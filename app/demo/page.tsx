@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button"
 import DemoToolbar from "@/components/demo/demo-toolbar"
 import DemoCanvas from "@/components/demo/demo-canvas"
 import DemoPropertiesPanel from "@/components/demo/demo-properties-panel"
-import EdgeTypeSelector from "@/components/demo/edge-type-selector"
+import EdgePropertiesPanel from "@/components/demo/edge-properties-panel"
 import { toast } from "sonner"
 
 const initialNodes: Node[] = [
@@ -51,8 +51,7 @@ function DemoPageContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
-  const [edgeType, setEdgeType] = useState<string>("smoothstep")
-  const [showEdgeSelector, setShowEdgeSelector] = useState(false)
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const reactFlowInstance = useRef<any>(null)
 
   const onConnect = useCallback(
@@ -60,19 +59,26 @@ function DemoPageContent() {
       const newEdge = {
         ...connection,
         animated: true,
-        type: edgeType,
+        type: "smoothstep",
       }
       setEdges((eds) => addEdge(newEdge, eds))
     },
-    [setEdges, edgeType]
+    [setEdges]
   )
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
     setSelectedNode(node)
+    setSelectedEdge(null)
+  }, [])
+
+  const onEdgeClick = useCallback((event: React.MouseEvent, edge: Edge) => {
+    setSelectedEdge(edge)
+    setSelectedNode(null)
   }, [])
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null)
+    setSelectedEdge(null)
   }, [])
 
   const handleAddNode = useCallback(() => {
@@ -140,6 +146,26 @@ function DemoPageContent() {
       })
     },
     [setNodes]
+  )
+
+  const handleUpdateEdge = useCallback(
+    (edgeId: string, updates: any) => {
+      setEdges((eds) =>
+        eds.map((edge) => {
+          if (edge.id === edgeId) {
+            return { ...edge, ...updates }
+          }
+          return edge
+        })
+      )
+      setSelectedEdge((prev) => {
+        if (prev && prev.id === edgeId) {
+          return { ...prev, ...updates }
+        }
+        return prev
+      })
+    },
+    [setEdges]
   )
 
   const handleSave = useCallback(() => {
@@ -227,7 +253,7 @@ function DemoPageContent() {
         onLoad={handleLoad}
       />
 
-      {/* Properties Panel */}
+      {/* Node Properties Panel */}
       {selectedNode && (
         <DemoPropertiesPanel
           selectedNode={selectedNode}
@@ -236,24 +262,12 @@ function DemoPageContent() {
         />
       )}
 
-      {/* Edge Type Selector Toggle Button */}
-      <Button
-        variant="ghost"
-        onClick={() => setShowEdgeSelector(!showEdgeSelector)}
-        className="absolute bottom-4 right-4 z-20 bg-background/95 backdrop-blur-sm border shadow-lg"
-      >
-        Connection Style
-      </Button>
-
-      {/* Edge Type Selector */}
-      {showEdgeSelector && (
-        <EdgeTypeSelector
-          currentType={edgeType}
-          onTypeChange={(type) => {
-            setEdgeType(type)
-            setShowEdgeSelector(false)
-            toast.success(`Connection style changed to ${type}`)
-          }}
+      {/* Edge Properties Panel */}
+      {selectedEdge && (
+        <EdgePropertiesPanel
+          selectedEdge={selectedEdge}
+          onClose={() => setSelectedEdge(null)}
+          onUpdateEdge={handleUpdateEdge}
         />
       )}
 
@@ -265,6 +279,7 @@ function DemoPageContent() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
       />
     </div>
