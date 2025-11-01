@@ -28,12 +28,48 @@ export default function EdgePropertiesPanel({
   ]
 
   const handleLabelChange = (label: string) => {
-    onUpdateEdge(selectedEdge.id, { 
-      label,
-      labelStyle: { fill: '#000', fontWeight: 500, fontSize: 12 },
-      labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+    const updates: any = { label }
+    
+    // If adding label for first time, set default styles
+    if (label && !selectedEdge.label) {
+      updates.labelStyle = { fill: '#000000', fontWeight: 500, fontSize: 12 }
+      updates.labelBgStyle = { fill: '#ffffff', fillOpacity: 0.9 }
+      updates.labelBgPadding = [8, 4] as [number, number]
+      updates.labelBgBorderRadius = 4
+      updates.labelShowBg = true
+    }
+    
+    onUpdateEdge(selectedEdge.id, updates)
+  }
+
+  const handleLabelTextColorChange = (color: string) => {
+    onUpdateEdge(selectedEdge.id, {
+      labelStyle: { 
+        ...selectedEdge.labelStyle,
+        fill: color,
+        fontWeight: 500,
+        fontSize: 12,
+      }
+    })
+  }
+
+  const handleLabelBgColorChange = (color: string) => {
+    onUpdateEdge(selectedEdge.id, {
+      labelBgStyle: { 
+        fill: color,
+        fillOpacity: 0.9,
+      },
       labelBgPadding: [8, 4] as [number, number],
       labelBgBorderRadius: 4,
+    })
+  }
+
+  const handleLabelPositionChange = (position: string) => {
+    onUpdateEdge(selectedEdge.id, {
+      labelShowBg: true,
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 4,
+      ...(position === 'center' ? {} : { labelPosition: position as any }),
     })
   }
 
@@ -76,6 +112,63 @@ export default function EdgePropertiesPanel({
             placeholder="Add label to connection"
           />
         </div>
+
+        {selectedEdge.label && (
+          <>
+            <div className="space-y-2">
+              <Label>Label Position</Label>
+              <div className="grid grid-cols-3 gap-2">
+                {['start', 'center', 'end'].map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => handleLabelPositionChange(pos)}
+                    className={`p-2 border rounded-lg text-xs capitalize transition-all hover:bg-muted ${
+                      (pos === 'center' && !selectedEdge.labelPosition) || selectedEdge.labelPosition === pos
+                        ? "border-primary bg-primary/10"
+                        : ""
+                    }`}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label Text Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {["#000000", "#ffffff", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#ef4444"].map((color) => (
+                  <button
+                    key={color}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{
+                      backgroundColor: color,
+                      borderColor: selectedEdge.labelStyle?.fill === color ? "#000" : "transparent",
+                    }}
+                    onClick={() => handleLabelTextColorChange(color)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label Background Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
+                  <button
+                    key={color}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{
+                      backgroundColor: color,
+                      borderColor: selectedEdge.labelBgStyle?.fill === color ? "#000" : "transparent",
+                    }}
+                    onClick={() => handleLabelBgColorChange(color)}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
 
         <div className="space-y-2">
           <Label>Connection Style</Label>
