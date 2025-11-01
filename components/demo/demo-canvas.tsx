@@ -23,12 +23,6 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from "./node-shapes"
-import {
-  CustomBezierEdge,
-  CustomSmoothStepEdge,
-  CustomStraightEdge,
-  CustomStepEdge,
-} from "./custom-edges"
 
 interface DemoCanvasProps {
   nodes: Node[]
@@ -63,17 +57,6 @@ export default function DemoCanvas({
     []
   )
 
-  const edgeTypes = useMemo(
-    () => ({
-      bezier: CustomBezierEdge,
-      smoothstep: CustomSmoothStepEdge,
-      straight: CustomStraightEdge,
-      step: CustomStepEdge,
-      default: CustomSmoothStepEdge,
-    }),
-    []
-  )
-
   const defaultEdgeOptions = {
     animated: true,
     type: "smoothstep",
@@ -94,7 +77,6 @@ export default function DemoCanvas({
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         fitView
         className="bg-muted/20"

@@ -51,6 +51,10 @@ const initialEdges: Edge[] = [
     label: "relates to",
     labelStyle: { fill: '#000000', fontWeight: 500, fontSize: 12 },
     labelBgStyle: { fill: '#ffffff', fillOpacity: 0.9 },
+    labelBgPadding: [8, 4] as [number, number],
+    labelBgBorderRadius: 4,
+    labelShowBg: true,
+    interactionWidth: 20,
   },
   { 
     id: "e1-3", 
