@@ -34,10 +34,6 @@ export default function EdgePropertiesPanel({
     if (label && !selectedEdge.label) {
       updates.labelStyle = { fill: '#000000', fontWeight: 500, fontSize: 12 }
       updates.labelBgStyle = { fill: '#ffffff', fillOpacity: 0.9 }
-      updates.labelBgPadding = [8, 4] as [number, number]
-      updates.labelBgBorderRadius = 4
-      updates.labelShowBg = true
-      updates.interactionWidth = 20
     }
     
     onUpdateEdge(selectedEdge.id, updates)
@@ -60,22 +56,11 @@ export default function EdgePropertiesPanel({
         fill: color,
         fillOpacity: 0.9,
       },
-      labelBgPadding: [8, 4] as [number, number],
-      labelBgBorderRadius: 4,
     })
   }
 
   const handleTypeChange = (type: string) => {
-    onUpdateEdge(selectedEdge.id, { 
-      type,
-      // Ensure label properties are preserved and label shows correctly on different edge types
-      ...(selectedEdge.label && {
-        labelShowBg: true,
-        labelBgPadding: [8, 4] as [number, number],
-        labelBgBorderRadius: 4,
-        interactionWidth: 20,
-      })
-    })
+    onUpdateEdge(selectedEdge.id, { type })
   }
 
   const handleAnimatedToggle = (animated: boolean) => {
