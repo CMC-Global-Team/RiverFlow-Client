@@ -31,6 +31,7 @@ interface DemoCanvasProps {
   onEdgesChange: (changes: any) => void
   onConnect: (connection: Connection) => void
   onNodeClick: (event: React.MouseEvent, node: Node) => void
+  onEdgeClick: (event: React.MouseEvent, edge: Edge) => void
   onPaneClick: () => void
 }
 
@@ -41,6 +42,7 @@ export default function DemoCanvas({
   onEdgesChange,
   onConnect,
   onNodeClick,
+  onEdgeClick,
   onPaneClick,
 }: DemoCanvasProps) {
   const nodeTypes = useMemo(
@@ -72,6 +74,7 @@ export default function DemoCanvas({
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
