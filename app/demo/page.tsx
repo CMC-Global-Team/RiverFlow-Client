@@ -54,6 +54,7 @@ const initialEdges: Edge[] = [
     labelBgPadding: [8, 4] as [number, number],
     labelBgBorderRadius: 4,
     labelShowBg: true,
+    interactionWidth: 20,
   },
   { 
     id: "e1-3", 

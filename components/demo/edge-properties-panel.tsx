@@ -37,6 +37,7 @@ export default function EdgePropertiesPanel({
       updates.labelBgPadding = [8, 4] as [number, number]
       updates.labelBgBorderRadius = 4
       updates.labelShowBg = true
+      updates.interactionWidth = 20
     }
     
     onUpdateEdge(selectedEdge.id, updates)
@@ -64,17 +65,17 @@ export default function EdgePropertiesPanel({
     })
   }
 
-  const handleLabelPositionChange = (position: string) => {
-    onUpdateEdge(selectedEdge.id, {
-      labelShowBg: true,
-      labelBgPadding: [8, 4] as [number, number],
-      labelBgBorderRadius: 4,
-      ...(position === 'center' ? {} : { labelPosition: position as any }),
-    })
-  }
-
   const handleTypeChange = (type: string) => {
-    onUpdateEdge(selectedEdge.id, { type })
+    onUpdateEdge(selectedEdge.id, { 
+      type,
+      // Ensure label properties are preserved and label shows correctly on different edge types
+      ...(selectedEdge.label && {
+        labelShowBg: true,
+        labelBgPadding: [8, 4] as [number, number],
+        labelBgBorderRadius: 4,
+        interactionWidth: 20,
+      })
+    })
   }
 
   const handleAnimatedToggle = (animated: boolean) => {
@@ -115,24 +116,6 @@ export default function EdgePropertiesPanel({
 
         {selectedEdge.label && (
           <>
-            <div className="space-y-2">
-              <Label>Label Position</Label>
-              <div className="grid grid-cols-3 gap-2">
-                {['start', 'center', 'end'].map((pos) => (
-                  <button
-                    key={pos}
-                    onClick={() => handleLabelPositionChange(pos)}
-                    className={`p-2 border rounded-lg text-xs capitalize transition-all hover:bg-muted ${
-                      (pos === 'center' && !selectedEdge.labelPosition) || selectedEdge.labelPosition === pos
-                        ? "border-primary bg-primary/10"
-                        : ""
-                    }`}
-                  >
-                    {pos}
-                  </button>
-                ))}
-              </div>
-            </div>
 
             <div className="space-y-2">
               <Label>Label Text Color</Label>
