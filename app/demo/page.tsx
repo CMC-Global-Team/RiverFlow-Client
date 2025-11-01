@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useRef } from "react"
+import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
   Node,
@@ -48,11 +48,11 @@ const initialEdges: Edge[] = [
 
 function DemoPageContent() {
   const router = useRouter()
+  const reactFlowInstance = useReactFlow()
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
-  const reactFlowInstance = useRef<any>(null)
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -213,22 +213,16 @@ function DemoPageContent() {
   }, [setNodes, setEdges])
 
   const handleZoomIn = useCallback(() => {
-    if (reactFlowInstance.current) {
-      reactFlowInstance.current.zoomIn()
-    }
-  }, [])
+    reactFlowInstance.zoomIn()
+  }, [reactFlowInstance])
 
   const handleZoomOut = useCallback(() => {
-    if (reactFlowInstance.current) {
-      reactFlowInstance.current.zoomOut()
-    }
-  }, [])
+    reactFlowInstance.zoomOut()
+  }, [reactFlowInstance])
 
   const handleFitView = useCallback(() => {
-    if (reactFlowInstance.current) {
-      reactFlowInstance.current.fitView()
-    }
-  }, [])
+    reactFlowInstance.fitView()
+  }, [reactFlowInstance])
 
   return (
     <div className="relative w-screen h-screen">
