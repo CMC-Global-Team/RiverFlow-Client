@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 
 interface EdgePropertiesPanelProps {
   selectedEdge: any
@@ -25,6 +26,16 @@ export default function EdgePropertiesPanel({
     { value: "step", label: "Step", description: "90° angles" },
     { value: "bezier", label: "Bezier", description: "Curved line" },
   ]
+
+  const handleLabelChange = (label: string) => {
+    onUpdateEdge(selectedEdge.id, { 
+      label,
+      labelStyle: { fill: '#000', fontWeight: 500, fontSize: 12 },
+      labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 4,
+    })
+  }
 
   const handleTypeChange = (type: string) => {
     onUpdateEdge(selectedEdge.id, { type })
@@ -56,6 +67,16 @@ export default function EdgePropertiesPanel({
       </div>
 
       <div className="p-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="edge-label">Connection Label</Label>
+          <Input
+            id="edge-label"
+            value={selectedEdge.label || ""}
+            onChange={(e) => handleLabelChange(e.target.value)}
+            placeholder="Add label to connection"
+          />
+        </div>
+
         <div className="space-y-2">
           <Label>Connection Style</Label>
           <div className="space-y-2">
@@ -105,6 +126,7 @@ export default function EdgePropertiesPanel({
           <p>From: {selectedEdge.source}</p>
           <p>To: {selectedEdge.target}</p>
           <p>Type: {selectedEdge.type || "default"}</p>
+          {selectedEdge.label && <p>Label: {selectedEdge.label}</p>}
         </div>
       </div>
     </div>
