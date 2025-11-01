@@ -15,7 +15,14 @@ import ReactFlow, {
   ReactFlowProvider,
 } from "reactflow"
 import "reactflow/dist/style.css"
-import CustomNode from "./custom-node"
+import {
+  RectangleNode,
+  CircleNode,
+  DiamondNode,
+  HexagonNode,
+  EllipseNode,
+  RoundedRectangleNode,
+} from "./node-shapes"
 
 interface DemoCanvasProps {
   nodes: Node[]
@@ -36,7 +43,17 @@ export default function DemoCanvas({
   onNodeClick,
   onPaneClick,
 }: DemoCanvasProps) {
-  const nodeTypes = useMemo(() => ({ customNode: CustomNode }), [])
+  const nodeTypes = useMemo(
+    () => ({
+      rectangle: RectangleNode,
+      circle: CircleNode,
+      diamond: DiamondNode,
+      hexagon: HexagonNode,
+      ellipse: EllipseNode,
+      roundedRectangle: RoundedRectangleNode,
+    }),
+    []
+  )
 
   const defaultEdgeOptions = {
     animated: true,
