@@ -4,6 +4,7 @@ import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import { Input } from "@/components/ui/input"
 
 interface EdgePropertiesPanelProps {
   selectedEdge: any
@@ -26,8 +27,55 @@ export default function EdgePropertiesPanel({
     { value: "bezier", label: "Bezier", description: "Curved line" },
   ]
 
+  const handleLabelChange = (label: string) => {
+    const updates: any = { label }
+    
+    // If adding label for first time, set default styles
+    if (label && !selectedEdge.label) {
+      updates.labelStyle = { fill: '#000000', fontWeight: 500, fontSize: 12 }
+      updates.labelBgStyle = { fill: '#ffffff', fillOpacity: 0.9 }
+      updates.labelBgPadding = [8, 4] as [number, number]
+      updates.labelBgBorderRadius = 4
+      updates.labelShowBg = true
+      updates.interactionWidth = 20
+    }
+    
+    onUpdateEdge(selectedEdge.id, updates)
+  }
+
+  const handleLabelTextColorChange = (color: string) => {
+    onUpdateEdge(selectedEdge.id, {
+      labelStyle: { 
+        ...selectedEdge.labelStyle,
+        fill: color,
+        fontWeight: 500,
+        fontSize: 12,
+      }
+    })
+  }
+
+  const handleLabelBgColorChange = (color: string) => {
+    onUpdateEdge(selectedEdge.id, {
+      labelBgStyle: { 
+        fill: color,
+        fillOpacity: 0.9,
+      },
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 4,
+    })
+  }
+
   const handleTypeChange = (type: string) => {
-    onUpdateEdge(selectedEdge.id, { type })
+    onUpdateEdge(selectedEdge.id, { 
+      type,
+      // Ensure label properties are preserved and label shows correctly on different edge types
+      ...(selectedEdge.label && {
+        labelShowBg: true,
+        labelBgPadding: [8, 4] as [number, number],
+        labelBgBorderRadius: 4,
+        interactionWidth: 20,
+      })
+    })
   }
 
   const handleAnimatedToggle = (animated: boolean) => {
@@ -56,6 +104,55 @@ export default function EdgePropertiesPanel({
       </div>
 
       <div className="p-4 space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="edge-label">Connection Label</Label>
+          <Input
+            id="edge-label"
+            value={selectedEdge.label || ""}
+            onChange={(e) => handleLabelChange(e.target.value)}
+            placeholder="Add label to connection"
+          />
+        </div>
+
+        {selectedEdge.label && (
+          <>
+
+            <div className="space-y-2">
+              <Label>Label Text Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {["#000000", "#ffffff", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#ef4444"].map((color) => (
+                  <button
+                    key={color}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{
+                      backgroundColor: color,
+                      borderColor: selectedEdge.labelStyle?.fill === color ? "#000" : "transparent",
+                    }}
+                    onClick={() => handleLabelTextColorChange(color)}
+                  />
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label Background Color</Label>
+              <div className="flex gap-2 flex-wrap">
+                {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
+                  <button
+                    key={color}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{
+                      backgroundColor: color,
+                      borderColor: selectedEdge.labelBgStyle?.fill === color ? "#000" : "transparent",
+                    }}
+                    onClick={() => handleLabelBgColorChange(color)}
+                  />
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
         <div className="space-y-2">
           <Label>Connection Style</Label>
           <div className="space-y-2">
@@ -105,6 +202,7 @@ export default function EdgePropertiesPanel({
           <p>From: {selectedEdge.source}</p>
           <p>To: {selectedEdge.target}</p>
           <p>Type: {selectedEdge.type || "default"}</p>
+          {selectedEdge.label && <p>Label: {selectedEdge.label}</p>}
         </div>
       </div>
     </div>
