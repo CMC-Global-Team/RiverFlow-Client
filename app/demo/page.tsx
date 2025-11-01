@@ -42,8 +42,25 @@ const initialNodes: Node[] = [
 ]
 
 const initialEdges: Edge[] = [
-  { id: "e1-2", source: "1", target: "2", animated: true, type: "smoothstep" },
-  { id: "e1-3", source: "1", target: "3", animated: true, type: "smoothstep" },
+  { 
+    id: "e1-2", 
+    source: "1", 
+    target: "2", 
+    animated: true, 
+    type: "smoothstep",
+    label: "relates to",
+    labelStyle: { fill: '#000', fontWeight: 500, fontSize: 12 },
+    labelBgStyle: { fill: '#fff', fillOpacity: 0.9 },
+    labelBgPadding: [8, 4] as [number, number],
+    labelBgBorderRadius: 4,
+  },
+  { 
+    id: "e1-3", 
+    source: "1", 
+    target: "3", 
+    animated: true, 
+    type: "smoothstep" 
+  },
 ]
 
 function DemoPageContent() {
