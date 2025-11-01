@@ -17,32 +17,33 @@ import { Button } from "@/components/ui/button"
 import DemoToolbar from "@/components/demo/demo-toolbar"
 import DemoCanvas from "@/components/demo/demo-canvas"
 import DemoPropertiesPanel from "@/components/demo/demo-properties-panel"
+import EdgeTypeSelector from "@/components/demo/edge-type-selector"
 import { toast } from "sonner"
 
 const initialNodes: Node[] = [
   {
     id: "1",
-    type: "customNode",
+    type: "rectangle",
     position: { x: 250, y: 100 },
-    data: { label: "Central Idea", description: "Main topic", color: "#8b5cf6" },
+    data: { label: "Central Idea", description: "Main topic", color: "#8b5cf6", shape: "rectangle" },
   },
   {
     id: "2",
-    type: "customNode",
-    position: { x: 100, y: 250 },
-    data: { label: "Subtopic 1", description: "First branch", color: "#3b82f6" },
+    type: "circle",
+    position: { x: 100, y: 280 },
+    data: { label: "Subtopic 1", description: "First branch", color: "#3b82f6", shape: "circle" },
   },
   {
     id: "3",
-    type: "customNode",
-    position: { x: 400, y: 250 },
-    data: { label: "Subtopic 2", description: "Second branch", color: "#ec4899" },
+    type: "ellipse",
+    position: { x: 400, y: 280 },
+    data: { label: "Subtopic 2", description: "Second branch", color: "#ec4899", shape: "ellipse" },
   },
 ]
 
 const initialEdges: Edge[] = [
-  { id: "e1-2", source: "1", target: "2", animated: true },
-  { id: "e1-3", source: "1", target: "3", animated: true },
+  { id: "e1-2", source: "1", target: "2", animated: true, type: "smoothstep" },
+  { id: "e1-3", source: "1", target: "3", animated: true, type: "smoothstep" },
 ]
 
 function DemoPageContent() {
@@ -50,13 +51,20 @@ function DemoPageContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [edgeType, setEdgeType] = useState<string>("smoothstep")
+  const [showEdgeSelector, setShowEdgeSelector] = useState(false)
   const reactFlowInstance = useRef<any>(null)
 
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge(connection, eds))
+      const newEdge = {
+        ...connection,
+        animated: true,
+        type: edgeType,
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
     },
-    [setEdges]
+    [setEdges, edgeType]
   )
 
   const onNodeClick = useCallback((event: React.MouseEvent, node: Node) => {
@@ -70,7 +78,7 @@ function DemoPageContent() {
   const handleAddNode = useCallback(() => {
     const newNode: Node = {
       id: `node-${Date.now()}`,
-      type: "customNode",
+      type: "rectangle",
       position: {
         x: Math.random() * 500,
         y: Math.random() * 500,
@@ -79,6 +87,7 @@ function DemoPageContent() {
         label: "New Node",
         description: "Add description",
         color: "#3b82f6",
+        shape: "rectangle",
       },
     }
     setNodes((nds) => [...nds, newNode])
@@ -103,20 +112,29 @@ function DemoPageContent() {
       setNodes((nds) =>
         nds.map((node) => {
           if (node.id === nodeId) {
-            return {
+            // If shape is being changed, update the node type as well
+            const updatedNode = {
               ...node,
               data: { ...node.data, ...newData },
             }
+            if (newData.shape) {
+              updatedNode.type = newData.shape
+            }
+            return updatedNode
           }
           return node
         })
       )
       setSelectedNode((prev) => {
         if (prev && prev.id === nodeId) {
-          return {
+          const updatedNode = {
             ...prev,
             data: { ...prev.data, ...newData },
           }
+          if (newData.shape) {
+            updatedNode.type = newData.shape
+          }
+          return updatedNode
         }
         return prev
       })
@@ -215,6 +233,27 @@ function DemoPageContent() {
           selectedNode={selectedNode}
           onClose={() => setSelectedNode(null)}
           onUpdateNode={handleUpdateNode}
+        />
+      )}
+
+      {/* Edge Type Selector Toggle Button */}
+      <Button
+        variant="ghost"
+        onClick={() => setShowEdgeSelector(!showEdgeSelector)}
+        className="absolute bottom-4 right-4 z-20 bg-background/95 backdrop-blur-sm border shadow-lg"
+      >
+        Connection Style
+      </Button>
+
+      {/* Edge Type Selector */}
+      {showEdgeSelector && (
+        <EdgeTypeSelector
+          currentType={edgeType}
+          onTypeChange={(type) => {
+            setEdgeType(type)
+            setShowEdgeSelector(false)
+            toast.success(`Connection style changed to ${type}`)
+          }}
         />
       )}
 
