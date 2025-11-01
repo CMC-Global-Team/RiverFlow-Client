@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { useRouter } from "next/navigation"
 import { ArrowRight, Sparkles } from "lucide-react"
 import gsap from "gsap"
 
@@ -9,6 +10,7 @@ interface HeroSectionProps {
 }
 
 export default function HeroSection({ onGetStarted }: HeroSectionProps) {
+  const router = useRouter()
   const containerRef = useRef<HTMLDivElement>(null)
   const titleRef = useRef<HTMLHeadingElement>(null)
   const subtitleRef = useRef<HTMLParagraphElement>(null)
@@ -83,7 +85,10 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
               Get Started Free
               <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-8 py-3 rounded-lg border border-border text-foreground font-semibold hover:bg-muted transition-all">
+            <button 
+              onClick={() => router.push("/demo")}
+              className="px-8 py-3 rounded-lg border border-border text-foreground font-semibold hover:bg-muted transition-all"
+            >
               Watch Demo
             </button>
           </div>
