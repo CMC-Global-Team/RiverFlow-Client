@@ -4,6 +4,8 @@ import type React from "react"
 
 import { useState } from "react"
 import { Mail, Lock, User, Github, Chrome } from "lucide-react"
+import apiClient from "@/lib/apiClient"
+import { isAxiosError } from "axios"
 
 export default function SignupForm() {
   const [name, setName] = useState("")
@@ -13,12 +15,40 @@ export default function SignupForm() {
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-  }
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+    setIsLoading(true);
+
+    const payload = {
+      name,
+      email,
+      password,
+    };
+
+    try {
+      const response = await apiClient.post('/api/auth/register', payload);
+
+      // axios trả về data trong thuộc tính `data`
+      console.log('Registration successful:', response.data); 
+      alert('Đăng ký thành công!');
+
+    } catch (error) {
+      // axios cũng cung cấp cách xử lý lỗi tốt hơn
+      if (isAxiosError(error) && error.response) {
+        console.error('Registration failed:', error.response.data);
+        alert(`Đăng ký thất bại: ${error.response.data.message || 'Lỗi không xác định'}`);
+      } else {
+        console.error('Network error:', error);
+        alert('Không thể kết nối đến máy chủ.');
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
