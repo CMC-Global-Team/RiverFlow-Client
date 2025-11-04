@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
@@ -63,6 +63,44 @@ export default function PackageFormDialog({
     isActive: initialData?.isActive ?? true,
     displayOrder: initialData?.displayOrder || 0,
   })
+
+  // Update form data when initialData changes (for edit mode)
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        name: initialData.name || "",
+        description: initialData.description || "",
+        slug: initialData.slug || "",
+        basePrice: initialData.basePrice || 0,
+        baseCurrencyCode: initialData.baseCurrencyCode || "USD",
+        durationDays: initialData.durationDays || 30,
+        maxMindmaps: initialData.maxMindmaps || 10,
+        maxCollaborators: initialData.maxCollaborators || 5,
+        maxStorageMb: initialData.maxStorageMb || 100,
+        features: initialData.features || [],
+        prices: initialData.prices || [],
+        isActive: initialData.isActive ?? true,
+        displayOrder: initialData.displayOrder || 0,
+      })
+    } else {
+      // Reset form for create mode
+      setFormData({
+        name: "",
+        description: "",
+        slug: "",
+        basePrice: 0,
+        baseCurrencyCode: "USD",
+        durationDays: 30,
+        maxMindmaps: 10,
+        maxCollaborators: 5,
+        maxStorageMb: 100,
+        features: [],
+        prices: [],
+        isActive: true,
+        displayOrder: 0,
+      })
+    }
+  }, [initialData])
 
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
