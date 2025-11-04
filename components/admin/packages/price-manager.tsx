@@ -116,9 +116,10 @@ export default function PriceManager({ prices = [], onPriceChange }: PriceManage
                       type="number"
                       step="0.01"
                       value={price.price || ""}
-                      onChange={(e) =>
-                        updatePrice(currency.code, "price", parseFloat(e.target.value))
-                      }
+                      onChange={(e) => {
+                        const value = parseFloat(e.target.value)
+                        updatePrice(currency.code, "price", isNaN(value) ? 0 : value)
+                      }}
                       placeholder="0.00"
                     />
                   </div>
@@ -136,13 +137,14 @@ export default function PriceManager({ prices = [], onPriceChange }: PriceManage
                         type="number"
                         step="0.01"
                         value={price.promotionalPrice || ""}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          const value = parseFloat(e.target.value)
                           updatePrice(
                             currency.code,
                             "promotionalPrice",
-                            parseFloat(e.target.value)
+                            isNaN(value) ? 0 : value
                           )
-                        }
+                        }}
                         placeholder="0.00"
                       />
                     </div>
