@@ -14,8 +14,16 @@ interface ForgotPasswordFormProps {
 export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("")
   
-  const { sendResetLink, isLoading, error, data } = useForgotPassword()
+  const { sendResetLink, isLoading, error, data, clearError } = useForgotPassword()
   const { toast } = useToast()
+  
+  // Xóa lỗi khi user thay đổi email
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setEmail(e.target.value)
+    if (error) {
+      clearError()
+    }
+  }
 
   // Hiển thị thông báo khi có lỗi
   useEffect(() => {
@@ -62,6 +70,13 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
             Nhập địa chỉ email của bạn và chúng tôi sẽ gửi link để đặt lại mật khẩu.
           </p>
 
+          {/* Hiển thị lỗi từ server */}
+          {error && (
+            <div className="rounded-lg border border-destructive/50 bg-destructive/10 p-3">
+              <p className="text-sm text-destructive font-medium">{error.message}</p>
+            </div>
+          )}
+
           {/* Email Input */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-foreground">Email</label>
@@ -70,9 +85,9 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={handleEmailChange}
                 placeholder="you@example.com"
-                className="w-full rounded-lg border border-border bg-input pl-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                className={`w-full rounded-lg border ${error ? 'border-destructive' : 'border-border'} bg-input pl-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all`}
                 required
               />
             </div>
