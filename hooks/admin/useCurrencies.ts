@@ -3,30 +3,31 @@
  */
 
 import { useState, useEffect } from "react"
-import { getAllCurrencies } from "@/services/admin/package.service"
-import type { CurrencyResponse, ApiErrorResponse } from "@/types/package.types"
+import { getAllCurrencies } from "@/services/admin/currency.service"
+import type { ApiErrorResponse } from "@/types/package.types"
+import type { CurrencyResponse } from "@/services/admin/currency.service"
 
 interface UseCurrenciesResult {
   currencies: CurrencyResponse[]
   isLoading: boolean
   error: ApiErrorResponse | null
-  refetch: () => Promise<void>
+  refetch: (isActive?: boolean) => Promise<void>
 }
 
 /**
  * Hook lấy danh sách currencies
  */
-export const useCurrencies = (): UseCurrenciesResult => {
+export const useCurrencies = (isActive?: boolean): UseCurrenciesResult => {
   const [currencies, setCurrencies] = useState<CurrencyResponse[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<ApiErrorResponse | null>(null)
 
-  const fetchCurrencies = async () => {
+  const fetchCurrencies = async (activeFilter?: boolean) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const data = await getAllCurrencies()
+      const data = await getAllCurrencies(activeFilter)
       setCurrencies(data)
     } catch (err) {
       const apiError = err as ApiErrorResponse
@@ -37,8 +38,8 @@ export const useCurrencies = (): UseCurrenciesResult => {
   }
 
   useEffect(() => {
-    fetchCurrencies()
-  }, [])
+    fetchCurrencies(isActive)
+  }, [isActive])
 
   return {
     currencies,

@@ -8,6 +8,8 @@ import PackageCard from "@/components/admin/packages/package-card"
 import PackageFormDialog from "@/components/admin/packages/package-form-dialog"
 import FeaturesList from "@/components/admin/features/features-list"
 import FeatureFormDialog from "@/components/admin/features/feature-form-dialog"
+import CurrenciesList from "@/components/admin/currencies/currencies-list"
+import CurrencyFormDialog from "@/components/admin/currencies/currency-form-dialog"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Filter } from "lucide-react"
@@ -16,9 +18,12 @@ import { usePackages } from "@/hooks/admin/usePackages"
 import { usePackageMutations } from "@/hooks/admin/usePackageMutations"
 import { useFeatures } from "@/hooks/admin/useFeatures"
 import { useFeatureMutations } from "@/hooks/admin/useFeatureMutations"
+import { useCurrencies } from "@/hooks/admin/useCurrencies"
+import { useCurrencyMutations } from "@/hooks/admin/useCurrencyMutations"
 import { useToast } from "@/hooks/use-toast"
 import type { PackageRequest } from "@/types/package.types"
 import type { FeatureRequest, FeatureResponse } from "@/services/admin/feature.service"
+import type { CurrencyRequest, CurrencyResponse } from "@/services/admin/currency.service"
 import {
   Select,
   SelectContent,
@@ -30,7 +35,9 @@ import {
 export default function PackagesManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [showFeatureDialog, setShowFeatureDialog] = useState(false)
+  const [showCurrencyDialog, setShowCurrencyDialog] = useState(false)
   const [editingFeature, setEditingFeature] = useState<FeatureResponse | undefined>()
+  const [editingCurrency, setEditingCurrency] = useState<CurrencyResponse | undefined>()
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("name")
   
@@ -45,6 +52,14 @@ export default function PackagesManagementPage() {
     update: updateFeature,
     remove: removeFeature,
   } = useFeatureMutations()
+  
+  // Currencies hooks
+  const { currencies, isLoading: currenciesLoading, refetch: refetchCurrencies } = useCurrencies()
+  const {
+    create: createCurrency,
+    update: updateCurrency,
+    remove: removeCurrency,
+  } = useCurrencyMutations()
 
   const handleCreatePackage = async (data: PackageRequest) => {
     const result = await create(data)
@@ -149,6 +164,72 @@ export default function PackagesManagementPage() {
     }
   }
 
+  // Currency handlers
+  const handleCreateCurrency = () => {
+    setEditingCurrency(undefined)
+    setShowCurrencyDialog(true)
+  }
+
+  const handleEditCurrency = (currency: CurrencyResponse) => {
+    setEditingCurrency(currency)
+    setShowCurrencyDialog(true)
+  }
+
+  const handleCurrencySubmit = async (data: CurrencyRequest) => {
+    if (editingCurrency) {
+      const result = await updateCurrency(editingCurrency.id, data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Currency updated successfully",
+        })
+        setShowCurrencyDialog(false)
+        refetchCurrencies()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update currency",
+          variant: "destructive",
+        })
+      }
+    } else {
+      const result = await createCurrency(data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Currency created successfully",
+        })
+        setShowCurrencyDialog(false)
+        refetchCurrencies()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create currency",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
+  const handleDeleteCurrency = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this currency?")) return
+    
+    const success = await removeCurrency(id)
+    if (success) {
+      toast({
+        title: "Success",
+        description: "Currency deleted successfully",
+      })
+      refetchCurrencies()
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to delete currency",
+        variant: "destructive",
+      })
+    }
+  }
+
   const filteredAndSortedPackages = useMemo(() => {
     let filtered = packages
 
@@ -199,9 +280,10 @@ export default function PackagesManagementPage() {
 
             {/* Tabs */}
             <Tabs defaultValue="packages" className="space-y-6">
-              <TabsList>
+              <TabsList className="grid w-full max-w-md grid-cols-3">
                 <TabsTrigger value="packages">Packages</TabsTrigger>
                 <TabsTrigger value="features">Features</TabsTrigger>
+                <TabsTrigger value="currencies">Currencies</TabsTrigger>
               </TabsList>
 
               {/* Packages Tab */}
@@ -304,6 +386,17 @@ export default function PackagesManagementPage() {
                   onCreate={handleCreateFeature}
                 />
               </TabsContent>
+
+              {/* Currencies Tab */}
+              <TabsContent value="currencies">
+                <CurrenciesList
+                  currencies={currencies}
+                  isLoading={currenciesLoading}
+                  onEdit={handleEditCurrency}
+                  onDelete={handleDeleteCurrency}
+                  onCreate={handleCreateCurrency}
+                />
+              </TabsContent>
             </Tabs>
           </div>
         </main>
@@ -324,6 +417,15 @@ export default function PackagesManagementPage() {
         onSubmit={handleFeatureSubmit}
         initialData={editingFeature}
         mode={editingFeature ? "edit" : "create"}
+      />
+
+      {/* Create/Edit Currency Dialog */}
+      <CurrencyFormDialog
+        open={showCurrencyDialog}
+        onOpenChange={setShowCurrencyDialog}
+        onSubmit={handleCurrencySubmit}
+        initialData={editingCurrency}
+        mode={editingCurrency ? "edit" : "create"}
       />
     </div>
   )
