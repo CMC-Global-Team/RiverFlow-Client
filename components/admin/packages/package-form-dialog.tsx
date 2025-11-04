@@ -168,10 +168,11 @@ export default function PackageFormDialog({
                     id="basePrice"
                     type="number"
                     step="0.01"
-                    value={formData.basePrice}
-                    onChange={(e) =>
-                      updateField("basePrice", parseFloat(e.target.value))
-                    }
+                    value={formData.basePrice || ""}
+                    onChange={(e) => {
+                      const value = parseFloat(e.target.value)
+                      updateField("basePrice", isNaN(value) ? 0 : value)
+                    }}
                     min="0"
                     required
                   />
@@ -182,10 +183,11 @@ export default function PackageFormDialog({
                   <Input
                     id="duration"
                     type="number"
-                    value={formData.durationDays}
-                    onChange={(e) =>
-                      updateField("durationDays", parseInt(e.target.value))
-                    }
+                    value={formData.durationDays || ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      updateField("durationDays", isNaN(value) ? 30 : value)
+                    }}
                     min="1"
                     required
                   />
@@ -198,10 +200,11 @@ export default function PackageFormDialog({
                   <Input
                     id="displayOrder"
                     type="number"
-                    value={formData.displayOrder}
-                    onChange={(e) =>
-                      updateField("displayOrder", parseInt(e.target.value))
-                    }
+                    value={formData.displayOrder || ""}
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value)
+                      updateField("displayOrder", isNaN(value) ? 0 : value)
+                    }}
                     min="0"
                   />
                 </div>
@@ -235,10 +238,11 @@ export default function PackageFormDialog({
                     <Input
                       id="maxMindmaps"
                       type="number"
-                      value={formData.maxMindmaps}
-                      onChange={(e) =>
-                        updateField("maxMindmaps", parseInt(e.target.value))
-                      }
+                      value={formData.maxMindmaps || ""}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value)
+                        updateField("maxMindmaps", isNaN(value) ? 0 : value)
+                      }}
                       min="0"
                     />
                   </div>
@@ -253,10 +257,11 @@ export default function PackageFormDialog({
                     <Input
                       id="maxCollaborators"
                       type="number"
-                      value={formData.maxCollaborators}
-                      onChange={(e) =>
-                        updateField("maxCollaborators", parseInt(e.target.value))
-                      }
+                      value={formData.maxCollaborators || ""}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value)
+                        updateField("maxCollaborators", isNaN(value) ? 0 : value)
+                      }}
                       min="0"
                     />
                   </div>
@@ -271,10 +276,11 @@ export default function PackageFormDialog({
                     <Input
                       id="maxStorage"
                       type="number"
-                      value={formData.maxStorageMb}
-                      onChange={(e) =>
-                        updateField("maxStorageMb", parseInt(e.target.value))
-                      }
+                      value={formData.maxStorageMb || ""}
+                      onChange={(e) => {
+                        const value = parseInt(e.target.value)
+                        updateField("maxStorageMb", isNaN(value) ? 0 : value)
+                      }}
                       min="0"
                     />
                   </div>

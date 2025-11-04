@@ -128,10 +128,11 @@ export default function CurrencyFormDialog({
               <Input
                 id="decimalPlaces"
                 type="number"
-                value={formData.decimalPlaces}
-                onChange={(e) =>
-                  updateField("decimalPlaces", parseInt(e.target.value))
-                }
+                value={formData.decimalPlaces ?? ""}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value)
+                  updateField("decimalPlaces", isNaN(value) ? 2 : value)
+                }}
                 min="0"
                 max="4"
                 required
@@ -146,10 +147,11 @@ export default function CurrencyFormDialog({
               <Input
                 id="displayOrder"
                 type="number"
-                value={formData.displayOrder}
-                onChange={(e) =>
-                  updateField("displayOrder", parseInt(e.target.value))
-                }
+                value={formData.displayOrder ?? ""}
+                onChange={(e) => {
+                  const value = parseInt(e.target.value)
+                  updateField("displayOrder", isNaN(value) ? 0 : value)
+                }}
                 min="0"
               />
             </div>
