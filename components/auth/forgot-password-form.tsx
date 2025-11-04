@@ -2,8 +2,10 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Mail, ArrowLeft } from "lucide-react"
+import { useForgotPassword } from "@/hooks/auth/useForgotPassword"
+import { useToast } from "@/hooks/use-toast"
 
 interface ForgotPasswordFormProps {
   onBack: () => void
@@ -11,16 +13,36 @@ interface ForgotPasswordFormProps {
 
 export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) {
   const [email, setEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
-  const [submitted, setSubmitted] = useState(false)
+  
+  const { sendResetLink, isLoading, error, data } = useForgotPassword()
+  const { toast } = useToast()
+
+  // Hiển thị thông báo khi có lỗi
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Gửi yêu cầu thất bại",
+        description: error.message,
+      })
+    }
+  }, [error, toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
-    setSubmitted(true)
+
+    // Validation
+    if (!email) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập email!",
+      })
+      return
+    }
+
+    // Gọi API forgot password
+    await sendResetLink({ email })
   }
 
   return (
@@ -34,10 +56,10 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
         Back to login
       </button>
 
-      {!submitted ? (
+      {!data ? (
         <form onSubmit={handleSubmit} className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Enter your email address and we'll send you a link to reset your password.
+            Nhập địa chỉ email của bạn và chúng tôi sẽ gửi link để đặt lại mật khẩu.
           </p>
 
           {/* Email Input */}
@@ -62,7 +84,7 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
             disabled={isLoading}
             className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
           >
-            {isLoading ? "Sending..." : "Send Reset Link"}
+            {isLoading ? "Đang gửi..." : "Gửi link đặt lại mật khẩu"}
           </button>
         </form>
       ) : (
@@ -71,14 +93,14 @@ export default function ForgotPasswordForm({ onBack }: ForgotPasswordFormProps) 
             <Mail className="h-6 w-6 text-primary" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Check your email</h3>
-            <p className="mt-2 text-sm text-muted-foreground">We've sent a password reset link to {email}</p>
+            <h3 className="font-semibold text-foreground">Kiểm tra email của bạn</h3>
+            <p className="mt-2 text-sm text-muted-foreground">{data.message}</p>
           </div>
           <button
             onClick={onBack}
             className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
           >
-            Back to login
+            Quay lại đăng nhập
           </button>
         </div>
       )}
