@@ -3,30 +3,31 @@
  */
 
 import { useState, useEffect } from "react"
-import { getAllFeatures } from "@/services/admin/package.service"
-import type { FeatureResponse, ApiErrorResponse } from "@/types/package.types"
+import { getAllFeatures } from "@/services/admin/feature.service"
+import type { ApiErrorResponse } from "@/types/package.types"
+import type { FeatureResponse } from "@/services/admin/feature.service"
 
 interface UseFeaturesResult {
   features: FeatureResponse[]
   isLoading: boolean
   error: ApiErrorResponse | null
-  refetch: () => Promise<void>
+  refetch: (isActive?: boolean) => Promise<void>
 }
 
 /**
  * Hook lấy danh sách features
  */
-export const useFeatures = (): UseFeaturesResult => {
+export const useFeatures = (isActive?: boolean): UseFeaturesResult => {
   const [features, setFeatures] = useState<FeatureResponse[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<ApiErrorResponse | null>(null)
 
-  const fetchFeatures = async () => {
+  const fetchFeatures = async (activeFilter?: boolean) => {
     setIsLoading(true)
     setError(null)
 
     try {
-      const data = await getAllFeatures()
+      const data = await getAllFeatures(activeFilter)
       setFeatures(data)
     } catch (err) {
       const apiError = err as ApiErrorResponse
@@ -37,8 +38,8 @@ export const useFeatures = (): UseFeaturesResult => {
   }
 
   useEffect(() => {
-    fetchFeatures()
-  }, [])
+    fetchFeatures(isActive)
+  }, [isActive])
 
   return {
     features,

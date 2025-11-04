@@ -6,13 +6,19 @@ import AdminHeader from "@/components/admin/admin-header"
 import PackageStats from "@/components/admin/packages/package-stats"
 import PackageCard from "@/components/admin/packages/package-card"
 import PackageFormDialog from "@/components/admin/packages/package-form-dialog"
+import FeaturesList from "@/components/admin/features/features-list"
+import FeatureFormDialog from "@/components/admin/features/feature-form-dialog"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Plus, Filter } from "lucide-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { usePackages } from "@/hooks/admin/usePackages"
 import { usePackageMutations } from "@/hooks/admin/usePackageMutations"
+import { useFeatures } from "@/hooks/admin/useFeatures"
+import { useFeatureMutations } from "@/hooks/admin/useFeatureMutations"
 import { useToast } from "@/hooks/use-toast"
 import type { PackageRequest } from "@/types/package.types"
+import type { FeatureRequest, FeatureResponse } from "@/services/admin/feature.service"
 import {
   Select,
   SelectContent,
@@ -23,12 +29,22 @@ import {
 
 export default function PackagesManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showFeatureDialog, setShowFeatureDialog] = useState(false)
+  const [editingFeature, setEditingFeature] = useState<FeatureResponse | undefined>()
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("name")
   
   const { toast } = useToast()
   const { packages, isLoading, refetch } = usePackages()
   const { create, remove, isLoading: isMutating } = usePackageMutations()
+  
+  // Features hooks
+  const { features, isLoading: featuresLoading, refetch: refetchFeatures } = useFeatures()
+  const {
+    create: createFeature,
+    update: updateFeature,
+    remove: removeFeature,
+  } = useFeatureMutations()
 
   const handleCreatePackage = async (data: PackageRequest) => {
     const result = await create(data)
@@ -62,6 +78,72 @@ export default function PackagesManagementPage() {
       toast({
         title: "Error",
         description: "Failed to delete package",
+        variant: "destructive",
+      })
+    }
+  }
+
+  // Feature handlers
+  const handleCreateFeature = () => {
+    setEditingFeature(undefined)
+    setShowFeatureDialog(true)
+  }
+
+  const handleEditFeature = (feature: FeatureResponse) => {
+    setEditingFeature(feature)
+    setShowFeatureDialog(true)
+  }
+
+  const handleFeatureSubmit = async (data: FeatureRequest) => {
+    if (editingFeature) {
+      const result = await updateFeature(editingFeature.id, data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Feature updated successfully",
+        })
+        setShowFeatureDialog(false)
+        refetchFeatures()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update feature",
+          variant: "destructive",
+        })
+      }
+    } else {
+      const result = await createFeature(data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Feature created successfully",
+        })
+        setShowFeatureDialog(false)
+        refetchFeatures()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create feature",
+          variant: "destructive",
+        })
+      }
+    }
+  }
+
+  const handleDeleteFeature = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this feature?")) return
+    
+    const success = await removeFeature(id)
+    if (success) {
+      toast({
+        title: "Success",
+        description: "Feature deleted successfully",
+      })
+      refetchFeatures()
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to delete feature",
         variant: "destructive",
       })
     }
@@ -103,112 +185,145 @@ export default function PackagesManagementPage() {
         <main className="flex-1 overflow-auto">
           <div className="p-6 md:p-8 space-y-8">
             {/* Header */}
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-foreground">
-                  Packages Management
-                </h1>
-                <p className="mt-2 text-muted-foreground">
-                  Manage subscription packages, features, and pricing
-                </p>
-              </div>
-              <Button onClick={() => setShowCreateDialog(true)}>
-                <Plus className="h-4 w-4 mr-2" />
-                Create Package
-              </Button>
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">
+                Packages Management
+              </h1>
+              <p className="mt-2 text-muted-foreground">
+                Manage subscription packages, features, and pricing
+              </p>
             </div>
 
             {/* Stats */}
             <PackageStats />
 
-            {/* Filters */}
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <Filter className="h-4 w-4 text-muted-foreground" />
-                <span className="text-sm font-medium text-foreground">Filters:</span>
-              </div>
-              <Select value={filterStatus} onValueChange={setFilterStatus}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Packages</SelectItem>
-                  <SelectItem value="active">Active Only</SelectItem>
-                  <SelectItem value="inactive">Inactive Only</SelectItem>
-                </SelectContent>
-              </Select>
+            {/* Tabs */}
+            <Tabs defaultValue="packages" className="space-y-6">
+              <TabsList>
+                <TabsTrigger value="packages">Packages</TabsTrigger>
+                <TabsTrigger value="features">Features</TabsTrigger>
+              </TabsList>
 
-              <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="name">Sort by Name</SelectItem>
-                  <SelectItem value="price">Sort by Price</SelectItem>
-                  <SelectItem value="subscribers">Sort by Subscribers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Loading State */}
-            {isLoading && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[1, 2, 3, 4, 5, 6].map((i) => (
-                  <Skeleton key={i} className="h-64 w-full" />
-                ))}
-              </div>
-            )}
-
-            {/* Packages Grid */}
-            {!isLoading && filteredAndSortedPackages.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredAndSortedPackages.map((pkg) => (
-                  <PackageCard
-                    key={pkg.id}
-                    id={pkg.id.toString()}
-                    name={pkg.name}
-                    description={pkg.description || ""}
-                    slug={pkg.slug}
-                    basePrice={pkg.basePrice}
-                    currency={pkg.baseCurrencySymbol}
-                    durationDays={pkg.durationDays}
-                    maxMindmaps={pkg.maxMindmaps}
-                    maxCollaborators={pkg.maxCollaborators}
-                    maxStorageMb={pkg.maxStorageMb}
-                    isActive={pkg.isActive}
-                    subscriberCount={pkg.subscriberCount}
-                    onEdit={() => console.log("Edit", pkg.id)}
-                    onDelete={() => handleDeletePackage(pkg.id)}
-                  />
-                ))}
-              </div>
-            )}
-
-            {/* Empty State */}
-            {!isLoading && filteredAndSortedPackages.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground">No packages found</p>
-                {filterStatus !== "all" && (
-                  <Button
-                    variant="outline"
-                    className="mt-4"
-                    onClick={() => setFilterStatus("all")}
-                  >
-                    Clear Filters
+              {/* Packages Tab */}
+              <TabsContent value="packages" className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-xl font-semibold">All Packages</h2>
+                  <Button onClick={() => setShowCreateDialog(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create Package
                   </Button>
+                </div>
+
+                {/* Filters */}
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Filters:</span>
+                  </div>
+                  <Select value={filterStatus} onValueChange={setFilterStatus}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Packages</SelectItem>
+                      <SelectItem value="active">Active Only</SelectItem>
+                      <SelectItem value="inactive">Inactive Only</SelectItem>
+                    </SelectContent>
+                  </Select>
+
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="name">Sort by Name</SelectItem>
+                      <SelectItem value="price">Sort by Price</SelectItem>
+                      <SelectItem value="subscribers">Sort by Subscribers</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Loading State */}
+                {isLoading && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <Skeleton key={i} className="h-64 w-full" />
+                    ))}
+                  </div>
                 )}
-              </div>
-            )}
+
+                {/* Packages Grid */}
+                {!isLoading && filteredAndSortedPackages.length > 0 && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredAndSortedPackages.map((pkg) => (
+                      <PackageCard
+                        key={pkg.id}
+                        id={pkg.id.toString()}
+                        name={pkg.name}
+                        description={pkg.description || ""}
+                        slug={pkg.slug}
+                        basePrice={pkg.basePrice}
+                        currency={pkg.baseCurrencySymbol}
+                        durationDays={pkg.durationDays}
+                        maxMindmaps={pkg.maxMindmaps}
+                        maxCollaborators={pkg.maxCollaborators}
+                        maxStorageMb={pkg.maxStorageMb}
+                        isActive={pkg.isActive}
+                        subscriberCount={pkg.subscriberCount}
+                        onEdit={() => console.log("Edit", pkg.id)}
+                        onDelete={() => handleDeletePackage(pkg.id)}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!isLoading && filteredAndSortedPackages.length === 0 && (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">No packages found</p>
+                    {filterStatus !== "all" && (
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => setFilterStatus("all")}
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+
+              {/* Features Tab */}
+              <TabsContent value="features">
+                <FeaturesList
+                  features={features}
+                  isLoading={featuresLoading}
+                  onEdit={handleEditFeature}
+                  onDelete={handleDeleteFeature}
+                  onCreate={handleCreateFeature}
+                />
+              </TabsContent>
+            </Tabs>
           </div>
         </main>
       </div>
 
-      {/* Create/Edit Dialog */}
+      {/* Create/Edit Package Dialog */}
       <PackageFormDialog
         open={showCreateDialog}
         onOpenChange={setShowCreateDialog}
         onSubmit={handleCreatePackage}
         mode="create"
+      />
+
+      {/* Create/Edit Feature Dialog */}
+      <FeatureFormDialog
+        open={showFeatureDialog}
+        onOpenChange={setShowFeatureDialog}
+        onSubmit={handleFeatureSubmit}
+        initialData={editingFeature}
+        mode={editingFeature ? "edit" : "create"}
       />
     </div>
   )
