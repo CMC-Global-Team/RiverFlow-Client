@@ -33,6 +33,15 @@ export interface SignInResponse {
   role: string;
 }
 
+// ForgotPassword API Types
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface MessageResponse {
+  message: string;
+}
+
 // API Error Response
 export interface ApiErrorResponse {
   message: string;
