@@ -100,22 +100,22 @@ export default function PackageStats() {
         icon={Users}
         label="Active Subscribers"
         value={stats.activeSubscribers.toLocaleString()}
-        change={`+${stats.growthPercentage}%`}
-        changeType="increase"
+        change={stats.growthPercentage > 0 ? `+${stats.growthPercentage.toFixed(1)}%` : undefined}
+        changeType={stats.growthPercentage > 0 ? "increase" : "decrease"}
         iconColor="text-green-500"
         iconBgColor="bg-green-100 dark:bg-green-950"
       />
       <StatItem
         icon={DollarSign}
         label="MRR"
-        value={`$${stats.monthlyRecurringRevenue.toLocaleString()}`}
+        value={`$${stats.monthlyRecurringRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
         iconColor="text-purple-500"
         iconBgColor="bg-purple-100 dark:bg-purple-950"
       />
       <StatItem
         icon={TrendingUp}
         label="Conversion Rate"
-        value={`${stats.conversionRate}%`}
+        value={`${stats.conversionRate.toFixed(1)}%`}
         iconColor="text-orange-500"
         iconBgColor="bg-orange-100 dark:bg-orange-950"
       />
