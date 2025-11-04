@@ -71,7 +71,20 @@ export default function PackageFormDialog({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    
+    // Convert features array to object/map for server
+    const featuresObject = formData.features.reduce((acc, featureKey) => {
+      acc[featureKey] = true
+      return acc
+    }, {} as Record<string, boolean>)
+    
+    // Send data with features as object
+    const submitData = {
+      ...formData,
+      features: featuresObject,
+    }
+    
+    onSubmit(submitData)
   }
 
   // Auto-generate slug from name
