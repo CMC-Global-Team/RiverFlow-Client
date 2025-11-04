@@ -16,6 +16,23 @@ export interface RegisterResponse {
   message: string;
 }
 
+// SignIn API Types
+export interface SignInRequest {
+  email: string;
+  password: string;
+}
+
+export interface SignInResponse {
+  accessToken: string;
+  refreshToken: string;
+  tokenType: string;
+  expiresIn: number; // in seconds
+  userId: number;
+  email: string;
+  fullName: string;
+  role: string;
+}
+
 // API Error Response
 export interface ApiErrorResponse {
   message: string;

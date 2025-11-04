@@ -2,8 +2,11 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Mail, Lock, Github, Chrome } from "lucide-react"
+import { useSignIn } from "@/hooks/auth/useSignIn"
+import { useToast } from "@/hooks/use-toast"
+import { useRouter } from "next/navigation"
 
 interface LoginFormProps {
   onForgotClick: () => void
@@ -12,14 +15,55 @@ interface LoginFormProps {
 export default function LoginForm({ onForgotClick }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
+  
+  const { signIn, isLoading, error, data } = useSignIn()
+  const { toast } = useToast()
+  const router = useRouter()
+
+  // Hiển thị thông báo khi có lỗi
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Đăng nhập thất bại",
+        description: error.message,
+      })
+    }
+  }, [error, toast])
+
+  // Hiển thị thông báo và chuyển trang khi đăng nhập thành công
+  useEffect(() => {
+    if (data) {
+      toast({
+        title: "Đăng nhập thành công!",
+        description: `Chào mừng trở lại, ${data.fullName}!`,
+      })
+      
+      // Chuyển hướng đến dashboard sau 1 giây
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 1000)
+    }
+  }, [data, toast, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
-    setIsLoading(false)
+
+    // Validation cơ bản
+    if (!email || !password) {
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Vui lòng nhập đầy đủ email và mật khẩu!",
+      })
+      return
+    }
+
+    // Gọi API đăng nhập
+    await signIn({
+      email,
+      password,
+    })
   }
 
   return (
