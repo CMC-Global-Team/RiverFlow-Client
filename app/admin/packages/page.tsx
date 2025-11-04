@@ -33,9 +33,10 @@ import {
 } from "@/components/ui/select"
 
 export default function PackagesManagementPage() {
-  const [showCreateDialog, setShowCreateDialog] = useState(false)
+  const [showPackageDialog, setShowPackageDialog] = useState(false)
   const [showFeatureDialog, setShowFeatureDialog] = useState(false)
   const [showCurrencyDialog, setShowCurrencyDialog] = useState(false)
+  const [editingPackage, setEditingPackage] = useState<any | undefined>()
   const [editingFeature, setEditingFeature] = useState<FeatureResponse | undefined>()
   const [editingCurrency, setEditingCurrency] = useState<CurrencyResponse | undefined>()
   const [filterStatus, setFilterStatus] = useState<string>("all")
@@ -43,7 +44,7 @@ export default function PackagesManagementPage() {
   
   const { toast } = useToast()
   const { packages, isLoading, refetch } = usePackages()
-  const { create, remove, isLoading: isMutating } = usePackageMutations()
+  const { create, update, remove, isLoading: isMutating } = usePackageMutations()
   
   // Features hooks
   const { features, isLoading: featuresLoading, refetch: refetchFeatures } = useFeatures()
@@ -61,21 +62,73 @@ export default function PackagesManagementPage() {
     remove: removeCurrency,
   } = useCurrencyMutations()
 
-  const handleCreatePackage = async (data: PackageRequest) => {
-    const result = await create(data)
-    if (result) {
-      toast({
-        title: "Success",
-        description: "Package created successfully",
-      })
-      setShowCreateDialog(false)
-      refetch()
+  const handleCreatePackage = () => {
+    setEditingPackage(undefined)
+    setShowPackageDialog(true)
+  }
+
+  const handleEditPackage = (pkg: any) => {
+    // Convert PackageResponse to form data format
+    const formData = {
+      name: pkg.name,
+      description: pkg.description,
+      slug: pkg.slug,
+      basePrice: pkg.basePrice,
+      baseCurrencyCode: pkg.baseCurrencyCode,
+      durationDays: pkg.durationDays,
+      maxMindmaps: pkg.maxMindmaps,
+      maxCollaborators: pkg.maxCollaborators,
+      maxStorageMb: pkg.maxStorageMb,
+      features: pkg.features ? Object.keys(pkg.features).filter(key => pkg.features[key]) : [],
+      prices: pkg.prices?.map((p: any) => ({
+        currencyCode: p.currencyCode,
+        price: p.price,
+        promotionalPrice: p.promotionalPrice,
+        promotionStartDate: p.promotionStartDate,
+        promotionEndDate: p.promotionEndDate,
+      })) || [],
+      isActive: pkg.isActive,
+      displayOrder: pkg.displayOrder,
+    }
+    setEditingPackage({ id: pkg.id, ...formData })
+    setShowPackageDialog(true)
+  }
+
+  const handlePackageSubmit = async (data: PackageRequest) => {
+    if (editingPackage) {
+      // Update package
+      const result = await update(editingPackage.id, data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Package updated successfully",
+        })
+        setShowPackageDialog(false)
+        refetch()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to update package",
+          variant: "destructive",
+        })
+      }
     } else {
-      toast({
-        title: "Error",
-        description: "Failed to create package",
-        variant: "destructive",
-      })
+      // Create package
+      const result = await create(data)
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Package created successfully",
+        })
+        setShowPackageDialog(false)
+        refetch()
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to create package",
+          variant: "destructive",
+        })
+      }
     }
   }
 
@@ -290,7 +343,7 @@ export default function PackagesManagementPage() {
               <TabsContent value="packages" className="space-y-6">
                 <div className="flex items-center justify-between">
                   <h2 className="text-xl font-semibold">All Packages</h2>
-                  <Button onClick={() => setShowCreateDialog(true)}>
+                  <Button onClick={handleCreatePackage}>
                     <Plus className="h-4 w-4 mr-2" />
                     Create Package
                   </Button>
@@ -352,7 +405,7 @@ export default function PackagesManagementPage() {
                         maxStorageMb={pkg.maxStorageMb}
                         isActive={pkg.isActive}
                         subscriberCount={pkg.subscriberCount}
-                        onEdit={() => console.log("Edit", pkg.id)}
+                        onEdit={() => handleEditPackage(pkg)}
                         onDelete={() => handleDeletePackage(pkg.id)}
                       />
                     ))}
@@ -404,10 +457,11 @@ export default function PackagesManagementPage() {
 
       {/* Create/Edit Package Dialog */}
       <PackageFormDialog
-        open={showCreateDialog}
-        onOpenChange={setShowCreateDialog}
-        onSubmit={handleCreatePackage}
-        mode="create"
+        open={showPackageDialog}
+        onOpenChange={setShowPackageDialog}
+        onSubmit={handlePackageSubmit}
+        initialData={editingPackage}
+        mode={editingPackage ? "edit" : "create"}
       />
 
       {/* Create/Edit Feature Dialog */}
