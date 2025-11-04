@@ -2,6 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card"
 import { Package, TrendingUp, DollarSign, Users } from "lucide-react"
+import { usePackageStats } from "@/hooks/admin/usePackageStats"
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface StatItemProps {
   icon: any
@@ -50,23 +52,55 @@ function StatItem({
   )
 }
 
+function StatSkeleton() {
+  return (
+    <Card>
+      <CardContent className="p-6">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-8 w-16" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <Skeleton className="h-12 w-12 rounded-full" />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
 export default function PackageStats() {
+  const { stats, isLoading } = usePackageStats()
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatSkeleton />
+        <StatSkeleton />
+        <StatSkeleton />
+        <StatSkeleton />
+      </div>
+    )
+  }
+
+  if (!stats) {
+    return null
+  }
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <StatItem
         icon={Package}
         label="Total Packages"
-        value={12}
-        change="+2 this month"
-        changeType="increase"
+        value={stats.totalPackages}
         iconColor="text-blue-500"
         iconBgColor="bg-blue-100 dark:bg-blue-950"
       />
       <StatItem
         icon={Users}
         label="Active Subscribers"
-        value="2,543"
-        change="+12.5%"
+        value={stats.activeSubscribers.toLocaleString()}
+        change={`+${stats.growthPercentage}%`}
         changeType="increase"
         iconColor="text-green-500"
         iconBgColor="bg-green-100 dark:bg-green-950"
@@ -74,18 +108,14 @@ export default function PackageStats() {
       <StatItem
         icon={DollarSign}
         label="MRR"
-        value="$45,231"
-        change="+8.2%"
-        changeType="increase"
+        value={`$${stats.monthlyRecurringRevenue.toLocaleString()}`}
         iconColor="text-purple-500"
         iconBgColor="bg-purple-100 dark:bg-purple-950"
       />
       <StatItem
         icon={TrendingUp}
         label="Conversion Rate"
-        value="23.5%"
-        change="-2.4%"
-        changeType="decrease"
+        value={`${stats.conversionRate}%`}
         iconColor="text-orange-500"
         iconBgColor="bg-orange-100 dark:bg-orange-950"
       />

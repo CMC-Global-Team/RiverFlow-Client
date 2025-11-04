@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo } from "react"
 import AdminSidebar from "@/components/admin/admin-sidebar"
 import AdminHeader from "@/components/admin/admin-header"
 import PackageStats from "@/components/admin/packages/package-stats"
@@ -8,6 +8,11 @@ import PackageCard from "@/components/admin/packages/package-card"
 import PackageFormDialog from "@/components/admin/packages/package-form-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Filter } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
+import { usePackages } from "@/hooks/admin/usePackages"
+import { usePackageMutations } from "@/hooks/admin/usePackageMutations"
+import { useToast } from "@/hooks/use-toast"
+import type { PackageRequest } from "@/types/package.types"
 import {
   Select,
   SelectContent,
@@ -16,83 +21,77 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-// Mock data based on database schema
-const mockPackages = [
-  {
-    id: "1",
-    name: "Free",
-    description: "Perfect for getting started",
-    slug: "free",
-    basePrice: 0,
-    currency: "$",
-    durationDays: 365,
-    maxMindmaps: 3,
-    maxCollaborators: 2,
-    maxStorageMb: 50,
-    isActive: true,
-    subscriberCount: 1543,
-  },
-  {
-    id: "2",
-    name: "Pro",
-    description: "For professionals and small teams",
-    slug: "pro",
-    basePrice: 9.99,
-    currency: "$",
-    durationDays: 30,
-    maxMindmaps: 50,
-    maxCollaborators: 10,
-    maxStorageMb: 500,
-    isActive: true,
-    subscriberCount: 892,
-  },
-  {
-    id: "3",
-    name: "Enterprise",
-    description: "For large organizations",
-    slug: "enterprise",
-    basePrice: 49.99,
-    currency: "$",
-    durationDays: 30,
-    maxMindmaps: 0,
-    maxCollaborators: 0,
-    maxStorageMb: 0,
-    isActive: true,
-    subscriberCount: 108,
-  },
-  {
-    id: "4",
-    name: "Starter",
-    description: "Limited time offer for new users",
-    slug: "starter",
-    basePrice: 4.99,
-    currency: "$",
-    durationDays: 30,
-    maxMindmaps: 10,
-    maxCollaborators: 3,
-    maxStorageMb: 200,
-    isActive: false,
-    subscriberCount: 45,
-  },
-]
-
 export default function PackagesManagementPage() {
   const [showCreateDialog, setShowCreateDialog] = useState(false)
   const [filterStatus, setFilterStatus] = useState<string>("all")
   const [sortBy, setSortBy] = useState<string>("name")
+  
+  const { toast } = useToast()
+  const { packages, isLoading, refetch } = usePackages()
+  const { create, remove, isLoading: isMutating } = usePackageMutations()
 
-  const handleCreatePackage = (data: any) => {
-    console.log("Creating package:", data)
-    setShowCreateDialog(false)
-    // TODO: Implement API call
+  const handleCreatePackage = async (data: PackageRequest) => {
+    const result = await create(data)
+    if (result) {
+      toast({
+        title: "Success",
+        description: "Package created successfully",
+      })
+      setShowCreateDialog(false)
+      refetch()
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to create package",
+        variant: "destructive",
+      })
+    }
   }
 
-  const filteredPackages = mockPackages.filter((pkg) => {
-    if (filterStatus === "all") return true
-    if (filterStatus === "active") return pkg.isActive
-    if (filterStatus === "inactive") return !pkg.isActive
-    return true
-  })
+  const handleDeletePackage = async (id: number) => {
+    if (!confirm("Are you sure you want to delete this package?")) return
+    
+    const success = await remove(id)
+    if (success) {
+      toast({
+        title: "Success",
+        description: "Package deleted successfully",
+      })
+      refetch()
+    } else {
+      toast({
+        title: "Error",
+        description: "Failed to delete package",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const filteredAndSortedPackages = useMemo(() => {
+    let filtered = packages
+
+    // Filter by status
+    if (filterStatus === "active") {
+      filtered = filtered.filter((pkg) => pkg.isActive)
+    } else if (filterStatus === "inactive") {
+      filtered = filtered.filter((pkg) => !pkg.isActive)
+    }
+
+    // Sort
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "price":
+          return a.basePrice - b.basePrice
+        case "subscribers":
+          return b.subscriberCount - a.subscriberCount
+        case "name":
+        default:
+          return a.name.localeCompare(b.name)
+      }
+    })
+
+    return sorted
+  }, [packages, filterStatus, sortBy])
 
   return (
     <div className="flex h-screen bg-background">
@@ -151,29 +150,53 @@ export default function PackagesManagementPage() {
               </Select>
             </div>
 
+            {/* Loading State */}
+            {isLoading && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Skeleton key={i} className="h-64 w-full" />
+                ))}
+              </div>
+            )}
+
             {/* Packages Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredPackages.map((pkg) => (
-                <PackageCard
-                  key={pkg.id}
-                  {...pkg}
-                  onEdit={() => console.log("Edit", pkg.id)}
-                  onDelete={() => console.log("Delete", pkg.id)}
-                />
-              ))}
-            </div>
+            {!isLoading && filteredAndSortedPackages.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredAndSortedPackages.map((pkg) => (
+                  <PackageCard
+                    key={pkg.id}
+                    id={pkg.id.toString()}
+                    name={pkg.name}
+                    description={pkg.description || ""}
+                    slug={pkg.slug}
+                    basePrice={pkg.basePrice}
+                    currency={pkg.baseCurrencySymbol}
+                    durationDays={pkg.durationDays}
+                    maxMindmaps={pkg.maxMindmaps}
+                    maxCollaborators={pkg.maxCollaborators}
+                    maxStorageMb={pkg.maxStorageMb}
+                    isActive={pkg.isActive}
+                    subscriberCount={pkg.subscriberCount}
+                    onEdit={() => console.log("Edit", pkg.id)}
+                    onDelete={() => handleDeletePackage(pkg.id)}
+                  />
+                ))}
+              </div>
+            )}
 
             {/* Empty State */}
-            {filteredPackages.length === 0 && (
+            {!isLoading && filteredAndSortedPackages.length === 0 && (
               <div className="text-center py-12">
                 <p className="text-muted-foreground">No packages found</p>
-                <Button
-                  variant="outline"
-                  className="mt-4"
-                  onClick={() => setFilterStatus("all")}
-                >
-                  Clear Filters
-                </Button>
+                {filterStatus !== "all" && (
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => setFilterStatus("all")}
+                  >
+                    Clear Filters
+                  </Button>
+                )}
               </div>
             )}
           </div>

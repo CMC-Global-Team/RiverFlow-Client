@@ -3,93 +3,13 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-
-interface Feature {
-  key: string
-  name: string
-  description: string
-  category: string
-}
+import { Skeleton } from "@/components/ui/skeleton"
+import { useFeatures } from "@/hooks/admin/useFeatures"
 
 interface FeatureManagerProps {
   selectedFeatures: string[]
   onFeatureToggle: (featureKey: string, checked: boolean) => void
 }
-
-const features: Feature[] = [
-  {
-    key: "real_time_collaboration",
-    name: "Real-time Collaboration",
-    description: "Edit mindmaps together in real-time",
-    category: "collaboration",
-  },
-  {
-    key: "unlimited_mindmaps",
-    name: "Unlimited Mindmaps",
-    description: "Create unlimited number of mindmaps",
-    category: "storage",
-  },
-  {
-    key: "unlimited_collaborators",
-    name: "Unlimited Collaborators",
-    description: "Invite unlimited collaborators",
-    category: "collaboration",
-  },
-  {
-    key: "export_pdf",
-    name: "Export to PDF",
-    description: "Export mindmaps as PDF files",
-    category: "export",
-  },
-  {
-    key: "export_png",
-    name: "Export to PNG",
-    description: "Export mindmaps as PNG images",
-    category: "export",
-  },
-  {
-    key: "export_json",
-    name: "Export to JSON",
-    description: "Export mindmaps as JSON data",
-    category: "export",
-  },
-  {
-    key: "custom_templates",
-    name: "Custom Templates",
-    description: "Create and use custom templates",
-    category: "advanced",
-  },
-  {
-    key: "version_history",
-    name: "Version History",
-    description: "Access full version history",
-    category: "advanced",
-  },
-  {
-    key: "ai_suggestions",
-    name: "AI Suggestions",
-    description: "Get AI-powered mindmap suggestions",
-    category: "advanced",
-  },
-  {
-    key: "priority_support",
-    name: "Priority Support",
-    description: "24/7 priority customer support",
-    category: "support",
-  },
-  {
-    key: "custom_branding",
-    name: "Custom Branding",
-    description: "Remove branding and add your own",
-    category: "advanced",
-  },
-  {
-    key: "api_access",
-    name: "API Access",
-    description: "Access to REST API",
-    category: "developer",
-  },
-]
 
 const categoryColors: Record<string, string> = {
   collaboration: "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
@@ -104,14 +24,39 @@ export default function FeatureManager({
   selectedFeatures = [],
   onFeatureToggle,
 }: FeatureManagerProps) {
+  const { features, isLoading } = useFeatures()
+
   // Group features by category
   const groupedFeatures = features.reduce((acc, feature) => {
     if (!acc[feature.category]) {
       acc[feature.category] = []
     }
-    acc[feature.category].push(feature)
+    acc[feature.category].push({
+      key: feature.featureKey,
+      name: feature.featureName,
+      description: feature.description || "",
+      category: feature.category,
+    })
     return acc
-  }, {} as Record<string, Feature[]>)
+  }, {} as Record<string, Array<{ key: string; name: string; description: string; category: string }>>)
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Package Features</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-20 w-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    )
+  }
 
   return (
     <Card>

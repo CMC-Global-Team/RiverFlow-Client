@@ -4,17 +4,10 @@ import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Switch } from "@/components/ui/switch"
-import { Calendar } from "lucide-react"
-
-interface Currency {
-  id: number
-  code: string
-  symbol: string
-  name: string
-}
+import { Skeleton } from "@/components/ui/skeleton"
+import { useCurrencies } from "@/hooks/admin/useCurrencies"
 
 interface Price {
   currencyCode: string
@@ -29,15 +22,8 @@ interface PriceManagerProps {
   onPriceChange: (prices: Price[]) => void
 }
 
-const currencies: Currency[] = [
-  { id: 1, code: "USD", symbol: "$", name: "US Dollar" },
-  { id: 2, code: "EUR", symbol: "€", name: "Euro" },
-  { id: 3, code: "GBP", symbol: "£", name: "British Pound" },
-  { id: 5, code: "VND", symbol: "₫", name: "Vietnamese Dong" },
-  { id: 6, code: "SGD", symbol: "S$", name: "Singapore Dollar" },
-]
-
 export default function PriceManager({ prices = [], onPriceChange }: PriceManagerProps) {
+  const { currencies, isLoading } = useCurrencies()
   const [showPromotion, setShowPromotion] = useState<Record<string, boolean>>({})
 
   const updatePrice = (currencyCode: string, field: string, value: any) => {
@@ -66,6 +52,23 @@ export default function PriceManager({ prices = [], onPriceChange }: PriceManage
         currencyCode,
         price: 0,
       }
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Multi-Currency Pricing</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="space-y-2">
+              <Skeleton className="h-16 w-full" />
+            </div>
+          ))}
+        </CardContent>
+      </Card>
     )
   }
 
