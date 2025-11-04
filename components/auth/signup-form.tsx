@@ -24,7 +24,7 @@ export default function SignupForm() {
     setIsLoading(true);
 
     const payload = {
-      name,
+      fullName: name,
       email,
       password,
     };
