@@ -23,9 +23,12 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
   // Hiển thị thông báo khi có lỗi
   useEffect(() => {
     if (error) {
+      // Kiểm tra nếu là lỗi email chưa xác thực (status 403)
+      const isUnverifiedEmail = error.status === 403
+      
       toast({
         variant: "destructive",
-        title: "Đăng nhập thất bại",
+        title: isUnverifiedEmail ? "Email chưa được xác thực" : "Đăng nhập thất bại",
         description: error.message,
       })
     }
