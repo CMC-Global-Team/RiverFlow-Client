@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { ArrowRight, Sparkles } from "lucide-react"
+import { ArrowRight, Sparkles, Plus } from "lucide-react"
 import gsap from "gsap"
 
 interface HeroSectionProps {
@@ -87,9 +87,10 @@ export default function HeroSection({ onGetStarted }: HeroSectionProps) {
             </button>
             <button 
               onClick={() => router.push("/demo")}
-              className="px-8 py-3 rounded-lg border border-border text-foreground font-semibold hover:bg-muted transition-all"
+              className="px-8 py-3 rounded-lg bg-white text-foreground font-semibold hover:bg-gray-50 transition-all flex items-center gap-2 group shadow-md hover:shadow-lg"
             >
-              Watch Demo
+              <Plus className="h-5 w-5 group-hover:rotate-90 transition-transform duration-200" />
+              Create New Mindmap
             </button>
           </div>
 
