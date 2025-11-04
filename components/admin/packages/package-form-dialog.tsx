@@ -21,6 +21,8 @@ interface PackageFormData {
   name: string
   description: string
   slug: string
+  basePrice: number
+  baseCurrencyCode: string
   durationDays: number
   maxMindmaps: number
   maxCollaborators: number
@@ -28,6 +30,7 @@ interface PackageFormData {
   features: string[]
   prices: any[]
   isActive: boolean
+  displayOrder: number
 }
 
 interface PackageFormDialogProps {
@@ -49,6 +52,8 @@ export default function PackageFormDialog({
     name: initialData?.name || "",
     description: initialData?.description || "",
     slug: initialData?.slug || "",
+    basePrice: initialData?.basePrice || 0,
+    baseCurrencyCode: initialData?.baseCurrencyCode || "USD",
     durationDays: initialData?.durationDays || 30,
     maxMindmaps: initialData?.maxMindmaps || 10,
     maxCollaborators: initialData?.maxCollaborators || 5,
@@ -56,6 +61,7 @@ export default function PackageFormDialog({
     features: initialData?.features || [],
     prices: initialData?.prices || [],
     isActive: initialData?.isActive ?? true,
+    displayOrder: initialData?.displayOrder || 0,
   })
 
   const updateField = (field: string, value: any) => {
@@ -157,6 +163,21 @@ export default function PackageFormDialog({
 
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
+                  <Label htmlFor="basePrice">Base Price (USD) *</Label>
+                  <Input
+                    id="basePrice"
+                    type="number"
+                    step="0.01"
+                    value={formData.basePrice}
+                    onChange={(e) =>
+                      updateField("basePrice", parseFloat(e.target.value))
+                    }
+                    min="0"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="duration">Duration (days) *</Label>
                   <Input
                     id="duration"
@@ -167,6 +188,21 @@ export default function PackageFormDialog({
                     }
                     min="1"
                     required
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="displayOrder">Display Order</Label>
+                  <Input
+                    id="displayOrder"
+                    type="number"
+                    value={formData.displayOrder}
+                    onChange={(e) =>
+                      updateField("displayOrder", parseInt(e.target.value))
+                    }
+                    min="0"
                   />
                 </div>
 
