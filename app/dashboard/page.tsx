@@ -11,6 +11,7 @@ import gsap from "gsap"
 import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
+import TemplateModal from "@/components/dashboard/template-modal"
 
 function DashboardContent() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -18,8 +19,9 @@ function DashboardContent() {
   const { user } = useAuth()
   const router = useRouter()
   const { mindmaps, loading, error, refetch } = useMindmaps()
-  const { remove, toggleFavorite, archive } = useMindmapActions()
+  const { create, remove, toggleFavorite, archive } = useMindmapActions()
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showTemplateModal, setShowTemplateModal] = useState(false)
 
   useEffect(() => {
     if (!containerRef.current || loading) return
@@ -68,8 +70,21 @@ function DashboardContent() {
   }
 
   const handleCreateNew = () => {
-    // TODO: Navigate to editor with new mindmap
-    router.push('/editor')
+    setShowTemplateModal(true)
+  }
+
+  const handleSelectTemplate = async (template: any) => {
+    // Create mindmap with selected template
+    const newMindmap = await create({
+      title: "Untitled Mindmap",
+      nodes: template.initialNodes,
+      edges: template.initialEdges,
+    })
+
+    if (newMindmap) {
+      // Navigate to editor with the new mindmap ID
+      router.push(`/editor?id=${newMindmap.id}`)
+    }
   }
 
   return (
@@ -166,6 +181,13 @@ function DashboardContent() {
           </div>
         </main>
       </div>
+
+      {/* Template Selection Modal */}
+      <TemplateModal
+        isOpen={showTemplateModal}
+        onClose={() => setShowTemplateModal(false)}
+        onSelectTemplate={handleSelectTemplate}
+      />
     </div>
   )
 }
