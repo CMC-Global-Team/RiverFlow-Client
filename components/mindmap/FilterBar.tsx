@@ -1,6 +1,7 @@
 "use client"
 
-import { Filter } from "lucide-react"
+import { Filter, ChevronDown, Star } from "lucide-react"
+import { useState } from "react"
 
 interface FilterBarProps {
   selectedCategory: string
@@ -34,6 +35,59 @@ const sortOptions = [
   { value: "nodeCount", label: "Node Count" },
 ]
 
+function CustomSelect({ 
+  value, 
+  onChange, 
+  options, 
+  placeholder 
+}: { 
+  value: string; 
+  onChange: (value: string) => void; 
+  options: { value: string; label: string }[]; 
+  placeholder?: string 
+}) {
+  const [isOpen, setIsOpen] = useState(false)
+  const selectedOption = options.find(opt => opt.value === value)
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted transition-all text-sm min-w-[140px] justify-between"
+      >
+        <span className="text-foreground">{selectedOption?.label || placeholder}</span>
+        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+      
+      {isOpen && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
+          <div className="absolute top-full left-0 mt-2 w-full bg-card border border-border rounded-lg shadow-lg z-20 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+            {options.map((option) => (
+              <button
+                key={option.value}
+                onClick={() => {
+                  onChange(option.value)
+                  setIsOpen(false)
+                }}
+                className={`
+                  w-full px-4 py-2.5 text-left text-sm transition-colors
+                  ${value === option.value 
+                    ? 'bg-primary/10 text-primary font-medium' 
+                    : 'text-foreground hover:bg-muted'
+                  }
+                `}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 export default function FilterBar({
   selectedCategory,
   onCategoryChange,
@@ -45,65 +99,55 @@ export default function FilterBar({
   onSortChange,
 }: FilterBarProps) {
   return (
-    <div className="flex flex-wrap items-center gap-4 p-4 bg-card rounded-lg border border-border">
+    <div className="flex flex-wrap items-center gap-4 p-4 bg-card rounded-lg border border-border shadow-sm">
       <div className="flex items-center gap-2">
-        <Filter className="h-5 w-5 text-muted-foreground" />
+        <Filter className="h-5 w-5 text-primary" />
         <span className="text-sm font-medium text-foreground">Filters:</span>
       </div>
 
       {/* Category Filter */}
-      <select
+      <CustomSelect
         value={selectedCategory}
-        onChange={(e) => onCategoryChange(e.target.value)}
-        className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-      >
-        {categories.map((cat) => (
-          <option key={cat.value} value={cat.value}>
-            {cat.label}
-          </option>
-        ))}
-      </select>
+        onChange={onCategoryChange}
+        options={categories}
+        placeholder="Category"
+      />
 
       {/* Status Filter */}
-      <select
+      <CustomSelect
         value={selectedStatus}
-        onChange={(e) => onStatusChange(e.target.value)}
-        className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-      >
-        {statuses.map((status) => (
-          <option key={status.value} value={status.value}>
-            {status.label}
-          </option>
-        ))}
-      </select>
+        onChange={onStatusChange}
+        options={statuses}
+        placeholder="Status"
+      />
 
       {/* Favorites Toggle */}
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input
-          type="checkbox"
-          checked={showFavoritesOnly}
-          onChange={onFavoritesToggle}
-          className="rounded border-border text-primary focus:ring-primary"
-        />
-        <span className="text-sm text-foreground">Favorites Only</span>
-      </label>
+      <button
+        onClick={onFavoritesToggle}
+        className={`
+          flex items-center gap-2 px-3 py-2 rounded-lg border transition-all
+          ${showFavoritesOnly 
+            ? 'border-yellow-500 bg-yellow-500/10 text-yellow-600' 
+            : 'border-border bg-background hover:bg-muted'
+          }
+        `}
+      >
+        <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-yellow-500' : ''}`} />
+        <span className="text-sm font-medium">Favorites</span>
+      </button>
 
       {/* Sort By */}
       <div className="ml-auto flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Sort by:</span>
-        <select
+        <span className="text-sm text-muted-foreground">Sort:</span>
+        <CustomSelect
           value={sortBy}
-          onChange={(e) => onSortChange(e.target.value)}
-          className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
+          onChange={onSortChange}
+          options={sortOptions}
+          placeholder="Sort by"
+        />
       </div>
     </div>
   )
 }
+
 

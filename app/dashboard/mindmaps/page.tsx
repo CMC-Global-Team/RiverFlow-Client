@@ -11,25 +11,26 @@ import ViewToggle from "@/components/mindmap/ViewToggle"
 import MindmapGrid from "@/components/mindmap/MindmapGrid"
 import MindmapList from "@/components/mindmap/MindmapList"
 import EmptyState from "@/components/mindmap/EmptyState"
-import TabBar from "@/components/mindmap/TabBar"
 import TemplateModal from "@/components/dashboard/template-modal"
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog"
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal"
-import { useAllMindmaps } from "@/hooks/mindmap/useAllMindmaps"
+import { useMindmapsByStatus } from "@/hooks/mindmap/useMindmapsByStatus"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { Plus, Loader2, AlertCircle } from "lucide-react"
 import { MindmapSummary } from "@/types/mindmap.types"
 
 function MyMindmapsContent() {
   const router = useRouter()
-  const { mindmaps, loading, error, refetch } = useAllMindmaps()
+  const [selectedStatus, setSelectedStatus] = useState<"active" | "archived">("active")
+  
+  // Fetch mindmaps based on status
+  const { mindmaps, loading, error, refetch } = useMindmapsByStatus(selectedStatus)
   const { create, update, remove, toggleFavorite, archive } = useMindmapActions()
 
   // UI State
   const [view, setView] = useState<"grid" | "list">("grid")
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
-  const [selectedStatus, setSelectedStatus] = useState("active")
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [sortBy, setSortBy] = useState("updatedAt")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -57,9 +58,6 @@ function MyMindmapsContent() {
       result = result.filter((m) => m.category === selectedCategory)
     }
 
-    // Filter by status
-    result = result.filter((m) => m.status === selectedStatus)
-
     // Filter by favorites
     if (showFavoritesOnly) {
       result = result.filter((m) => m.isFavorite)
@@ -82,7 +80,7 @@ function MyMindmapsContent() {
     })
 
     return result
-  }, [mindmaps, searchQuery, selectedCategory, selectedStatus, showFavoritesOnly, sortBy])
+  }, [mindmaps, searchQuery, selectedCategory, showFavoritesOnly, sortBy])
 
   // Action Handlers
   const handleCreateNew = () => {
@@ -174,7 +172,10 @@ function MyMindmapsContent() {
                 <div>
                   <h1 className="text-3xl font-bold text-foreground">My Mindmaps</h1>
                   <p className="mt-2 text-muted-foreground">
-                    {filteredAndSortedMindmaps.length} of {mindmaps.length} mindmap{mindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} mindmap{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length !== mindmaps.length && 
+                      ` (${mindmaps.length} total)`
+                    }
                   </p>
                 </div>
                 <button
@@ -186,75 +187,22 @@ function MyMindmapsContent() {
                 </button>
               </div>
 
-              {/* Tab Bar */}
-              <div className="mb-4">
-                <TabBar
-                  tabs={[
-                    {
-                      id: "active",
-                      label: "Active",
-                      count: mindmaps.filter((m) => m.status === "active").length,
-                    },
-                    {
-                      id: "archived",
-                      label: "Archived",
-                      count: mindmaps.filter((m) => m.status === "archived").length,
-                    },
-                  ]}
-                  activeTab={selectedStatus}
-                  onTabChange={setSelectedStatus}
-                />
-              </div>
-
               {/* Search Bar */}
               <div className="mb-4">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
               </div>
 
-              {/* Filter Bar (hide status filter as we have tabs) */}
-              <div className="mb-4">
-                <div className="flex flex-wrap items-center gap-4 p-4 bg-card rounded-lg border border-border">
-                  {/* Category Filter */}
-                  <select
-                    value={selectedCategory}
-                    onChange={(e) => setSelectedCategory(e.target.value)}
-                    className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  >
-                    <option value="all">All Categories</option>
-                    <option value="work">Work</option>
-                    <option value="personal">Personal</option>
-                    <option value="education">Education</option>
-                    <option value="project">Project</option>
-                    <option value="brainstorming">Brainstorming</option>
-                  </select>
-
-                  {/* Favorites Toggle */}
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={showFavoritesOnly}
-                      onChange={() => setShowFavoritesOnly(!showFavoritesOnly)}
-                      className="rounded border-border text-primary focus:ring-primary"
-                    />
-                    <span className="text-sm text-foreground">Favorites Only</span>
-                  </label>
-
-                  {/* Sort By */}
-                  <div className="ml-auto flex items-center gap-2">
-                    <span className="text-sm text-muted-foreground">Sort by:</span>
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="px-3 py-2 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    >
-                      <option value="updatedAt">Last Modified</option>
-                      <option value="createdAt">Date Created</option>
-                      <option value="title">Title</option>
-                      <option value="nodeCount">Node Count</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
+              {/* Filter Bar */}
+              <FilterBar
+                selectedCategory={selectedCategory}
+                onCategoryChange={setSelectedCategory}
+                selectedStatus={selectedStatus}
+                onStatusChange={setSelectedStatus}
+                showFavoritesOnly={showFavoritesOnly}
+                onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
+                sortBy={sortBy}
+                onSortChange={setSortBy}
+              />
             </div>
 
             {/* View Toggle */}
