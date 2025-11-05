@@ -1,92 +1,126 @@
 "use client"
 
-import { useRef, useEffect } from "react"
+import { useCallback, useMemo, useEffect } from 'react'
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  MarkerType,
+} from 'reactflow'
+import 'reactflow/dist/style.css'
+import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
+import {
+  RectangleNode,
+  CircleNode,
+  DiamondNode,
+  HexagonNode,
+  EllipseNode,
+  RoundedRectangleNode,
+} from './node-shapes'
 
 export default function Canvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    setSelectedNode,
+    setSelectedEdge,
+    selectedNode,
+    selectedEdge,
+    deleteNode,
+    deleteEdge,
+  } = useMindmapContext()
 
+  const nodeTypes = useMemo(
+    () => ({
+      rectangle: RectangleNode,
+      circle: CircleNode,
+      diamond: DiamondNode,
+      hexagon: HexagonNode,
+      ellipse: EllipseNode,
+      roundedRectangle: RoundedRectangleNode,
+    }),
+    []
+  )
+
+  const defaultEdgeOptions = {
+    animated: true,
+    type: "smoothstep",
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+  }
+
+  const onNodeClick = useCallback(
+    (_event: any, node: any) => {
+      setSelectedNode(node)
+      setSelectedEdge(null)
+    },
+    [setSelectedNode, setSelectedEdge]
+  )
+
+  const onEdgeClick = useCallback(
+    (_event: any, edge: any) => {
+      setSelectedEdge(edge)
+      setSelectedNode(null)
+    },
+    [setSelectedEdge, setSelectedNode]
+  )
+
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null)
+    setSelectedEdge(null)
+  }, [setSelectedNode, setSelectedEdge])
+
+  // Keyboard shortcuts
   useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
-
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    // Set canvas size
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
-
-    // Draw grid
-    const gridSize = 20
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)"
-    ctx.lineWidth = 1
-
-    for (let x = 0; x < canvas.width; x += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
-      ctx.stroke()
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Delete key or Backspace
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        // Prevent default browser back navigation on Backspace
+        if (event.key === 'Backspace') {
+          event.preventDefault()
+        }
+        
+        if (selectedNode) {
+          deleteNode(selectedNode.id)
+        } else if (selectedEdge) {
+          deleteEdge(selectedEdge.id)
+        }
+      }
     }
 
-    for (let y = 0; y < canvas.height; y += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
-
-    // Draw sample mindmap structure
-    ctx.fillStyle = "rgba(59, 130, 246, 0.1)"
-    ctx.strokeStyle = "rgb(59, 130, 246)"
-    ctx.lineWidth = 2
-
-    // Center node
-    const centerX = canvas.width / 2
-    const centerY = canvas.height / 2
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, 40, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle = "rgb(15, 23, 42)"
-    ctx.font = "bold 14px sans-serif"
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    ctx.fillText("Central Idea", centerX, centerY)
-
-    // Branch nodes
-    const branches = [
-      { x: centerX - 150, y: centerY - 100 },
-      { x: centerX + 150, y: centerY - 100 },
-      { x: centerX - 150, y: centerY + 100 },
-      { x: centerX + 150, y: centerY + 100 },
-    ]
-
-    branches.forEach((branch) => {
-      // Draw line
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.3)"
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(centerX, centerY)
-      ctx.lineTo(branch.x, branch.y)
-      ctx.stroke()
-
-      // Draw node
-      ctx.fillStyle = "rgba(59, 130, 246, 0.05)"
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.5)"
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.arc(branch.x, branch.y, 30, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-
-      ctx.fillStyle = "rgb(15, 23, 42)"
-      ctx.font = "12px sans-serif"
-      ctx.fillText("Branch", branch.x, branch.y)
-    })
-  }, [])
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNode, selectedEdge, deleteNode, deleteEdge])
 
   return (
-    <canvas ref={canvasRef} className="w-full h-full bg-background cursor-crosshair rounded-lg border border-border" />
+    <div className="w-full h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
+        onPaneClick={onPaneClick}
+        nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
+        fitView
+        className="bg-muted/20"
+      >
+        <Background color="#aaa" gap={16} />
+        <Controls />
+        <MiniMap
+          nodeColor={(node) => {
+            return node.data.color || "#3b82f6"
+          }}
+          className="bg-background border"
+        />
+      </ReactFlow>
+    </div>
   )
 }
