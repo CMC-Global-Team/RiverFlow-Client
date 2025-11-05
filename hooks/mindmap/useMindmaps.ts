@@ -22,7 +22,10 @@ export const useMindmaps = () => {
       const data = await getAllMindmaps();
       setMindmaps(data);
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to fetch mindmaps');
+      const errorMessage = err.response?.status === 403 
+        ? 'Authentication failed (403). Please log in again.'
+        : err.response?.data?.message || 'Failed to fetch mindmaps';
+      setError(errorMessage);
       console.error('Error fetching mindmaps:', err);
     } finally {
       setLoading(false);
