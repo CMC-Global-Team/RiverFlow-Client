@@ -11,7 +11,7 @@ import {
  * Service for Mindmap API operations
  */
 
-const MINDMAP_API_BASE = '/mindmaps';
+const MINDMAP_API_BASE = '/api/mindmaps';
 
 /**
  * Create a new mindmap
