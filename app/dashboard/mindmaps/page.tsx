@@ -30,7 +30,6 @@ function MyMindmapsContent() {
   // UI State
   const [view, setView] = useState<"grid" | "list">("grid")
   const [searchQuery, setSearchQuery] = useState("")
-  const [selectedCategory, setSelectedCategory] = useState("all")
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
   const [sortBy, setSortBy] = useState("updatedAt")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
@@ -51,11 +50,6 @@ function MyMindmapsContent() {
           m.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
           m.description?.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    }
-
-    // Filter by category
-    if (selectedCategory !== "all") {
-      result = result.filter((m) => m.category === selectedCategory)
     }
 
     // Filter by favorites
@@ -80,7 +74,7 @@ function MyMindmapsContent() {
     })
 
     return result
-  }, [mindmaps, searchQuery, selectedCategory, showFavoritesOnly, sortBy])
+  }, [mindmaps, searchQuery, showFavoritesOnly, sortBy])
 
   // Action Handlers
   const handleCreateNew = () => {
@@ -194,8 +188,6 @@ function MyMindmapsContent() {
 
               {/* Filter Bar */}
               <FilterBar
-                selectedCategory={selectedCategory}
-                onCategoryChange={setSelectedCategory}
                 selectedStatus={selectedStatus}
                 onStatusChange={setSelectedStatus}
                 showFavoritesOnly={showFavoritesOnly}
@@ -246,17 +238,21 @@ function MyMindmapsContent() {
             {!loading && !error && filteredAndSortedMindmaps.length === 0 && (
               <EmptyState
                 title={
-                  searchQuery || selectedCategory !== "all" || showFavoritesOnly
+                  searchQuery || showFavoritesOnly
                     ? "No mindmaps match your filters"
+                    : selectedStatus === "archived"
+                    ? "No archived mindmaps"
                     : "No mindmaps yet"
                 }
                 description={
-                  searchQuery || selectedCategory !== "all" || showFavoritesOnly
+                  searchQuery || showFavoritesOnly
                     ? "Try adjusting your filters or search query"
+                    : selectedStatus === "archived"
+                    ? "Mindmaps you archive will appear here"
                     : "Create your first mindmap to get started"
                 }
                 actionLabel="Create Mindmap"
-                onAction={handleCreateNew}
+                onAction={selectedStatus === "active" ? handleCreateNew : undefined}
               />
             )}
 

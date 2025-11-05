@@ -4,8 +4,6 @@ import { Filter, ChevronDown, Star } from "lucide-react"
 import { useState } from "react"
 
 interface FilterBarProps {
-  selectedCategory: string
-  onCategoryChange: (category: string) => void
   selectedStatus: string
   onStatusChange: (status: string) => void
   showFavoritesOnly: boolean
@@ -13,15 +11,6 @@ interface FilterBarProps {
   sortBy: string
   onSortChange: (sort: string) => void
 }
-
-const categories = [
-  { value: "all", label: "All Categories" },
-  { value: "work", label: "Work" },
-  { value: "personal", label: "Personal" },
-  { value: "education", label: "Education" },
-  { value: "project", label: "Project" },
-  { value: "brainstorming", label: "Brainstorming" },
-]
 
 const statuses = [
   { value: "active", label: "Active" },
@@ -89,8 +78,6 @@ function CustomSelect({
 }
 
 export default function FilterBar({
-  selectedCategory,
-  onCategoryChange,
   selectedStatus,
   onStatusChange,
   showFavoritesOnly,
@@ -104,14 +91,6 @@ export default function FilterBar({
         <Filter className="h-5 w-5 text-primary" />
         <span className="text-sm font-medium text-foreground">Filters:</span>
       </div>
-
-      {/* Category Filter */}
-      <CustomSelect
-        value={selectedCategory}
-        onChange={onCategoryChange}
-        options={categories}
-        placeholder="Category"
-      />
 
       {/* Status Filter */}
       <CustomSelect
