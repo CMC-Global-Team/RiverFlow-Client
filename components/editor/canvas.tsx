@@ -1,92 +1,72 @@
 "use client"
 
-import { useRef, useEffect } from "react"
+import { useCallback } from 'react'
+import ReactFlow, {
+  Background,
+  Controls,
+  MiniMap,
+  BackgroundVariant,
+  NodeTypes,
+} from 'reactflow'
+import 'reactflow/dist/style.css'
+import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
+
+// Custom node component
+function CustomNode({ data }: any) {
+  return (
+    <div className="px-4 py-2 shadow-lg rounded-lg bg-card border-2 border-primary">
+      <div className="text-sm font-semibold text-foreground">{data.label}</div>
+    </div>
+  )
+}
+
+const nodeTypes: NodeTypes = {
+  custom: CustomNode,
+}
 
 export default function Canvas() {
-  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const {
+    nodes,
+    edges,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    setSelectedNode,
+  } = useMindmapContext()
 
-  useEffect(() => {
-    const canvas = canvasRef.current
-    if (!canvas) return
+  const onNodeClick = useCallback(
+    (_event: any, node: any) => {
+      setSelectedNode(node)
+    },
+    [setSelectedNode]
+  )
 
-    const ctx = canvas.getContext("2d")
-    if (!ctx) return
-
-    // Set canvas size
-    canvas.width = canvas.offsetWidth
-    canvas.height = canvas.offsetHeight
-
-    // Draw grid
-    const gridSize = 20
-    ctx.strokeStyle = "rgba(0, 0, 0, 0.05)"
-    ctx.lineWidth = 1
-
-    for (let x = 0; x < canvas.width; x += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x, canvas.height)
-      ctx.stroke()
-    }
-
-    for (let y = 0; y < canvas.height; y += gridSize) {
-      ctx.beginPath()
-      ctx.moveTo(0, y)
-      ctx.lineTo(canvas.width, y)
-      ctx.stroke()
-    }
-
-    // Draw sample mindmap structure
-    ctx.fillStyle = "rgba(59, 130, 246, 0.1)"
-    ctx.strokeStyle = "rgb(59, 130, 246)"
-    ctx.lineWidth = 2
-
-    // Center node
-    const centerX = canvas.width / 2
-    const centerY = canvas.height / 2
-    ctx.beginPath()
-    ctx.arc(centerX, centerY, 40, 0, Math.PI * 2)
-    ctx.fill()
-    ctx.stroke()
-
-    ctx.fillStyle = "rgb(15, 23, 42)"
-    ctx.font = "bold 14px sans-serif"
-    ctx.textAlign = "center"
-    ctx.textBaseline = "middle"
-    ctx.fillText("Central Idea", centerX, centerY)
-
-    // Branch nodes
-    const branches = [
-      { x: centerX - 150, y: centerY - 100 },
-      { x: centerX + 150, y: centerY - 100 },
-      { x: centerX - 150, y: centerY + 100 },
-      { x: centerX + 150, y: centerY + 100 },
-    ]
-
-    branches.forEach((branch) => {
-      // Draw line
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.3)"
-      ctx.lineWidth = 2
-      ctx.beginPath()
-      ctx.moveTo(centerX, centerY)
-      ctx.lineTo(branch.x, branch.y)
-      ctx.stroke()
-
-      // Draw node
-      ctx.fillStyle = "rgba(59, 130, 246, 0.05)"
-      ctx.strokeStyle = "rgba(59, 130, 246, 0.5)"
-      ctx.lineWidth = 1.5
-      ctx.beginPath()
-      ctx.arc(branch.x, branch.y, 30, 0, Math.PI * 2)
-      ctx.fill()
-      ctx.stroke()
-
-      ctx.fillStyle = "rgb(15, 23, 42)"
-      ctx.font = "12px sans-serif"
-      ctx.fillText("Branch", branch.x, branch.y)
-    })
-  }, [])
+  const onPaneClick = useCallback(() => {
+    setSelectedNode(null)
+  }, [setSelectedNode])
 
   return (
-    <canvas ref={canvasRef} className="w-full h-full bg-background cursor-crosshair rounded-lg border border-border" />
+    <div className="w-full h-full">
+      <ReactFlow
+        nodes={nodes}
+        edges={edges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onConnect={onConnect}
+        onNodeClick={onNodeClick}
+        onPaneClick={onPaneClick}
+        nodeTypes={nodeTypes}
+        fitView
+        attributionPosition="bottom-left"
+      >
+        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        <Controls />
+        <MiniMap 
+          nodeStrokeWidth={3}
+          zoomable
+          pannable
+        />
+      </ReactFlow>
+    </div>
   )
 }
