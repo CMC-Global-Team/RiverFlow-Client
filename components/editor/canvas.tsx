@@ -1,28 +1,22 @@
 "use client"
 
-import { useCallback } from 'react'
+import { useCallback, useMemo } from 'react'
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
-  BackgroundVariant,
-  NodeTypes,
+  MarkerType,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
-
-// Custom node component
-function CustomNode({ data }: any) {
-  return (
-    <div className="px-4 py-2 shadow-lg rounded-lg bg-card border-2 border-primary">
-      <div className="text-sm font-semibold text-foreground">{data.label}</div>
-    </div>
-  )
-}
-
-const nodeTypes: NodeTypes = {
-  custom: CustomNode,
-}
+import {
+  RectangleNode,
+  CircleNode,
+  DiamondNode,
+  HexagonNode,
+  EllipseNode,
+  RoundedRectangleNode,
+} from './node-shapes'
 
 export default function Canvas() {
   const {
@@ -32,18 +26,49 @@ export default function Canvas() {
     onEdgesChange,
     onConnect,
     setSelectedNode,
+    setSelectedEdge,
   } = useMindmapContext()
+
+  const nodeTypes = useMemo(
+    () => ({
+      rectangle: RectangleNode,
+      circle: CircleNode,
+      diamond: DiamondNode,
+      hexagon: HexagonNode,
+      ellipse: EllipseNode,
+      roundedRectangle: RoundedRectangleNode,
+    }),
+    []
+  )
+
+  const defaultEdgeOptions = {
+    animated: true,
+    type: "smoothstep",
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+    },
+  }
 
   const onNodeClick = useCallback(
     (_event: any, node: any) => {
       setSelectedNode(node)
+      setSelectedEdge(null)
     },
-    [setSelectedNode]
+    [setSelectedNode, setSelectedEdge]
+  )
+
+  const onEdgeClick = useCallback(
+    (_event: any, edge: any) => {
+      setSelectedEdge(edge)
+      setSelectedNode(null)
+    },
+    [setSelectedEdge, setSelectedNode]
   )
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null)
-  }, [setSelectedNode])
+    setSelectedEdge(null)
+  }, [setSelectedNode, setSelectedEdge])
 
   return (
     <div className="w-full h-full">
@@ -54,17 +79,20 @@ export default function Canvas() {
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
         onNodeClick={onNodeClick}
+        onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
+        defaultEdgeOptions={defaultEdgeOptions}
         fitView
-        attributionPosition="bottom-left"
+        className="bg-muted/20"
       >
-        <Background variant={BackgroundVariant.Dots} gap={16} size={1} />
+        <Background color="#aaa" gap={16} />
         <Controls />
-        <MiniMap 
-          nodeStrokeWidth={3}
-          zoomable
-          pannable
+        <MiniMap
+          nodeColor={(node) => {
+            return node.data.color || "#3b82f6"
+          }}
+          className="bg-background border"
         />
       </ReactFlow>
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { ChevronDown, Users, Loader2, Check } from "lucide-react"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
@@ -123,9 +124,11 @@ function EditorInner() {
 
 function EditorContent() {
   return (
-    <MindmapProvider>
-      <EditorInner />
-    </MindmapProvider>
+    <ReactFlowProvider>
+      <MindmapProvider>
+        <EditorInner />
+      </MindmapProvider>
+    </ReactFlowProvider>
   )
 }
 

@@ -1,77 +1,180 @@
 "use client"
 
 import {
-  Type,
-  Circle,
-  Square,
+  Plus,
   Trash2,
-  Copy,
-  Undo2,
-  Redo2,
-  Download,
-  Share2,
-  Settings,
   ZoomIn,
   ZoomOut,
+  Maximize2,
+  Download,
+  Upload,
+  Circle,
+  Square,
+  Diamond,
+  Hexagon,
 } from "lucide-react"
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { useReactFlow } from "reactflow"
+import { toast } from "sonner"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Button } from "@/components/ui/button"
 
 export default function Toolbar() {
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges } = useMindmapContext()
+  const reactFlowInstance = useReactFlow()
+
+  const handleAddNode = (shape: string) => {
+    addNode(
+      {
+        x: Math.random() * 500,
+        y: Math.random() * 500,
+      },
+      shape
+    )
+    toast.success(`${shape} node added`)
+  }
+
+  const handleDeleteSelected = () => {
+    if (selectedNode) {
+      deleteNode(selectedNode.id)
+      toast.success("Node deleted")
+    } else if (selectedEdge) {
+      deleteEdge(selectedEdge.id)
+      toast.success("Connection deleted")
+    } else {
+      toast.error("Please select a node or connection first")
+    }
+  }
+
+  const handleZoomIn = () => {
+    reactFlowInstance.zoomIn()
+  }
+
+  const handleZoomOut = () => {
+    reactFlowInstance.zoomOut()
+  }
+
+  const handleFitView = () => {
+    reactFlowInstance.fitView()
+  }
+
+  const handleDownload = () => {
+    const mindmapData = {
+      nodes,
+      edges,
+    }
+    const dataStr = JSON.stringify(mindmapData, null, 2)
+    const dataBlob = new Blob([dataStr], { type: "application/json" })
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement("a")
+    link.href = url
+    link.download = "mindmap.json"
+    link.click()
+    URL.revokeObjectURL(url)
+    toast.success("Mindmap downloaded")
+  }
+
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
-      {/* Text Tools */}
+      {/* Add Node Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Add Text">
-          <Type className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-      </div>
-
-      {/* Shape Tools */}
-      <div className="flex items-center gap-1 border-r border-border pr-3">
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Add Circle">
-          <Circle className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Add Rectangle">
-          <Square className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Add Node"
+              className="hover:bg-primary/10 hover:text-primary"
+            >
+              <Plus className="h-5 w-5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => handleAddNode("rectangle")}>
+              <Square className="h-4 w-4 mr-2" />
+              Rectangle
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddNode("circle")}>
+              <Circle className="h-4 w-4 mr-2" />
+              Circle
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddNode("ellipse")}>
+              <Circle className="h-4 w-4 mr-2" />
+              Ellipse
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddNode("diamond")}>
+              <Diamond className="h-4 w-4 mr-2" />
+              Diamond
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddNode("hexagon")}>
+              <Hexagon className="h-4 w-4 mr-2" />
+              Hexagon
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")}>
+              <Square className="h-4 w-4 mr-2" />
+              Rounded Rectangle
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Edit Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Undo">
-          <Undo2 className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Redo">
-          <Redo2 className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Copy">
-          <Copy className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Delete">
-          <Trash2 className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDeleteSelected}
+          title="Delete Selected"
+          className="hover:bg-destructive/10 hover:text-destructive"
+        >
+          <Trash2 className="h-5 w-5" />
+        </Button>
       </div>
 
       {/* Zoom Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Zoom In">
-          <ZoomIn className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Zoom Out">
-          <ZoomOut className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomIn}
+          title="Zoom In"
+        >
+          <ZoomIn className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomOut}
+          title="Zoom Out"
+        >
+          <ZoomOut className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleFitView}
+          title="Fit View"
+        >
+          <Maximize2 className="h-5 w-5" />
+        </Button>
       </div>
 
-      {/* Export & Share */}
+      {/* Export */}
       <div className="flex items-center gap-1 ml-auto">
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Download">
-          <Download className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Share">
-          <Share2 className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
-        <button className="rounded-lg p-2 hover:bg-muted transition-colors" title="Settings">
-          <Settings className="h-5 w-5 text-muted-foreground hover:text-foreground" />
-        </button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDownload}
+          title="Download Mindmap"
+          className="hover:bg-primary/10 hover:text-primary"
+        >
+          <Download className="h-5 w-5" />
+        </Button>
       </div>
     </div>
   )
