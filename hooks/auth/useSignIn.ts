@@ -2,7 +2,10 @@
  * Custom hook để quản lý logic đăng nhập
  */
 
+"use client";
+
 import { useState } from "react";
+import { useAuth } from "./useAuth";
 import { signInUser } from "@/services/auth/signin.service";
 import type { SignInRequest, SignInResponse, ApiErrorResponse } from "@/types/auth.types";
 
@@ -22,6 +25,7 @@ export const useSignIn = (): UseSignInResult => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<ApiErrorResponse | null>(null);
   const [data, setData] = useState<SignInResponse | null>(null);
+  const { login } = useAuth();
 
   const signIn = async (signInData: SignInRequest): Promise<SignInResponse | null> => {
     setIsLoading(true);
@@ -32,17 +36,8 @@ export const useSignIn = (): UseSignInResult => {
       const response = await signInUser(signInData);
       setData(response);
       
-      // Lưu token vào localStorage
-      if (response.accessToken) {
-        localStorage.setItem("accessToken", response.accessToken);
-        localStorage.setItem("refreshToken", response.refreshToken);
-        localStorage.setItem("user", JSON.stringify({
-          userId: response.userId,
-          email: response.email,
-          fullName: response.fullName,
-          role: response.role,
-        }));
-      }
+      // Sử dụng AuthContext để lưu trạng thái đăng nhập
+      login(response);
       
       return response;
     } catch (err) {

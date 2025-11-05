@@ -2,7 +2,9 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LogOut, User } from "lucide-react"
+import { useAuth } from "@/hooks/auth/useAuth"
+import { useLogout } from "@/hooks/auth/useLogout"
 
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
@@ -10,6 +12,8 @@ interface HeaderProps {
 
 export default function Header({ onAuthClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { isAuthenticated, user } = useAuth()
+  const { logout, isLoading: isLoggingOut } = useLogout()
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
@@ -49,20 +53,42 @@ export default function Header({ onAuthClick }: HeaderProps) {
             </Link>
           </nav>
 
-          {/* Auth Buttons */}
+          {/* Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center gap-3">
-            <button
-              onClick={() => onAuthClick("login")}
-              className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-            >
-              Login
-            </button>
-            <button
-              onClick={() => onAuthClick("signup")}
-              className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
-            >
-              Get Started
-            </button>
+            {isAuthenticated ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="text-sm font-medium">{user?.fullName}</span>
+                </Link>
+                <button
+                  onClick={() => logout()}
+                  disabled={isLoggingOut}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {isLoggingOut ? "Logging out..." : "Logout"}
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => onAuthClick("login")}
+                  className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                >
+                  Login
+                </button>
+                <button
+                  onClick={() => onAuthClick("signup")}
+                  className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
+                >
+                  Get Started
+                </button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -98,25 +124,50 @@ export default function Header({ onAuthClick }: HeaderProps) {
             <Link href="#" className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
               Docs
             </Link>
-            <div className="flex gap-2 px-4 pt-2">
-              <button
-                onClick={() => {
-                  onAuthClick("login")
-                  setMobileMenuOpen(false)
-                }}
-                className="flex-1 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => {
-                  onAuthClick("signup")
-                  setMobileMenuOpen(false)
-                }}
-                className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
-              >
-                Get Started
-              </button>
+            <div className="px-4 pt-2 space-y-2">
+              {isAuthenticated ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <User className="h-4 w-4" />
+                    {user?.fullName}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      logout()
+                      setMobileMenuOpen(false)
+                    }}
+                    disabled={isLoggingOut}
+                    className="w-full px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                  >
+                    {isLoggingOut ? "Logging out..." : "Logout"}
+                  </button>
+                </>
+              ) : (
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      onAuthClick("login")
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  >
+                    Login
+                  </button>
+                  <button
+                    onClick={() => {
+                      onAuthClick("signup")
+                      setMobileMenuOpen(false)
+                    }}
+                    className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
+                  >
+                    Get Started
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
