@@ -10,9 +10,18 @@ interface MindmapCardProps {
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onArchive?: (id: string) => void
+  onEdit?: (id: string) => void
+  onClick?: (id: string) => void
 }
 
-export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArchive }: MindmapCardProps) {
+export default function MindmapCard({ 
+  mindmap, 
+  onDelete, 
+  onToggleFavorite, 
+  onArchive, 
+  onEdit,
+  onClick 
+}: MindmapCardProps) {
   const [showMenu, setShowMenu] = useState(false)
   
   const formatDate = (dateString: string) => {
@@ -24,7 +33,10 @@ export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArc
   }
 
   return (
-    <div className="group rounded-xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all">
+    <div 
+      className="group rounded-xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
+      onClick={() => onClick?.(mindmap.id)}
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -57,7 +69,10 @@ export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArc
         </div>
         <div className="relative">
           <button
-            onClick={() => setShowMenu(!showMenu)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setShowMenu(!showMenu)
+            }}
             className="rounded-lg p-2 hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
           >
             <MoreVertical className="h-5 w-5" />
@@ -66,22 +81,27 @@ export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArc
             <>
               <div
                 className="fixed inset-0 z-10"
-                onClick={() => setShowMenu(false)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setShowMenu(false)
+                }}
               />
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-lg border border-border bg-card shadow-lg z-20">
+              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-card shadow-lg z-20">
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors rounded-t-lg"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowMenu(false)
-                    // TODO: Navigate to editor
+                    onEdit?.(mindmap.id)
                   }}
                 >
                   <Edit className="h-4 w-4" />
-                  Edit
+                  Edit Name & Description
                 </button>
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowMenu(false)
                     onToggleFavorite?.(mindmap.id)
                   }}
@@ -91,7 +111,8 @@ export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArc
                 </button>
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowMenu(false)
                     onArchive?.(mindmap.id)
                   }}
@@ -101,7 +122,8 @@ export default function MindmapCard({ mindmap, onDelete, onToggleFavorite, onArc
                 </button>
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation()
                     setShowMenu(false)
                     onDelete?.(mindmap.id)
                   }}

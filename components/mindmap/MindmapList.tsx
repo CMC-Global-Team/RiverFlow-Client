@@ -1,6 +1,6 @@
 "use client"
 
-import { Star, Share2, Archive, Trash2, Calendar, Network } from "lucide-react"
+import { Star, Share2, Archive, Trash2, Calendar, Network, Edit } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { MindmapSummary } from "@/types/mindmap.types"
 
@@ -9,6 +9,8 @@ interface MindmapListProps {
   onDelete: (id: string) => void
   onToggleFavorite: (id: string) => void
   onArchive: (id: string) => void
+  onEdit: (id: string) => void
+  onClick: (id: string) => void
   actionLoading: string | null
 }
 
@@ -17,6 +19,8 @@ export default function MindmapList({
   onDelete,
   onToggleFavorite,
   onArchive,
+  onEdit,
+  onClick,
   actionLoading,
 }: MindmapListProps) {
   const formatDate = (dateString: string) => {
@@ -32,9 +36,10 @@ export default function MindmapList({
       {mindmaps.map((mindmap) => (
         <div
           key={mindmap.id}
+          onClick={() => onClick(mindmap.id)}
           className={`
             group flex items-center gap-4 p-4 rounded-lg border border-border bg-card
-            hover:border-primary/50 hover:shadow-md transition-all
+            hover:border-primary/50 hover:shadow-md transition-all cursor-pointer
             ${actionLoading === mindmap.id ? "opacity-50 pointer-events-none" : ""}
           `}
         >
@@ -79,21 +84,40 @@ export default function MindmapList({
           {/* Actions */}
           <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button
-              onClick={() => onToggleFavorite(mindmap.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onEdit(mindmap.id)
+              }}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              title="Edit name & description"
+            >
+              <Edit className="h-4 w-4" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onToggleFavorite(mindmap.id)
+              }}
               className="p-2 rounded-lg hover:bg-muted transition-colors"
               title={mindmap.isFavorite ? "Remove from favorites" : "Add to favorites"}
             >
               <Star className={`h-4 w-4 ${mindmap.isFavorite ? "fill-yellow-500 text-yellow-500" : ""}`} />
             </button>
             <button
-              onClick={() => onArchive(mindmap.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onArchive(mindmap.id)
+              }}
               className="p-2 rounded-lg hover:bg-muted transition-colors"
               title="Archive"
             >
               <Archive className="h-4 w-4" />
             </button>
             <button
-              onClick={() => onDelete(mindmap.id)}
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(mindmap.id)
+              }}
               className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
               title="Delete"
             >

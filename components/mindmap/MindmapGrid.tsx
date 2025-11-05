@@ -10,6 +10,8 @@ interface MindmapGridProps {
   onDelete: (id: string) => void
   onToggleFavorite: (id: string) => void
   onArchive: (id: string) => void
+  onEdit: (id: string) => void
+  onClick: (id: string) => void
   actionLoading: string | null
 }
 
@@ -18,6 +20,8 @@ export default function MindmapGrid({
   onDelete,
   onToggleFavorite,
   onArchive,
+  onEdit,
+  onClick,
   actionLoading,
 }: MindmapGridProps) {
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
@@ -53,6 +57,8 @@ export default function MindmapGrid({
             onDelete={onDelete}
             onToggleFavorite={onToggleFavorite}
             onArchive={onArchive}
+            onEdit={onEdit}
+            onClick={onClick}
           />
         </div>
       ))}
