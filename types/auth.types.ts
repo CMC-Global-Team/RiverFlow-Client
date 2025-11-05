@@ -38,6 +38,13 @@ export interface ForgotPasswordRequest {
   email: string;
 }
 
+// ResetPassword API Types
+export interface ResetPasswordRequest {
+  token: string;
+  newPassword: string;
+  confirmPassword: string;
+}
+
 export interface MessageResponse {
   message: string;
 }
