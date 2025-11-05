@@ -1,66 +1,28 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { useAuth } from "@/hooks/auth/useAuth"
 import Sidebar from "@/components/dashboard/sidebar"
 import DashboardHeader from "@/components/dashboard/dashboard-header"
 import MindmapCard from "@/components/dashboard/mindmap-card"
-import { Plus } from "lucide-react"
+import { Plus, Loader2, AlertCircle } from "lucide-react"
 import gsap from "gsap"
-
-const recentMindmaps = [
-  {
-    id: "1",
-    title: "Project Planning",
-    description: "Q1 2025 project roadmap and milestones",
-    lastModified: "2 hours ago",
-    collaborators: 3,
-  },
-  {
-    id: "2",
-    title: "Learning Path",
-    description: "Web development learning resources",
-    lastModified: "1 day ago",
-    collaborators: 1,
-  },
-  {
-    id: "3",
-    title: "Business Strategy",
-    description: "2025 business goals and strategies",
-    lastModified: "3 days ago",
-    collaborators: 5,
-  },
-  {
-    id: "4",
-    title: "Product Features",
-    description: "Feature brainstorming for new product",
-    lastModified: "1 week ago",
-    collaborators: 4,
-  },
-  {
-    id: "5",
-    title: "Team Structure",
-    description: "Organization and team hierarchy",
-    lastModified: "2 weeks ago",
-    collaborators: 2,
-  },
-  {
-    id: "6",
-    title: "Content Calendar",
-    description: "Social media content planning",
-    lastModified: "3 weeks ago",
-    collaborators: 3,
-  },
-]
+import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
+import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
+import { useRouter } from "next/navigation"
 
 function DashboardContent() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
   const { user } = useAuth()
+  const router = useRouter()
+  const { mindmaps, loading, error, refetch } = useMindmaps()
+  const { remove, toggleFavorite, archive } = useMindmapActions()
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!containerRef.current) return
+    if (!containerRef.current || loading) return
 
     const ctx = gsap.context(() => {
       cardsRef.current.forEach((card, index) => {
@@ -76,7 +38,39 @@ function DashboardContent() {
     }, containerRef)
 
     return () => ctx.revert()
-  }, [])
+  }, [loading, mindmaps])
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Are you sure you want to delete this mindmap?')) return
+    
+    setActionLoading(id)
+    const success = await remove(id)
+    if (success) {
+      await refetch()
+    }
+    setActionLoading(null)
+  }
+
+  const handleToggleFavorite = async (id: string) => {
+    setActionLoading(id)
+    await toggleFavorite(id)
+    await refetch()
+    setActionLoading(null)
+  }
+
+  const handleArchive = async (id: string) => {
+    if (!confirm('Archive this mindmap?')) return
+    
+    setActionLoading(id)
+    await archive(id)
+    await refetch()
+    setActionLoading(null)
+  }
+
+  const handleCreateNew = () => {
+    // TODO: Navigate to editor with new mindmap
+    router.push('/editor')
+  }
 
   return (
     <div className="flex h-screen bg-background">
@@ -97,25 +91,78 @@ function DashboardContent() {
 
             {/* Quick Action */}
             <div className="mb-8">
-              <button className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all">
+              <button 
+                onClick={handleCreateNew}
+                className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
+              >
                 <Plus className="h-5 w-5" />
                 Create New Mindmap
               </button>
             </div>
 
-            {/* Mindmaps Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {recentMindmaps.map((mindmap, index) => (
-                <div
-                  key={mindmap.id}
-                  ref={(el) => {
-                    cardsRef.current[index] = el
-                  }}
-                >
-                  <MindmapCard {...mindmap} />
+            {/* Loading State */}
+            {loading && (
+              <div className="flex items-center justify-center py-12">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                <span className="ml-3 text-muted-foreground">Loading mindmaps...</span>
+              </div>
+            )}
+
+            {/* Error State */}
+            {error && (
+              <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
+                <AlertCircle className="h-5 w-5" />
+                <div>
+                  <p className="font-semibold">Failed to load mindmaps</p>
+                  <p className="text-sm">{error}</p>
                 </div>
-              ))}
-            </div>
+                <button
+                  onClick={refetch}
+                  className="ml-auto px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && !error && mindmaps.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">No mindmaps yet. Create your first one!</p>
+                <button 
+                  onClick={handleCreateNew}
+                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create Your First Mindmap
+                </button>
+              </div>
+            )}
+
+            {/* Mindmaps Grid */}
+            {!loading && !error && mindmaps.length > 0 && (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {mindmaps.map((mindmap, index) => (
+                  <div
+                    key={mindmap.id}
+                    ref={(el) => {
+                      cardsRef.current[index] = el
+                    }}
+                    style={{ 
+                      opacity: actionLoading === mindmap.id ? 0.5 : 1,
+                      pointerEvents: actionLoading === mindmap.id ? 'none' : 'auto'
+                    }}
+                  >
+                    <MindmapCard 
+                      mindmap={mindmap}
+                      onDelete={handleDelete}
+                      onToggleFavorite={handleToggleFavorite}
+                      onArchive={handleArchive}
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </main>
       </div>
