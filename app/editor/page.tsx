@@ -2,11 +2,12 @@
 
 import { useState } from "react"
 import { ChevronDown, Users } from "lucide-react"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import Toolbar from "@/components/editor/toolbar"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 
-export default function EditorPage() {
+function EditorContent() {
   const [mindmapTitle, setMindmapTitle] = useState("Untitled Mindmap")
   const [isEditing, setIsEditing] = useState(false)
 
@@ -63,5 +64,13 @@ export default function EditorPage() {
         <PropertiesPanel />
       </div>
     </div>
+  )
+}
+
+export default function EditorPage() {
+  return (
+    <ProtectedRoute>
+      <EditorContent />
+    </ProtectedRoute>
   )
 }

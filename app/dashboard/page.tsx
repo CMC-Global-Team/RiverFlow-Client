@@ -1,6 +1,8 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
+import { useAuth } from "@/hooks/auth/useAuth"
 import Sidebar from "@/components/dashboard/sidebar"
 import DashboardHeader from "@/components/dashboard/dashboard-header"
 import MindmapCard from "@/components/dashboard/mindmap-card"
@@ -52,9 +54,10 @@ const recentMindmaps = [
   },
 ]
 
-export default function DashboardPage() {
+function DashboardContent() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
+  const { user } = useAuth()
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -86,7 +89,9 @@ export default function DashboardPage() {
           <div className="p-6 md:p-8">
             {/* Welcome Section */}
             <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground">Welcome back, User</h1>
+              <h1 className="text-3xl font-bold text-foreground">
+                Welcome back, {user?.fullName || "User"}
+              </h1>
               <p className="mt-2 text-muted-foreground">Here are your recent mindmaps</p>
             </div>
 
@@ -115,5 +120,13 @@ export default function DashboardPage() {
         </main>
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <ProtectedRoute>
+      <DashboardContent />
+    </ProtectedRoute>
   )
 }
