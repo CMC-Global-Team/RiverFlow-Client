@@ -1,10 +1,12 @@
 "use client"
-
+import "@/i18n/i18n"
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { useLogout } from "@/hooks/auth/useLogout"
+import i18n from "i18next";
+import {useTranslation} from "react-i18next";
 
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
@@ -14,7 +16,9 @@ export default function Header({ onAuthClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAuthenticated, user } = useAuth()
   const { logout, isLoading: isLoggingOut } = useLogout()
-
+  const setLang = (lng: string) => i18n.changeLanguage(lng)
+    const current = i18n.language
+    const { t } = useTranslation()
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -31,29 +35,52 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Features
+                {t("features")}
             </Link>
             <Link
               href="/pricing"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Pricing
+                {t("pricing")}
             </Link>
             <Link
               href="/about"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              About
+                {t("about")}
             </Link>
             <Link
               href="#"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Docs
+                {t("docs")}
             </Link>
           </nav>
 
-          {/* Auth Buttons / User Menu */}
+            {/* Nút đổi ngôn ngữ */}
+            <div className="flex items-center gap-2 mr-2">
+                {["vi", "en"].map((lng) => {
+                    const isActive = current?.startsWith(lng)
+                    return (
+                        <button
+                            key={lng}
+                            onClick={() => setLang(lng)}
+                            aria-pressed={isActive}
+                            className={[
+                                "px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 transform",
+                                isActive
+                                    ? "bg-blue-600 blur-lg shadow-md scale-105"
+                                    : "bg-white border border-gray-300 text-gray-700 hover:cc hover:scale-105"
+                            ].join(" ")}
+                        >
+                            {lng.toUpperCase()}
+                        </button>
+                    )
+                })}
+            </div>
+
+
+            {/* Auth Buttons / User Menu */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
@@ -164,7 +191,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                   >
-                    Get Started
+                      {t("GetStarted")}
                   </button>
                 </div>
               )}
