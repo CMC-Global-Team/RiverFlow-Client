@@ -2,9 +2,11 @@
 
 import { Search, Bell } from "lucide-react"
 import { useState } from "react"
+import { useAuth } from "@/hooks/auth/useAuth"
 
 export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("")
+  const { user } = useAuth()
 
   return (
     <header className="border-b border-border bg-background/80 backdrop-blur-md sticky top-0 z-30">
@@ -31,8 +33,12 @@ export default function DashboardHeader() {
           </button>
 
           <button className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent"></div>
-            <span className="text-sm font-medium text-foreground hidden sm:inline">Profile</span>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+              <span className="text-xs font-bold text-white">
+                {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+              </span>
+            </div>
+            <span className="text-sm font-medium text-foreground hidden sm:inline">{user?.fullName}</span>
           </button>
         </div>
       </div>

@@ -59,14 +59,11 @@ export default function Header({ onAuthClick }: HeaderProps) {
               <>
                 <Link
                   href="/dashboard"
-                  className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
                 >
-                  Dashboard
-                </Link>
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted">
                   <User className="h-4 w-4" />
                   <span className="text-sm font-medium">{user?.fullName}</span>
-                </div>
+                </Link>
                 <button
                   onClick={() => logout()}
                   disabled={isLoggingOut}
@@ -127,14 +124,16 @@ export default function Header({ onAuthClick }: HeaderProps) {
             <Link href="#" className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
               Docs
             </Link>
-            <div className="flex gap-2 px-4 pt-2">
+            <div className="px-4 pt-2 space-y-2">
               {isAuthenticated ? (
                 <>
                   <Link
                     href="/dashboard"
-                    className="flex-1 px-4 py-2 text-center rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
+                    className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all"
+                    onClick={() => setMobileMenuOpen(false)}
                   >
-                    Dashboard
+                    <User className="h-4 w-4" />
+                    {user?.fullName}
                   </Link>
                   <button
                     onClick={() => {
@@ -142,13 +141,13 @@ export default function Header({ onAuthClick }: HeaderProps) {
                       setMobileMenuOpen(false)
                     }}
                     disabled={isLoggingOut}
-                    className="flex-1 px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
+                    className="w-full px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
                   >
                     {isLoggingOut ? "Logging out..." : "Logout"}
                   </button>
                 </>
               ) : (
-                <>
+                <div className="flex gap-2">
                   <button
                     onClick={() => {
                       onAuthClick("login")
@@ -167,7 +166,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                   >
                     Get Started
                   </button>
-                </>
+                </div>
               )}
             </div>
           </div>

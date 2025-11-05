@@ -3,9 +3,11 @@
 import { useState } from "react"
 import Link from "next/link"
 import { LayoutGrid, FileText, Settings, LogOut, Plus, ChevronDown } from "lucide-react"
+import { useLogout } from "@/hooks/auth/useLogout"
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const { logout, isLoading } = useLogout()
 
   return (
     <aside
@@ -60,9 +62,13 @@ export default function Sidebar() {
 
       {/* Logout */}
       <div className="absolute bottom-4 left-4 right-4">
-        <button className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-all">
+        <button 
+          onClick={() => logout()}
+          disabled={isLoading}
+          className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-all disabled:opacity-50"
+        >
           <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span className="text-sm font-medium">Logout</span>}
+          {!isCollapsed && <span className="text-sm font-medium">{isLoading ? "Logging out..." : "Logout"}</span>}
         </button>
       </div>
     </aside>
