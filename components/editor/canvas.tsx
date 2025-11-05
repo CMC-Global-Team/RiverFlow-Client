@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useEffect } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -27,6 +27,10 @@ export default function Canvas() {
     onConnect,
     setSelectedNode,
     setSelectedEdge,
+    selectedNode,
+    selectedEdge,
+    deleteNode,
+    deleteEdge,
   } = useMindmapContext()
 
   const nodeTypes = useMemo(
@@ -69,6 +73,28 @@ export default function Canvas() {
     setSelectedNode(null)
     setSelectedEdge(null)
   }, [setSelectedNode, setSelectedEdge])
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Delete key or Backspace
+      if (event.key === 'Delete' || event.key === 'Backspace') {
+        // Prevent default browser back navigation on Backspace
+        if (event.key === 'Backspace') {
+          event.preventDefault()
+        }
+        
+        if (selectedNode) {
+          deleteNode(selectedNode.id)
+        } else if (selectedEdge) {
+          deleteEdge(selectedEdge.id)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selectedNode, selectedEdge, deleteNode, deleteEdge])
 
   return (
     <div className="w-full h-full">

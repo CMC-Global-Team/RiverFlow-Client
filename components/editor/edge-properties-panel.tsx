@@ -1,14 +1,15 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { toast } from "sonner"
 
 export default function EdgePropertiesPanel() {
-  const { selectedEdge, updateEdgeData, setSelectedEdge } = useMindmapContext()
+  const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
 
   if (!selectedEdge) return null
 
@@ -86,6 +87,13 @@ export default function EdgePropertiesPanel() {
   }
 
   const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#ef4444", "#14b8a6"]
+
+  const handleDeleteConnection = () => {
+    if (confirm('Are you sure you want to delete this connection?')) {
+      deleteEdge(selectedEdge.id)
+      toast.success('Connection deleted')
+    }
+  }
 
   return (
     <div className="w-64 border-l border-border bg-card overflow-y-auto">
@@ -196,6 +204,16 @@ export default function EdgePropertiesPanel() {
           <p>Type: {selectedEdge.type || "default"}</p>
           {selectedEdge.label && <p>Label: {selectedEdge.label}</p>}
         </div>
+
+        {/* Delete Connection Button */}
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={handleDeleteConnection}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete Connection
+        </Button>
       </div>
     </div>
   )

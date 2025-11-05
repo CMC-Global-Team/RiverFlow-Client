@@ -63,7 +63,11 @@ function EditorInner() {
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <div onClick={() => setIsEditing(true)} className="cursor-pointer" onBlur={() => setIsEditing(false)}>
+            <div 
+              onClick={() => setIsEditing(true)} 
+              className="group cursor-pointer flex items-center gap-2" 
+              onBlur={() => setIsEditing(false)}
+            >
               {isEditing ? (
                 <input
                   type="text"
@@ -74,9 +78,14 @@ function EditorInner() {
                   className="text-xl font-bold text-foreground bg-input border border-border rounded px-2 py-1"
                 />
               ) : (
-                <h1 className="text-xl font-bold text-foreground hover:text-primary transition-colors">
-                  {mindmap?.title || "Untitled Mindmap"}
-                </h1>
+                <>
+                  <h1 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                    {mindmap?.title || "Untitled Mindmap"}
+                  </h1>
+                  <span className="text-xs text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity">
+                    (Click to edit)
+                  </span>
+                </>
               )}
             </div>
           </div>
