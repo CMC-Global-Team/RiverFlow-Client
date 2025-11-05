@@ -1,118 +1,48 @@
 "use client"
 
-import { ChevronDown } from "lucide-react"
 import { useState } from "react"
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import NodePropertiesPanel from "./node-properties-panel"
+import EdgePropertiesPanel from "./edge-properties-panel"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 
 export default function PropertiesPanel() {
-  const [expandedSections, setExpandedSections] = useState({
-    fill: true,
-    stroke: true,
-    text: false,
-  })
+  const { selectedNode, selectedEdge } = useMindmapContext()
+  const [isCollapsed, setIsCollapsed] = useState(false)
 
-  const toggleSection = (section: keyof typeof expandedSections) => {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }))
+  // Hide sidebar if nothing is selected
+  const hasSelection = selectedNode || selectedEdge
+
+  if (!hasSelection) {
+    return null // Completely hide when nothing selected
   }
 
   return (
-    <div className="w-64 border-l border-border bg-card overflow-y-auto">
-      <div className="p-4 space-y-4">
-        <h3 className="font-semibold text-foreground">Properties</h3>
+    <div 
+      className={`relative border-l border-border bg-card overflow-y-auto transition-all duration-300 ${
+        isCollapsed ? 'w-0' : 'w-80'
+      }`}
+    >
+      {/* Collapse/Expand Button */}
+      <button
+        onClick={() => setIsCollapsed(!isCollapsed)}
+        className="absolute -left-8 top-4 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-md transition-all"
+        title={isCollapsed ? "Expand properties" : "Collapse properties"}
+      >
+        {isCollapsed ? (
+          <ChevronLeft className="h-3 w-3" />
+        ) : (
+          <ChevronRight className="h-3 w-3" />
+        )}
+      </button>
 
-        {/* Fill Section */}
-        <div className="border border-border rounded-lg">
-          <button
-            onClick={() => toggleSection("fill")}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted transition-colors"
-          >
-            <span className="text-sm font-medium text-foreground">Fill</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${expandedSections.fill ? "" : "-rotate-90"}`} />
-          </button>
-          {expandedSections.fill && (
-            <div className="px-4 py-3 border-t border-border space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Color</label>
-                <div className="mt-2 flex gap-2">
-                  <input type="color" defaultValue="#3b82f6" className="h-8 w-12 rounded cursor-pointer" />
-                  <input
-                    type="text"
-                    defaultValue="#3b82f6"
-                    className="flex-1 rounded border border-border bg-input px-2 py-1 text-xs"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Opacity</label>
-                <input type="range" min="0" max="100" defaultValue="100" className="w-full mt-2" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Stroke Section */}
-        <div className="border border-border rounded-lg">
-          <button
-            onClick={() => toggleSection("stroke")}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted transition-colors"
-          >
-            <span className="text-sm font-medium text-foreground">Stroke</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${expandedSections.stroke ? "" : "-rotate-90"}`} />
-          </button>
-          {expandedSections.stroke && (
-            <div className="px-4 py-3 border-t border-border space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Color</label>
-                <div className="mt-2 flex gap-2">
-                  <input type="color" defaultValue="#3b82f6" className="h-8 w-12 rounded cursor-pointer" />
-                  <input
-                    type="text"
-                    defaultValue="#3b82f6"
-                    className="flex-1 rounded border border-border bg-input px-2 py-1 text-xs"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Width</label>
-                <input type="range" min="1" max="10" defaultValue="2" className="w-full mt-2" />
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Text Section */}
-        <div className="border border-border rounded-lg">
-          <button
-            onClick={() => toggleSection("text")}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-muted transition-colors"
-          >
-            <span className="text-sm font-medium text-foreground">Text</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${expandedSections.text ? "" : "-rotate-90"}`} />
-          </button>
-          {expandedSections.text && (
-            <div className="px-4 py-3 border-t border-border space-y-3">
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Font Size</label>
-                <input
-                  type="number"
-                  defaultValue="14"
-                  className="w-full mt-2 rounded border border-border bg-input px-2 py-1 text-xs"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-medium text-muted-foreground">Font Weight</label>
-                <select className="w-full mt-2 rounded border border-border bg-input px-2 py-1 text-xs">
-                  <option>Normal</option>
-                  <option>Bold</option>
-                  <option>Italic</option>
-                </select>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Content */}
+      {!isCollapsed && (
+        <>
+          {selectedEdge && <EdgePropertiesPanel />}
+          {selectedNode && !selectedEdge && <NodePropertiesPanel />}
+        </>
+      )}
     </div>
   )
 }

@@ -10,14 +10,18 @@ interface MindmapContextType {
   nodes: Node[]
   edges: Edge[]
   selectedNode: Node | null
+  selectedEdge: Edge | null
   isSaving: boolean
   onNodesChange: (changes: NodeChange[]) => void
   onEdgesChange: (changes: EdgeChange[]) => void
   onConnect: (connection: Connection) => void
   setSelectedNode: (node: Node | null) => void
-  addNode: (position: { x: number; y: number }) => void
+  setSelectedEdge: (edge: Edge | null) => void
+  addNode: (position: { x: number; y: number }, shape?: string) => void
   deleteNode: (nodeId: string) => void
+  deleteEdge: (edgeId: string) => void
   updateNodeData: (nodeId: string, data: any) => void
+  updateEdgeData: (edgeId: string, updates: any) => void
   saveMindmap: () => Promise<void>
   loadMindmap: (id: string) => Promise<void>
   setTitle: (title: string) => void
@@ -30,17 +34,56 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
   // Load mindmap by ID
   const loadMindmap = useCallback(async (id: string) => {
     try {
       const data = await getMindmapById(id)
+      console.log('Loaded mindmap data:', data)
+      console.log('Loaded nodes:', data.nodes)
+      console.log('Loaded edges:', data.edges)
+      
       setMindmap(data)
       
-      // Convert API data to ReactFlow format
-      setNodes(data.nodes || [])
-      setEdges(data.edges || [])
+      // Normalize nodes - ensure all have required properties
+      const normalizedNodes = (data.nodes || []).map((node: any) => {
+        // If node doesn't have shape in data, infer from type or set default
+        const nodeType = node.type === 'default' ? 'rectangle' : node.type
+        const nodeShape = node.data?.shape || nodeType || 'rectangle'
+        
+        return {
+          ...node,
+          type: nodeType, // Convert 'default' to 'rectangle'
+          data: {
+            // Set defaults first
+            label: 'Node',
+            description: '',
+            color: '#3b82f6',
+            // Then override with existing data
+            ...node.data,
+            // Ensure shape is always set correctly based on type
+            shape: node.data?.shape || nodeShape,
+          }
+        }
+      })
+      
+      // Normalize edges - ensure all have required properties
+      const normalizedEdges = (data.edges || []).map((edge: any) => {
+        return {
+          ...edge,
+          animated: edge.animated !== undefined ? edge.animated : true,
+          type: edge.type || 'smoothstep',
+          // Preserve any existing edge properties (label, labelStyle, etc.)
+        }
+      })
+      
+      setNodes(normalizedNodes)
+      setEdges(normalizedEdges)
+      
+      console.log('Normalized nodes:', normalizedNodes)
+      console.log('Normalized edges:', normalizedEdges)
     } catch (error) {
       console.error('Error loading mindmap:', error)
     }
@@ -65,18 +108,28 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   // Connection handler
   const onConnect = useCallback(
     (connection: Connection) => {
-      setEdges((eds) => addEdge(connection, eds))
+      const newEdge = {
+        ...connection,
+        animated: true,
+        type: "smoothstep",
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
     },
     []
   )
 
   // Add new node
-  const addNode = useCallback((position: { x: number; y: number }) => {
+  const addNode = useCallback((position: { x: number; y: number }, shape: string = 'rectangle') => {
     const newNode: Node = {
       id: `node-${Date.now()}`,
-      type: 'default',
+      type: shape,
       position,
-      data: { label: 'New Node' },
+      data: { 
+        label: 'New Node', 
+        description: 'Add description',
+        color: '#3b82f6',
+        shape,
+      },
     }
     setNodes((nds) => [...nds, newNode])
   }, [])
@@ -90,16 +143,62 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedNode])
 
+  // Delete edge
+  const deleteEdge = useCallback((edgeId: string) => {
+    setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
+    if (selectedEdge?.id === edgeId) {
+      setSelectedEdge(null)
+    }
+  }, [selectedEdge])
+
   // Update node data
-  const updateNodeData = useCallback((nodeId: string, data: any) => {
+  const updateNodeData = useCallback((nodeId: string, newData: any) => {
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
-          return { ...node, data: { ...node.data, ...data } }
+          const updatedNode = {
+            ...node,
+            data: { ...node.data, ...newData },
+          }
+          if (newData.shape) {
+            updatedNode.type = newData.shape
+          }
+          return updatedNode
         }
         return node
       })
     )
+    setSelectedNode((prev) => {
+      if (prev && prev.id === nodeId) {
+        const updatedNode = {
+          ...prev,
+          data: { ...prev.data, ...newData },
+        }
+        if (newData.shape) {
+          updatedNode.type = newData.shape
+        }
+        return updatedNode
+      }
+      return prev
+    })
+  }, [])
+
+  // Update edge data
+  const updateEdgeData = useCallback((edgeId: string, updates: any) => {
+    setEdges((eds) =>
+      eds.map((edge) => {
+        if (edge.id === edgeId) {
+          return { ...edge, ...updates }
+        }
+        return edge
+      })
+    )
+    setSelectedEdge((prev) => {
+      if (prev && prev.id === edgeId) {
+        return { ...prev, ...updates }
+      }
+      return prev
+    })
   }, [])
 
   // Set title
@@ -118,6 +217,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
     setIsSaving(true)
     try {
+      console.log('Saving mindmap with nodes:', nodes)
+      console.log('Saving mindmap with edges:', edges)
+      
       await updateMindmap(mindmap.id, {
         title: mindmap.title,
         nodes,
@@ -137,14 +239,18 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     nodes,
     edges,
     selectedNode,
+    selectedEdge,
     isSaving,
     onNodesChange,
     onEdgesChange,
     onConnect,
     setSelectedNode,
+    setSelectedEdge,
     addNode,
     deleteNode,
+    deleteEdge,
     updateNodeData,
+    updateEdgeData,
     saveMindmap,
     loadMindmap,
     setTitle,
