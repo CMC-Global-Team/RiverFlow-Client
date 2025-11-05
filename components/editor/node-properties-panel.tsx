@@ -1,14 +1,15 @@
 "use client"
 
-import { X } from "lucide-react"
+import { X, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { toast } from "sonner"
 
 export default function NodePropertiesPanel() {
-  const { selectedNode, updateNodeData, setSelectedNode } = useMindmapContext()
+  const { selectedNode, updateNodeData, setSelectedNode, deleteNode } = useMindmapContext()
 
   if (!selectedNode) return null
 
@@ -37,8 +38,13 @@ export default function NodePropertiesPanel() {
     { value: "roundedRectangle", label: "Rounded", icon: "▢" },
   ]
 
+  const handleDeleteNode = () => {
+    deleteNode(selectedNode.id)
+    toast.success('Node deleted')
+  }
+
   return (
-    <div className="w-64 border-l border-border bg-card overflow-y-auto">
+    <div className="h-full bg-card overflow-y-auto">
       <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
         <h3 className="font-semibold">Node Properties</h3>
         <Button variant="ghost" size="icon" onClick={() => setSelectedNode(null)}>
@@ -108,6 +114,16 @@ export default function NodePropertiesPanel() {
           <p>Type: {selectedNode.type || "default"}</p>
           <p>Shape: {selectedNode.data.shape || "rectangle"}</p>
         </div>
+
+        {/* Delete Node Button */}
+        <Button
+          variant="destructive"
+          className="w-full"
+          onClick={handleDeleteNode}
+        >
+          <Trash2 className="h-4 w-4 mr-2" />
+          Delete Node
+        </Button>
       </div>
     </div>
   )

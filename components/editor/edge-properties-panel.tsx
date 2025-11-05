@@ -77,26 +77,29 @@ export default function EdgePropertiesPanel() {
   }
 
   const handleColorChange = (color: string) => {
-    updateEdgeData(selectedEdge.id, { 
-      style: { ...selectedEdge.style, stroke: color },
+    const currentStyle = selectedEdge.style || {}
+    const currentMarkerEnd = selectedEdge.markerEnd || {}
+    
+    const updates: any = {
+      style: { ...currentStyle, stroke: color },
       markerEnd: {
-        ...selectedEdge.markerEnd,
+        ...currentMarkerEnd,
         color: color,
       }
-    })
+    }
+    
+    updateEdgeData(selectedEdge.id, updates)
   }
 
   const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#ef4444", "#14b8a6"]
 
   const handleDeleteConnection = () => {
-    if (confirm('Are you sure you want to delete this connection?')) {
-      deleteEdge(selectedEdge.id)
-      toast.success('Connection deleted')
-    }
+    deleteEdge(selectedEdge.id)
+    toast.success('Connection deleted')
   }
 
   return (
-    <div className="w-64 border-l border-border bg-card overflow-y-auto">
+    <div className="h-full bg-card overflow-y-auto">
       <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
         <h3 className="font-semibold">Connection Properties</h3>
         <Button variant="ghost" size="icon" onClick={() => setSelectedEdge(null)}>
@@ -109,7 +112,7 @@ export default function EdgePropertiesPanel() {
           <Label htmlFor="edge-label">Connection Label</Label>
           <Input
             id="edge-label"
-            value={selectedEdge.label || ""}
+            value={(selectedEdge.label as string) || ""}
             onChange={(e) => handleLabelChange(e.target.value)}
             placeholder="Add label to connection"
           />
