@@ -27,15 +27,27 @@ export default function MindmapGrid({
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
 
   useEffect(() => {
+    // Ensure cards are visible initially
+    cardsRef.current.forEach((card) => {
+      if (card) {
+        gsap.set(card, { opacity: 1 })
+      }
+    })
+    
+    // Then animate
     cardsRef.current.forEach((card, index) => {
       if (!card) return
-      gsap.from(card, {
-        opacity: 0,
-        y: 20,
-        duration: 0.5,
-        delay: index * 0.05,
-        ease: "power2.out",
-      })
+      gsap.fromTo(
+        card,
+        { opacity: 0, y: 20 },
+        {
+          opacity: 1,
+          y: 0,
+          duration: 0.5,
+          delay: index * 0.05,
+          ease: "power2.out",
+        }
+      )
     })
   }, [mindmaps])
 
