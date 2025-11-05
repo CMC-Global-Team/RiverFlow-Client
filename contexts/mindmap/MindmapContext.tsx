@@ -41,11 +41,49 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const loadMindmap = useCallback(async (id: string) => {
     try {
       const data = await getMindmapById(id)
+      console.log('Loaded mindmap data:', data)
+      console.log('Loaded nodes:', data.nodes)
+      console.log('Loaded edges:', data.edges)
+      
       setMindmap(data)
       
-      // Convert API data to ReactFlow format
-      setNodes(data.nodes || [])
-      setEdges(data.edges || [])
+      // Normalize nodes - ensure all have required properties
+      const normalizedNodes = (data.nodes || []).map((node: any) => {
+        // If node doesn't have shape in data, infer from type or set default
+        const nodeType = node.type === 'default' ? 'rectangle' : node.type
+        const nodeShape = node.data?.shape || nodeType || 'rectangle'
+        
+        return {
+          ...node,
+          type: nodeType, // Convert 'default' to 'rectangle'
+          data: {
+            // Set defaults first
+            label: 'Node',
+            description: '',
+            color: '#3b82f6',
+            // Then override with existing data
+            ...node.data,
+            // Ensure shape is always set correctly based on type
+            shape: node.data?.shape || nodeShape,
+          }
+        }
+      })
+      
+      // Normalize edges - ensure all have required properties
+      const normalizedEdges = (data.edges || []).map((edge: any) => {
+        return {
+          ...edge,
+          animated: edge.animated !== undefined ? edge.animated : true,
+          type: edge.type || 'smoothstep',
+          // Preserve any existing edge properties (label, labelStyle, etc.)
+        }
+      })
+      
+      setNodes(normalizedNodes)
+      setEdges(normalizedEdges)
+      
+      console.log('Normalized nodes:', normalizedNodes)
+      console.log('Normalized edges:', normalizedEdges)
     } catch (error) {
       console.error('Error loading mindmap:', error)
     }
@@ -179,6 +217,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
     setIsSaving(true)
     try {
+      console.log('Saving mindmap with nodes:', nodes)
+      console.log('Saving mindmap with edges:', edges)
+      
       await updateMindmap(mindmap.id, {
         title: mindmap.title,
         nodes,
