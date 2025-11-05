@@ -1,12 +1,12 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, Suspense } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react"
 import { useResetPassword } from "@/hooks/auth/useResetPassword"
 import { Button } from "@/components/ui/button"
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
@@ -18,6 +18,7 @@ export default function ResetPasswordPage() {
   const [validationError, setValidationError] = useState("")
   const [isValidatingToken, setIsValidatingToken] = useState(true)
   const [isTokenValid, setIsTokenValid] = useState(false)
+  const [countdown, setCountdown] = useState(3)
 
   const { resetUserPassword, isLoading, error, data } = useResetPassword()
 
@@ -39,14 +40,19 @@ export default function ResetPasswordPage() {
     validateToken()
   }, [token, router])
 
-  // Redirect về login sau khi reset thành công
+  // Đếm ngược và redirect về login sau khi reset thành công
   useEffect(() => {
     if (data) {
-      setTimeout(() => {
+      if (countdown > 0) {
+        const timer = setTimeout(() => {
+          setCountdown(countdown - 1)
+        }, 1000)
+        return () => clearTimeout(timer)
+      } else {
         router.push("/")
-      }, 3000)
+      }
     }
-  }, [data, router])
+  }, [data, countdown, router])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -109,7 +115,8 @@ export default function ResetPasswordPage() {
             <h2 className="text-2xl font-bold text-foreground mb-2">Đặt lại mật khẩu thành công!</h2>
             <p className="text-muted-foreground mb-6">{data.message}</p>
             <p className="text-sm text-muted-foreground">
-              Bạn sẽ được chuyển đến trang đăng nhập sau 3 giây...
+              Bạn sẽ được chuyển đến trang đăng nhập sau{" "}
+              <span className="font-semibold text-primary">{countdown}</span> giây...
             </p>
           </div>
         </div>
@@ -229,6 +236,23 @@ export default function ResetPasswordPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
+          <div className="text-center">
+            <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
+            <p className="text-muted-foreground">Đang tải...</p>
+          </div>
+        </div>
+      }
+    >
+      <ResetPasswordContent />
+    </Suspense>
   )
 }
 
