@@ -13,6 +13,15 @@ export const metadata: Metadata = {
   title: "RiverFlow - Online Mindmap Drawing",
   description: "Create beautiful mindmaps collaboratively with RiverFlow",
   generator: "v0.app",
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+    apple: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+    ],
+  },
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({

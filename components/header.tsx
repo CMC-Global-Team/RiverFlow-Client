@@ -1,10 +1,12 @@
 "use client"
-
+import "@/i18n/i18n"
 import { useState } from "react"
 import Link from "next/link"
 import { Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { useLogout } from "@/hooks/auth/useLogout"
+import { useTranslation } from "react-i18next"
+import LanguageSwitcher from "./LanguageSwitcher"
 
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
@@ -14,7 +16,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAuthenticated, user } = useAuth()
   const { logout, isLoading: isLoggingOut } = useLogout()
-
+  const { t } = useTranslation()
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -31,29 +33,29 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Features
+                {t("features")}
             </Link>
             <Link
               href="/pricing"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Pricing
+                {t("pricing")}
             </Link>
             <Link
               href="/about"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              About
+                {t("about")}
             </Link>
             <Link
               href="#"
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Docs
+                {t("docs")}
             </Link>
           </nav>
 
-          {/* Auth Buttons / User Menu */}
+          {/* Desktop Actions - Auth Buttons & Language Switcher */}
           <div className="hidden md:flex items-center gap-3">
             {isAuthenticated ? (
               <>
@@ -89,6 +91,9 @@ export default function Header({ onAuthClick }: HeaderProps) {
                 </button>
               </>
             )}
+            
+            {/* Language Switcher */}
+            <LanguageSwitcher />
           </div>
 
           {/* Mobile Menu Button */}
@@ -107,23 +112,29 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Features
+              {t("features")}
             </Link>
             <Link
               href="/pricing"
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              Pricing
+              {t("pricing")}
             </Link>
             <Link
               href="/about"
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
             >
-              About
+              {t("about")}
             </Link>
             <Link href="#" className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
-              Docs
+              {t("docs")}
             </Link>
+            
+            {/* Language Switcher - Mobile */}
+            <div className="px-4">
+              <LanguageSwitcher />
+            </div>
+
             <div className="px-4 pt-2 space-y-2">
               {isAuthenticated ? (
                 <>
@@ -164,7 +175,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                   >
-                    Get Started
+                      {t("GetStarted")}
                   </button>
                 </div>
               )}
