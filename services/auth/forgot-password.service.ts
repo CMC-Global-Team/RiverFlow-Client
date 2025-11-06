@@ -13,7 +13,7 @@ import { AxiosError } from "axios";
  */
 export const forgotPassword = async (data: ForgotPasswordRequest): Promise<MessageResponse> => {
   try {
-    const response = await apiClient.post<MessageResponse>("/api/auth/forgot-password", data);
+    const response = await apiClient.post<MessageResponse>("/auth/forgot-password", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

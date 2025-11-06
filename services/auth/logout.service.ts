@@ -12,7 +12,7 @@ import { AxiosError } from "axios";
  */
 export const logoutUser = async (): Promise<MessageResponse> => {
   try {
-    const response = await apiClient.post<MessageResponse>("/api/auth/logout");
+    const response = await apiClient.post<MessageResponse>("/auth/logout");
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

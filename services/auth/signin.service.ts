@@ -13,7 +13,7 @@ import { AxiosError } from "axios";
  */
 export const signInUser = async (data: SignInRequest): Promise<SignInResponse> => {
   try {
-    const response = await apiClient.post<SignInResponse>("/api/auth/signin", data);
+    const response = await apiClient.post<SignInResponse>("/auth/signin", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
