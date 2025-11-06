@@ -20,7 +20,7 @@ interface RefreshTokenResponse {
 export const refreshAccessToken = async (refreshToken: string): Promise<RefreshTokenResponse> => {
   try {
     const response = await axios.post<RefreshTokenResponse>(
-      `${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`,
+      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
       { refreshToken },
       {
         headers: {

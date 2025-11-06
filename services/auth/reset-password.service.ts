@@ -13,7 +13,7 @@ import { AxiosError } from "axios";
  */
 export const resetPassword = async (data: ResetPasswordRequest): Promise<MessageResponse> => {
   try {
-    const response = await apiClient.post<MessageResponse>("/api/auth/reset-password", data);
+    const response = await apiClient.post<MessageResponse>("/auth/reset-password", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -39,7 +39,7 @@ export const validateResetToken = async (token: string): Promise<boolean> => {
   try {
     // Gửi request với token và password giả để kiểm tra token
     // Server sẽ trả về lỗi nếu token không hợp lệ
-    await apiClient.post<MessageResponse>("/api/auth/validate-reset-token", { token });
+    await apiClient.post<MessageResponse>("/auth/validate-reset-token", { token });
     return true;
   } catch (error: unknown) {
     return false;

@@ -13,7 +13,7 @@ import { AxiosError } from "axios";
  */
 export const registerUser = async (data: RegisterRequest): Promise<RegisterResponse> => {
   try {
-    const response = await apiClient.post<RegisterResponse>("/api/auth/register", data);
+    const response = await apiClient.post<RegisterResponse>("/auth/register", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
