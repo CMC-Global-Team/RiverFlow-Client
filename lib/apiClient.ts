@@ -57,6 +57,20 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
+    // Xử lý lỗi 403 - Token hết hạn hoặc không hợp lệ, tự động logout
+    if (error.response?.status === 403) {
+      // Clear tất cả dữ liệu authentication
+      localStorage.clear();
+      deleteCookie('accessToken');
+      
+      // Redirect về trang login
+      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        window.location.href = '/';
+      }
+      
+      return Promise.reject(error);
+    }
+    
     // Nếu lỗi 401 và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
