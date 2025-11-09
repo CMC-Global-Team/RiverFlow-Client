@@ -10,7 +10,7 @@
       "data": {
         "label": "Central Idea",
         "description": "Main topic",
-        "color": "#8b5cf6",
+        "color": "#ec4899",
         "shape": "rectangle"
       },
       "width": 150,
@@ -28,7 +28,7 @@
       "data": {
         "label": "Subtopic 1",
         "description": "First branch",
-        "color": "#3b82f6",
+        "color": "#ef4444",
         "shape": "ellipse"
       },
       "width": 160,
@@ -50,7 +50,7 @@
       "data": {
         "label": "Subtopic 2",
         "description": "Second branch",
-        "color": "#ec4899",
+        "color": "#ef4444",
         "shape": "ellipse"
       },
       "width": 160,
@@ -160,7 +160,7 @@
       "data": {
         "label": "New Node",
         "description": "Add description",
-        "color": "#3b82f6",
+        "color": "#ef4444",
         "shape": "ellipse"
       },
       "width": 160,
@@ -182,7 +182,7 @@
       "data": {
         "label": "New Node",
         "description": "Add description",
-        "color": "#3b82f6",
+        "color": "#ef4444",
         "shape": "ellipse"
       },
       "width": 160,
@@ -292,7 +292,7 @@
       "data": {
         "label": "New Node",
         "description": "Add description",
-        "color": "#3b82f6",
+        "color": "#ef4444",
         "shape": "ellipse"
       },
       "width": 160,
