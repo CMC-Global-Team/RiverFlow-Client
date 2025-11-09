@@ -14,23 +14,77 @@ interface NodeData {
 export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
-  return (
-    <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{ borderColor: color }}
-    >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
-      <div className="space-y-1">
-        <div className="font-semibold text-sm" style={{ color }}>
-          {data.label}
+    return (
+        <div
+            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
+                selected ? "ring-2 ring-primary ring-offset-2" : ""
+            }`}
+            style={{ borderColor: color }}
+        >
+            <Handle
+                type="target"
+                id="target-top"
+                position={Position.Top}
+                className="w-3 h-3"
+                style={{ background: color, left: "50%" }}
+            />
+            <Handle
+                type="target"
+                id="target-right"
+                position={Position.Right}
+                className="w-3 h-3"
+                style={{ background: color, top: "50%" }}
+            />
+            <Handle
+                type="target"
+                id="target-bottom"
+                position={Position.Bottom}
+                className="w-3 h-3"
+                style={{ background: color, left: "50%" }}
+            />
+            <Handle
+                type="target"
+                id="target-left"
+                position={Position.Left}
+                className="w-3 h-3"
+                style={{ background: color, top: "50%" }}
+            />
+            <div className="space-y-1">
+                <div className="font-semibold text-sm" style={{ color }}>
+                    {data.label}
+                </div>
+                {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
+            </div>
+            <Handle
+                type="source"
+                id="source-top"
+                position={Position.Top}
+                className="w-3 h-3"
+                style={{ background: color, left: "50%" }}
+            />
+            <Handle
+                type="source"
+                id="source-right"
+                position={Position.Right}
+                className="w-3 h-3"
+                style={{ background: color, top: "50%" }}
+            />
+            <Handle
+                type="source"
+                id="source-bottom"
+                position={Position.Bottom}
+                className="w-3 h-3"
+                style={{ background: color, left: "50%" }}
+            />
+            <Handle
+                type="source"
+                id="source-left"
+                position={Position.Left}
+                className="w-3 h-3"
+                style={{ background: color, top: "50%" }}
+            />
         </div>
-        {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
-      </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
-    </div>
-  )
+    )
 })
 
 RectangleNode.displayName = "RectangleNode"
@@ -46,15 +100,68 @@ export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
-      <div className="text-center px-3">
+        <Handle
+            type="target"
+            id="target-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <div className="text-center px-3">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
-    </div>
+        <Handle
+            type="source"
+            id="source-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />    </div>
   )
 })
 
@@ -66,8 +173,35 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 
   return (
     <div className="relative w-32 h-32">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 z-10" style={{ background: color }} />
-      <div
+        <Handle
+            type="target"
+            id="target-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <div
         className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
@@ -81,8 +215,34 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
           {data.description && <div className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{data.description}</div>}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 z-10" style={{ background: color }} />
-    </div>
+        <Handle
+            type="source"
+            id="source-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />    </div>
   )
 })
 
@@ -94,8 +254,35 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 
   return (
     <div className="relative w-36 h-32">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 z-10" style={{ background: color }} />
-      <svg
+        <Handle
+            type="target"
+            id="target-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <svg
         viewBox="0 0 100 87"
         className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
       >
@@ -115,8 +302,34 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
           {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 z-10" style={{ background: color }} />
-    </div>
+        <Handle
+            type="source"
+            id="source-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />    </div>
   )
 })
 
@@ -133,15 +346,68 @@ export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
-      <div className="text-center px-4">
+        <Handle
+            type="target"
+            id="target-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <div className="text-center px-4">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
-    </div>
+        <Handle
+            type="source"
+            id="source-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />    </div>
   )
 })
 
@@ -158,15 +424,68 @@ export const RoundedRectangleNode = memo(({ data, selected }: NodeProps<NodeData
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
-      <div className="space-y-1">
+        <Handle
+            type="target"
+            id="target-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="target"
+            id="target-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <div className="space-y-1">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
-    </div>
+        <Handle
+            type="source"
+            id="source-top"
+            position={Position.Top}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-right"
+            position={Position.Right}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-bottom"
+            position={Position.Bottom}
+            className="w-3 h-3"
+            style={{ background: color, left: "50%" }}
+        />
+        <Handle
+            type="source"
+            id="source-left"
+            position={Position.Left}
+            className="w-3 h-3"
+            style={{ background: color, top: "50%" }}
+        />    </div>
   )
 })
 
