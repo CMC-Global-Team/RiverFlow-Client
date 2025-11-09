@@ -4,8 +4,8 @@
       "id": "1",
       "type": "rectangle",
       "position": {
-        "x": 138.03018316925233,
-        "y": 166.06632687883373
+        "x": -158.18543111115304,
+        "y": 230.61933795556897
       },
       "data": {
         "label": "Central Idea",
@@ -18,16 +18,16 @@
       "selected": false,
       "dragging": false,
       "positionAbsolute": {
-        "x": 138.03018316925233,
-        "y": 166.06632687883373
+        "x": -158.18543111115304,
+        "y": 230.61933795556897
       }
     },
     {
-      "id": "node-1762670551525",
+      "id": "node-1762705433906",
       "type": "rectangle",
       "position": {
-        "x": -312.6067088120838,
-        "y": 645.4778560811797
+        "x": 147.96367290867133,
+        "y": 14.475733806337104
       },
       "data": {
         "label": "New Node",
@@ -39,17 +39,17 @@
       "height": 67,
       "selected": false,
       "positionAbsolute": {
-        "x": -312.6067088120838,
-        "y": 645.4778560811797
+        "x": 147.96367290867133,
+        "y": 14.475733806337104
       },
       "dragging": false
     },
     {
-      "id": "node-1762670553383",
+      "id": "node-1762705445205",
       "type": "rectangle",
       "position": {
-        "x": 455.0344266192185,
-        "y": 460.43611763700505
+        "x": 139.76439040920724,
+        "y": 233.1269938980632
       },
       "data": {
         "label": "New Node",
@@ -61,17 +61,17 @@
       "height": 67,
       "selected": false,
       "positionAbsolute": {
-        "x": 455.0344266192185,
-        "y": 460.43611763700505
+        "x": 139.76439040920724,
+        "y": 233.1269938980632
       },
       "dragging": false
     },
     {
-      "id": "node-1762672408282",
+      "id": "node-1762705445381",
       "type": "rectangle",
       "position": {
-        "x": -305.5635477413507,
-        "y": 306.1807844192333
+        "x": 417.4371895415792,
+        "y": 87.05265060995853
       },
       "data": {
         "label": "New Node",
@@ -83,17 +83,17 @@
       "height": 67,
       "selected": false,
       "positionAbsolute": {
-        "x": -305.5635477413507,
-        "y": 306.1807844192333
+        "x": 417.4371895415792,
+        "y": 87.05265060995853
       },
       "dragging": false
     },
     {
-      "id": "node-1762672408433",
+      "id": "node-1762705445524",
       "type": "rectangle",
       "position": {
-        "x": 472.6102694957727,
-        "y": 276.9397352257082
+        "x": 417.8169364681695,
+        "y": -43.61091669811602
       },
       "data": {
         "label": "New Node",
@@ -105,17 +105,17 @@
       "height": 67,
       "selected": true,
       "positionAbsolute": {
-        "x": 472.6102694957727,
-        "y": 276.9397352257082
+        "x": 417.8169364681695,
+        "y": -43.61091669811602
       },
       "dragging": false
     },
     {
-      "id": "node-1762672408577",
+      "id": "node-1762705445676",
       "type": "rectangle",
       "position": {
-        "x": -317.7373209727563,
-        "y": 484.9012420185652
+        "x": 146.1865051320045,
+        "y": 468.1752539338718
       },
       "data": {
         "label": "New Node",
@@ -127,17 +127,17 @@
       "height": 67,
       "selected": false,
       "positionAbsolute": {
-        "x": -317.7373209727563,
-        "y": 484.9012420185652
+        "x": 146.1865051320045,
+        "y": 468.1752539338718
       },
       "dragging": false
     },
     {
-      "id": "node-1762672481599",
+      "id": "node-1762705492616",
       "type": "rectangle",
       "position": {
-        "x": 432.23681365802105,
-        "y": 666.9617843951662
+        "x": 415.653094781108,
+        "y": 196.12643048208892
       },
       "data": {
         "label": "New Node",
@@ -149,8 +149,74 @@
       "height": 67,
       "selected": false,
       "positionAbsolute": {
-        "x": 432.23681365802105,
-        "y": 666.9617843951662
+        "x": 415.653094781108,
+        "y": 196.12643048208892
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762705492808",
+      "type": "rectangle",
+      "position": {
+        "x": 414.10755025869975,
+        "y": 311.25797216635937
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 414.10755025869975,
+        "y": 311.25797216635937
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762705492962",
+      "type": "rectangle",
+      "position": {
+        "x": 409.3232581241021,
+        "y": 407.37394559754057
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 409.3232581241021,
+        "y": 407.37394559754057
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762705509184",
+      "type": "rectangle",
+      "position": {
+        "x": 409.1625579176499,
+        "y": 543.1495974098758
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 409.1625579176499,
+        "y": 543.1495974098758
       },
       "dragging": false
     }
@@ -158,80 +224,119 @@
   "edges": [
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
       "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762672408282",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762672408282",
+      "sourceHandle": "source-right",
+      "target": "node-1762705433906",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-1source-right-node-1762705433906target-left",
       "selected": false
     },
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
       "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762672408577",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762672408577",
+      "sourceHandle": "source-right",
+      "target": "node-1762705445205",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-1source-right-node-1762705445205target-left",
       "selected": false
     },
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
       "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762670551525",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762670551525",
+      "sourceHandle": "source-right",
+      "target": "node-1762705445676",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-1source-right-node-1762705445676target-left",
       "selected": false
     },
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
-      "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762672408433",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762672408433",
+      "source": "node-1762705433906",
+      "sourceHandle": "source-right",
+      "target": "node-1762705445524",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705433906source-right-node-1762705445524target-left",
       "selected": false
     },
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
-      "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762670553383",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762670553383",
+      "source": "node-1762705433906",
+      "sourceHandle": "source-right",
+      "target": "node-1762705445381",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705433906source-right-node-1762705445381target-left",
       "selected": false
     },
     {
       "animated": true,
-      "type": "straight",
+      "type": "default",
       "markerEnd": {
         "type": "arrowclosed"
       },
-      "source": "1",
-      "sourceHandle": null,
-      "target": "node-1762672481599",
-      "targetHandle": null,
-      "id": "reactflow__edge-1-node-1762672481599",
+      "source": "node-1762705445205",
+      "sourceHandle": "source-right",
+      "target": "node-1762705492616",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705445205source-right-node-1762705492616target-left",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762705445205",
+      "sourceHandle": "source-right",
+      "target": "node-1762705492808",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705445205source-right-node-1762705492808target-left",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762705445676",
+      "sourceHandle": "source-right",
+      "target": "node-1762705492962",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705445676source-right-node-1762705492962target-left",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762705445676",
+      "sourceHandle": "source-right",
+      "target": "node-1762705509184",
+      "targetHandle": "target-left",
+      "id": "reactflow__edge-node-1762705445676source-right-node-1762705509184target-left",
       "selected": false
     }
   ]
