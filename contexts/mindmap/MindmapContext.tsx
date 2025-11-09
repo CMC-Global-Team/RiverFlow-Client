@@ -17,7 +17,7 @@ interface MindmapContextType {
   onConnect: (connection: Connection) => void
   setSelectedNode: (node: Node | null) => void
   setSelectedEdge: (edge: Edge | null) => void
-  addNode: (position: { x: number; y: number }, shape?: string) => void
+  addNode: (position: { x: number; y: number }, shape?: string) => string
   deleteNode: (nodeId: string) => void
   deleteEdge: (edgeId: string) => void
   updateNodeData: (nodeId: string, data: any) => void
@@ -166,6 +166,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       },
     }
     setNodes((nds) => [...nds, newNode])
+    return newNode.id
   }, [])
 
   // Delete node
