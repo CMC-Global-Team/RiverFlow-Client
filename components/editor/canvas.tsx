@@ -6,6 +6,7 @@ import ReactFlow, {
   Controls,
   MiniMap,
   MarkerType,
+  useReactFlow,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
@@ -32,7 +33,16 @@ export default function Canvas() {
     deleteNode,
     deleteEdge,
     addNode,
+    onViewportChange,
   } = useMindmapContext()
+
+  const { getViewport } = useReactFlow();
+
+  const handleMoveEnd = useCallback(() => {
+    if (onViewportChange) {
+        onViewportChange(getViewport());
+    }
+  }, [getViewport, onViewportChange]);
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
@@ -161,6 +171,7 @@ export default function Canvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onMoveEnd={handleMoveEnd}
         onNodeClick={onNodeClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
