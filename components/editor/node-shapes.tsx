@@ -8,6 +8,7 @@ interface NodeData {
   description?: string
   color?: string
   shape?: string
+  isEditing?: boolean
 }
 
 // Rectangle Node (default)
