@@ -34,6 +34,13 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     setIsEditing(false)
   }
 
+  const cancel = () => {
+    setLabel(data.label || "Untitled")
+    setDescription(data.description || "")
+    setIsEditing(false)
+    updateNodeData(id, { isEditing: false })
+  }
+
 
 })
 // Rectangle Node (default)
