@@ -24,6 +24,17 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
       textareaRef.current.select()
     }
   }, [isEditing])
+
+  const save = () => {
+    updateNodeData(id, {
+      label: label.trim() || "Untitled",
+      description: description.trim(),
+      isEditing: false,
+    })
+    setIsEditing(false)
+  }
+
+
 })
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
