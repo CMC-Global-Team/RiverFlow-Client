@@ -1,0 +1,135 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "rectangle",
+      "position": {
+        "x": 250,
+        "y": 100
+      },
+      "data": {
+        "label": "Central Idea",
+        "description": "Main topic",
+        "color": "#8b5cf6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "2",
+      "type": "circle",
+      "position": {
+        "x": 100,
+        "y": 280
+      },
+      "data": {
+        "label": "Subtopic 1",
+        "description": "First branch",
+        "color": "#3b82f6",
+        "shape": "circle"
+      },
+      "width": 128,
+      "height": 128
+    },
+    {
+      "id": "3",
+      "type": "ellipse",
+      "position": {
+        "x": 400.96837075352266,
+        "y": 280.96837075352266
+      },
+      "data": {
+        "label": "Subtopic 2",
+        "description": "Second branch",
+        "color": "#ec4899",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 400.96837075352266,
+        "y": 280.96837075352266
+      }
+    },
+    {
+      "id": "node-1762670551525",
+      "type": "rectangle",
+      "position": {
+        "x": -39.10584382749015,
+        "y": 115.87004631110611
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -39.10584382749015,
+        "y": 115.87004631110611
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762670553383",
+      "type": "rectangle",
+      "position": {
+        "x": 499.5549688027705,
+        "y": 79.53814562217133
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": true,
+      "positionAbsolute": {
+        "x": 499.5549688027705,
+        "y": 79.53814562217133
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "id": "e1-2",
+      "source": "1",
+      "target": "2",
+      "animated": true,
+      "type": "smoothstep",
+      "label": "relates to",
+      "labelStyle": {
+        "fill": "#000000",
+        "fontWeight": 500,
+        "fontSize": 12
+      },
+      "labelBgStyle": {
+        "fill": "#ffffff",
+        "fillOpacity": 0.9
+      },
+      "labelBgPadding": [
+        8,
+        4
+      ],
+      "labelBgBorderRadius": 4,
+      "labelShowBg": true,
+      "interactionWidth": 20
+    },
+    {
+      "id": "e1-3",
+      "source": "1",
+      "target": "3",
+      "animated": true,
+      "type": "smoothstep"
+    }
+  ]
+}

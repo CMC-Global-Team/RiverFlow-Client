@@ -1,0 +1,444 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "rectangle",
+      "position": {
+        "x": 250,
+        "y": 100
+      },
+      "data": {
+        "label": "Central Idea",
+        "description": "Main topic",
+        "color": "#ec4899",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "dragging": false
+    },
+    {
+      "id": "2",
+      "type": "ellipse",
+      "position": {
+        "x": -267.97171159621655,
+        "y": 324.2580913752531
+      },
+      "data": {
+        "label": "Subtopic 1",
+        "description": "First branch",
+        "color": "#ef4444",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": -267.97171159621655,
+        "y": 324.2580913752531
+      }
+    },
+    {
+      "id": "3",
+      "type": "ellipse",
+      "position": {
+        "x": 772.7823183745426,
+        "y": 261.3233769151303
+      },
+      "data": {
+        "label": "Subtopic 2",
+        "description": "Second branch",
+        "color": "#ef4444",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 772.7823183745426,
+        "y": 261.3233769151303
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706034533",
+      "type": "rectangle",
+      "position": {
+        "x": -430.0970440957948,
+        "y": 549.4839570700462
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -430.0970440957948,
+        "y": 549.4839570700462
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706043827",
+      "type": "rectangle",
+      "position": {
+        "x": -193.94822167339507,
+        "y": 529.3589735495743
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -193.94822167339507,
+        "y": 529.3589735495743
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706054700",
+      "type": "rectangle",
+      "position": {
+        "x": 914.0337520144042,
+        "y": 419.11913526133065
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 914.0337520144042,
+        "y": 419.11913526133065
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706054852",
+      "type": "rectangle",
+      "position": {
+        "x": 683.4266957404114,
+        "y": 414.68827963404453
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 683.4266957404114,
+        "y": 414.68827963404453
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706067294",
+      "type": "ellipse",
+      "position": {
+        "x": 111.00855612184209,
+        "y": 249.48678003212564
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#ef4444",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96,
+      "selected": false,
+      "dragging": false,
+      "positionAbsolute": {
+        "x": 111.00855612184209,
+        "y": 249.48678003212564
+      }
+    },
+    {
+      "id": "node-1762706092254",
+      "type": "ellipse",
+      "position": {
+        "x": 463.6404884327748,
+        "y": 360.07642246658946
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#ef4444",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 463.6404884327748,
+        "y": 360.07642246658946
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706133715",
+      "type": "rectangle",
+      "position": {
+        "x": -34.98614295671419,
+        "y": 429.8146143752632
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": -34.98614295671419,
+        "y": 429.8146143752632
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706149618",
+      "type": "rectangle",
+      "position": {
+        "x": 563.1810907597852,
+        "y": 545.1036205547082
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 563.1810907597852,
+        "y": 545.1036205547082
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706149812",
+      "type": "rectangle",
+      "position": {
+        "x": 225.06610388104517,
+        "y": 423.7582270024093
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 225.06610388104517,
+        "y": 423.7582270024093
+      },
+      "dragging": false
+    },
+    {
+      "id": "node-1762706150282",
+      "type": "rectangle",
+      "position": {
+        "x": 336.2955959753097,
+        "y": 552.6497536255597
+      },
+      "data": {
+        "label": "New Node",
+        "description": "Add description",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67,
+      "selected": false,
+      "positionAbsolute": {
+        "x": 336.2955959753097,
+        "y": 552.6497536255597
+      },
+      "dragging": false
+    }
+  ],
+  "edges": [
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "2",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706043827",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-2source-bottom-node-1762706043827target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "2",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706034533",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-2source-bottom-node-1762706034533target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762706067294",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706149812",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-node-1762706067294source-bottom-node-1762706149812target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762706067294",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706133715",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-node-1762706067294source-bottom-node-1762706133715target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762706092254",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706150282",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-node-1762706092254source-bottom-node-1762706150282target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "node-1762706092254",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706149618",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-node-1762706092254source-bottom-node-1762706149618target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "3",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706054852",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-3source-bottom-node-1762706054852target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "3",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706054700",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-3source-bottom-node-1762706054700target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "1",
+      "sourceHandle": "source-bottom",
+      "target": "3",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-1source-bottom-3target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "1",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706067294",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-1source-bottom-node-1762706067294target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "1",
+      "sourceHandle": "source-bottom",
+      "target": "node-1762706092254",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-1source-bottom-node-1762706092254target-top",
+      "selected": false
+    },
+    {
+      "animated": true,
+      "type": "default",
+      "markerEnd": {
+        "type": "arrowclosed"
+      },
+      "source": "1",
+      "sourceHandle": "source-bottom",
+      "target": "2",
+      "targetHandle": "target-top",
+      "id": "reactflow__edge-1source-bottom-2target-top",
+      "selected": false
+    }
+  ]
+}
