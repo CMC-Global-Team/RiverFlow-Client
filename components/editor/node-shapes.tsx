@@ -41,7 +41,55 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     updateNodeData(id, { isEditing: false })
   }
 
-
+  if (isEditing) {
+    return (
+      <div className="space-y-1">
+        <textarea
+          ref={textareaRef}
+          value={label}
+          onChange={(e) => setLabel(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault()
+              save()
+            }
+            if (e.key === "Escape") cancel()
+          }}
+          className="w-full resize-none outline-none font-semibold text-sm bg-transparent"
+          rows={1}
+          placeholder="Title..."
+        />
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => e.key === "Escape" && cancel()}
+          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent"
+          rows={2}
+          placeholder="Description..."
+        />
+      </div>
+    )
+  }
+return (
+    <div
+      className="cursor-text select-none"
+      onDoubleClick={() => {
+        setIsEditing(true)
+        updateNodeData(id, { isEditing: true })
+      }}
+    >
+      <div className="font-semibold text-sm" style={{ color: data.color || "#3b82f6" }}>
+        {label}
+      </div>
+      {description && (
+        <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+          {description}
+        </div>
+      )}
+    </div>
+  )
 })
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
