@@ -242,6 +242,13 @@ export default function Canvas() {
     [setSelectedNode, setSelectedEdge]
   )
 
+  const onNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: any) =>{
+        updateNodeData(node.id, {isEditing: true})
+        },
+    [updateNodeData]
+  )
+
   const onEdgeClick = useCallback(
     (_event: any, edge: any) => {
       setSelectedEdge(edge)
@@ -382,6 +389,7 @@ export default function Canvas() {
           reactFlowInstance.current = instance
         }}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={() => {
           setLongPressedNode(null)
