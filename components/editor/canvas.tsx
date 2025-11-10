@@ -34,6 +34,10 @@ export default function Canvas() {
     deleteEdge,
     addNode,
     onViewportChange,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useMindmapContext()
 
   const { getViewport } = useReactFlow();
@@ -112,6 +116,8 @@ export default function Canvas() {
         return
       }
 
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey
+
       // Tab key - Add child node
       if (event.key === 'Tab' && selectedNode) {
         event.preventDefault()
@@ -157,11 +163,28 @@ export default function Canvas() {
           deleteEdge(selectedEdge.id)
         }
       }
+
+      if (isCtrlOrCmd && event.key === 'z') {
+        event.preventDefault();
+        if (canUndo) {
+            undo();
+        }
+      }
+
+      if (
+          (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
+          (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
+         ) {
+        event.preventDefault();
+        if (canRedo) {
+            redo();
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedNode, selectedEdge, deleteNode, deleteEdge, addNode, onConnect])
+  }, [selectedNode, selectedEdge, deleteNode, deleteEdge, addNode, onConnect, undo, redo, canUndo, canRedo])
 
   return (
     <div className="w-full h-full">
