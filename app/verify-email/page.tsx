@@ -37,7 +37,7 @@ function VerifyEmailComponent() {
         const verifyToken = async () => {
             try {
                 console.log('Verifying email with token:', token?.substring(0, 8) + '...')
-                const response = await apiClient.get(`/api/auth/verify-email?token=${encodeURIComponent(token)}`)
+                const response = await apiClient.get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
                 console.log('Verification response:', response.data)
                 setStatus('success')
                 setMessage(response.data.message || 'Xác thực tài khoản thành công!')
