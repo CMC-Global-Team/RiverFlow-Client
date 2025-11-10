@@ -7,7 +7,7 @@ import { useAuth } from "@/hooks/auth/useAuth"
 import { useLogout } from "@/hooks/auth/useLogout"
 import { useTranslation } from "react-i18next"
 import LanguageSwitcher from "./LanguageSwitcher"
-
+import { ThemeSwitcher } from "@/components/theme-switcher"
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
 }
@@ -95,7 +95,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
             {/* Language Switcher */}
             <LanguageSwitcher />
           </div>
-
+              <ThemeSwitcher />
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}

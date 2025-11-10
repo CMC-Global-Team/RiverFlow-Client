@@ -216,3 +216,22 @@ html {
 ::selection {
   @apply bg-primary text-primary-foreground;
 }
+
+
+
+/*Dark light theme blablabl*/
+:root {
+  --background: #ffffff;
+  --foreground: #000000;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ffffff;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.3s, color 0.3s;
+}

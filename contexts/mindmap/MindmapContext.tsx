@@ -17,7 +17,7 @@ interface MindmapContextType {
   onConnect: (connection: Connection) => void
   setSelectedNode: (node: Node | null) => void
   setSelectedEdge: (edge: Edge | null) => void
-  addNode: (position: { x: number; y: number }, shape?: string) => void
+  addNode: (position: { x: number; y: number }, shape?: string) => string
   deleteNode: (nodeId: string) => void
   deleteEdge: (edgeId: string) => void
   updateNodeData: (nodeId: string, data: any) => void
@@ -48,7 +48,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       setMindmap(data)
       
       // Normalize nodes - ensure all have required properties
-      const normalizedNodes = (data.nodes || []).map((node: any) => {
+      let normalizedNodes = (data.nodes || []).map((node: any) => {
         // If node doesn't have shape in data, infer from type or set default
         const nodeType = node.type === 'default' ? 'rectangle' : node.type
         const nodeShape = node.data?.shape || nodeType || 'rectangle'
@@ -68,6 +68,40 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           }
         }
       })
+      
+      // If mindmap is empty (no nodes), create a root node at the center of the screen
+      if (normalizedNodes.length === 0) {
+        // Calculate center position based on viewport size
+        // ReactFlow uses its own coordinate system, so we calculate based on typical canvas dimensions
+        // The canvas area is typically the viewport minus sidebar (256px) and accounting for padding
+        let centerX = 400 // Default center X
+        let centerY = 300 // Default center Y
+        
+        if (typeof window !== 'undefined') {
+          // Calculate based on window dimensions
+          // Canvas width = window width - sidebar (256px) - properties panel (320px when open, but assume closed initially) - padding
+          const canvasWidth = window.innerWidth - 256 - 32 // sidebar + padding
+          const canvasHeight = window.innerHeight - 80 - 32 // header (~80px) + padding
+          
+          // Center position in ReactFlow coordinates (accounting for typical node size ~200x100)
+          centerX = canvasWidth / 2 - 100
+          centerY = canvasHeight / 2 - 50
+        }
+        
+        const rootNode: Node = {
+          id: `root-node-${Date.now()}`,
+          type: 'rectangle',
+          position: { x: centerX, y: centerY },
+          data: {
+            label: 'Root Node',
+            description: 'Click to edit',
+            color: '#3b82f6',
+            shape: 'rectangle',
+          },
+        }
+        normalizedNodes = [rootNode]
+        console.log('Created root node at center:', rootNode)
+      }
       
       // Normalize edges - ensure all have required properties
       const normalizedEdges = (data.edges || []).map((edge: any) => {
@@ -132,6 +166,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       },
     }
     setNodes((nds) => [...nds, newNode])
+    return newNode.id
   }, [])
 
   // Delete node
