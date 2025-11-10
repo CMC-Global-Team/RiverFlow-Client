@@ -12,6 +12,8 @@ import {
   Square,
   Diamond,
   Hexagon,
+  Redo2,
+  Undo2,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -25,7 +27,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 export default function Toolbar() {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
 
   const handleAddNode = (shape: string) => {
@@ -135,6 +137,27 @@ export default function Toolbar() {
           <Trash2 className="h-5 w-5" />
         </Button>
       </div>
+
+      <div className="flex items-center gap-1 border-r border-border pr-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={undo}
+          disabled={!canUndo}
+          title="Undo (Ctrl+Z)"
+        >
+          <Undo2 className="h-5 w-5" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={redo}
+          disabled={!canRedo}
+          title="Redo (Ctrl+Y)"
+        >
+          <Redo2 className="h-5 w-5" />
+        </Button>
+      </div>
 
       {/* Zoom Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
