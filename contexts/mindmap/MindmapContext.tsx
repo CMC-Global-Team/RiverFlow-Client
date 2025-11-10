@@ -1,9 +1,10 @@
 "use client"
 
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react'
-import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange } from 'reactflow'
+import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
+import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport } from 'reactflow'
 import { getMindmapById, updateMindmap } from '@/services/mindmap/mindmap.service'
-import { MindmapResponse } from '@/types/mindmap.types'
+import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
+import { useToast } from "@/hooks/use-toast"
 
 interface MindmapContextType {
   mindmap: MindmapResponse | null
@@ -25,6 +26,7 @@ interface MindmapContextType {
   saveMindmap: () => Promise<void>
   loadMindmap: (id: string) => Promise<void>
   setTitle: (title: string) => void
+  onViewportChange: (viewport: Viewport) => void
 }
 
 const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
@@ -33,9 +35,25 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [mindmap, setMindmap] = useState<MindmapResponse | null>(null)
   const [nodes, setNodes] = useState<Node[]>([])
   const [edges, setEdges] = useState<Edge[]>([])
+  const [viewport, setViewport] = useState<Viewport | null>(null)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
+
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // Refs để giữ state mới nhất cho hàm save (tránh stale state)
+  const latestMindmapRef = useRef(mindmap);
+  const latestNodesRef = useRef(nodes);
+  const latestEdgesRef = useRef(edges);
+  const latestViewportRef = useRef(viewport);
+
+  // Cập nhật refs mỗi khi state thay đổi
+  useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
+  useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { latestEdgesRef.current = edges; }, [edges]);
+  useEffect(() => { latestViewportRef.current = viewport; }, [viewport]);
 
   // Load mindmap by ID
   const loadMindmap = useCallback(async (id: string) => {
@@ -113,31 +131,80 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         }
       })
       
+      setMindmap(data)
       setNodes(normalizedNodes)
       setEdges(normalizedEdges)
-      
-      console.log('Normalized nodes:', normalizedNodes)
-      console.log('Normalized edges:', normalizedEdges)
+        setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
     } catch (error) {
       console.error('Error loading mindmap:', error)
     }
   }, [])
 
+  // Save mindmap
+  const saveMindmap = useCallback(async () => {
+    const currentMindmap = latestMindmapRef.current;
+    const currentNodes = latestNodesRef.current;
+    const currentEdges = latestEdgesRef.current;
+    const currentViewport = latestViewportRef.current;
+    if (!currentMindmap?.id) {
+      console.error('No mindmap loaded, cannot save.')
+      return
+    }
+
+    setIsSaving(true)
+    if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+    }
+    try {
+      console.log('Đang lưu...');
+      
+      // Dùng UpdateMindmapRequest
+      const payload: UpdateMindmapRequest = {
+        title: currentMindmap.title,
+        nodes: currentNodes,
+        edges: currentEdges,
+        viewport: currentViewport || undefined,
+      };
+
+      await updateMindmap(currentMindmap.id, payload);
+      
+      console.log('Mindmap auto-saved successfully');
+
+    } catch (error) {
+      console.error('Error auto-saving mindmap:', error)
+      toast({ variant: "destructive", title: "Lỗi lưu", description: "Không thể tự động lưu." });
+      throw error
+    } finally {
+      setIsSaving(false)
+    }
+  }, [toast])
+
+  const triggerDebouncedSave = useCallback(() => {
+    if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+    }
+    saveTimerRef.current = setTimeout(() => {
+        saveMindmap();
+    }, 1500);
+  }, [saveMindmap]);
+
   // Node changes handler
   const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      setNodes((nds) => applyNodeChanges(changes, nds))
-    },
-    []
-  )
+    (changes: NodeChange[]) => {
+      setNodes((nds) => applyNodeChanges(changes, nds))
+      triggerDebouncedSave(); 
+    },
+    [triggerDebouncedSave]
+  )
 
   // Edge changes handler
   const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds))
-    },
-    []
-  )
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds))
+      triggerDebouncedSave();
+    },
+    [triggerDebouncedSave]
+  )
 
   // Connection handler
   const onConnect = useCallback(
@@ -148,8 +215,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         type: "smoothstep",
       }
       setEdges((eds) => addEdge(newEdge, eds))
+      triggerDebouncedSave();
     },
-    []
+    [triggerDebouncedSave]
   )
 
   // Add new node
@@ -166,25 +234,28 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       },
     }
     setNodes((nds) => [...nds, newNode])
+    triggerDebouncedSave();
     return newNode.id
-  }, [])
+  }, [triggerDebouncedSave])
 
   // Delete node
   const deleteNode = useCallback((nodeId: string) => {
     setNodes((nds) => nds.filter((node) => node.id !== nodeId))
     setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId))
+    triggerDebouncedSave();
     if (selectedNode?.id === nodeId) {
       setSelectedNode(null)
     }
-  }, [selectedNode])
+  }, [triggerDebouncedSave])
 
   // Delete edge
   const deleteEdge = useCallback((edgeId: string) => {
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
+    triggerDebouncedSave();
     if (selectedEdge?.id === edgeId) {
       setSelectedEdge(null)
     }
-  }, [selectedEdge])
+  }, [triggerDebouncedSave])
 
   // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
@@ -216,7 +287,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       return prev
     })
-  }, [])
+    triggerDebouncedSave();
+  }, [triggerDebouncedSave])
 
   // Update edge data
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
@@ -234,40 +306,21 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       return prev
     })
-  }, [])
+    triggerDebouncedSave();
+  }, [triggerDebouncedSave])
 
   // Set title
   const setTitle = useCallback((title: string) => {
     if (mindmap) {
       setMindmap({ ...mindmap, title })
+      triggerDebouncedSave();
     }
-  }, [mindmap])
+  }, [mindmap, triggerDebouncedSave])
 
-  // Save mindmap
-  const saveMindmap = useCallback(async () => {
-    if (!mindmap?.id) {
-      console.error('No mindmap loaded')
-      return
-    }
-
-    setIsSaving(true)
-    try {
-      console.log('Saving mindmap with nodes:', nodes)
-      console.log('Saving mindmap with edges:', edges)
-      
-      await updateMindmap(mindmap.id, {
-        title: mindmap.title,
-        nodes,
-        edges,
-      })
-      console.log('Mindmap saved successfully')
-    } catch (error) {
-      console.error('Error saving mindmap:', error)
-      throw error
-    } finally {
-      setIsSaving(false)
-    }
-  }, [mindmap, nodes, edges])
+  const onViewportChange = useCallback((viewport: Viewport) => {
+    setViewport(viewport);
+    triggerDebouncedSave(); // Kích hoạt lưu khi di chuyển
+  }, [triggerDebouncedSave]);
 
   const value: MindmapContextType = {
     mindmap,
@@ -289,6 +342,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     saveMindmap,
     loadMindmap,
     setTitle,
+    onViewportChange,
   }
 
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
