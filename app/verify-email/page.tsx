@@ -36,19 +36,36 @@ function VerifyEmailComponent() {
 
         const verifyToken = async () => {
             try {
-                const response = await apiClient.get(`/api/auth/verify-email?token=${token}`)
+                console.log('Verifying email with token:', token?.substring(0, 8) + '...')
+                const response = await apiClient.get(`/api/auth/verify-email?token=${encodeURIComponent(token)}`)
+                console.log('Verification response:', response.data)
                 setStatus('success')
                 setMessage(response.data.message || 'Xác thực tài khoản thành công!')
-                alert('Xác thực thành công! Bạn sẽ được chuyển đến trang đăng nhập.')
                 setTimeout(() => {
                     router.push('/?showLogin=true')
-                }, 1000)
+                }, 2000)
             } catch (error) {
+                console.error('Verification error:', error)
                 setStatus('error')
-                if (isAxiosError(error) && error.response) {
-                    setMessage(error.response.data.message || 'Token không hợp lệ hoặc đã hết hạn.')
+                if (isAxiosError(error)) {
+                    if (error.response) {
+                        // Server responded with error
+                        const errorMessage = error.response.data?.message || 
+                                           error.response.data?.error || 
+                                           'Token không hợp lệ hoặc đã hết hạn.'
+                        console.error('Server error response:', error.response.status, errorMessage)
+                        setMessage(errorMessage)
+                    } else if (error.request) {
+                        // Request was made but no response received
+                        console.error('No response from server:', error.request)
+                        setMessage('Không thể kết nối đến server. Vui lòng kiểm tra kết nối mạng và thử lại.')
+                    } else {
+                        // Something else happened
+                        console.error('Error setting up request:', error.message)
+                        setMessage('Đã xảy ra lỗi. Vui lòng thử lại.')
+                    }
                 } else {
-                    setMessage('Đã xảy ra lỗi. Vui lòng thử lại.')
+                    setMessage('Đã xảy ra lỗi không xác định. Vui lòng thử lại.')
                 }
             }
         }

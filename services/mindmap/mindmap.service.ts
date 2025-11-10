@@ -146,3 +146,15 @@ export const searchMindmaps = async (keyword: string): Promise<MindmapSummary[]>
   return response.data;
 };
 
+export const undoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
+    // Gọi API /api/mindmaps/{id}/undo
+    const response = await apiClient.post(`/mindmaps/${mindmapId}/undo`);
+    return response.data;
+};
+
+export const redoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
+    // Gọi API /api/mindmaps/{id}/redo
+    const response = await apiClient.post(`/mindmaps/${mindmapId}/redo`);
+    return response.data;
+};
+
