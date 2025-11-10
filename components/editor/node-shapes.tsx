@@ -92,7 +92,7 @@ return (
   )
 })
 // Rectangle Node (default)
-export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -130,10 +130,7 @@ export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
         />      <div className="space-y-1">
-        <div className="font-semibold text-sm" style={{ color }}>
-          {data.label}
-        </div>
-        {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
+        <EditableContent data={data} id={id} />
       </div>
         <Handle
             type="source"
@@ -169,7 +166,7 @@ export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 RectangleNode.displayName = "RectangleNode"
 
 // Circle Node
-export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -207,10 +204,7 @@ export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
         />      <div className="text-center px-3">
-        <div className="font-semibold text-sm" style={{ color }}>
-          {data.label}
-        </div>
-        {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{data.description}</div>}
+        <EditableContent data={data} id={id} />
       </div>
         <Handle
             type="source"
@@ -246,7 +240,7 @@ export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 CircleNode.displayName = "CircleNode"
 
 // Diamond Node
-export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -286,10 +280,7 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
-          <div className="font-semibold text-xs" style={{ color }}>
-            {data.label}
-          </div>
-          {data.description && <div className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{data.description}</div>}
+          <EditableContent data={data} id={id} />
         </div>
       </div>
         <Handle
@@ -326,7 +317,7 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 DiamondNode.displayName = "DiamondNode"
 
 // Hexagon Node
-export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -372,10 +363,7 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-4">
-          <div className="font-semibold text-sm" style={{ color }}>
-            {data.label}
-          </div>
-          {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
+          <EditableContent data={data} id={id} />
         </div>
       </div>
         <Handle
@@ -412,7 +400,7 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 HexagonNode.displayName = "HexagonNode"
 
 // Ellipse Node
-export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -450,10 +438,7 @@ export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
         />      <div className="text-center px-4">
-        <div className="font-semibold text-sm" style={{ color }}>
-          {data.label}
-        </div>
-        {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
+        <EditableContent data={data} id={id} />
       </div>
         <Handle
             type="source"
@@ -489,7 +474,7 @@ export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 EllipseNode.displayName = "EllipseNode"
 
 // Rounded Rectangle Node
-export const RoundedRectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
 
   return (
@@ -527,10 +512,7 @@ export const RoundedRectangleNode = memo(({ data, selected }: NodeProps<NodeData
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
         />      <div className="space-y-1">
-        <div className="font-semibold text-sm" style={{ color }}>
-          {data.label}
-        </div>
-        {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
+        <EditableContent data={data} id={id} />
       </div>
         <Handle
             type="source"
