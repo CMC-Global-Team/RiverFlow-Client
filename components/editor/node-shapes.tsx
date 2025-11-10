@@ -11,7 +11,13 @@ interface NodeData {
   shape?: string
   isEditing?: boolean
 }
-
+const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
+  const { updateNodeData } = useMindmapContext()
+  const [isEditing, setIsEditing] = useState(data.isEditing || false)
+  const [label, setLabel] = useState(data.label || "New Node")
+  const [description, setDescription] = useState(data.description || "")
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+})
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
