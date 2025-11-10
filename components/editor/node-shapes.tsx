@@ -1,5 +1,6 @@
 "use client"
-
+import { useState, useEffect, useRef } from "react"
+import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
 import { Handle, Position, NodeProps } from "reactflow"
 
