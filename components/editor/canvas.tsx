@@ -6,6 +6,7 @@ import ReactFlow, {
   Controls,
   MiniMap,
   MarkerType,
+  useReactFlow,
   ReactFlowInstance,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -64,7 +65,20 @@ export default function Canvas() {
     deleteNode,
     deleteEdge,
     addNode,
+    onViewportChange,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useMindmapContext()
+
+  const { getViewport } = useReactFlow();
+
+  const handleMoveEnd = useCallback(() => {
+    if (onViewportChange) {
+        onViewportChange(getViewport());
+    }
+  }, [getViewport, onViewportChange]);
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
@@ -272,6 +286,8 @@ export default function Canvas() {
         return
       }
 
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey
+
       // Tab key - Add child node
       if (event.key === 'Tab' && selectedNode) {
         event.preventDefault()
@@ -297,11 +313,28 @@ export default function Canvas() {
           deleteEdge(selectedEdge.id)
         }
       }
+
+      if (isCtrlOrCmd && event.key === 'z') {
+        event.preventDefault();
+        if (canUndo) {
+            undo();
+        }
+      }
+
+      if (
+          (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
+          (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
+         ) {
+        event.preventDefault();
+        if (canRedo) {
+            redo();
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedNode, selectedEdge, deleteNode, deleteEdge, createChildNode, createSiblingNode])
+  }, [selectedNode, selectedEdge, deleteNode, deleteEdge,addNode, onConnect, undo, redo, canUndo, canRedo, createChildNode, createSiblingNode])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -344,6 +377,7 @@ export default function Canvas() {
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onConnect={onConnect}
+        onMoveEnd={handleMoveEnd}
         onInit={(instance) => {
           reactFlowInstance.current = instance
         }}
