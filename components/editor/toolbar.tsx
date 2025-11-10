@@ -12,6 +12,7 @@ import {
   Square,
   Diamond,
   Hexagon,
+  GitBranch,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -25,7 +26,7 @@ import {
 import { Button } from "@/components/ui/button"
 
 export default function Toolbar() {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, onConnect, setSelectedNode } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
 
   const handleAddNode = (shape: string) => {
@@ -37,6 +38,77 @@ export default function Toolbar() {
       shape
     )
     toast.success(`${shape} node added`)
+  }
+
+  const handleAddSiblingNode = () => {
+    if (!selectedNode) {
+      toast.error("Vui lòng chọn một node trước")
+      return
+    }
+
+    // Find parent node by finding edge where selectedNode is the target
+    const parentEdge = edges.find(edge => edge.target === selectedNode.id)
+    const parentNode = parentEdge ? nodes.find(n => n.id === parentEdge.source) : null
+
+    // Calculate position for sibling node
+    const siblingOffset = 200 // Horizontal distance between siblings
+    const verticalOffset = 150 // Vertical distance for root nodes
+    
+    let siblingPosition: { x: number; y: number }
+    
+    if (parentNode) {
+      // Has parent: position to the right
+      siblingPosition = {
+        x: selectedNode.position.x + siblingOffset,
+        y: selectedNode.position.y,
+      }
+    } else {
+      // Root node: position below
+      siblingPosition = {
+        x: selectedNode.position.x,
+        y: selectedNode.position.y + verticalOffset,
+      }
+    }
+
+    // Get shape from current node or default to rectangle
+    const siblingShape = selectedNode.type || selectedNode.data?.shape || 'rectangle'
+
+    // Create sibling node
+    const siblingNodeId = addNode(siblingPosition, siblingShape)
+    
+    // If there's a parent, connect the new sibling to the same parent
+    if (parentNode) {
+      setTimeout(() => {
+        onConnect({
+          source: parentNode.id,
+          target: siblingNodeId,
+          sourceHandle: null,
+          targetHandle: null,
+        })
+      }, 10)
+    }
+
+    // Select the new node after it's created
+    // Use a longer timeout to ensure the node is in the nodes array
+    setTimeout(() => {
+      // Get the latest nodes from context by checking again
+      const currentNodes = [...nodes]
+      const newNode = currentNodes.find(n => n.id === siblingNodeId)
+      if (newNode) {
+        setSelectedNode(newNode)
+      } else {
+        // If still not found, try one more time after a short delay
+        setTimeout(() => {
+          const latestNodes = [...nodes]
+          const foundNode = latestNodes.find(n => n.id === siblingNodeId)
+          if (foundNode) {
+            setSelectedNode(foundNode)
+          }
+        }, 50)
+      }
+    }, 100)
+
+    toast.success("Node anh em đã được thêm")
   }
 
   const handleDeleteSelected = () => {
@@ -125,6 +197,16 @@ export default function Toolbar() {
 
       {/* Edit Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleAddSiblingNode}
+          title="Thêm node anh em (Enter)"
+          disabled={!selectedNode}
+          className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+        >
+          <GitBranch className="h-5 w-5" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"
