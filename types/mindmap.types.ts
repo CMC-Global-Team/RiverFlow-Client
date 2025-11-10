@@ -66,6 +66,8 @@ export interface MindmapResponse {
   metadata?: MindmapMetadata;
   createdAt: string;
   updatedAt: string;
+  canUndo: boolean;
+  canRedo: boolean;
 }
 
 // Mindmap summary (for list views)
