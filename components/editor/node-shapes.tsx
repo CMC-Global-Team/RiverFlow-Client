@@ -17,6 +17,13 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const [label, setLabel] = useState(data.label || "New Node")
   const [description, setDescription] = useState(data.description || "")
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  useEffect(() => {
+    if (isEditing && textareaRef.current) {
+      textareaRef.current.focus()
+      textareaRef.current.select()
+    }
+  }, [isEditing])
 })
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
