@@ -10,6 +10,7 @@ interface NodeData {
   color?: string
   bgColor?: string
   shape?: string
+  isEditing?: boolean
 }
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
@@ -24,6 +25,15 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     setLabel(data.label || "New Node")
     setDescription(data.description || "")
   }, [data.label, data.description])
+
+  // Auto-enable editing when isEditing prop is set
+  useEffect(() => {
+    if (data.isEditing && !editingLabel) {
+      setEditingLabel(true)
+      // Clear the flag after enabling
+      updateNodeData(id, { isEditing: false })
+    }
+  }, [data.isEditing, editingLabel, id, updateNodeData])
 
   useEffect(() => {
     if (editingLabel && labelRef.current) {
