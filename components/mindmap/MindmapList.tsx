@@ -1,6 +1,6 @@
 "use client"
 
-import { Star, Share2, Archive, Trash2, Calendar, Network, Edit } from "lucide-react"
+import { Star, Share2, Archive, Trash2, Calendar, Network, Edit, Copy } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { MindmapSummary } from "@/types/mindmap.types"
 
@@ -10,6 +10,7 @@ interface MindmapListProps {
   onToggleFavorite: (id: string) => void
   onArchive: (id: string) => void
   onEdit: (id: string) => void
+  onDuplicate: (id: string) => void
   onClick: (id: string) => void
   actionLoading: string | null
 }
@@ -20,6 +21,7 @@ export default function MindmapList({
   onToggleFavorite,
   onArchive,
   onEdit,
+  onDuplicate,
   onClick,
   actionLoading,
 }: MindmapListProps) {
@@ -93,6 +95,16 @@ export default function MindmapList({
             >
               <Edit className="h-4 w-4" />
             </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDuplicate(mindmap.id)
+              }}
+              className="p-2 rounded-lg hover:bg-muted transition-colors"
+              title="Duplicate"
+            >
+              <Copy className="h-4 w-4" />
+            </button>
             <button
               onClick={(e) => {
                 e.stopPropagation()

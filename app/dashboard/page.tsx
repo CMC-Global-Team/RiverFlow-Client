@@ -15,6 +15,9 @@ import TemplateModal from "@/components/dashboard/template-modal"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
+import { useToast } from "@/hooks/use-toast"
+import { duplicateMindmap } from "@/services/mindmap/mindmap.service"
+
 function DashboardContent() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
@@ -29,6 +32,7 @@ function DashboardContent() {
 
     const [showEditModal, setShowEditModal] = useState(false)
     const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
+    const { toast } = useToast()
 
     useEffect(() => {
     if (!containerRef.current || loading) return
@@ -135,17 +139,42 @@ function DashboardContent() {
 
     const handleSelectTemplate = async (template: any) => {
     // Create mindmap with selected template
-    const newMindmap = await create({
-      title: "Untitled Mindmap",
-      nodes: template.initialNodes,
-      edges: template.initialEdges,
-    })
+      const newMindmap = await create({
+        title: "Untitled Mindmap",
+        nodes: template.initialNodes,
+        edges: template.initialEdges,
+      })
 
-    if (newMindmap) {
-      // Navigate to editor with the new mindmap ID
-      router.push(`/editor?id=${newMindmap.id}`)
+      if (newMindmap) {
+        // Navigate to editor with the new mindmap ID
+        router.push(`/editor?id=${newMindmap.id}`)
+      }
     }
-  }
+
+    const handleDuplicate = async (id: string) => {
+    setActionLoading(id);
+    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." });
+
+    try {
+      const newMindmap = await duplicateMindmap(id);
+      
+      toast({ 
+        title: "Nhân bản thành công!",
+        description: `Đã tạo "${newMindmap.title}".`
+      });
+      await refetch();
+
+    } catch (error) {
+      console.error("Duplicate failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Lỗi", 
+        description: "Không thể nhân bản mind map." 
+      });
+    } finally {
+      setActionLoading(null); 
+    }
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -240,6 +269,7 @@ function DashboardContent() {
                           onArchive={handleArchive}
                           onEdit={handleEditInfo}
                           onClick={(id) => router.push(`/editor?id=${id}`)}
+                          onDuplicate={handleDuplicate}
                       />
                   </div>
                 ))}
