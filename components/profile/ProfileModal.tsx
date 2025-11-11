@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
+import { createPortal } from "react-dom"
 import { X, Loader2, User, Mail, Globe, Clock, Upload, Image as ImageIcon } from "lucide-react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile, updateUserProfile } from "@/services/auth/update-user.service"
@@ -120,8 +121,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
   }
 
-  if (!isOpen) return null
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
@@ -170,7 +169,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     }
   }
 
-  return (
+  if (!isOpen) return null
+
+  const modalContent = (
     <div 
       className="fixed inset-0 z-[9999] flex items-center justify-center"
       style={{ 
