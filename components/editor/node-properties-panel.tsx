@@ -37,6 +37,16 @@ const toggleBold = () => execCommand("bold")
     if (type === "highlight") execCommand("hiliteColor", value)
     if (type === "color") execCommand("foreColor", value)
   }
+
+    /*f FIX CHỮ BỊ NGƯỢC  */
+  useEffect(() => {
+    if (labelRef.current && labelRef.current.innerText !== selectedNode.data.label) {
+      labelRef.current.innerHTML = selectedNode.data.label || ""
+    }
+    if (descRef.current && descRef.current.innerText !== selectedNode.data.description) {
+      descRef.current.innerHTML = selectedNode.data.description || ""
+    }
+  }, [selectedNode.id])
   const handleLabelChange = (value: string) => {
     updateNodeData(selectedNode.id, { label: value })
   }
