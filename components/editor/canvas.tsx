@@ -1,14 +1,13 @@
 "use client"
 
 import { useCallback, useMemo, useEffect, useRef, useState } from 'react'
-import { useCallback, useMemo, useEffect, useRef, useState } from 'react'
 import ReactFlow, {
   Background,
   Controls,
   MiniMap,
   MarkerType,
   ReactFlowInstance,
-  Position,
+  useReactFlow,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
@@ -440,7 +439,6 @@ export default function Canvas() {
   // (Old plus-button helpers removed)
 
   return (
-    <div className="w-full h-full relative">
     <div className="w-full h-full relative">
       <ReactFlow
         nodes={nodes}
