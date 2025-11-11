@@ -1,0 +1,76 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "circle",
+      "position": { "x": 400, "y": 300 },
+      "data": {
+        "label": "Main Idea",
+        "description": "Central brainstorming topic",
+        "color": "#8b5cf6",
+        "shape": "circle"
+      },
+      "width": 140,
+      "height": 140
+    },
+    {
+      "id": "2",
+      "type": "rectangle",
+      "position": { "x": 200, "y": 150 },
+      "data": {
+        "label": "Why?",
+        "description": "Reasons and motivations",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "3",
+      "type": "rectangle",
+      "position": { "x": 600, "y": 150 },
+      "data": {
+        "label": "How?",
+        "description": "Methods and approaches",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "4",
+      "type": "rectangle",
+      "position": { "x": 200, "y": 450 },
+      "data": {
+        "label": "What?",
+        "description": "What needs to be done",
+        "color": "#f59e0b",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "5",
+      "type": "rectangle",
+      "position": { "x": 600, "y": 450 },
+      "data": {
+        "label": "When?",
+        "description": "Timeline and deadlines",
+        "color": "#ef4444",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    }
+  ],
+  "edges": [
+    { "id": "e1-2", "source": "1", "target": "2", "animated": true, "type": "smoothstep" },
+    { "id": "e1-3", "source": "1", "target": "3", "animated": true, "type": "smoothstep" },
+    { "id": "e1-4", "source": "1", "target": "4", "animated": true, "type": "smoothstep" },
+    { "id": "e1-5", "source": "1", "target": "5", "animated": true, "type": "smoothstep" }
+  ]
+}
+

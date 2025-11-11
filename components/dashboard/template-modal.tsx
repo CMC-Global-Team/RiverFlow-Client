@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { X, Layout, Sparkles, FileText, Network, Workflow } from "lucide-react"
+import { useState, useEffect } from "react"
+import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch } from "lucide-react"
 
 interface Template {
   id: string
@@ -11,6 +11,7 @@ interface Template {
   thumbnail?: string
   initialNodes: any[]
   initialEdges: any[]
+  filePath?: string
 }
 
 interface TemplateModalProps {
@@ -19,7 +20,81 @@ interface TemplateModalProps {
   onSelectTemplate: (template: Template) => void
 }
 
-const templates: Template[] = [
+// Template metadata from public/templates folder
+const templateMetadata = [
+  {
+    id: "blank",
+    name: "Blank Canvas",
+    description: "Start from scratch with an empty mindmap",
+    icon: <Layout className="h-6 w-6" />,
+    filePath: null, // Built-in template
+  },
+  {
+    id: "basic-mindmap",
+    name: "Basic Mindmap",
+    description: "Mindmap mẫu cơ bản với nhiều node",
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/basic-mindmap.json",
+  },
+  {
+    id: "simple-structure",
+    name: "Simple Structure",
+    description: "Cấu trúc đơn giản với central node và branches",
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/simple-structure.json",
+  },
+  {
+    id: "complex-mindmap",
+    name: "Complex Mindmap",
+    description: "Mindmap phức tạp với nhiều nhánh",
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/complex-mindmap.json",
+  },
+  {
+    id: "hierarchical-structure",
+    name: "Hierarchical Structure",
+    description: "Cấu trúc phân cấp rõ ràng",
+    icon: <GitBranch className="h-6 w-6" />,
+    filePath: "/templates/hierarchical-structure.json",
+  },
+  {
+    id: "radial-mindmap",
+    name: "Radial Mindmap",
+    description: "Mindmap dạng phóng xạ",
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/radial-mindmap.json",
+  },
+  {
+    id: "brainstorming",
+    name: "Brainstorming",
+    description: "Lý tưởng cho các buổi brainstorming sáng tạo",
+    icon: <Sparkles className="h-6 w-6" />,
+    filePath: "/templates/brainstorming.json",
+  },
+  {
+    id: "project-planning",
+    name: "Project Planning",
+    description: "Hoàn hảo cho lập kế hoạch dự án",
+    icon: <Workflow className="h-6 w-6" />,
+    filePath: "/templates/project-planning.json",
+  },
+  {
+    id: "decision-tree",
+    name: "Decision Tree",
+    description: "Cây quyết định cho phân tích lựa chọn",
+    icon: <GitBranch className="h-6 w-6" />,
+    filePath: "/templates/decision-tree.json",
+  },
+  {
+    id: "study-notes",
+    name: "Study Notes",
+    description: "Tổ chức tài liệu học tập của bạn",
+    icon: <FileText className="h-6 w-6" />,
+    filePath: "/templates/study-notes.json",
+  },
+]
+
+const builtInTemplates: Template[] = [
   {
     id: "blank",
     name: "Blank Canvas",
@@ -208,13 +283,77 @@ const templates: Template[] = [
 
 export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: TemplateModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
+  const [templates, setTemplates] = useState<Template[]>(builtInTemplates)
+  const [loading, setLoading] = useState<string | null>(null)
+
+  // Load templates from public/templates folder
+  useEffect(() => {
+    if (!isOpen) return
+
+    const loadTemplates = async () => {
+      const loadedTemplates: Template[] = [...builtInTemplates]
+
+      for (const meta of templateMetadata) {
+        if (meta.filePath) {
+          try {
+            const response = await fetch(meta.filePath)
+            if (response.ok) {
+              const data = await response.json()
+              if (data.nodes && data.edges) {
+                loadedTemplates.push({
+                  id: meta.id,
+                  name: meta.name,
+                  description: meta.description,
+                  icon: meta.icon,
+                  initialNodes: data.nodes,
+                  initialEdges: data.edges,
+                  filePath: meta.filePath,
+                })
+              }
+            }
+          } catch (error) {
+            console.error(`Failed to load template ${meta.filePath}:`, error)
+          }
+        }
+      }
+
+      setTemplates(loadedTemplates)
+    }
+
+    loadTemplates()
+  }, [isOpen])
 
   if (!isOpen) return null
 
-  const handleSelect = () => {
+  const handleSelect = async () => {
     if (selectedTemplate) {
-      onSelectTemplate(selectedTemplate)
-      onClose()
+      setLoading(selectedTemplate.id)
+      try {
+        // If template has filePath, reload it to ensure we have the latest data
+        if (selectedTemplate.filePath) {
+          const response = await fetch(selectedTemplate.filePath)
+          if (response.ok) {
+            const data = await response.json()
+            const updatedTemplate = {
+              ...selectedTemplate,
+              initialNodes: data.nodes,
+              initialEdges: data.edges,
+            }
+            onSelectTemplate(updatedTemplate)
+          } else {
+            onSelectTemplate(selectedTemplate)
+          }
+        } else {
+          onSelectTemplate(selectedTemplate)
+        }
+        onClose()
+      } catch (error) {
+        console.error("Error loading template:", error)
+        onSelectTemplate(selectedTemplate)
+        onClose()
+      } finally {
+        setLoading(null)
+      }
     }
   }
 
@@ -251,6 +390,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                       ? "border-primary bg-primary/5 shadow-lg"
                       : "border-border hover:border-primary/50 hover:shadow-md"
                   }
+                  ${loading === template.id ? "opacity-50 cursor-wait" : ""}
                 `}
               >
                 <div className="flex items-start gap-4">
