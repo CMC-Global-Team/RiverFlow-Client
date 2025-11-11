@@ -143,6 +143,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         email: updatedProfile.email,
         fullName: updatedProfile.fullName,
         role: user?.role || "USER",
+        avatar: updatedProfile.avatar,
       })
 
       toast({

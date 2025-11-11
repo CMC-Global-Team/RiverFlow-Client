@@ -14,6 +14,7 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  avatar?: string;
 }
 
 // Auth context type

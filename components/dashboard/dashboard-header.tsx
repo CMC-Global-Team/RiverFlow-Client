@@ -39,7 +39,24 @@ export default function DashboardHeader() {
             onClick={() => setIsProfileModalOpen(true)}
             className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors"
           >
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+            {user?.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt={user.fullName}
+                className="h-8 w-8 rounded-full object-cover border border-border"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    const fallback = parent.querySelector('.avatar-fallback') as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }
+                }}
+              />
+            ) : null}
+            <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
               <span className="text-xs font-bold text-white">
                 {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
               </span>
