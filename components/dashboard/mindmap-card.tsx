@@ -80,7 +80,7 @@ export default function MindmapCard({
                     e.stopPropagation();
                     const rect = e.currentTarget.getBoundingClientRect();
                     setMenuPos({
-                        x: rect.left,
+                        x: rect.left - 150,
                         y: rect.bottom + 6
                     });
                     setShowMenu(!showMenu);
