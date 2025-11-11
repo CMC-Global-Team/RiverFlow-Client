@@ -126,7 +126,10 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
       className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -200,7 +203,10 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
       className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -302,7 +308,10 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
         className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
-        style={{ borderColor: color }}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+         }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
@@ -381,7 +390,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
-          fill="hsl(var(--background))"
+          fill={data.bgColor || "hsl(var(--background))"}
           stroke={color}
           strokeWidth="2"
           className={selected ? "stroke-[3]" : ""}
@@ -434,7 +443,10 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -508,7 +520,10 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
       className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
