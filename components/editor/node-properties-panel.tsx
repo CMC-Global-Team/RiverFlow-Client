@@ -26,7 +26,7 @@ export default function NodePropertiesPanel() {
   }
 
   const handleBackgroundColorChange = (value: string) => {
-    updateNodeData(selectedNode.id, { backgroundColor: value })
+    updateNodeData(selectedNode.id, { bgColor: value ?? undefined })
   }
 
   const handleShapeChange = (shape: string) => {
@@ -130,11 +130,11 @@ export default function NodePropertiesPanel() {
                 className="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform relative"
                 style={{
                   backgroundColor: color,
-                  borderColor: selectedNode.data.backgroundColor === color ? "#000" : "#e5e7eb",
+                  borderColor: selectedNode.data.bgColor === color ? "#000" : "#e5e7eb",
                 }}
                 onClick={() => handleBackgroundColorChange(color)}
               >
-                {selectedNode.data.backgroundColor === color && (
+                {selectedNode.data.bgColor === color && (
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="w-3 h-3 bg-black rounded-full" />
                   </div>
@@ -143,7 +143,7 @@ export default function NodePropertiesPanel() {
             ))}
             {/* Reset button */}
             <button
-              onClick={() => handleBackgroundColorChange("")}
+              onClick={() => handleBackgroundColorChange(undefined as any)}
               className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-400 hover:border-gray-600 flex items-center justify-center"
               title="Reset background"
             >
