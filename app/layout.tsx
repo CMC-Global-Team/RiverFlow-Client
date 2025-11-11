@@ -3,9 +3,8 @@ import type { Metadata } from "next"
 import { Geist, Geist_Mono } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Toaster } from "@/components/ui/toaster"
-import { AuthProvider } from "@/contexts/auth/AuthContext"
+import { Providers } from "@/components/providers"
 import "./globals.css"
-import { ThemeProvider } from "@/components/theme-provider"
 const _geist = Geist({ subsets: ["latin"] })
 const _geistMono = Geist_Mono({ subsets: ["latin"] })
 
@@ -36,13 +35,11 @@ export default function RootLayout({
         <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
       </head>
       <body className={`font-sans antialiased`}>
-       <ThemeProvider attribute="class" defaultTheme="light">
-          <AuthProvider>
-            {children}
-            <Toaster />
-            <Analytics />
-          </AuthProvider>
-          </ThemeProvider>
+        <Providers>
+          {children}
+          <Toaster />
+          <Analytics />
+        </Providers>
       </body>
     </html>
   )
