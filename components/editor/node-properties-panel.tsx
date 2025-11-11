@@ -47,6 +47,12 @@ export default function NodePropertiesPanel() {
     toast.success('Node deleted')
   }
 
+  const backgroundColors = [
+    "#ffffff", "#f3f4f6", "#e5e7eb", // white, gray-100, gray-200
+    "#dbeafe", "#fde8e8", "#fef3c7", "#d1fae5", "#e0e7ff", // light blue, red, yellow, green, indigo
+    "#f3e8ff", "#fee2e2", "#fef9c3", "#d4f4dd", // light purple, red, yellow, green
+  ]
+
   return (
     <div className="h-full bg-card overflow-y-auto">
       <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
