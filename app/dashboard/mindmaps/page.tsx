@@ -206,13 +206,16 @@ function MyMindmapsContent() {
                     }
                   </p>
                 </div>
-                <button
-                  onClick={handleCreateNew}
-                  className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
-                >
-                  <Plus className="h-5 w-5" />
-                  Create New
-                </button>
+                {/* Only show Create New button if user has mindmaps */}
+                {!loading && !error && mindmaps.length > 0 && (
+                  <button
+                    onClick={handleCreateNew}
+                    className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create New
+                  </button>
+                )}
               </div>
 
               {/* Search Bar */}
