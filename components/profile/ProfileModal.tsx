@@ -141,7 +141,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           </div>
         ) : (
           <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+            <div className="p-6 space-y-6 max-h-[calc(80vh-200px)] overflow-y-auto">
               {/* Full Name */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
