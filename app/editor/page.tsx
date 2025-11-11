@@ -12,7 +12,7 @@ import { useSearchParams } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import gsap from "gsap"
-
+import { ThemeSwitcher } from "@/components/theme-switcher"
 function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
@@ -158,6 +158,7 @@ function EditorInner() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
+             <ThemeSwitcher/>
             {/* Auto-save Toggle */}
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
               <Switch
