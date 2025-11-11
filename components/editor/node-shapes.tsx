@@ -10,9 +10,31 @@ interface NodeData {
   shape?: string
 }
 
+interface ExtendedNodeProps extends NodeProps<NodeData> {
+  onHandleHover?: (nodeId: string, handleId: string, handlePosition: string, handleType: 'source' | 'target', event: React.MouseEvent) => void
+  onHandleLeave?: (nodeId: string, handleId: string) => void
+}
+
 // Rectangle Node (default)
-export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const RectangleNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      // Convert Position enum to string for easier handling
+      const positionStr = position === Position.Top ? 'top' :
+                         position === Position.Right ? 'right' :
+                         position === Position.Bottom ? 'bottom' : 'left'
+      console.log('RectangleNode handle hover:', { nodeId: id, handleId, position: positionStr, handleType })
+      onHandleHover?.(id, handleId, positionStr, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div
@@ -21,14 +43,48 @@ export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3" 
+        style={{ background: color, top: '50%' }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <div className="space-y-1">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3" 
+        style={{ background: color, top: '50%' }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
@@ -36,8 +92,20 @@ export const RectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 RectangleNode.displayName = "RectangleNode"
 
 // Circle Node
-export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const CircleNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleHover?.(id, handleId, position, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div
@@ -46,14 +114,48 @@ export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <div className="text-center px-3">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-1">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
@@ -61,12 +163,41 @@ export const CircleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 CircleNode.displayName = "CircleNode"
 
 // Diamond Node
-export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const DiamondNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleHover?.(id, handleId, position, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div className="relative w-32 h-32">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 z-10" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <div
         className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
@@ -81,7 +212,24 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
           {data.description && <div className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{data.description}</div>}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 z-10" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
@@ -89,12 +237,41 @@ export const DiamondNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 DiamondNode.displayName = "DiamondNode"
 
 // Hexagon Node
-export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const HexagonNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleHover?.(id, handleId, position, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div className="relative w-36 h-32">
-      <Handle type="target" position={Position.Top} className="w-3 h-3 z-10" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <svg
         viewBox="0 0 100 87"
         className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
@@ -115,7 +292,24 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
           {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
         </div>
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3 z-10" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3 z-10" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
@@ -123,8 +317,20 @@ export const HexagonNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 HexagonNode.displayName = "HexagonNode"
 
 // Ellipse Node
-export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const EllipseNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleHover?.(id, handleId, position, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div
@@ -133,14 +339,48 @@ export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <div className="text-center px-4">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
@@ -148,8 +388,20 @@ export const EllipseNode = memo(({ data, selected }: NodeProps<NodeData>) => {
 EllipseNode.displayName = "EllipseNode"
 
 // Rounded Rectangle Node
-export const RoundedRectangleNode = memo(({ data, selected }: NodeProps<NodeData>) => {
+export const RoundedRectangleNode = memo(({ id, data, selected, onHandleHover, onHandleLeave }: ExtendedNodeProps) => {
   const color = data.color || "#3b82f6"
+
+  const handleMouseEnter = (handleId: string, position: Position, handleType: 'source' | 'target') => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleHover?.(id, handleId, position, handleType, e)
+    }
+
+  const handleMouseLeave = (handleId: string) => 
+    (e: React.MouseEvent) => {
+      e.stopPropagation()
+      onHandleLeave?.(id, handleId)
+    }
 
   return (
     <div
@@ -158,14 +410,48 @@ export const RoundedRectangleNode = memo(({ data, selected }: NodeProps<NodeData
       }`}
       style={{ borderColor: color }}
     >
-      <Handle type="target" position={Position.Top} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="target" 
+        id="target-top"
+        position={Position.Top} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('target-top', Position.Top, 'target')}
+        onMouseLeave={handleMouseLeave('target-top')}
+      />
+      <Handle 
+        type="target" 
+        id="target-right"
+        position={Position.Right} 
+        className="w-3 h-3" 
+        style={{ background: color, top: '50%' }}
+        onMouseEnter={handleMouseEnter('target-right', Position.Right, 'target')}
+        onMouseLeave={handleMouseLeave('target-right')}
+      />
       <div className="space-y-1">
         <div className="font-semibold text-sm" style={{ color }}>
           {data.label}
         </div>
         {data.description && <div className="text-xs text-muted-foreground line-clamp-2">{data.description}</div>}
       </div>
-      <Handle type="source" position={Position.Bottom} className="w-3 h-3" style={{ background: color }} />
+      <Handle 
+        type="source" 
+        id="source-bottom"
+        position={Position.Bottom} 
+        className="w-3 h-3" 
+        style={{ background: color }}
+        onMouseEnter={handleMouseEnter('source-bottom', Position.Bottom, 'source')}
+        onMouseLeave={handleMouseLeave('source-bottom')}
+      />
+      <Handle 
+        type="source" 
+        id="source-left"
+        position={Position.Left} 
+        className="w-3 h-3" 
+        style={{ background: color, top: '50%' }}
+        onMouseEnter={handleMouseEnter('source-left', Position.Left, 'source')}
+        onMouseLeave={handleMouseLeave('source-left')}
+      />
     </div>
   )
 })
