@@ -264,22 +264,33 @@ export default function Canvas() {
   }, [setSelectedNode, setSelectedEdge])
 
   // Effect to select newly created child or sibling node
+  // Use a ref to track the previous nodes length to detect when new nodes are added
+  const prevNodesLengthRef = useRef(nodes.length)
+  
   useEffect(() => {
-    if (pendingChildNodeId.current) {
-      const newNode = nodes.find(n => n.id === pendingChildNodeId.current)
-      if (newNode) {
-        setSelectedNode(newNode)
-        pendingChildNodeId.current = null
+    // Only run if nodes length increased (new node added)
+    if (nodes.length > prevNodesLengthRef.current) {
+      if (pendingChildNodeId.current) {
+        const newNode = nodes.find(n => n.id === pendingChildNodeId.current)
+        if (newNode) {
+          setSelectedNode(newNode)
+          pendingChildNodeId.current = null
+        }
       }
-    }
-    if (pendingSiblingNodeId.current) {
-      const newNode = nodes.find(n => n.id === pendingSiblingNodeId.current)
-      if (newNode) {
-        setSelectedNode(newNode)
-        pendingSiblingNodeId.current = null
+      if (pendingSiblingNodeId.current) {
+        const newNode = nodes.find(n => n.id === pendingSiblingNodeId.current)
+        if (newNode) {
+          setSelectedNode(newNode)
+          pendingSiblingNodeId.current = null
+        }
       }
+      prevNodesLengthRef.current = nodes.length
+    } else if (nodes.length < prevNodesLengthRef.current) {
+      // Update ref if nodes were deleted
+      prevNodesLengthRef.current = nodes.length
     }
-  }, [nodes, setSelectedNode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes.length]) // Only depend on nodes.length to prevent infinite loops
 
   // Keyboard shortcuts
   useEffect(() => {

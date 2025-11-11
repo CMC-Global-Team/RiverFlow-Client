@@ -90,25 +90,8 @@ export default function Toolbar() {
       }, 10)
     }
 
-    // Select the new node after it's created
-    // Use a longer timeout to ensure the node is in the nodes array
-    setTimeout(() => {
-      // Get the latest nodes from context by checking again
-      const currentNodes = [...nodes]
-      const newNode = currentNodes.find(n => n.id === siblingNodeId)
-      if (newNode) {
-        setSelectedNode(newNode)
-      } else {
-        // If still not found, try one more time after a short delay
-        setTimeout(() => {
-          const latestNodes = [...nodes]
-          const foundNode = latestNodes.find(n => n.id === siblingNodeId)
-          if (foundNode) {
-            setSelectedNode(foundNode)
-          }
-        }, 50)
-      }
-    }, 100)
+    // Note: Node selection is handled by the useEffect in Canvas component
+    // No need to manually select here to avoid infinite loops
 
     toast.success("Node anh em đã được thêm")
   }
