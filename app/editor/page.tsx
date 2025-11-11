@@ -8,6 +8,7 @@ import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
+import BackButton from "@/components/editor/back-button"
 import { useSearchParams } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -129,6 +130,7 @@ function EditorInner() {
       <header className="border-b border-border bg-card px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <BackButton />
             <div 
               onClick={() => setIsEditing(true)} 
               className="cursor-pointer" 
