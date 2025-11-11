@@ -25,6 +25,10 @@ export default function NodePropertiesPanel() {
     updateNodeData(selectedNode.id, { color: value })
   }
 
+  const handleBackgroundColorChange = (value: string) => {
+    updateNodeData(selectedNode.id, { backgroundColor: value })
+  }
+
   const handleShapeChange = (shape: string) => {
     updateNodeData(selectedNode.id, { shape })
   }
@@ -128,4 +132,3 @@ export default function NodePropertiesPanel() {
     </div>
   )
 }
-
