@@ -172,7 +172,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-[9999] flex items-center justify-center"
       style={{ 
         position: 'fixed', 
         top: 0, 
@@ -182,7 +182,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'center',
-        zIndex: 100
+        zIndex: 9999,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        backdropFilter: 'blur(4px)'
       }}
       onClick={onClose}
       onKeyDown={handleKeyDown}
@@ -190,11 +192,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       <div 
         className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border"
         style={{ 
-          margin: 'auto',
           maxHeight: '85vh',
           overflow: 'hidden',
           display: 'flex',
-          flexDirection: 'column'
+          flexDirection: 'column',
+          position: 'relative'
         }}
         onClick={(e) => e.stopPropagation()}
       >
