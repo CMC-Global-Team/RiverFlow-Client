@@ -19,33 +19,41 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
-import { Plus } from 'lucide-react'
+import { ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react'
 
-// Component to handle add button
-function AddChildButton({ screenPosition, onAddChild, onClose }: {
+// Component for directional arrow buttons
+function DirectionButton({
+  screenPosition,
+  onClick,
+  title,
+  direction,
+}: {
   screenPosition: { x: number; y: number }
-  onAddChild: () => void
-  onClose: () => void
+  onClick: () => void
+  title: string
+  direction: 'top' | 'right' | 'bottom' | 'left'
 }) {
+  const Icon = direction === 'top' ? ArrowUp : direction === 'right' ? ArrowRight : direction === 'bottom' ? ArrowDown : ArrowLeft
+  
   return (
     <div
       className="absolute z-50 pointer-events-auto"
       style={{
         left: `${screenPosition.x}px`,
         top: `${screenPosition.y}px`,
-        transform: 'translate(-50%, -100%)',
+        transform: 'translate(-50%, -50%)',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation()
-        onAddChild()
-        onClose()
+        onClick()
       }}
     >
       <button
-        className="w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center border-2 border-background"
-        title="Thêm node con"
+        className="w-8 h-8 rounded-full bg-primary/90 text-primary-foreground shadow-lg hover:bg-primary transition-all flex items-center justify-center border-2 border-background backdrop-blur-sm"
+        title={title}
       >
-        <Plus className="w-4 h-4" />
+        <Icon className="w-4 h-4" />
       </button>
     </div>
   )
@@ -90,54 +98,111 @@ export default function Canvas() {
   // Ref to store ReactFlow instance
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   
-  // State for long press detection
-  const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number } } | null>(null)
-  const [buttonScreenPosition, setButtonScreenPosition] = useState<{ x: number; y: number } | null>(null)
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
-  const longPressNodeRef = useRef<string | null>(null)
+  // State for hover detection with delay
+  const [hoveredNode, setHoveredNode] = useState<{
+    id: string
+    screenPositions: {
+      top: { x: number; y: number }
+      right: { x: number; y: number }
+      bottom: { x: number; y: number }
+      left: { x: number; y: number }
+    }
+  } | null>(null)
+  
+  const hoverTimer = useRef<NodeJS.Timeout | null>(null)
+  const hideTimer = useRef<NodeJS.Timeout | null>(null)
+  const hoveredNodeId = useRef<string | null>(null)
 
-  // Calculate screen position from flow position
-  const calculateScreenPosition = useCallback((flowPosition: { x: number; y: number }) => {
-    if (!reactFlowInstance.current) return null
+  // Calculate screen positions for 4 directional buttons around a node
+  const calculateDirectionPositions = useCallback((node: any) => {
+    if (!reactFlowInstance.current || !node) return null
     
     const viewport = reactFlowInstance.current.getViewport()
-    const screenX = (flowPosition.x * viewport.zoom) + viewport.x
-    const screenY = (flowPosition.y * viewport.zoom) + viewport.y
+    const nodeWidth = node.width || 150
+    const nodeHeight = node.height || 50
+    const offset = 40 // Distance from node edge
     
-    return { x: screenX, y: screenY - 40 } // Position above the node
+    // Calculate node center in screen coordinates
+    const nodeCenterX = (node.position.x * viewport.zoom) + viewport.x + (nodeWidth * viewport.zoom) / 2
+    const nodeCenterY = (node.position.y * viewport.zoom) + viewport.y + (nodeHeight * viewport.zoom) / 2
+    
+    return {
+      top: {
+        x: nodeCenterX,
+        y: nodeCenterY - (nodeHeight * viewport.zoom) / 2 - offset
+      },
+      right: {
+        x: nodeCenterX + (nodeWidth * viewport.zoom) / 2 + offset,
+        y: nodeCenterY
+      },
+      bottom: {
+        x: nodeCenterX,
+        y: nodeCenterY + (nodeHeight * viewport.zoom) / 2 + offset
+      },
+      left: {
+        x: nodeCenterX - (nodeWidth * viewport.zoom) / 2 - offset,
+        y: nodeCenterY
+      }
+    }
   }, [])
 
-  // Create node types with long press handlers
-  const nodeTypes = useMemo(() => {
-    const createNodeWithLongPress = (NodeComponent: any) => {
-      const WrappedNode = (props: any) => {
-        const handleLongPress = () => {
-          if (reactFlowInstance.current) {
-            setLongPressedNode({
-              id: props.id,
-              position: props.position,
-            })
-            const screenPos = calculateScreenPosition(props.position)
-            if (screenPos) {
-              setButtonScreenPosition(screenPos)
-            }
-          }
+  // Handle node hover with delay
+  const handleNodeMouseEnter = useCallback((nodeId: string) => {
+    // Clear any existing timers
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current)
+    }
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current)
+    }
+    
+    hoveredNodeId.current = nodeId
+    
+    // Delay 0.5-1 second before showing buttons (using 750ms as middle ground)
+    hoverTimer.current = setTimeout(() => {
+      const node = nodes.find(n => n.id === nodeId)
+      if (node && hoveredNodeId.current === nodeId) {
+        const positions = calculateDirectionPositions(node)
+        if (positions) {
+          setHoveredNode({
+            id: nodeId,
+            screenPositions: positions
+          })
         }
-
-        return <NodeComponent {...props} onLongPress={handleLongPress} />
       }
-      return WrappedNode
-    }
+    }, 750) // 750ms delay
+  }, [nodes, calculateDirectionPositions])
 
-    return {
-      rectangle: createNodeWithLongPress(RectangleNode),
-      circle: createNodeWithLongPress(CircleNode),
-      diamond: createNodeWithLongPress(DiamondNode),
-      hexagon: createNodeWithLongPress(HexagonNode),
-      ellipse: createNodeWithLongPress(EllipseNode),
-      roundedRectangle: createNodeWithLongPress(RoundedRectangleNode),
+  const handleNodeMouseLeave = useCallback(() => {
+    // Clear hover timer if still waiting
+    if (hoverTimer.current) {
+      clearTimeout(hoverTimer.current)
+      hoverTimer.current = null
     }
-  }, [calculateScreenPosition])
+    
+    hoveredNodeId.current = null
+    
+    // Hide buttons after 200-300ms delay (using 250ms)
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current)
+    }
+    
+    hideTimer.current = setTimeout(() => {
+      setHoveredNode(null)
+    }, 250) // 250ms delay before hiding
+  }, [])
+
+  // Create node types - hover will be handled by ReactFlow's onNodeMouseEnter/onNodeMouseLeave
+  const nodeTypes = useMemo(() => {
+    return {
+      rectangle: RectangleNode,
+      circle: CircleNode,
+      diamond: DiamondNode,
+      hexagon: HexagonNode,
+      ellipse: EllipseNode,
+      roundedRectangle: RoundedRectangleNode,
+    }
+  }, [])
 
   const defaultEdgeOptions = {
     animated: true,
@@ -147,13 +212,40 @@ export default function Canvas() {
     },
   }
 
-  // Helper function to create child node
-  const createChildNode = useCallback((parentNode: any) => {
-    // Calculate position for child node (below parent with offset)
+  // Helper function to create child node in a specific direction
+  const createChildNodeInDirection = useCallback((
+    parentNode: any,
+    direction: 'top' | 'right' | 'bottom' | 'left'
+  ) => {
     const childOffset = 150 // Distance between parent and child
-    const childPosition = {
-      x: parentNode.position.x,
-      y: parentNode.position.y + childOffset,
+    
+    let childPosition: { x: number; y: number }
+    
+    switch (direction) {
+      case 'top':
+        childPosition = {
+          x: parentNode.position.x,
+          y: parentNode.position.y - childOffset,
+        }
+        break
+      case 'right':
+        childPosition = {
+          x: parentNode.position.x + childOffset,
+          y: parentNode.position.y,
+        }
+        break
+      case 'bottom':
+        childPosition = {
+          x: parentNode.position.x,
+          y: parentNode.position.y + childOffset,
+        }
+        break
+      case 'left':
+        childPosition = {
+          x: parentNode.position.x - childOffset,
+          y: parentNode.position.y,
+        }
+        break
     }
 
     // Get shape from parent node or default to rectangle
@@ -175,7 +267,15 @@ export default function Canvas() {
         targetHandle: null,
       })
     }, 10)
+    
+    // Hide buttons after creating node
+    setHoveredNode(null)
   }, [addNode, onConnect])
+
+  // Legacy function for backward compatibility
+  const createChildNode = useCallback((parentNode: any) => {
+    createChildNodeInDirection(parentNode, 'bottom')
+  }, [createChildNodeInDirection])
 
   // Helper function to create sibling node
   const createSiblingNode = useCallback((currentNode: any) => {
@@ -228,15 +328,6 @@ export default function Canvas() {
 
   const onNodeClick = useCallback(
     (_event: any, node: any) => {
-      // Clear long press if clicking normally
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current)
-        longPressTimer.current = null
-      }
-      setLongPressedNode(null)
-      setButtonScreenPosition(null)
-      longPressNodeRef.current = null
-      
       setSelectedNode(node)
       setSelectedEdge(null)
     },
@@ -259,10 +350,12 @@ export default function Canvas() {
   )
 
   const onPaneClick = useCallback(() => {
+    setHoveredNode(null)
     setSelectedNode(null)
     setSelectedEdge(null)
   }, [setSelectedNode, setSelectedEdge])
 
+<<<<<<< HEAD
   // Effect to select newly created child or sibling node
   // Use a ref to track the previous nodes length to detect when new nodes are added
   const prevNodesLengthRef = useRef(nodes.length)
@@ -283,14 +376,38 @@ export default function Canvas() {
           setSelectedNode(newNode)
           pendingSiblingNodeId.current = null
         }
+=======
+  // Effect to select newly created child or sibling node and enable editing
+  useEffect(() => {
+    if (pendingChildNodeId.current) {
+      const newNode = nodes.find(n => n.id === pendingChildNodeId.current)
+      if (newNode) {
+        setSelectedNode(newNode)
+        // Enable editing mode for the new node
+        updateNodeData(newNode.id, { isEditing: true })
+        pendingChildNodeId.current = null
+      }
+    }
+    if (pendingSiblingNodeId.current) {
+      const newNode = nodes.find(n => n.id === pendingSiblingNodeId.current)
+      if (newNode) {
+        setSelectedNode(newNode)
+        // Enable editing mode for the new node
+        updateNodeData(newNode.id, { isEditing: true })
+        pendingSiblingNodeId.current = null
+>>>>>>> e6724ade567b74e5dd1e21861f0deaf9da2b0a64
       }
       prevNodesLengthRef.current = nodes.length
     } else if (nodes.length < prevNodesLengthRef.current) {
       // Update ref if nodes were deleted
       prevNodesLengthRef.current = nodes.length
     }
+<<<<<<< HEAD
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes.length]) // Only depend on nodes.length to prevent infinite loops
+=======
+  }, [nodes, setSelectedNode, updateNodeData])
+>>>>>>> e6724ade567b74e5dd1e21861f0deaf9da2b0a64
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -358,35 +475,30 @@ export default function Canvas() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current)
+      if (hoverTimer.current) {
+        clearTimeout(hoverTimer.current)
+      }
+      if (hideTimer.current) {
+        clearTimeout(hideTimer.current)
       }
     }
   }, [])
 
-  const handleAddChildFromButton = useCallback(() => {
-    if (longPressedNode) {
-      const parentNode = nodes.find(n => n.id === longPressedNode.id)
-      if (parentNode) {
-        createChildNode(parentNode)
-      }
-    }
-  }, [longPressedNode, nodes, createChildNode])
-
-  const handleCloseAddButton = useCallback(() => {
-    setLongPressedNode(null)
-    setButtonScreenPosition(null)
-  }, [])
-
-  // Update button position when long-pressed node changes
+  // Update button positions when viewport changes
   useEffect(() => {
-    if (longPressedNode && reactFlowInstance.current) {
-      const screenPos = calculateScreenPosition(longPressedNode.position)
-      if (screenPos) {
-        setButtonScreenPosition(screenPos)
+    if (hoveredNode) {
+      const node = nodes.find(n => n.id === hoveredNode.id)
+      if (node) {
+        const positions = calculateDirectionPositions(node)
+        if (positions) {
+          setHoveredNode({
+            id: hoveredNode.id,
+            screenPositions: positions
+          })
+        }
       }
     }
-  }, [longPressedNode, calculateScreenPosition])
+  }, [hoveredNode, nodes, calculateDirectionPositions])
 
   return (
     <div className="w-full h-full relative">
@@ -402,11 +514,24 @@ export default function Canvas() {
         }}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
+        onNodeMouseEnter={(_event, node) => handleNodeMouseEnter(node.id)}
+        onNodeMouseLeave={handleNodeMouseLeave}
         onEdgeClick={onEdgeClick}
-        onPaneClick={() => {
-          setLongPressedNode(null)
-          setButtonScreenPosition(null)
-          onPaneClick()
+        onPaneClick={onPaneClick}
+        onMove={() => {
+          // Update button positions when viewport changes
+          if (hoveredNode) {
+            const node = nodes.find(n => n.id === hoveredNode.id)
+            if (node) {
+              const positions = calculateDirectionPositions(node)
+              if (positions) {
+                setHoveredNode({
+                  id: hoveredNode.id,
+                  screenPositions: positions
+                })
+              }
+            }
+          }
         }}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
@@ -423,13 +548,54 @@ export default function Canvas() {
         />
       </ReactFlow>
       
-      {/* Add child button overlay */}
-      {longPressedNode && buttonScreenPosition && (
-        <AddChildButton
-          screenPosition={buttonScreenPosition}
-          onAddChild={handleAddChildFromButton}
-          onClose={handleCloseAddButton}
-        />
+      {/* Directional arrow buttons overlay */}
+      {hoveredNode && (
+        <>
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.top}
+            title="Thêm node phía trên"
+            direction="top"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.id)
+              if (parent) {
+                createChildNodeInDirection(parent, 'top')
+              }
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.right}
+            title="Thêm node bên phải"
+            direction="right"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.id)
+              if (parent) {
+                createChildNodeInDirection(parent, 'right')
+              }
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.bottom}
+            title="Thêm node phía dưới"
+            direction="bottom"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.id)
+              if (parent) {
+                createChildNodeInDirection(parent, 'bottom')
+              }
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.left}
+            title="Thêm node bên trái"
+            direction="left"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.id)
+              if (parent) {
+                createChildNodeInDirection(parent, 'left')
+              }
+            }}
+          />
+        </>
       )}
     </div>
   )
