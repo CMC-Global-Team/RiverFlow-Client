@@ -7,10 +7,13 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
-
+import { useState, useRef, useEffect } from "react"
 export default function NodePropertiesPanel() {
   const { selectedNode, updateNodeData, setSelectedNode, deleteNode } = useMindmapContext()
-
+const [focusedField, setFocusedField] = useState<"label" | "description" | null>(null)
+  const labelRef = useRef<HTMLDivElement>(null)
+  const descRef = useRef<HTMLDivElement>(null)
+  
   if (!selectedNode) return null
 
   const handleLabelChange = (value: string) => {
