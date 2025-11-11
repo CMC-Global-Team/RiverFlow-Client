@@ -184,7 +184,11 @@ export const DiamondNode = memo(({ id, data, selected, onHandleHover, onHandleLe
     }
 
   return (
-    <div className="relative w-32 h-32">
+    <div
+      className="relative w-32 h-32"
+      onMouseEnter={() => onNodeHoverChange?.(id, true)}
+      onMouseLeave={() => onNodeHoverChange?.(id, false)}
+    >
       <Handle 
         type="target" 
         id="target-top"
@@ -208,8 +212,6 @@ export const DiamondNode = memo(({ id, data, selected, onHandleHover, onHandleLe
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
         style={{ borderColor: color }}
-        onMouseEnter={() => onNodeHoverChange?.(id, true)}
-        onMouseLeave={() => onNodeHoverChange?.(id, false)}
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
@@ -260,7 +262,11 @@ export const HexagonNode = memo(({ id, data, selected, onHandleHover, onHandleLe
     }
 
   return (
-    <div className="relative w-36 h-32">
+    <div
+      className="relative w-36 h-32"
+      onMouseEnter={() => onNodeHoverChange?.(id, true)}
+      onMouseLeave={() => onNodeHoverChange?.(id, false)}
+    >
       <Handle 
         type="target" 
         id="target-top"
@@ -282,8 +288,6 @@ export const HexagonNode = memo(({ id, data, selected, onHandleHover, onHandleLe
       <svg
         viewBox="0 0 100 87"
         className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
-        onMouseEnter={() => onNodeHoverChange?.(id, true)}
-        onMouseLeave={() => onNodeHoverChange?.(id, false)}
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
