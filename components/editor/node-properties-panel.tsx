@@ -30,6 +30,9 @@ const handleUpdateContent = (field: "label" | "description") => {
     document.execCommand(command, false, value)
     if (focusedField) handleUpdateContent(focusedField)
   }
+const toggleBold = () => execCommand("bold")
+  const toggleItalic = () => execCommand("italic")
+  const toggleUnderline = () => execCommand("underline")
   
   const handleLabelChange = (value: string) => {
     updateNodeData(selectedNode.id, { label: value })
