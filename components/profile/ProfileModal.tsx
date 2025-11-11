@@ -388,4 +388,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       </div>
     </div>
   )
+
+  // Use portal to render modal to body, avoiding parent container constraints
+  if (typeof window !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  
+  return null
 }
