@@ -14,6 +14,7 @@ import {
   Hexagon,
   Redo2,
   Undo2,
+  GitBranch,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -206,7 +207,7 @@ export default function Toolbar() {
           disabled={!selectedNode}
           className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
         >
-          <Trash2 className="h-5 w-5" />
+          <GitBranch className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
