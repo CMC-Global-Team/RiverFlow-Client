@@ -26,6 +26,10 @@ const handleUpdateContent = (field: "label" | "description") => {
     const value = ref.innerHTML
     updateNodeData(selectedNode.id, { [field]: value })
   }
+ const execCommand = (command: string, value?: string) => {
+    document.execCommand(command, false, value)
+    if (focusedField) handleUpdateContent(focusedField)
+  }
   
   const handleLabelChange = (value: string) => {
     updateNodeData(selectedNode.id, { label: value })
