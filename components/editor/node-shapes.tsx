@@ -400,7 +400,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
-          fill={data.bgColor || "hsl(var(--background))"}
+          fill={data.bgColor || "#ffffff"}
           stroke={color}
           strokeWidth="2"
           className={selected ? "stroke-[3]" : ""}
