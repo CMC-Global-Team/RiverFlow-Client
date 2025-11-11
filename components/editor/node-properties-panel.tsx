@@ -25,6 +25,10 @@ export default function NodePropertiesPanel() {
     updateNodeData(selectedNode.id, { color: value })
   }
 
+  const handleBackgroundColorChange = (value: string) => {
+    updateNodeData(selectedNode.id, { backgroundColor: value })
+  }
+
   const handleShapeChange = (shape: string) => {
     updateNodeData(selectedNode.id, { shape })
   }
@@ -42,6 +46,12 @@ export default function NodePropertiesPanel() {
     deleteNode(selectedNode.id)
     toast.success('Node deleted')
   }
+
+  const backgroundColors = [
+    "#ffffff", "#f3f4f6", "#e5e7eb", // white, gray-100, gray-200
+    "#dbeafe", "#fde8e8", "#fef3c7", "#d1fae5", "#e0e7ff", // light blue, red, yellow, green, indigo
+    "#f3e8ff", "#fee2e2", "#fef9c3", "#d4f4dd", // light purple, red, yellow, green
+  ]
 
   return (
     <div className="h-full bg-card overflow-y-auto">
@@ -92,6 +102,7 @@ export default function NodePropertiesPanel() {
           </div>
         </div>
 
+        {/* Border Color */}
         <div className="space-y-2">
           <Label htmlFor="node-color">Color</Label>
           <div className="flex gap-2 flex-wrap">
@@ -106,6 +117,38 @@ export default function NodePropertiesPanel() {
                 onClick={() => handleColorChange(color)}
               />
             ))}
+          </div>
+        </div>
+
+        {/* Background Color */}
+        <div className="space-y-2">
+          <Label>Background</Label>
+          <div className="flex gap-2 flex-wrap">
+            {backgroundColors.map((color) => (
+              <button
+                key={color}
+                className="w-8 h-8 rounded-lg border-2 hover:scale-110 transition-transform relative"
+                style={{
+                  backgroundColor: color,
+                  borderColor: selectedNode.data.backgroundColor === color ? "#000" : "#e5e7eb",
+                }}
+                onClick={() => handleBackgroundColorChange(color)}
+              >
+                {selectedNode.data.backgroundColor === color && (
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-3 h-3 bg-black rounded-full" />
+                  </div>
+                )}
+              </button>
+            ))}
+            {/* Reset button */}
+            <button
+              onClick={() => handleBackgroundColorChange("")}
+              className="w-8 h-8 rounded-lg border-2 border-dashed border-gray-400 hover:border-gray-600 flex items-center justify-center"
+              title="Reset background"
+            >
+              <X className="w-4 h-4 text-gray-500" />
+            </button>
           </div>
         </div>
 
@@ -128,4 +171,3 @@ export default function NodePropertiesPanel() {
     </div>
   )
 }
-
