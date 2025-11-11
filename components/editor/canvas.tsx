@@ -70,6 +70,7 @@ export default function Canvas() {
     redo,
     canUndo,
     canRedo,
+    updateNodeData,
   } = useMindmapContext()
 
   const { getViewport } = useReactFlow();
@@ -243,9 +244,9 @@ export default function Canvas() {
   )
 
   const onNodeDoubleClick = useCallback(
-    (_event: React.MouseEvent, node: any) =>{
-        updateNodeData(node.id, {isEditing: true})
-        },
+    (_event: React.MouseEvent, node: any) => {
+      updateNodeData(node.id, { isEditing: true })
+    },
     [updateNodeData]
   )
 
