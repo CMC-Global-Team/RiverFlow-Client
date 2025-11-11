@@ -18,6 +18,8 @@ import { useMindmapsByStatus } from "@/hooks/mindmap/useMindmapsByStatus"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { Plus, Loader2, AlertCircle } from "lucide-react"
 import { MindmapSummary } from "@/types/mindmap.types"
+import { useToast } from "@/hooks/use-toast"
+import { duplicateMindmap } from "@/services/mindmap/mindmap.service"
 
 function MyMindmapsContent() {
   const router = useRouter()
@@ -39,6 +41,7 @@ function MyMindmapsContent() {
   const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
+  const { toast } = useToast()
 
   // Filter and Sort Logic
   const filteredAndSortedMindmaps = useMemo(() => {
@@ -157,6 +160,31 @@ function MyMindmapsContent() {
         await refetch()
         setActionLoading(null)
     }
+
+  const handleDuplicate = async (id: string) => {
+    setActionLoading(id)
+    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." })
+
+    try {
+      const newMindmap = await duplicateMindmap(id)
+      
+      toast({ 
+        title: "Nhân bản thành công!",
+        description: `Đã tạo "${newMindmap.title}".`
+      })
+      await refetch()
+
+    } catch (error) {
+      console.error("Duplicate failed:", error)
+      toast({ 
+        variant: "destructive", 
+        title: "Lỗi", 
+        description: "Không thể nhân bản mind map." 
+      })
+    } finally {
+      setActionLoading(null) 
+    }
+  }
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -195,7 +223,7 @@ function MyMindmapsContent() {
               {/* Filter Bar */}
               <FilterBar
                 selectedStatus={selectedStatus}
-                onStatusChange={setSelectedStatus}
+                onStatusChange={(status) => setSelectedStatus(status as "active" | "archived")}
                 showFavoritesOnly={showFavoritesOnly}
                 onFavoritesToggle={() => setShowFavoritesOnly(!showFavoritesOnly)}
                 sortBy={sortBy}
@@ -273,6 +301,7 @@ function MyMindmapsContent() {
                     onArchive={handleArchive}
                     onEdit={handleEditInfo}
                     onUnarchive={handleUnarchive}
+                    onDuplicate={handleDuplicate}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}
                   />
@@ -284,6 +313,7 @@ function MyMindmapsContent() {
                     onArchive={handleArchive}
                     onUnarchive={handleUnarchive}
                     onEdit={handleEditInfo}
+                    onDuplicate={handleDuplicate}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}
                   />
