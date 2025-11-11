@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch } from "lucide-react"
+import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 
 interface Template {
   id: string
@@ -285,12 +285,24 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [templates, setTemplates] = useState<Template[]>(builtInTemplates)
   const [loading, setLoading] = useState<string | null>(null)
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
 
   // Load templates from public/templates folder
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      // Reset templates when modal closes
+      setTemplates(builtInTemplates)
+      setIsLoadingTemplates(false)
+      return
+    }
 
     const loadTemplates = async () => {
+      setIsLoadingTemplates(true)
+      
+      // Add 1-2 second delay before showing templates
+      const delay = Math.random() * 1000 + 1000 // Random delay between 1-2 seconds
+      await new Promise(resolve => setTimeout(resolve, delay))
+
       const loadedTemplates: Template[] = [...builtInTemplates]
 
       for (const meta of templateMetadata) {
@@ -318,6 +330,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       }
 
       setTemplates(loadedTemplates)
+      setIsLoadingTemplates(false)
     }
 
     loadTemplates()
@@ -378,49 +391,56 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
 
         {/* Templates Grid */}
         <div className="p-6 max-h-[60vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                onClick={() => setSelectedTemplate(template)}
-                className={`
-                  relative p-6 rounded-lg border-2 cursor-pointer transition-all
-                  ${
-                    selectedTemplate?.id === template.id
-                      ? "border-primary bg-primary/5 shadow-lg"
-                      : "border-border hover:border-primary/50 hover:shadow-md"
-                  }
-                  ${loading === template.id ? "opacity-50 cursor-wait" : ""}
-                `}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`
-                    p-3 rounded-lg
-                    ${selectedTemplate?.id === template.id ? "bg-primary text-primary-foreground" : "bg-muted"}
-                  `}>
-                    {template.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">
-                      {template.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {template.description}
-                    </p>
-                  </div>
-                </div>
-                {selectedTemplate?.id === template.id && (
-                  <div className="absolute top-3 right-3">
-                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                      <svg className="h-4 w-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+          {isLoadingTemplates ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Đang tải templates...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  onClick={() => setSelectedTemplate(template)}
+                  className={`
+                    relative p-6 rounded-lg border-2 cursor-pointer transition-all
+                    ${
+                      selectedTemplate?.id === template.id
+                        ? "border-primary bg-primary/5 shadow-lg"
+                        : "border-border hover:border-primary/50 hover:shadow-md"
+                    }
+                    ${loading === template.id ? "opacity-50 cursor-wait" : ""}
+                  `}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`
+                      p-3 rounded-lg
+                      ${selectedTemplate?.id === template.id ? "bg-primary text-primary-foreground" : "bg-muted"}
+                    `}>
+                      {template.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground mb-1">
+                        {template.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {template.description}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
+                  {selectedTemplate?.id === template.id && (
+                    <div className="absolute top-3 right-3">
+                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="h-4 w-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
