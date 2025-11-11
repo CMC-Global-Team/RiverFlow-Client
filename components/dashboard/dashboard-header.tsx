@@ -4,8 +4,11 @@ import { Search, Bell } from "lucide-react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import ProfileModal from "@/components/profile/ProfileModal"
+
 export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const { user } = useAuth()
 
   return (
@@ -31,8 +34,11 @@ export default function DashboardHeader() {
             <Bell className="h-5 w-5 text-muted-foreground" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
           </button>
- <ThemeSwitcher/>
-          <button className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors">
+          <ThemeSwitcher/>
+          <button 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors"
+          >
             <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
               <span className="text-xs font-bold text-white">
                 {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
@@ -42,6 +48,12 @@ export default function DashboardHeader() {
           </button>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
     </header>
   )
 }
