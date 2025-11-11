@@ -110,11 +110,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   return (
     <div 
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+      style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
       <div 
         className="relative w-full max-w-2xl mx-4 bg-card rounded-xl shadow-2xl border border-border"
+        style={{ margin: 'auto' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
