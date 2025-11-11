@@ -19,43 +19,42 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
-import { Plus } from 'lucide-react'
+import { ArrowUp, ArrowRight, ArrowDown, ArrowLeft } from 'lucide-react'
 
-// Component to handle add button
-function AddChildButton({ screenPosition, onAddChild, onClose }: {
+// (Old AddChildButton removed)
+
+// Arrow button used for node-hover directional add
+function DirectionButton({
+  screenPosition,
+  onClick,
+  title,
+  direction,
+}: {
   screenPosition: { x: number; y: number }
-  onAddChild: () => void
-  onClose: () => void
+  onClick: () => void
+  title: string
+  direction: 'top' | 'right' | 'bottom' | 'left'
 }) {
-  // Ensure screenPosition is valid
-  if (!screenPosition || typeof screenPosition.x !== 'number' || typeof screenPosition.y !== 'number') {
-    return null
-  }
-
+  const Icon = direction === 'top' ? ArrowUp : direction === 'right' ? ArrowRight : direction === 'bottom' ? ArrowDown : ArrowLeft
   return (
     <div
       className="absolute z-50 pointer-events-auto"
       style={{
         left: `${screenPosition.x}px`,
         top: `${screenPosition.y}px`,
-        transform: 'translate(-50%, -50%)', // Center both horizontally and vertically
-        pointerEvents: 'auto',
+        transform: 'translate(-50%, -50%)',
       }}
+      onMouseDown={(e) => e.stopPropagation()}
       onClick={(e) => {
         e.stopPropagation()
-        onAddChild()
-        onClose()
-      }}
-      onMouseDown={(e) => {
-        // Prevent triggering node click when clicking the button
-        e.stopPropagation()
+        onClick()
       }}
     >
       <button
-        className="w-8 h-8 rounded-full bg-primary text-primary-foreground shadow-lg hover:bg-primary/90 transition-all flex items-center justify-center border-2 border-background hover:scale-110"
-        title="Thêm node con"
+        className="w-7 h-7 rounded-full bg-primary/90 text-primary-foreground shadow hover:bg-primary transition-all flex items-center justify-center border-2 border-background"
+        title={title}
       >
-        <Plus className="w-4 h-4" />
+        <Icon className="w-4 h-4" />
       </button>
     </div>
   )
@@ -83,15 +82,18 @@ export default function Canvas() {
   // Ref to store ReactFlow instance
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   
-  // State for handle hover detection
-  const [hoveredHandle, setHoveredHandle] = useState<{
+  // (Old handle-hover state removed)
+
+  // State for node hover to show 4 directional buttons
+  const [hoveredNode, setHoveredNode] = useState<{
     nodeId: string
-    handleId: string
-    handlePosition: string
-    handleType: 'source' | 'target'
-    screenPosition: { x: number; y: number }
+    screenPositions: {
+      top: { x: number; y: number }
+      right: { x: number; y: number }
+      bottom: { x: number; y: number }
+      left: { x: number; y: number }
+    }
   } | null>(null)
-  const handleHoverTimers = useRef<Map<string, NodeJS.Timeout>>(new Map())
 
   // Calculate screen position for handle - position button right next to the handle
   const calculateHandleScreenPosition = useCallback((
@@ -170,93 +172,28 @@ export default function Canvas() {
     return screenPos
   }, [])
 
-  // Handle handle hover (when hovering over a handle)
-  const handleHandleHover = useCallback((
-    nodeId: string,
-    handleId: string,
-    handlePosition: string,
-    handleType: 'source' | 'target',
-    event: React.MouseEvent
-  ) => {
-    console.log('handleHandleHover called:', { nodeId, handleId, handlePosition, handleType })
-    const timerKey = `${nodeId}-${handleId}`
-    
-    // Clear any existing timer for this handle
-    const existingTimer = handleHoverTimers.current.get(timerKey)
-    if (existingTimer) {
-      clearTimeout(existingTimer)
-    }
-    
-    // Store mouse position from event for accurate button placement
-    const mouseX = event.clientX
-    const mouseY = event.clientY
-    
-    // Start new timer for this handle (1 second)
-    const timer = setTimeout(() => {
-      console.log('Timer fired for handle:', { nodeId, handleId, handlePosition })
-      const parentNode = nodes.find(n => n.id === nodeId)
-      if (parentNode && reactFlowInstance.current) {
-        // Calculate button position relative to mouse position (handle location)
-        // Place button right next to the handle (smaller offset for closer placement)
-        let buttonX = mouseX
-        let buttonY = mouseY
-        
-        // Add small offset based on handle position to place button right next to handle
-        switch (handlePosition) {
-          case 'top':
-            buttonY = mouseY - 20 // Right above handle
-            break
-          case 'right':
-            buttonX = mouseX + 20 // Right next to handle
-            break
-          case 'bottom':
-            buttonY = mouseY + 20 // Right below handle
-            break
-          case 'left':
-            buttonX = mouseX - 20 // Right next to handle (left side)
-            break
-        }
-        
-        const screenPos = {
-          x: buttonX,
-          y: buttonY
-        }
-        
-        console.log('Screen position calculated from mouse:', { mouseX, mouseY, buttonX, buttonY, screenPos })
-        
-        const newHoveredHandle = {
-          nodeId,
-          handleId,
-          handlePosition,
-          handleType,
-          screenPosition: screenPos
-        }
-        console.log('Setting hovered handle:', newHoveredHandle)
-        setHoveredHandle(newHoveredHandle)
-        console.log('Hovered handle set successfully')
-      } else {
-        console.warn('Parent node or ReactFlow instance not found:', { 
-          parentNode: !!parentNode, 
-          reactFlowInstance: !!reactFlowInstance.current 
-        })
-      }
-      handleHoverTimers.current.delete(timerKey)
-    }, 1000) // 1 giây
-    
-    handleHoverTimers.current.set(timerKey, timer)
-  }, [nodes, calculateHandleScreenPosition])
+  // (Old handle-hover handlers removed)
 
-  // Handle handle leave
-  const handleHandleLeave = useCallback((nodeId: string, handleId: string) => {
-    const timerKey = `${nodeId}-${handleId}`
-    
-    // Clear timer for this handle
-    const timer = handleHoverTimers.current.get(timerKey)
-    if (timer) {
-      clearTimeout(timer)
-      handleHoverTimers.current.delete(timerKey)
+  // Node hover handlers to compute all 4 positions and show buttons immediately
+  const handleNodeHoverChange = useCallback((nodeId: string, isHovering: boolean) => {
+    if (!isHovering) {
+      setHoveredNode(null)
+      return
     }
-  }, [])
+    const parentNode = nodes.find(n => n.id === nodeId)
+    if (!parentNode) return
+    const bounds = { width: parentNode.width || 150, height: parentNode.height || 50 }
+    const top = calculateHandleScreenPosition(parentNode.position, 'top', bounds)
+    const right = calculateHandleScreenPosition(parentNode.position, 'right', bounds)
+    const bottom = calculateHandleScreenPosition(parentNode.position, 'bottom', bounds)
+    const left = calculateHandleScreenPosition(parentNode.position, 'left', bounds)
+    if (top && right && bottom && left) {
+      setHoveredNode({
+        nodeId,
+        screenPositions: { top, right, bottom, left },
+      })
+    }
+  }, [nodes, calculateHandleScreenPosition])
 
   // Create node types with handle hover handlers
   const nodeTypes = useMemo(() => {
@@ -271,8 +208,7 @@ export default function Canvas() {
             selected={selected}
             position={position}
             type={type}
-            onHandleHover={handleHandleHover}
-            onHandleLeave={handleHandleLeave}
+            onNodeHoverChange={handleNodeHoverChange}
           />
         )
       }
@@ -288,7 +224,7 @@ export default function Canvas() {
       ellipse: createNodeWithHandlers(EllipseNode),
       roundedRectangle: createNodeWithHandlers(RoundedRectangleNode),
     }
-  }, [handleHandleHover, handleHandleLeave])
+  }, [handleNodeHoverChange])
 
   const defaultEdgeOptions = {
     animated: true,
@@ -370,12 +306,7 @@ export default function Canvas() {
 
   const onNodeClick = useCallback(
     (_event: any, node: any) => {
-      // Clear handle hover button when clicking on a node
-      setHoveredHandle(null)
-      
-      // Clear any hover timers
-      handleHoverTimers.current.forEach((timer) => clearTimeout(timer))
-      handleHoverTimers.current.clear()
+      setHoveredNode(null)
       
       setSelectedNode(node)
       setSelectedEdge(null)
@@ -392,12 +323,7 @@ export default function Canvas() {
   )
 
   const onPaneClick = useCallback(() => {
-    // Clear handle hover button when clicking on pane
-    setHoveredHandle(null)
-    
-    // Clear any hover timers
-    handleHoverTimers.current.forEach((timer) => clearTimeout(timer))
-    handleHoverTimers.current.clear()
+    setHoveredNode(null)
     
     setSelectedNode(null)
     setSelectedEdge(null)
@@ -467,31 +393,10 @@ export default function Canvas() {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      // Clear all hover timers
-      handleHoverTimers.current.forEach((timer) => clearTimeout(timer))
-      handleHoverTimers.current.clear()
     }
   }, [])
 
-  const handleAddChildFromButton = useCallback(() => {
-    if (hoveredHandle) {
-      const parentNode = nodes.find(n => n.id === hoveredHandle.nodeId)
-      if (parentNode) {
-        createChildNode(
-          parentNode,
-          hoveredHandle.handlePosition,
-          hoveredHandle.handleType,
-          hoveredHandle.handleId
-        )
-      }
-    }
-  }, [hoveredHandle, nodes, createChildNode])
-
-  const handleCloseAddButton = useCallback(() => {
-    setHoveredHandle(null)
-  }, [])
-
-  // Note: screenPosition is calculated when timer fires, no need for separate useEffect
+  // (Old plus-button helpers removed)
 
   return (
     <div className="w-full h-full relative">
@@ -508,25 +413,19 @@ export default function Canvas() {
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         onMove={() => {
-          // Update button position when panning/zooming
-          if (hoveredHandle && reactFlowInstance.current) {
-            const parentNode = nodes.find(n => n.id === hoveredHandle.nodeId)
+          if (hoveredNode && reactFlowInstance.current) {
+            const parentNode = nodes.find(n => n.id === hoveredNode.nodeId)
             if (parentNode) {
-              const screenPos = calculateHandleScreenPosition(
-                parentNode.position,
-                hoveredHandle.handlePosition,
-                {
-                  width: parentNode.width || 150,
-                  height: parentNode.height || 50
-                }
-              )
-              if (screenPos && (
-                !hoveredHandle.screenPosition ||
-                Math.abs(hoveredHandle.screenPosition.x - screenPos.x) > 1 ||
-                Math.abs(hoveredHandle.screenPosition.y - screenPos.y) > 1
-              )) {
-                // Only update if position changed significantly to avoid excessive updates
-                setHoveredHandle(prev => prev ? { ...prev, screenPosition: screenPos } : null)
+              const bounds = { width: parentNode.width || 150, height: parentNode.height || 50 }
+              const top = calculateHandleScreenPosition(parentNode.position, 'top', bounds)
+              const right = calculateHandleScreenPosition(parentNode.position, 'right', bounds)
+              const bottom = calculateHandleScreenPosition(parentNode.position, 'bottom', bounds)
+              const left = calculateHandleScreenPosition(parentNode.position, 'left', bounds)
+              if (top && right && bottom && left) {
+                setHoveredNode(prev => prev ? {
+                  nodeId: prev.nodeId,
+                  screenPositions: { top, right, bottom, left },
+                } : null)
               }
             }
           }
@@ -545,14 +444,47 @@ export default function Canvas() {
           className="bg-background border"
         />
       </ReactFlow>
-      
-      {/* Add child button overlay */}
-      {hoveredHandle && hoveredHandle.screenPosition && (
-        <AddChildButton
-          screenPosition={hoveredHandle.screenPosition}
-          onAddChild={handleAddChildFromButton}
-          onClose={handleCloseAddButton}
-        />
+
+      {/* Node-hover directional buttons */}
+      {hoveredNode && (
+        <>
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.top}
+            title="Thêm node phía trên"
+            direction="top"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.nodeId)
+              if (parent) createChildNode(parent, 'top', 'target', 'target-top')
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.right}
+            title="Thêm node bên phải"
+            direction="right"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.nodeId)
+              if (parent) createChildNode(parent, 'right', 'target', 'target-right')
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.bottom}
+            title="Thêm node phía dưới"
+            direction="bottom"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.nodeId)
+              if (parent) createChildNode(parent, 'bottom', 'source', 'source-bottom')
+            }}
+          />
+          <DirectionButton
+            screenPosition={hoveredNode.screenPositions.left}
+            title="Thêm node bên trái"
+            direction="left"
+            onClick={() => {
+              const parent = nodes.find(n => n.id === hoveredNode.nodeId)
+              if (parent) createChildNode(parent, 'left', 'source', 'source-left')
+            }}
+          />
+        </>
       )}
     </div>
   )
