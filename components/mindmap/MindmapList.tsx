@@ -13,6 +13,7 @@ interface MindmapListProps {
   onDuplicate: (id: string) => void
   onClick: (id: string) => void
   actionLoading: string | null
+    onUnarchive?: (id: string) => void
 }
 
 export default function MindmapList({
@@ -24,6 +25,7 @@ export default function MindmapList({
   onDuplicate,
   onClick,
   actionLoading,
+    onUnarchive
 }: MindmapListProps) {
   const formatDate = (dateString: string) => {
     try {
@@ -115,16 +117,29 @@ export default function MindmapList({
             >
               <Star className={`h-4 w-4 ${mindmap.isFavorite ? "fill-yellow-500 text-yellow-500" : ""}`} />
             </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onArchive(mindmap.id)
-              }}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              title="Archive"
-            >
-              <Archive className="h-4 w-4" />
-            </button>
+              {((mindmap as any).isArchived === true || (mindmap as any).status === "archived") ? (
+                  <button
+                      onClick={(e) => {
+                          e.stopPropagation()
+                          onUnarchive?.(mindmap.id)
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="Unarchive"
+                  >
+                      <Archive className="h-4 w-4" />
+                  </button>
+              ) : (
+                  <button
+                      onClick={(e) => {
+                          e.stopPropagation()
+                          onArchive(mindmap.id)
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title="Archive"
+                  >
+                      <Archive className="h-4 w-4" />
+                  </button>
+              )}
             <button
               onClick={(e) => {
                 e.stopPropagation()
