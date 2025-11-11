@@ -20,7 +20,13 @@ const [focusedField, setFocusedField] = useState<"label" | "description" | null>
     "#8b5cf6", "#ec4899", "#14b8a6", "#000000", "#ffffff"
   ]
   if (!selectedNode) return null
-
+const handleUpdateContent = (field: "label" | "description") => {
+    const ref = field === "label" ? labelRef.current : descRef.current
+    if (!ref) return
+    const value = ref.innerHTML
+    updateNodeData(selectedNode.id, { [field]: value })
+  }
+  
   const handleLabelChange = (value: string) => {
     updateNodeData(selectedNode.id, { label: value })
   }
