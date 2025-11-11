@@ -12,21 +12,23 @@ interface MindmapCardProps {
   onArchive?: (id: string) => void
   onEdit?: (id: string) => void
   onDuplicate?: (id: string) => void
-  onClick?: (id: string) => void
+    onUnarchive?: (id: string) => void
+    onClick?: (id: string) => void
 }
 
 export default function MindmapCard({ 
   mindmap, 
   onDelete, 
   onToggleFavorite, 
-  onArchive, 
+  onArchive,
+    onUnarchive,
   onEdit,
   onDuplicate,
   onClick 
 }: MindmapCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  
-  const formatDate = (dateString: string) => {
+    const isArchived = (mindmap as any).isArchived === true || (mindmap as any).status === "archived"
+    const formatDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true })
     } catch {
@@ -122,17 +124,32 @@ export default function MindmapCard({
                   <Star className="h-4 w-4" />
                   {mindmap.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 </button>
-                <button 
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onArchive?.(mindmap.id)
-                  }}
-                >
-                  <Archive className="h-4 w-4" />
-                  Archive
-                </button>
+                     {!isArchived ? (
+                        <button
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setShowMenu(false)
+                                onArchive?.(mindmap.id)
+                            }}
+                        >
+                            <Archive className="h-4 w-4" />
+                            Archive
+                        </button>
+                    ) : (
+                        <button
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setShowMenu(false)
+                                onUnarchive?.(mindmap.id)
+                            }}
+                        >
+                            <Archive className="h-4 w-4" />
+                            Unarchive
+                        </button>
+                    )}
+
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
                   onClick={(e) => {
