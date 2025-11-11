@@ -8,84 +8,110 @@ interface NodeData {
   label: string
   description?: string
   color?: string
+  bgColor?: string
   shape?: string
-  isEditing?: boolean
 }
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
-  const [isEditing, setIsEditing] = useState(data.isEditing || false)
   const [label, setLabel] = useState(data.label || "New Node")
   const [description, setDescription] = useState(data.description || "")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [editingLabel, setEditingLabel] = useState(false)
+  const [editingDesc, setEditingDesc] = useState(false)
+  const labelRef = useRef<HTMLTextAreaElement>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus()
-      textareaRef.current.select()
+    setLabel(data.label || "New Node")
+    setDescription(data.description || "")
+  }, [data.label, data.description])
+
+  useEffect(() => {
+    if (editingLabel && labelRef.current) {
+      labelRef.current.focus()
+      labelRef.current.select()
     }
-  }, [isEditing])
+  }, [editingLabel])
+
+  useEffect(() => {
+    if (editingDesc && descRef.current) {
+      descRef.current.focus()
+      descRef.current.select()
+    }
+  }, [editingDesc])
 
   const save = () => {
     updateNodeData(id, {
       label: label.trim() || "Untitled",
       description: description.trim(),
-      isEditing: false,
     })
-    setIsEditing(false)
+    setEditingLabel(false)
+    setEditingDesc(false)
   }
 
-  const cancel = () => {
-    setLabel(data.label || "Untitled")
-    setDescription(data.description || "")
-    setIsEditing(false)
-    updateNodeData(id, { isEditing: false })
-  }
-
-  if (isEditing) {
-    return (
-      <div className="space-y-1">
+  return (
+    <div className="space-y-1">
+      {/* Label */}
+      {editingLabel ? (
         <textarea
-          ref={textareaRef}
+          ref={labelRef}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          onBlur={save}
+          onBlur={() => {
+            save()
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault()
-              save()
+              labelRef.current?.blur()
             }
-            if (e.key === "Escape") cancel()
+            if (e.key === "Escape") {
+              setLabel(data.label || "Untitled")
+              setEditingLabel(false)
+            }
           }}
-          className="w-full resize-none outline-none font-semibold text-sm bg-transparent"
+          className="w-full resize-none outline-none font-semibold text-sm bg-transparent border-b border-primary"
           rows={1}
-          placeholder="Title..."
         />
+      ) : (
+        <div
+          className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
+          style={{ color: data.color || "#3b82f6" }}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setEditingLabel(true)
+          }}
+        >
+          {label || <span className="text-muted-foreground">Double-click to add title</span>}
+        </div>
+      )}
+
+      {/* Description */}
+      {editingDesc ? (
         <textarea
+          ref={descRef}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => e.key === "Escape" && cancel()}
-          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent"
+          onBlur={() => {
+            save()
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setDescription(data.description || "")
+              setEditingDesc(false)
+            }
+          }}
+          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1"
           rows={2}
-          placeholder="Description..."
         />
-      </div>
-    )
-  }
-return (
-    <div
-      className="cursor-text select-none"
-      onDoubleClick={() => {
-        setIsEditing(true)
-        updateNodeData(id, { isEditing: true })
-      }}
-    >
-      <div className="font-semibold text-sm" style={{ color: data.color || "#3b82f6" }}>
-        {label}
-      </div>
-      {description && (
-        <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-          {description}
+      ) : (
+        <div
+          className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setEditingDesc(true)
+          }}
+        >
+          {description || <span className="text-muted-foreground/50">Description</span>}
         </div>
       )}
     </div>
@@ -100,7 +126,10 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
       className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -174,7 +203,10 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
       className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -276,7 +308,10 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
         className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
-        style={{ borderColor: color }}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+         }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
@@ -355,7 +390,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
-          fill="hsl(var(--background))"
+          fill={data.bgColor || "hsl(var(--background))"}
           stroke={color}
           strokeWidth="2"
           className={selected ? "stroke-[3]" : ""}
@@ -408,7 +443,10 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"
@@ -482,7 +520,10 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
       className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
-      style={{ borderColor: color }}
+      style={{
+        borderColor: color,
+        backgroundColor: data.bgColor || "transparent"
+      }}
     >
         <Handle
             type="target"

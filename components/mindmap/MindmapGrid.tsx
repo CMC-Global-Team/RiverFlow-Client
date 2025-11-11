@@ -11,7 +11,8 @@ interface MindmapGridProps {
   onToggleFavorite: (id: string) => void
   onArchive: (id: string) => void
   onEdit: (id: string) => void
-  onClick: (id: string) => void
+    onUnarchive?: (id: string) => void
+    onClick: (id: string) => void
   actionLoading: string | null
 }
 
@@ -20,7 +21,7 @@ export default function MindmapGrid({
   onDelete,
   onToggleFavorite,
   onArchive,
-  onEdit,
+  onEdit, onUnarchive,
   onClick,
   actionLoading,
 }: MindmapGridProps) {
@@ -70,6 +71,7 @@ export default function MindmapGrid({
             onToggleFavorite={onToggleFavorite}
             onArchive={onArchive}
             onEdit={onEdit}
+            onUnarchive={onUnarchive}
             onClick={onClick}
           />
         </div>

@@ -25,9 +25,10 @@ function MyMindmapsContent() {
   
   // Fetch mindmaps based on status
   const { mindmaps, loading, error, refetch } = useMindmapsByStatus(selectedStatus)
-  const { create, update, remove, toggleFavorite, archive } = useMindmapActions()
+  const { create, update, remove, toggleFavorite, archive,unarchive } = useMindmapActions()
 
-  // UI State
+
+    // UI State
   const [view, setView] = useState<"grid" | "list">("grid")
   const [searchQuery, setSearchQuery] = useState("")
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
@@ -150,7 +151,12 @@ function MyMindmapsContent() {
     await refetch()
     setActionLoading(null)
   }
-
+    const handleUnarchive = async (id: string) => {
+        setActionLoading(id)
+        await unarchive(id)
+        await refetch()
+        setActionLoading(null)
+    }
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -266,6 +272,7 @@ function MyMindmapsContent() {
                     onToggleFavorite={handleToggleFavorite}
                     onArchive={handleArchive}
                     onEdit={handleEditInfo}
+                    onUnarchive={handleUnarchive}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}
                   />
@@ -275,6 +282,7 @@ function MyMindmapsContent() {
                     onDelete={handleDeleteClick}
                     onToggleFavorite={handleToggleFavorite}
                     onArchive={handleArchive}
+                    onUnarchive={handleUnarchive}
                     onEdit={handleEditInfo}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}

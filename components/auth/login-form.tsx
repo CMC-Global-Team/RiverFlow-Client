@@ -3,10 +3,13 @@
 import type React from "react"
 
 import { useState, useEffect } from "react"
-import { Mail, Lock, Github, Chrome } from "lucide-react"
+import { Mail, Lock, Github } from "lucide-react"
 import { useSignIn } from "@/hooks/auth/useSignIn"
+import { useGoogleSignIn } from "@/hooks/auth/useGoogleSignIn"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
+import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton"
+import type { CredentialResponse } from "@react-oauth/google"
 
 interface LoginFormProps {
   onForgotClick: () => void
@@ -17,8 +20,55 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
   const [password, setPassword] = useState("")
   
   const { signIn, isLoading, error, data } = useSignIn()
+  const { signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleSignIn()
   const { toast } = useToast()
   const router = useRouter()
+
+  // Xử lý lỗi Google login
+  useEffect(() => {
+    if (googleError) {
+      toast({
+        variant: "destructive",
+        title: "Đăng nhập thất bại",
+        description: googleError.message || "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
+      })
+    }
+  }, [googleError, toast])
+
+  // Handler khi Google login thành công
+  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+    try {
+      if (credentialResponse.credential) {
+        const response = await signInWithGoogle(credentialResponse.credential)
+        if (response) {
+          toast({
+            title: "Đăng nhập thành công!",
+            description: `Chào mừng trở lại, ${response.fullName}!`,
+          })
+          setTimeout(() => {
+            router.push("/dashboard")
+          }, 1000)
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Đăng nhập thất bại",
+          description: "Không nhận được credential từ Google.",
+        })
+      }
+    } catch (err) {
+      console.error("Google login error:", err)
+    }
+  }
+
+  // Handler khi Google login thất bại
+  const handleGoogleError = () => {
+    toast({
+      variant: "destructive",
+      title: "Đăng nhập thất bại",
+      description: "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
+    })
+  }
 
   // Hiển thị thông báo khi có lỗi
   useEffect(() => {
@@ -132,21 +182,20 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
       </div>
 
       {/* Social Buttons */}
-      <div className="grid grid-cols-2 gap-3">
+      <div className="space-y-3">
         <button
           type="button"
-          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
+          disabled
         >
           <Github className="h-5 w-5" />
           <span className="text-sm font-medium">GitHub</span>
         </button>
-        <button
-          type="button"
-          className="flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
-        >
-          <Chrome className="h-5 w-5" />
-          <span className="text-sm font-medium">Google</span>
-        </button>
+        <GoogleLoginButton
+          onSuccess={handleGoogleSuccess}
+          onError={handleGoogleError}
+          text="signin_with"
+        />
       </div>
     </form>
   )

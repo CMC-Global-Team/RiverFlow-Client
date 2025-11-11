@@ -219,14 +219,34 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     return newNode.id
   }, [triggerDebouncedSave])
 
-  // Delete node
   const deleteNode = useCallback((nodeId: string) => {
-    setNodes((nds) => nds.filter((node) => node.id !== nodeId))
-    setEdges((eds) => eds.filter((edge) => edge.source !== nodeId && edge.target !== nodeId))
-    triggerDebouncedSave();
-    if (selectedNode?.id === nodeId) {
-      setSelectedNode(null)
+     const edgesSnapshot = latestEdgesRef.current;
+    const toDelete = new Set<string>();
+    const queue: string[] = [nodeId];
+    toDelete.add(nodeId);
+
+    while (queue.length > 0) {
+      const current = queue.shift() as string;
+      const outgoing = edgesSnapshot.filter(e => e.source === current);
+      for (const e of outgoing) {
+        if (!toDelete.has(e.target)) {
+          toDelete.add(e.target);
+          queue.push(e.target);
+        }
+      }
     }
+
+    setNodes((nds) => nds.filter((node) => !toDelete.has(node.id)));
+    setEdges((eds) => eds.filter((edge) => !(toDelete.has(edge.source) || toDelete.has(edge.target))));
+
+     if (selectedNode && toDelete.has(selectedNode.id)) {
+      setSelectedNode(null);
+    }
+    if (selectedEdge && (toDelete.has(selectedEdge.source) || toDelete.has(selectedEdge.target))) {
+      setSelectedEdge(null);
+    }
+
+    triggerDebouncedSave();
   }, [triggerDebouncedSave])
 
   // Delete edge

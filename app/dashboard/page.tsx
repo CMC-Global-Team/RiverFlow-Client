@@ -84,8 +84,7 @@ function DashboardContent() {
   }
 
   const handleArchive = async (id: string) => {
-    if (!confirm('Archive this mindmap?')) return
-    
+
     setActionLoading(id)
     await archive(id)
     await refetch()
