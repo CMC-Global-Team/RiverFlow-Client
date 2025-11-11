@@ -124,7 +124,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!formData.fullName.trim() || !formData.email.trim()) {
+    if (!formData.fullName.trim()) {
       toast({
         variant: "destructive",
         title: "Lỗi",
@@ -299,22 +299,23 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
                   </div>
 
-                  {/* Email */}
-                  <div>
-                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
-                      <Mail className="h-4 w-4" />
-                      Email <span className="text-destructive">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      value={formData.email}
-                      onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                      placeholder="Nhập email"
-                      disabled={isLoading}
-                      required
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 text-sm"
-                    />
-                  </div>
+              {/* Email */}
+              <div>
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                  <Mail className="h-4 w-4" />
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  placeholder="Email"
+                  disabled={true}
+                  className="w-full px-3 py-2 rounded-lg border border-border bg-muted text-muted-foreground cursor-not-allowed text-sm"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Email không thể thay đổi
+                </p>
+              </div>
                 </div>
 
                 {/* Right Column */}
@@ -371,7 +372,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
               </button>
               <button
                 type="submit"
-                disabled={isLoading || !formData.fullName.trim() || !formData.email.trim()}
+                disabled={isLoading || !formData.fullName.trim()}
                 className="px-6 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed text-sm"
               >
                 {isLoading ? (
