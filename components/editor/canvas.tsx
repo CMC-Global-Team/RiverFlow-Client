@@ -228,15 +228,6 @@ export default function Canvas() {
 
   const onNodeClick = useCallback(
     (_event: any, node: any) => {
-      // Clear long press if clicking normally
-      if (longPressTimer.current) {
-        clearTimeout(longPressTimer.current)
-        longPressTimer.current = null
-      }
-      setLongPressedNode(null)
-      setButtonScreenPosition(null)
-      longPressNodeRef.current = null
-      
       setSelectedNode(node)
       setSelectedEdge(null)
     },
@@ -263,23 +254,38 @@ export default function Canvas() {
     setSelectedEdge(null)
   }, [setSelectedNode, setSelectedEdge])
 
-  // Effect to select newly created child or sibling node
+  // Effect to select newly created child or sibling node and enable editing
+  // Use a ref to track the previous nodes length to detect when new nodes are added
+  const prevNodesLengthRef = useRef(nodes.length)
+  
   useEffect(() => {
-    if (pendingChildNodeId.current) {
-      const newNode = nodes.find(n => n.id === pendingChildNodeId.current)
-      if (newNode) {
-        setSelectedNode(newNode)
-        pendingChildNodeId.current = null
+    // Only run if nodes length increased (new node added)
+    if (nodes.length > prevNodesLengthRef.current) {
+      if (pendingChildNodeId.current) {
+        const newNode = nodes.find(n => n.id === pendingChildNodeId.current)
+        if (newNode) {
+          setSelectedNode(newNode)
+          // Enable editing mode for the new node
+          updateNodeData(newNode.id, { isEditing: true })
+          pendingChildNodeId.current = null
+        }
       }
-    }
-    if (pendingSiblingNodeId.current) {
-      const newNode = nodes.find(n => n.id === pendingSiblingNodeId.current)
-      if (newNode) {
-        setSelectedNode(newNode)
-        pendingSiblingNodeId.current = null
+      if (pendingSiblingNodeId.current) {
+        const newNode = nodes.find(n => n.id === pendingSiblingNodeId.current)
+        if (newNode) {
+          setSelectedNode(newNode)
+          // Enable editing mode for the new node
+          updateNodeData(newNode.id, { isEditing: true })
+          pendingSiblingNodeId.current = null
+        }
       }
+      prevNodesLengthRef.current = nodes.length
+    } else if (nodes.length < prevNodesLengthRef.current) {
+      // Update ref if nodes were deleted
+      prevNodesLengthRef.current = nodes.length
     }
-  }, [nodes, setSelectedNode])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [nodes.length]) // Only depend on nodes.length to prevent infinite loops
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -392,11 +398,7 @@ export default function Canvas() {
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
-        onPaneClick={() => {
-          setLongPressedNode(null)
-          setButtonScreenPosition(null)
-          onPaneClick()
-        }}
+        onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
         fitView

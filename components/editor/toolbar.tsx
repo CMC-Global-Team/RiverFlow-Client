@@ -14,6 +14,7 @@ import {
   Hexagon,
   Redo2,
   Undo2,
+  GitBranch,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -89,25 +90,8 @@ export default function Toolbar() {
       }, 10)
     }
 
-    // Select the new node after it's created
-    // Use a longer timeout to ensure the node is in the nodes array
-    setTimeout(() => {
-      // Get the latest nodes from context by checking again
-      const currentNodes = [...nodes]
-      const newNode = currentNodes.find(n => n.id === siblingNodeId)
-      if (newNode) {
-        setSelectedNode(newNode)
-      } else {
-        // If still not found, try one more time after a short delay
-        setTimeout(() => {
-          const latestNodes = [...nodes]
-          const foundNode = latestNodes.find(n => n.id === siblingNodeId)
-          if (foundNode) {
-            setSelectedNode(foundNode)
-          }
-        }, 50)
-      }
-    }, 100)
+    // Note: Node selection is handled by the useEffect in Canvas component
+    // No need to manually select here to avoid infinite loops
 
     toast.success("Node anh em đã được thêm")
   }
@@ -206,7 +190,7 @@ export default function Toolbar() {
           disabled={!selectedNode}
           className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
         >
-          <Trash2 className="h-5 w-5" />
+          <GitBranch className="h-5 w-5" />
         </Button>
         <Button
           variant="ghost"
