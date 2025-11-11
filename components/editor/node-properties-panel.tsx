@@ -33,7 +33,10 @@ const handleUpdateContent = (field: "label" | "description") => {
 const toggleBold = () => execCommand("bold")
   const toggleItalic = () => execCommand("italic")
   const toggleUnderline = () => execCommand("underline")
-  
+  const toggleTextStyle = (type: "highlight" | "color", value: string) => {
+    if (type === "highlight") execCommand("hiliteColor", value)
+    if (type === "color") execCommand("foreColor", value)
+  }
   const handleLabelChange = (value: string) => {
     updateNodeData(selectedNode.id, { label: value })
   }
