@@ -12,7 +12,7 @@ import { AxiosError } from "axios";
  */
 export const getUserProfile = async (): Promise<UserResponse> => {
   try {
-    const response = await apiClient.get<UserResponse>("/user/profile");
+    const response = await apiClient.get<UserResponse>("/api/user/profile");
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -36,7 +36,7 @@ export const getUserProfile = async (): Promise<UserResponse> => {
  */
 export const updateUserProfile = async (data: UpdateUserRequest): Promise<UserResponse> => {
   try {
-    const response = await apiClient.put<UserResponse>("/user/profile", data);
+    const response = await apiClient.put<UserResponse>("/api/user/profile", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
