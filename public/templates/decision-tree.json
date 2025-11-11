@@ -1,0 +1,104 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "diamond",
+      "position": { "x": 400, "y": 100 },
+      "data": {
+        "label": "Decision Point",
+        "description": "Main decision to make",
+        "color": "#ef4444",
+        "shape": "diamond"
+      },
+      "width": 160,
+      "height": 120
+    },
+    {
+      "id": "2",
+      "type": "rectangle",
+      "position": { "x": 150, "y": 300 },
+      "data": {
+        "label": "Option A",
+        "description": "First choice",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "3",
+      "type": "rectangle",
+      "position": { "x": 400, "y": 300 },
+      "data": {
+        "label": "Option B",
+        "description": "Second choice",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "4",
+      "type": "rectangle",
+      "position": { "x": 650, "y": 300 },
+      "data": {
+        "label": "Option C",
+        "description": "Third choice",
+        "color": "#f59e0b",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "5",
+      "type": "ellipse",
+      "position": { "x": 100, "y": 500 },
+      "data": {
+        "label": "Outcome A",
+        "description": "Result of Option A",
+        "color": "#10b981",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    },
+    {
+      "id": "6",
+      "type": "ellipse",
+      "position": { "x": 400, "y": 500 },
+      "data": {
+        "label": "Outcome B",
+        "description": "Result of Option B",
+        "color": "#3b82f6",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    },
+    {
+      "id": "7",
+      "type": "ellipse",
+      "position": { "x": 700, "y": 500 },
+      "data": {
+        "label": "Outcome C",
+        "description": "Result of Option C",
+        "color": "#f59e0b",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    }
+  ],
+  "edges": [
+    { "id": "e1-2", "source": "1", "target": "2", "animated": true, "type": "smoothstep", "label": "Yes" },
+    { "id": "e1-3", "source": "1", "target": "3", "animated": true, "type": "smoothstep", "label": "Maybe" },
+    { "id": "e1-4", "source": "1", "target": "4", "animated": true, "type": "smoothstep", "label": "No" },
+    { "id": "e2-5", "source": "2", "target": "5", "animated": true, "type": "smoothstep" },
+    { "id": "e3-6", "source": "3", "target": "6", "animated": true, "type": "smoothstep" },
+    { "id": "e4-7", "source": "4", "target": "7", "animated": true, "type": "smoothstep" }
+  ]
+}
+

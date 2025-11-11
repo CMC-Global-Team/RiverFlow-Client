@@ -1,0 +1,118 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "rectangle",
+      "position": { "x": 400, "y": 50 },
+      "data": {
+        "label": "Subject: Mathematics",
+        "description": "Main subject",
+        "color": "#8b5cf6",
+        "shape": "rectangle"
+      },
+      "width": 200,
+      "height": 67
+    },
+    {
+      "id": "2",
+      "type": "rectangle",
+      "position": { "x": 100, "y": 200 },
+      "data": {
+        "label": "Chapter 1: Algebra",
+        "description": "Basic algebra concepts",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 180,
+      "height": 67
+    },
+    {
+      "id": "3",
+      "type": "rectangle",
+      "position": { "x": 400, "y": 200 },
+      "data": {
+        "label": "Chapter 2: Geometry",
+        "description": "Shapes and angles",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "width": 180,
+      "height": 67
+    },
+    {
+      "id": "4",
+      "type": "rectangle",
+      "position": { "x": 700, "y": 200 },
+      "data": {
+        "label": "Chapter 3: Calculus",
+        "description": "Derivatives and integrals",
+        "color": "#f59e0b",
+        "shape": "rectangle"
+      },
+      "width": 180,
+      "height": 67
+    },
+    {
+      "id": "5",
+      "type": "ellipse",
+      "position": { "x": 50, "y": 400 },
+      "data": {
+        "label": "Key Formulas",
+        "description": "Important formulas",
+        "color": "#6366f1",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    },
+    {
+      "id": "6",
+      "type": "ellipse",
+      "position": { "x": 250, "y": 400 },
+      "data": {
+        "label": "Practice Problems",
+        "description": "Exercises to solve",
+        "color": "#6366f1",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    },
+    {
+      "id": "7",
+      "type": "ellipse",
+      "position": { "x": 450, "y": 400 },
+      "data": {
+        "label": "Theorems",
+        "description": "Important theorems",
+        "color": "#6366f1",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    },
+    {
+      "id": "8",
+      "type": "ellipse",
+      "position": { "x": 650, "y": 400 },
+      "data": {
+        "label": "Examples",
+        "description": "Worked examples",
+        "color": "#6366f1",
+        "shape": "ellipse"
+      },
+      "width": 160,
+      "height": 96
+    }
+  ],
+  "edges": [
+    { "id": "e1-2", "source": "1", "target": "2", "animated": true, "type": "smoothstep" },
+    { "id": "e1-3", "source": "1", "target": "3", "animated": true, "type": "smoothstep" },
+    { "id": "e1-4", "source": "1", "target": "4", "animated": true, "type": "smoothstep" },
+    { "id": "e2-5", "source": "2", "target": "5", "animated": true, "type": "smoothstep" },
+    { "id": "e2-6", "source": "2", "target": "6", "animated": true, "type": "smoothstep" },
+    { "id": "e3-7", "source": "3", "target": "7", "animated": true, "type": "smoothstep" },
+    { "id": "e4-8", "source": "4", "target": "8", "animated": true, "type": "smoothstep" }
+  ]
+}
+

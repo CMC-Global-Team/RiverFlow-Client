@@ -1,6 +1,4 @@
 "use client"
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Card, CardContent } from "@/components/ui/card"
 import { useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import {
@@ -13,7 +11,7 @@ import {
   ReactFlowProvider,
   useReactFlow,
 } from "reactflow"
-import {ArrowLeft, PlusCircle} from "lucide-react"
+import {ArrowLeft} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import DemoToolbar from "@/components/demo/demo-toolbar"
 import DemoCanvas from "@/components/demo/demo-canvas"
@@ -73,7 +71,6 @@ function DemoPageContent() {
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
-    const [openTemplates, setOpenTemplates] = useState(false)
 
   const onConnect = useCallback(
     (connection: Connection) => {
@@ -256,33 +253,6 @@ function DemoPageContent() {
         <ArrowLeft className="h-4 w-4 mr-2" />
         Back to Home
       </Button>
-        <Button
-            variant="ghost"
-            onClick={() => setOpenTemplates(true)}
-            className="absolute top-4 right-4 z-20 bg-background/95 backdrop-blur-sm border shadow-lg"
-        >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Templates availaible
-        </Button>
-        <TemplateSelectorModal
-            open={openTemplates}
-            onOpenChange={setOpenTemplates}
-            onSelectTemplate={(path) => {
-                fetch(path)
-                    .then((res) => res.json())
-                    .then((data) => {
-                        if (data.nodes && data.edges) {
-                            setNodes(data.nodes)
-                            setEdges(data.edges)
-                            toast.success("Template loaded successfully!")
-                        } else {
-                            toast.error("Invalid template format")
-                        }
-                    })
-                    .catch(() => toast.error("Error loading template"))
-                    .finally(() => setOpenTemplates(false))
-            }}
-        />
       {/* Toolbar */}
       <DemoToolbar
         onAddNode={handleAddNode}
@@ -325,105 +295,6 @@ function DemoPageContent() {
       />
     </div>
   )
-}
-
-function TemplateSelectorModal({
-                                   open,
-                                   onOpenChange,
-                                   onSelectTemplate,
-                               }: {
-    open: boolean
-    onOpenChange: (open: boolean) => void
-    onSelectTemplate: (path: string) => void
-}) {
-    const templates = [
-        {
-            name: "Basic Mindmap",
-            path: "templates/temp1.json",
-            desc: "Mindmap mẫu cơ bản với 6 node",
-        },
-        {
-            name: "Flowchart Example",
-            path: "templates/temp2.json",
-            desc: "tesst2",
-        },
-        {
-            name: "Flowchart Example",
-            path: "templates/temp3.json",
-            desc: "Sơ đồ quy trình đơn giản",
-        },
-        {
-            name: "Flowchart Example",
-            path: "templates/temp4.json",
-            desc: "Sơ đồ quy trình đơn giản",
-        },
-        {
-            name: "Flowchart Example",
-            path: "templates/temp5.json",
-            desc: "Sơ đồ quy trình đơn giản",
-        },{
-            name: "Flowchart Example",
-            path: "templates/temp6.json",
-            desc: "Sơ đồ quy trình đơn giản",
-        },
-    ]
-    const itemsPerPage = 3
-    const [page, setPage] = useState(1)
-    const totalPages = Math.ceil(templates.length / itemsPerPage)
-    const startIndex = (page - 1) * itemsPerPage
-    const visibleTemplates = templates.slice(startIndex, startIndex + itemsPerPage)
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle className="text-lg font-semibold text-center">
-                        Template availaible
-                    </DialogTitle>
-                </DialogHeader>
-
-                {/* Danh sách template có phân trang */}
-                <div className="space-y-3 mb-4">
-                    {visibleTemplates.map((tpl) => (
-                        <Card
-                            key={tpl.path}
-                            className="cursor-pointer hover:border-primary transition"
-                            onClick={() => onSelectTemplate(tpl.path)}
-                        >
-                            <CardContent className="p-4">
-                                <p className="font-medium">{tpl.name}</p>
-                                <p className="text-sm text-muted-foreground">{tpl.desc}</p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
-
-                {/* Thanh phân trang */}
-                <div className="flex items-center justify-between">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    >
-                        ← Trang trước
-                    </Button>
-
-                    <span className="text-sm text-muted-foreground">
-            Trang {page}/{totalPages}
-          </span>
-
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages}
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    >
-                        Trang sau →
-                    </Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-    )
 }
 
 export default function DemoPage() {

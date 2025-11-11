@@ -1,0 +1,91 @@
+{
+  "nodes": [
+    {
+      "id": "1",
+      "type": "hexagon",
+      "position": { "x": 400, "y": 100 },
+      "data": {
+        "label": "Project Goal",
+        "description": "Main objective",
+        "color": "#8b5cf6",
+        "shape": "hexagon",
+        "bgColor": "#ffffff"
+      },
+      "width": 180,
+      "height": 120
+    },
+    {
+      "id": "2",
+      "type": "rectangle",
+      "position": { "x": 150, "y": 300 },
+      "data": {
+        "label": "Phase 1: Planning",
+        "description": "Initial planning phase",
+        "color": "#3b82f6",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "3",
+      "type": "rectangle",
+      "position": { "x": 400, "y": 300 },
+      "data": {
+        "label": "Phase 2: Development",
+        "description": "Development phase",
+        "color": "#10b981",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "4",
+      "type": "rectangle",
+      "position": { "x": 650, "y": 300 },
+      "data": {
+        "label": "Phase 3: Testing",
+        "description": "Testing and QA",
+        "color": "#f59e0b",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "5",
+      "type": "rectangle",
+      "position": { "x": 275, "y": 500 },
+      "data": {
+        "label": "Deliverable 1",
+        "description": "First deliverable",
+        "color": "#6366f1",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    },
+    {
+      "id": "6",
+      "type": "rectangle",
+      "position": { "x": 525, "y": 500 },
+      "data": {
+        "label": "Deliverable 2",
+        "description": "Second deliverable",
+        "color": "#6366f1",
+        "shape": "rectangle"
+      },
+      "width": 150,
+      "height": 67
+    }
+  ],
+  "edges": [
+    { "id": "e1-2", "source": "1", "target": "2", "animated": true, "type": "smoothstep" },
+    { "id": "e1-3", "source": "1", "target": "3", "animated": true, "type": "smoothstep" },
+    { "id": "e1-4", "source": "1", "target": "4", "animated": true, "type": "smoothstep" },
+    { "id": "e2-5", "source": "2", "target": "5", "animated": true, "type": "smoothstep" },
+    { "id": "e3-6", "source": "3", "target": "6", "animated": true, "type": "smoothstep" }
+  ]
+}
+
