@@ -15,6 +15,10 @@ const [focusedField, setFocusedField] = useState<"label" | "description" | null>
   const descRef = useRef<HTMLDivElement>(null)
   const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
+   const COLORS = [
+    "#ef4444", "#f97316", "#facc15", "#22c55e", "#3b82f6",
+    "#8b5cf6", "#ec4899", "#14b8a6", "#000000", "#ffffff"
+  ]
   if (!selectedNode) return null
 
   const handleLabelChange = (value: string) => {
