@@ -260,14 +260,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
-    // Handle undefined values by removing the property
-    const cleanedData = Object.fromEntries(
-      Object.entries(newData).filter(([_, value]) => value !== undefined)
-    )
-    const dataToMerge = Object.keys(newData).some((key) => newData[key] === undefined)
-      ? { ...newData, ...Object.fromEntries(Object.keys(newData).filter(k => newData[k] === undefined).map(k => [k, undefined])) }
-      : newData
-    
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
