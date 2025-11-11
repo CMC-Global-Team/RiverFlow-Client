@@ -58,13 +58,16 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     
     // Xử lý lỗi 403 - Token hết hạn hoặc không hợp lệ, tự động logout
+    // Không redirect nếu đang ở trang verify-email (vì đây là public endpoint)
     if (error.response?.status === 403) {
       // Clear tất cả dữ liệu authentication
       localStorage.clear();
       deleteCookie('accessToken');
       
-      // Redirect về trang login
-      if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      // Redirect về trang login (trừ khi đang ở trang verify-email)
+      if (typeof window !== 'undefined' && 
+          window.location.pathname !== '/' && 
+          !window.location.pathname.includes('/verify-email')) {
         window.location.href = '/';
       }
       
@@ -122,8 +125,10 @@ apiClient.interceptors.response.use(
           localStorage.clear();
           deleteCookie('accessToken');
           
-          // Chỉ redirect nếu không phải đang ở trang login
-          if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+          // Chỉ redirect nếu không phải đang ở trang login hoặc verify-email
+          if (typeof window !== 'undefined' && 
+              window.location.pathname !== '/' && 
+              !window.location.pathname.includes('/verify-email')) {
             window.location.href = '/';
           }
           
@@ -135,7 +140,9 @@ apiClient.interceptors.response.use(
         localStorage.clear();
         deleteCookie('accessToken');
         
-        if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+        if (typeof window !== 'undefined' && 
+            window.location.pathname !== '/' && 
+            !window.location.pathname.includes('/verify-email')) {
           window.location.href = '/';
         }
       }

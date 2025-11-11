@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useMemo, useEffect, useRef, useState } from 'react'
+import { useCallback, useMemo, useEffect, useRef, useState } from 'react'
 import ReactFlow, {
   Background,
   Controls,
@@ -74,7 +75,21 @@ export default function Canvas() {
     deleteNode,
     deleteEdge,
     addNode,
+    onViewportChange,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    updateNodeData,
   } = useMindmapContext()
+
+  const { getViewport } = useReactFlow();
+
+  const handleMoveEnd = useCallback(() => {
+    if (onViewportChange) {
+        onViewportChange(getViewport());
+    }
+  }, [getViewport, onViewportChange]);
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
@@ -314,6 +329,13 @@ export default function Canvas() {
     [setSelectedNode, setSelectedEdge]
   )
 
+  const onNodeDoubleClick = useCallback(
+    (_event: React.MouseEvent, node: any) => {
+      updateNodeData(node.id, { isEditing: true })
+    },
+    [updateNodeData]
+  )
+
   const onEdgeClick = useCallback(
     (_event: any, edge: any) => {
       setSelectedEdge(edge)
@@ -364,6 +386,8 @@ export default function Canvas() {
         return
       }
 
+      const isCtrlOrCmd = event.ctrlKey || event.metaKey
+
       // Tab key - Add child node
       if (event.key === 'Tab' && selectedNode) {
         event.preventDefault()
@@ -384,6 +408,23 @@ export default function Canvas() {
           deleteEdge(selectedEdge.id)
         }
       }
+
+      if (isCtrlOrCmd && event.key === 'z') {
+        event.preventDefault();
+        if (canUndo) {
+            undo();
+        }
+      }
+
+      if (
+          (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
+          (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
+         ) {
+        event.preventDefault();
+        if (canRedo) {
+            redo();
+        }
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
@@ -400,6 +441,7 @@ export default function Canvas() {
 
   return (
     <div className="w-full h-full relative">
+    <div className="w-full h-full relative">
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -410,6 +452,7 @@ export default function Canvas() {
           reactFlowInstance.current = instance
         }}
         onNodeClick={onNodeClick}
+        onNodeDoubleClick={onNodeDoubleClick}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         onMove={() => {

@@ -1,5 +1,6 @@
 "use client"
-
+import { useState, useEffect, useRef } from "react"
+import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
 import { Handle, Position, NodeProps } from "reactflow"
 
@@ -215,10 +216,7 @@ export const DiamondNode = memo(({ id, data, selected, onHandleHover, onHandleLe
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
-          <div className="font-semibold text-xs" style={{ color }}>
-            {data.label}
-          </div>
-          {data.description && <div className="text-[10px] text-muted-foreground line-clamp-1 mt-0.5">{data.description}</div>}
+          <EditableContent data={data} id={id} />
         </div>
       </div>
       <Handle 
@@ -299,10 +297,7 @@ export const HexagonNode = memo(({ id, data, selected, onHandleHover, onHandleLe
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-4">
-          <div className="font-semibold text-sm" style={{ color }}>
-            {data.label}
-          </div>
-          {data.description && <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{data.description}</div>}
+          <EditableContent data={data} id={id} />
         </div>
       </div>
       <Handle 

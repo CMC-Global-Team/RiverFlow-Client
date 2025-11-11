@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreVertical, Share2, Trash2, Edit, Star, Archive } from "lucide-react"
+import { MoreVertical, Share2, Trash2, Edit, Star, Archive, Copy } from "lucide-react"
 import { useState } from "react"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { formatDistanceToNow } from "date-fns"
@@ -11,6 +11,7 @@ interface MindmapCardProps {
   onToggleFavorite?: (id: string) => void
   onArchive?: (id: string) => void
   onEdit?: (id: string) => void
+  onDuplicate?: (id: string) => void
   onClick?: (id: string) => void
 }
 
@@ -20,6 +21,7 @@ export default function MindmapCard({
   onToggleFavorite, 
   onArchive, 
   onEdit,
+  onDuplicate,
   onClick 
 }: MindmapCardProps) {
   const [showMenu, setShowMenu] = useState(false)
@@ -98,6 +100,17 @@ export default function MindmapCard({
                   <Edit className="h-4 w-4" />
                   Edit Name & Description
                 </button>
+                <button 
+                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    setShowMenu(false)
+                    onDuplicate?.(mindmap.id) 
+                  }}
+                >
+                  <Copy className="h-4 w-4" /> 
+                  Duplicate
+                </button>
                 <button 
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   onClick={(e) => {

@@ -1,4 +1,5 @@
 import apiClient from '@/lib/apiClient';
+import { AxiosError } from 'axios';
 import {
   CreateMindmapRequest,
   UpdateMindmapRequest,
@@ -144,5 +145,34 @@ export const searchMindmaps = async (keyword: string): Promise<MindmapSummary[]>
     }
   );
   return response.data;
+};
+
+export const undoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
+    // Gọi API /api/mindmaps/{id}/undo
+    const response = await apiClient.post(`/mindmaps/${mindmapId}/undo`);
+    return response.data;
+};
+
+export const redoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
+    // Gọi API /api/mindmaps/{id}/redo
+    const response = await apiClient.post(`/mindmaps/${mindmapId}/redo`);
+    return response.data;
+};
+
+/**
+ * Gọi API để nhân bản một mindmap
+ * @param mindmapId ID của mindmap gốc
+ * @returns Promise chứa dữ liệu mindmap MỚI
+ */
+export const duplicateMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
+  try {
+    const response = await apiClient.post<MindmapResponse>(`/mindmaps/${mindmapId}/duplicate`);
+    return response.data;
+  } catch (error: unknown) {
+    if (error instanceof AxiosError) {
+      console.error('Lỗi khi nhân bản mindmap:', error.response?.data || error.message);
+    }
+    throw error; 
+  }
 };
 
