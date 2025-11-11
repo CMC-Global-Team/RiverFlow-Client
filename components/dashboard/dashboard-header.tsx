@@ -4,8 +4,11 @@ import { Search, Bell } from "lucide-react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import ProfileModal from "@/components/profile/ProfileModal"
+
 export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("")
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const { user } = useAuth()
 
   return (
@@ -31,9 +34,29 @@ export default function DashboardHeader() {
             <Bell className="h-5 w-5 text-muted-foreground" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
           </button>
- <ThemeSwitcher/>
-          <button className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center">
+          <ThemeSwitcher/>
+          <button 
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors"
+          >
+            {user?.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt={user.fullName}
+                className="h-8 w-8 rounded-full object-cover border border-border"
+                onError={(e) => {
+                  // Fallback to initials if image fails to load
+                  const target = e.target as HTMLImageElement;
+                  target.style.display = 'none';
+                  const parent = target.parentElement;
+                  if (parent) {
+                    const fallback = parent.querySelector('.avatar-fallback') as HTMLElement;
+                    if (fallback) fallback.style.display = 'flex';
+                  }
+                }}
+              />
+            ) : null}
+            <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
               <span className="text-xs font-bold text-white">
                 {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
               </span>
@@ -42,6 +65,12 @@ export default function DashboardHeader() {
           </button>
         </div>
       </div>
+
+      {/* Profile Modal */}
+      <ProfileModal 
+        isOpen={isProfileModalOpen} 
+        onClose={() => setIsProfileModalOpen(false)} 
+      />
     </header>
   )
 }
