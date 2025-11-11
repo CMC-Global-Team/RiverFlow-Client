@@ -192,16 +192,18 @@ function DashboardContent() {
               <p className="mt-2 text-muted-foreground">Here are your recent mindmaps</p>
             </div>
 
-            {/* Quick Action */}
-            <div className="mb-8">
-              <button 
-                onClick={handleCreateNew}
-                className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
-              >
-                <Plus className="h-5 w-5" />
-                Create New Mindmap
-              </button>
-            </div>
+            {/* Quick Action - Only show if user has mindmaps */}
+            {!loading && !error && mindmaps.length > 0 && (
+              <div className="mb-8">
+                <button 
+                  onClick={handleCreateNew}
+                  className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
+                >
+                  <Plus className="h-5 w-5" />
+                  Create New Mindmap
+                </button>
+              </div>
+            )}
 
             {/* Loading State */}
             {loading && (
