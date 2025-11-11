@@ -13,7 +13,8 @@ export default function NodePropertiesPanel() {
 const [focusedField, setFocusedField] = useState<"label" | "description" | null>(null)
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
-  
+  const [showHighlight, setShowHighlight] = useState(false)
+  const [showTextColor, setShowTextColor] = useState(false)
   if (!selectedNode) return null
 
   const handleLabelChange = (value: string) => {
