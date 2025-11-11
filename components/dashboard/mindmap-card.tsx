@@ -4,6 +4,7 @@ import { MoreVertical, Share2, Trash2, Edit, Star, Archive, Copy } from "lucide-
 import { useState } from "react"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { formatDistanceToNow } from "date-fns"
+import { createPortal } from "react-dom"
 
 interface MindmapCardProps {
   mindmap: MindmapSummary
@@ -12,33 +13,37 @@ interface MindmapCardProps {
   onArchive?: (id: string) => void
   onEdit?: (id: string) => void
   onDuplicate?: (id: string) => void
-  onClick?: (id: string) => void
+    onUnarchive?: (id: string) => void
+    onClick?: (id: string) => void
 }
 
-export default function MindmapCard({ 
-  mindmap, 
-  onDelete, 
-  onToggleFavorite, 
-  onArchive, 
+export default function MindmapCard({
+  mindmap,
+  onDelete,
+  onToggleFavorite,
+  onArchive,
+    onUnarchive,
   onEdit,
   onDuplicate,
-  onClick 
+  onClick
 }: MindmapCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-  
-  const formatDate = (dateString: string) => {
+    const isArchived = (mindmap as any).isArchived === true || (mindmap as any).status === "archived"
+    const formatDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true })
     } catch {
       return dateString
     }
   }
+    const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
 
   return (
-    <div 
-      className="group rounded-xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer"
+    <div
+      className="group rounded-xl border border-border bg-card p-6 hover:border-primary/50 hover:shadow-lg transition-all cursor-pointer relative z-10"
       onClick={() => onClick?.(mindmap.id)}
     >
+
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1">
@@ -70,16 +75,22 @@ export default function MindmapCard({
           )}
         </div>
         <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation()
-              setShowMenu(!showMenu)
-            }}
-            className="rounded-lg p-2 hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
-          >
-            <MoreVertical className="h-5 w-5" />
-          </button>
-          {showMenu && (
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    setMenuPos({
+                        x: rect.left - 150,
+                        y: rect.bottom + 6
+                    });
+                    setShowMenu(!showMenu);
+                }}
+                className="rounded-lg p-2 hover:bg-muted transition-colors opacity-0 group-hover:opacity-100"
+            >
+                <MoreVertical className="h-5 w-5" />
+            </button>
+
+            {showMenu &&  createPortal(
             <>
               <div
                 className="fixed inset-0 z-10"
@@ -88,8 +99,11 @@ export default function MindmapCard({
                   setShowMenu(false)
                 }}
               />
-              <div className="absolute right-0 top-full mt-2 w-56 rounded-lg border border-border bg-card shadow-lg z-20">
-                <button 
+                <div
+                    className="fixed w-56 rounded-lg border border-border bg-card shadow-lg z-30"
+                    style={{ top: menuPos.y, left: menuPos.x }}
+                >
+                <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors rounded-t-lg"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -100,18 +114,18 @@ export default function MindmapCard({
                   <Edit className="h-4 w-4" />
                   Edit Name & Description
                 </button>
-                <button 
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onDuplicate?.(mindmap.id) 
-                  }}
-                >
-                  <Copy className="h-4 w-4" /> 
-                  Duplicate
-                </button>
-                <button 
+                <button
+                 className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                 onClick={(e) => {
+                 e.stopPropagation()
+                setShowMenu(false)
+                onDuplicate?.(mindmap.id)
+                }}
+                >
+                <Copy className="h-4 w-4" />
+                Duplicate
+                </button>
+                <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -122,18 +136,33 @@ export default function MindmapCard({
                   <Star className="h-4 w-4" />
                   {mindmap.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                 </button>
-                <button 
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onArchive?.(mindmap.id)
-                  }}
-                >
-                  <Archive className="h-4 w-4" />
-                  Archive
-                </button>
-                <button 
+                     {!isArchived ? (
+                        <button
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setShowMenu(false)
+                                onArchive?.(mindmap.id)
+                            }}
+                        >
+                            <Archive className="h-4 w-4" />
+                            Archive
+                        </button>
+                    ) : (
+                        <button
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation()
+                                setShowMenu(false)
+                                onUnarchive?.(mindmap.id)
+                            }}
+                        >
+                            <Archive className="h-4 w-4" />
+                            Unarchive
+                        </button>
+                    )}
+
+                <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
                   onClick={(e) => {
                     e.stopPropagation()
@@ -146,7 +175,7 @@ export default function MindmapCard({
                 </button>
               </div>
             </>
-          )}
+          , document.body)}
         </div>
       </div>
 
