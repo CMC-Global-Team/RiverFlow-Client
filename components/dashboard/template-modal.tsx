@@ -391,47 +391,53 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
 
         {/* Templates Grid */}
         <div className="p-6 max-h-[60vh] overflow-y-auto">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {templates.map((template) => (
-              <div
-                key={template.id}
-                onClick={() => setSelectedTemplate(template)}
-                className={`
-                  relative p-6 rounded-lg border-2 cursor-pointer transition-all
-                  ${
-                    selectedTemplate?.id === template.id
-                      ? "border-primary bg-primary/5 shadow-lg"
-                      : "border-border hover:border-primary/50 hover:shadow-md"
-                  }
-                  ${loading === template.id ? "opacity-50 cursor-wait" : ""}
-                `}
-              >
-                <div className="flex items-start gap-4">
-                  <div className={`
-                    p-3 rounded-lg
-                    ${selectedTemplate?.id === template.id ? "bg-primary text-primary-foreground" : "bg-muted"}
-                  `}>
-                    {template.icon}
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">
-                      {template.name}
-                    </h3>
-                    <p className="text-xs text-muted-foreground">
-                      {template.description}
-                    </p>
-                  </div>
-                </div>
-                {selectedTemplate?.id === template.id && (
-                  <div className="absolute top-3 right-3">
-                    <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
-                      <svg className="h-4 w-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
-                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                      </svg>
+          {isLoadingTemplates ? (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Đang tải templates...</p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {templates.map((template) => (
+                <div
+                  key={template.id}
+                  onClick={() => setSelectedTemplate(template)}
+                  className={`
+                    relative p-6 rounded-lg border-2 cursor-pointer transition-all
+                    ${
+                      selectedTemplate?.id === template.id
+                        ? "border-primary bg-primary/5 shadow-lg"
+                        : "border-border hover:border-primary/50 hover:shadow-md"
+                    }
+                    ${loading === template.id ? "opacity-50 cursor-wait" : ""}
+                  `}
+                >
+                  <div className="flex items-start gap-4">
+                    <div className={`
+                      p-3 rounded-lg
+                      ${selectedTemplate?.id === template.id ? "bg-primary text-primary-foreground" : "bg-muted"}
+                    `}>
+                      {template.icon}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground mb-1">
+                        {template.name}
+                      </h3>
+                      <p className="text-xs text-muted-foreground">
+                        {template.description}
+                      </p>
                     </div>
                   </div>
-                )}
-              </div>
+                  {selectedTemplate?.id === template.id && (
+                    <div className="absolute top-3 right-3">
+                      <div className="h-6 w-6 rounded-full bg-primary flex items-center justify-center">
+                        <svg className="h-4 w-4 text-primary-foreground" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           )}
