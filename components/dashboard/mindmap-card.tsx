@@ -114,16 +114,16 @@ export default function MindmapCard({
                   <Edit className="h-4 w-4" />
                   Edit Name & Description
                 </button>
-                <button
+                <button 
                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
                  onClick={(e) => {
                  e.stopPropagation()
-                setShowMenu(false)
-                onDuplicate?.(mindmap.id)
-                }}
-                >
-                <Copy className="h-4 w-4" />
-                Duplicate
+                 setShowMenu(false)
+                 onDuplicate?.(mindmap.id)
+                 }}
+                 >
+                 <Copy className="h-4 w-4" />
+                 Duplicate
                 </button>
                 <button
                   className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
