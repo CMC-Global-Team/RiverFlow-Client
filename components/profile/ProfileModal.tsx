@@ -158,8 +158,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         ) : (
-          <form onSubmit={handleSubmit}>
-            <div className="p-6 space-y-6 max-h-[calc(80vh-200px)] overflow-y-auto">
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden">
+            <div className="p-6 space-y-6 flex-1 overflow-y-auto">
               {/* Full Name */}
               <div>
                 <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
