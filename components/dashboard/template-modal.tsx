@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch } from "lucide-react"
+import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 
 interface Template {
   id: string
@@ -285,12 +285,24 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null)
   const [templates, setTemplates] = useState<Template[]>(builtInTemplates)
   const [loading, setLoading] = useState<string | null>(null)
+  const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
 
   // Load templates from public/templates folder
   useEffect(() => {
-    if (!isOpen) return
+    if (!isOpen) {
+      // Reset templates when modal closes
+      setTemplates(builtInTemplates)
+      setIsLoadingTemplates(false)
+      return
+    }
 
     const loadTemplates = async () => {
+      setIsLoadingTemplates(true)
+      
+      // Add 1-2 second delay before showing templates
+      const delay = Math.random() * 1000 + 1000 // Random delay between 1-2 seconds
+      await new Promise(resolve => setTimeout(resolve, delay))
+
       const loadedTemplates: Template[] = [...builtInTemplates]
 
       for (const meta of templateMetadata) {
@@ -318,6 +330,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       }
 
       setTemplates(loadedTemplates)
+      setIsLoadingTemplates(false)
     }
 
     loadTemplates()
@@ -419,8 +432,9 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                   </div>
                 )}
               </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
