@@ -14,6 +14,7 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  avatar?: string;
 }
 
 // Auth context type
@@ -76,6 +77,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       email: authData.email,
       fullName: authData.fullName,
       role: authData.role,
+      avatar: authData.avatar,
     };
 
     // Lưu vào state
