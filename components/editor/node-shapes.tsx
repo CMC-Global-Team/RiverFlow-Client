@@ -9,83 +9,108 @@ interface NodeData {
   description?: string
   color?: string
   shape?: string
-  isEditing?: boolean
 }
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
-  const [isEditing, setIsEditing] = useState(data.isEditing || false)
   const [label, setLabel] = useState(data.label || "New Node")
   const [description, setDescription] = useState(data.description || "")
-  const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const [editingLabel, setEditingLabel] = useState(false)
+  const [editingDesc, setEditingDesc] = useState(false)
+  const labelRef = useRef<HTMLTextAreaElement>(null)
+  const descRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
-      textareaRef.current.focus()
-      textareaRef.current.select()
+    setLabel(data.label || "New Node")
+    setDescription(data.description || "")
+  }, [data.label, data.description])
+
+  useEffect(() => {
+    if (editingLabel && labelRef.current) {
+      labelRef.current.focus()
+      labelRef.current.select()
     }
-  }, [isEditing])
+  }, [editingLabel])
+
+  useEffect(() => {
+    if (editingDesc && descRef.current) {
+      descRef.current.focus()
+      descRef.current.select()
+    }
+  }, [editingDesc])
 
   const save = () => {
     updateNodeData(id, {
       label: label.trim() || "Untitled",
       description: description.trim(),
-      isEditing: false,
     })
-    setIsEditing(false)
+    setEditingLabel(false)
+    setEditingDesc(false)
   }
 
-  const cancel = () => {
-    setLabel(data.label || "Untitled")
-    setDescription(data.description || "")
-    setIsEditing(false)
-    updateNodeData(id, { isEditing: false })
-  }
-
-  if (isEditing) {
-    return (
-      <div className="space-y-1">
+  return (
+    <div className="space-y-1">
+      {/* Label */}
+      {editingLabel ? (
         <textarea
-          ref={textareaRef}
+          ref={labelRef}
           value={label}
           onChange={(e) => setLabel(e.target.value)}
-          onBlur={save}
+          onBlur={() => {
+            save()
+          }}
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault()
-              save()
+              labelRef.current?.blur()
             }
-            if (e.key === "Escape") cancel()
+            if (e.key === "Escape") {
+              setLabel(data.label || "Untitled")
+              setEditingLabel(false)
+            }
           }}
-          className="w-full resize-none outline-none font-semibold text-sm bg-transparent"
+          className="w-full resize-none outline-none font-semibold text-sm bg-transparent border-b border-primary"
           rows={1}
-          placeholder="Title..."
         />
+      ) : (
+        <div
+          className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
+          style={{ color: data.color || "#3b82f6" }}
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setEditingLabel(true)
+          }}
+        >
+          {label || <span className="text-muted-foreground">Double-click to add title</span>}
+        </div>
+      )}
+
+      {/* Description */}
+      {editingDesc ? (
         <textarea
+          ref={descRef}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => e.key === "Escape" && cancel()}
-          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent"
+          onBlur={() => {
+            save()
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setDescription(data.description || "")
+              setEditingDesc(false)
+            }
+          }}
+          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1"
           rows={2}
-          placeholder="Description..."
         />
-      </div>
-    )
-  }
-return (
-    <div
-      className="cursor-text select-none"
-      onDoubleClick={() => {
-        setIsEditing(true)
-        updateNodeData(id, { isEditing: true })
-      }}
-    >
-      <div className="font-semibold text-sm" style={{ color: data.color || "#3b82f6" }}>
-        {label}
-      </div>
-      {description && (
-        <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-          {description}
+      ) : (
+        <div
+          className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
+          onDoubleClick={(e) => {
+            e.stopPropagation()
+            setEditingDesc(true)
+          }}
+        >
+          {description || <span className="text-muted-foreground/50">Description</span>}
         </div>
       )}
     </div>
