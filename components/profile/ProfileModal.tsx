@@ -109,12 +109,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
       <div 
-        className="relative w-full max-w-2xl mx-4 bg-card rounded-xl shadow-2xl border border-border animate-in zoom-in-95 slide-in-from-bottom-4 duration-300"
+        className="relative w-full max-w-2xl mx-4 bg-card rounded-xl shadow-2xl border border-border"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
