@@ -104,6 +104,18 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     try {
       const response = await uploadAvatar(file)
       setFormData({ ...formData, avatar: response.url })
+      
+      // Update avatar in auth context immediately
+      if (user) {
+        updateUser({
+          userId: user.userId,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          avatar: response.url, // New avatar URL from server
+        })
+      }
+      
       toast({
         title: "Thành công",
         description: "Upload avatar thành công",
