@@ -12,7 +12,9 @@ import { AxiosError } from "axios";
  */
 export const getUserProfile = async (): Promise<UserResponse> => {
   try {
-    const response = await apiClient.get<UserResponse>("/api/user/profile");
+    // Backend endpoint: GET /api/user/profile
+    // Client baseURL already includes /api, so use /user/profile
+    const response = await apiClient.get<UserResponse>("/user/profile");
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
@@ -36,7 +38,9 @@ export const getUserProfile = async (): Promise<UserResponse> => {
  */
 export const updateUserProfile = async (data: UpdateUserRequest): Promise<UserResponse> => {
   try {
-    const response = await apiClient.put<UserResponse>("/api/user/profile", data);
+    // Backend endpoint: PUT /api/user/profile
+    // Client baseURL already includes /api, so use /user/profile
+    const response = await apiClient.put<UserResponse>("/user/profile", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {

@@ -24,6 +24,8 @@ export const uploadAvatar = async (file: File): Promise<UploadAvatarResponse> =>
     const formData = new FormData();
     formData.append("file", file);
 
+    // Backend endpoint: POST /api/user/avatar/upload
+    // Client baseURL already includes /api, so use /user/avatar/upload
     const response = await apiClient.post<UploadAvatarResponse>("/user/avatar/upload", formData, {
       headers: {
         "Content-Type": "multipart/form-data",
