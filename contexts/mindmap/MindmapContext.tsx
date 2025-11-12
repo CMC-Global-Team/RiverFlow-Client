@@ -27,7 +27,9 @@ interface MindmapContextType {
   loadMindmap: (id: string) => Promise<void>
   setTitle: (title: string) => void
   onViewportChange: (viewport: Viewport) => void
-  
+  autoSaveEnabled: boolean
+  setAutoSaveEnabled: (enabled: boolean) => void
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
   canUndo: boolean 
   canRedo: boolean 
   undo: () => Promise<void> 
@@ -35,6 +37,154 @@ interface MindmapContextType {
 }
 
 const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
+
+type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
+
+interface AutoSaveOptions {
+  defaultEnabled?: boolean
+  debounceMs?: number
+  statusResetMs?: number
+  setIsSaving?: (value: boolean) => void
+  onError?: (error: unknown) => void
+}
+
+interface UseMindmapAutoSaveResult {
+  autoSaveEnabled: boolean
+  setAutoSaveEnabled: (enabled: boolean) => void
+  saveStatus: SaveStatus
+  scheduleAutoSave: (debounceMsOverride?: number) => void
+  saveImmediately: () => Promise<void>
+  cancelScheduledSave: () => void
+  markSynced: (status?: SaveStatus) => void
+}
+
+function useMindmapAutoSave(
+  onSave: () => Promise<void>,
+  {
+    defaultEnabled = true,
+    debounceMs = 1500,
+    statusResetMs = 2000,
+    setIsSaving,
+    onError,
+  }: AutoSaveOptions = {}
+): UseMindmapAutoSaveResult {
+  const [autoSaveEnabled, setAutoSaveEnabledState] = useState(defaultEnabled)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const statusTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      if (statusTimerRef.current) {
+        clearTimeout(statusTimerRef.current)
+        statusTimerRef.current = null
+      }
+    }
+  }, [])
+
+  const clearSaveTimer = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+  }, [])
+
+  const clearStatusTimer = useCallback(() => {
+    if (statusTimerRef.current) {
+      clearTimeout(statusTimerRef.current)
+      statusTimerRef.current = null
+    }
+  }, [])
+
+  const scheduleStatusReset = useCallback(() => {
+    clearStatusTimer()
+    statusTimerRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return
+      setSaveStatus('idle')
+    }, statusResetMs)
+  }, [clearStatusTimer, statusResetMs])
+
+  const runSave = useCallback(async () => {
+    clearSaveTimer()
+    clearStatusTimer()
+    setIsSaving?.(true)
+    setSaveStatus('saving')
+    try {
+      await onSave()
+      if (!isMountedRef.current) return
+      setSaveStatus('saved')
+      scheduleStatusReset()
+    } catch (error) {
+      if (isMountedRef.current) {
+        setSaveStatus('error')
+      }
+      onError?.(error)
+      throw error
+    } finally {
+      setIsSaving?.(false)
+    }
+  }, [clearSaveTimer, clearStatusTimer, onSave, onError, scheduleStatusReset, setIsSaving])
+
+  const scheduleAutoSave = useCallback(
+    (debounceMsOverride?: number) => {
+      if (!autoSaveEnabled) return
+      clearSaveTimer()
+      const delay = debounceMsOverride ?? debounceMs
+      saveTimerRef.current = setTimeout(() => {
+        runSave().catch(() => {})
+      }, delay)
+    },
+    [autoSaveEnabled, clearSaveTimer, debounceMs, runSave]
+  )
+
+  const saveImmediately = useCallback(async () => {
+    await runSave()
+  }, [runSave])
+
+  const cancelScheduledSave = useCallback(() => {
+    clearSaveTimer()
+  }, [clearSaveTimer])
+
+  const markSynced = useCallback(
+    (status: SaveStatus = 'saved') => {
+      if (!isMountedRef.current) return
+      clearStatusTimer()
+      setSaveStatus(status)
+      if (status === 'saved') {
+        scheduleStatusReset()
+      }
+    },
+    [clearStatusTimer, scheduleStatusReset]
+  )
+
+  const handleToggleAutoSave = useCallback(
+    (enabled: boolean) => {
+      setAutoSaveEnabledState(enabled)
+      if (!enabled) {
+        cancelScheduledSave()
+        clearStatusTimer()
+        setSaveStatus('idle')
+      }
+    },
+    [cancelScheduledSave, clearStatusTimer]
+  )
+
+  return {
+    autoSaveEnabled,
+    setAutoSaveEnabled: handleToggleAutoSave,
+    saveStatus,
+    scheduleAutoSave,
+    saveImmediately,
+    cancelScheduledSave,
+    markSynced,
+  }
+}
 
 export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [mindmap, setMindmap] = useState<MindmapResponse | null>(null)
@@ -48,7 +198,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null);
   const latestMindmapRef = useRef(mindmap);
   const latestNodesRef = useRef(nodes);
   const latestEdgesRef = useRef(edges);
@@ -121,85 +270,93 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, []); // useCallback rỗng vì nó là hàm setter
 
   // --- Cập nhật 'loadMindmap' ---
+  const performSave = useCallback(async () => {
+    const currentMindmap = latestMindmapRef.current
+    if (!currentMindmap) {
+      throw new Error('No mindmap loaded, cannot save.')
+    }
+
+    const payload: UpdateMindmapRequest = {
+      title: currentMindmap.title,
+      nodes: latestNodesRef.current,
+      edges: latestEdgesRef.current,
+      viewport: latestViewportRef.current || undefined,
+    }
+
+    const responseData = await updateMindmap(currentMindmap.id, payload)
+    setFullMindmapState(responseData)
+  }, [setFullMindmapState])
+
+  const {
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
+    scheduleAutoSave,
+    saveImmediately,
+    cancelScheduledSave,
+    markSynced,
+  } = useMindmapAutoSave(performSave, {
+    setIsSaving,
+    onError: (error) => {
+      console.error('Mindmap save failed:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Save failed',
+        description: 'Unable to sync your changes. They will retry shortly.',
+      })
+    },
+  })
+
   const loadMindmap = useCallback(async (id: string) => {
     try {
       const data = await getMindmapById(id)
-      setFullMindmapState(data); // <-- Dùng hàm helper mới
+      setFullMindmapState(data)
+      markSynced('idle')
     } catch (error) {
       console.error('Error loading mindmap:', error)
     }
-  }, [setFullMindmapState]) // <-- Sửa dependency
+  }, [markSynced, setFullMindmapState])
 
-  // --- Cập nhật 'saveMindmap' ---
   const saveMindmap = useCallback(async () => {
-    const currentMindmap = latestMindmapRef.current;
-    if (!currentMindmap) {
-      console.error('No mindmap loaded, cannot save.')
-      return
-    }
-    setIsSaving(true)
-    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
-    
-    try {
-      const payload: UpdateMindmapRequest = {
-        title: currentMindmap.title,
-        nodes: latestNodesRef.current,
-        edges: latestEdgesRef.current,
-        viewport: latestViewportRef.current || undefined,
-      };
-
-      const responseData = await updateMindmap(currentMindmap.id, payload); // <-- Lấy response
-      setFullMindmapState(responseData); // <-- Dùng helper để set state VÀ cờ undo/redo
-      console.log('Mindmap auto-saved successfully');
+    try {
+      await saveImmediately()
     } catch (error) {
-      // ... (error handling)
-    } finally {
-      setIsSaving(false)
+      throw error
     }
-  }, [toast, setFullMindmapState])
-
-  const triggerDebouncedSave = useCallback(() => {
-    if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current);
-    }
-    saveTimerRef.current = setTimeout(() => {
-        saveMindmap();
-    }, 1500);
-  }, [saveMindmap]);
+  }, [saveImmediately])
 
 // Node changes handler
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      setNodes((nds) => applyNodeChanges(changes, nds))
-      triggerDebouncedSave();
-    },
-    [triggerDebouncedSave]
-
-  )
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds) => applyNodeChanges(changes, nds))
+      scheduleAutoSave()
+    },
+    [scheduleAutoSave]
+  )
 
   // Edge changes handler
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds))
-      triggerDebouncedSave();
-    },
-    [triggerDebouncedSave]
-  )
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds))
+      scheduleAutoSave()
+    },
+    [scheduleAutoSave]
+  )
 
   // Connection handler
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      const newEdge = {
-        ...connection,
-        animated: true,
-        type: "smoothstep",
-      }
-      setEdges((eds) => addEdge(newEdge, eds))
-      triggerDebouncedSave();
-    },
-    [triggerDebouncedSave]
-  )
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const newEdge = {
+        ...connection,
+        animated: true,
+        type: "smoothstep",
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
+      scheduleAutoSave()
+    },
+    [scheduleAutoSave]
+  )
 
   // Add new node
   const addNode = useCallback((position: { x: number; y: number }, shape: string = 'rectangle') => {
@@ -215,9 +372,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       },
     }
     setNodes((nds) => [...nds, newNode])
-    triggerDebouncedSave();
+    scheduleAutoSave()
     return newNode.id
-  }, [triggerDebouncedSave])
+  }, [scheduleAutoSave])
 
   const deleteNode = useCallback((nodeId: string) => {
      const edgesSnapshot = latestEdgesRef.current;
@@ -246,17 +403,17 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       setSelectedEdge(null);
     }
 
-    triggerDebouncedSave();
-  }, [triggerDebouncedSave])
+    scheduleAutoSave()
+  }, [scheduleAutoSave])
 
   // Delete edge
   const deleteEdge = useCallback((edgeId: string) => {
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
-    triggerDebouncedSave();
+    scheduleAutoSave()
     if (selectedEdge?.id === edgeId) {
       setSelectedEdge(null)
     }
-  }, [triggerDebouncedSave])
+  }, [scheduleAutoSave])
 
   // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
@@ -304,8 +461,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       return prev
     })
-    triggerDebouncedSave();
-  }, [triggerDebouncedSave])
+    scheduleAutoSave()
+  }, [scheduleAutoSave])
 
   // Update edge data
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
@@ -323,32 +480,32 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       return prev
     })
-    triggerDebouncedSave();
-  }, [triggerDebouncedSave])
+    scheduleAutoSave()
+  }, [scheduleAutoSave])
 
   // Set title
   const setTitle = useCallback((title: string) => {
     if (mindmap) {
       setMindmap({ ...mindmap, title })
-      triggerDebouncedSave();
+      scheduleAutoSave()
     }
-  }, [mindmap, triggerDebouncedSave])
+  }, [mindmap, scheduleAutoSave])
 
   const onViewportChange = useCallback((viewport: Viewport) => {
     setViewport(viewport);
-    triggerDebouncedSave(); // Kích hoạt lưu khi di chuyển
-  }, [triggerDebouncedSave]);
+    scheduleAutoSave() // Kích hoạt lưu khi di chuyển
+  }, [scheduleAutoSave]);
 
   const undo = useCallback(async () => {
       if (!mindmap?.id || !canUndo) return; // Kiểm tra nếu có thể undo
 
-      // Hủy mọi thay đổi đang chờ lưu (debounce)
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      cancelScheduledSave();
       
       setIsSaving(true); // Hiển thị loading (tùy chọn)
       try {
           const restoredMindmap = await undoMindmap(mindmap.id);
           setFullMindmapState(restoredMindmap); // Cập nhật state với dữ liệu mới
+          markSynced('saved');
           toast({ title: "Đã hoàn tác!" });
       } catch (error) {
           console.error("Undo failed:", error);
@@ -356,17 +513,18 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       } finally {
           setIsSaving(false);
       }
-  }, [mindmap?.id, canUndo, toast, setFullMindmapState]); // Thêm dependencies
+  }, [mindmap?.id, canUndo, cancelScheduledSave, markSynced, toast, setFullMindmapState]); // Thêm dependencies
 
   const redo = useCallback(async () => {
       if (!mindmap?.id || !canRedo) return; // Kiểm tra nếu có thể redo
       
-      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+      cancelScheduledSave();
       
       setIsSaving(true);
       try {
           const restoredMindmap = await redoMindmap(mindmap.id);
           setFullMindmapState(restoredMindmap); // Cập nhật state
+          markSynced('saved');
           toast({ title: "Đã làm lại!" });
       } catch (error) {
           console.error("Redo failed:", error);
@@ -374,7 +532,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       } finally {
           setIsSaving(false);
       }
-  }, [mindmap?.id, canRedo, toast, setFullMindmapState]);
+  }, [mindmap?.id, canRedo, cancelScheduledSave, markSynced, toast, setFullMindmapState]);
 
   const value: MindmapContextType = {
     mindmap,
@@ -397,6 +555,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     loadMindmap,
     setTitle,
     onViewportChange,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
     canUndo,
     canRedo,
     undo,

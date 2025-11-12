@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { ChevronDown, Users, Loader2, Check } from "lucide-react"
+import { ChevronDown, Users, Loader2, Check, AlertCircle } from "lucide-react"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { ReactFlowProvider } from "reactflow"
@@ -25,15 +25,12 @@ function EditorInner() {
     loadMindmap,
     isSaving,
     setTitle,
-    nodes,
-    edges,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
   } = useMindmapContext()
   
   const [isEditing, setIsEditing] = useState(false)
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle')
-  const [autoSave, setAutoSave] = useState(true)
-  const autoSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null)
-  const isInitialLoadRef = useRef(true)
 
   // Load mindmap on mount
   useEffect(() => {
@@ -42,52 +39,11 @@ function EditorInner() {
     }
   }, [mindmapId, loadMindmap])
 
-  // Auto-save when nodes or edges change
-  useEffect(() => {
-    // Skip auto-save on initial load
-    if (isInitialLoadRef.current) {
-      isInitialLoadRef.current = false
-      return
-    }
-
-    // Skip if auto-save is disabled
-    if (!autoSave) return
-
-    // Clear previous timeout
-    if (autoSaveTimeoutRef.current) {
-      clearTimeout(autoSaveTimeoutRef.current)
-    }
-
-    // Set new timeout for auto-save (debounce 2 seconds)
-    autoSaveTimeoutRef.current = setTimeout(async () => {
-      try {
-        setSaveStatus('saving')
-        await saveMindmap()
-        setSaveStatus('saved')
-        setTimeout(() => setSaveStatus('idle'), 2000)
-      } catch (error) {
-        console.error('Auto-save failed:', error)
-        setSaveStatus('idle')
-      }
-    }, 2000)
-
-    // Cleanup
-    return () => {
-      if (autoSaveTimeoutRef.current) {
-        clearTimeout(autoSaveTimeoutRef.current)
-      }
-    }
-  }, [nodes, edges, autoSave, saveMindmap])
-
   const handleSave = async () => {
     try {
-      setSaveStatus('saving')
       await saveMindmap()
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
     } catch (error) {
       console.error('Save failed:', error)
-      setSaveStatus('idle')
       alert('Failed to save mindmap')
     }
   }
@@ -165,8 +121,8 @@ function EditorInner() {
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
               <Switch
                 id="auto-save"
-                checked={autoSave}
-                onCheckedChange={setAutoSave}
+                checked={autoSaveEnabled}
+                onCheckedChange={setAutoSaveEnabled}
               />
               <Label htmlFor="auto-save" className="text-sm font-medium cursor-pointer">
                 Auto-save
@@ -179,7 +135,7 @@ function EditorInner() {
               <ChevronDown className="h-4 w-4" />
             </button>
             
-            {!autoSave && (
+            {!autoSaveEnabled && (
               <button 
                 onClick={handleSave}
                 disabled={isSaving || saveStatus === 'saved'}
@@ -187,14 +143,21 @@ function EditorInner() {
               >
                 {saveStatus === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />}
                 {saveStatus === 'saved' && <Check className="h-4 w-4" />}
+                {saveStatus === 'error' && <AlertCircle className="h-4 w-4 text-destructive" />}
                 <span>
-                  {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Save'}
+                  {saveStatus === 'saving'
+                    ? 'Saving...'
+                    : saveStatus === 'saved'
+                      ? 'Saved'
+                      : saveStatus === 'error'
+                        ? 'Retry Save'
+                        : 'Save'}
                 </span>
               </button>
             )}
 
             {/* Auto-save Status Indicator */}
-            {autoSave && (
+            {autoSaveEnabled && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {saveStatus === 'saving' && (
                   <>
@@ -206,6 +169,12 @@ function EditorInner() {
                   <>
                     <Check className="h-4 w-4 text-green-500" />
                     <span className="text-green-500">Saved</span>
+                  </>
+                )}
+                {saveStatus === 'error' && (
+                  <>
+                    <AlertCircle className="h-4 w-4 text-destructive" />
+                    <span className="text-destructive">Auto-save failed</span>
                   </>
                 )}
                 {saveStatus === 'idle' && (
