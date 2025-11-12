@@ -5,6 +5,7 @@ import { useState } from "react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ProfileModal from "@/components/profile/ProfileModal"
+import { getAvatarUrl } from "@/lib/avatar-utils"
 
 export default function DashboardHeader() {
   const [searchQuery, setSearchQuery] = useState("")
@@ -41,11 +42,7 @@ export default function DashboardHeader() {
           >
             {user?.avatar ? (
               <img 
-                src={user.avatar.startsWith('http') 
-                  ? user.avatar 
-                  : user.avatar.startsWith('/api')
-                    ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}${user.avatar}`
-                    : `${process.env.NEXT_PUBLIC_API_URL}${user.avatar}`}
+                src={getAvatarUrl(user.avatar) || ''}
                 alt={user.fullName}
                 className="h-8 w-8 rounded-full object-cover border border-border"
                 onError={(e) => {
