@@ -48,7 +48,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             // Convert relative path to absolute URL
             const absoluteUrl = profile.avatar.startsWith('http') 
               ? profile.avatar 
-              : `${process.env.NEXT_PUBLIC_API_URL}${profile.avatar}`
+              : profile.avatar.startsWith('/api')
+                ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}${profile.avatar}`
+                : `${process.env.NEXT_PUBLIC_API_URL}${profile.avatar}`
             setAvatarPreview(absoluteUrl)
           }
         })
