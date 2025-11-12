@@ -6,6 +6,7 @@ import { X, Loader2, User, Mail, Globe, Clock, Upload, Image as ImageIcon } from
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile, updateUserProfile } from "@/services/auth/update-user.service"
 import { uploadAvatar } from "@/services/auth/upload-avatar.service"
+import { getAvatarUrl } from "@/lib/avatar-utils"
 import { useToast } from "@/hooks/use-toast"
 import type { UpdateUserRequest } from "@/types/user.types"
 
@@ -46,12 +47,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           })
           if (profile.avatar) {
             // Convert relative path to absolute URL
-            const absoluteUrl = profile.avatar.startsWith('http') 
-              ? profile.avatar 
-              : profile.avatar.startsWith('/api')
-                ? `${process.env.NEXT_PUBLIC_API_URL?.replace(/\/api$/, '')}${profile.avatar}`
-                : `${process.env.NEXT_PUBLIC_API_URL}${profile.avatar}`
-            setAvatarPreview(absoluteUrl)
+            const absoluteUrl = getAvatarUrl(profile.avatar)
+            if (absoluteUrl) {
+              setAvatarPreview(absoluteUrl)
+            }
           }
         })
         .catch((error) => {
