@@ -45,7 +45,11 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
             timezone: profile.timezone || "UTC",
           })
           if (profile.avatar) {
-            setAvatarPreview(profile.avatar)
+            // Convert relative path to absolute URL
+            const absoluteUrl = profile.avatar.startsWith('http') 
+              ? profile.avatar 
+              : `${process.env.NEXT_PUBLIC_API_URL}${profile.avatar}`
+            setAvatarPreview(absoluteUrl)
           }
         })
         .catch((error) => {
