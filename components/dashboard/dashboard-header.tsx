@@ -41,7 +41,7 @@ export default function DashboardHeader() {
           >
             {user?.avatar ? (
               <img 
-                src={user.avatar} 
+                src={user.avatar.startsWith('http') ? user.avatar : `${process.env.NEXT_PUBLIC_API_URL}${user.avatar}`}
                 alt={user.fullName}
                 className="h-8 w-8 rounded-full object-cover border border-border"
                 onError={(e) => {
