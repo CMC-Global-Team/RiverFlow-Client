@@ -50,7 +50,7 @@ export default function NodePropertiesPanel() {
   useEffect(() => {
     if (labelRef.current) labelRef.current.innerHTML = selectedNode.data.label || ""
     if (descRef.current) descRef.current.innerHTML = selectedNode.data.description || ""
-  }, [selectedNode.id])
+  }, [selectedNode?.id, selectedNode?.data?.label, selectedNode?.data?.description])
 
   
   const saveField = (field: "label" | "description") => {

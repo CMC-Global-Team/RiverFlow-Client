@@ -14,23 +14,15 @@ interface NodeData {
 }
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
-  const [label, setLabel] = useState(data.label || "New Node")
-  const [description, setDescription] = useState(data.description || "")
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setLabel(data.label || "New Node")
-    setDescription(data.description || "")
-  }, [data.label, data.description])
-
   // Auto-enable editing when isEditing prop is set
   useEffect(() => {
     if (data.isEditing && !editingLabel) {
       setEditingLabel(true)
-      // Clear the flag after enabling
       updateNodeData(id, { isEditing: false })
     }
   }, [data.isEditing, editingLabel, id, updateNodeData])
@@ -38,21 +30,30 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   useEffect(() => {
     if (editingLabel && labelRef.current) {
       labelRef.current.focus()
+      // Initialize content with current data when entering edit mode
+      labelRef.current.innerHTML = data.label || ""
     }
-  }, [editingLabel])
+  }, [editingLabel, data.label])
 
   useEffect(() => {
     if (editingDesc && descRef.current) {
       descRef.current.focus()
+      descRef.current.innerHTML = data.description || ""
     }
-  }, [editingDesc])
+  }, [editingDesc, data.description])
 
-  const save = () => {
-    updateNodeData(id, {
-      label: label.trim() || "Untitled",
-      description: description.trim(),
-    })
+  const finishLabel = () => {
+    if (labelRef.current) {
+      const html = labelRef.current.innerHTML
+      updateNodeData(id, { label: html })
+    }
     setEditingLabel(false)
+  }
+  const finishDesc = () => {
+    if (descRef.current) {
+      const html = descRef.current.innerHTML
+      updateNodeData(id, { description: html })
+    }
     setEditingDesc(false)
   }
 
