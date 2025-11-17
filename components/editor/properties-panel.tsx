@@ -1,23 +1,30 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import NodePropertiesPanel from "./node-properties-panel"
 import EdgePropertiesPanel from "./edge-properties-panel"
-import { X, ChevronLeft, ChevronRight } from "lucide-react"
+import { X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function PropertiesPanel() {
   const { selectedNode, selectedEdge } = useMindmapContext()
-  const [isOpen, setIsOpen] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
-  const [position, setPosition] = useState({ x: 0, y: 0 })
+  const [position, setPosition] = useState({ x: window.innerWidth - 350, y: 100 })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
-  // Hide panel if nothing is selected
   const hasSelection = selectedNode || selectedEdge
 
-  if (!hasSelection) {
+  // Auto open panel when something is selected
+  useEffect(() => {
+    if (hasSelection) {
+      setIsOpen(true)
+    }
+  }, [hasSelection, selectedNode, selectedEdge])
+
+  // If nothing selected and panel is closed, don't render
+  if (!hasSelection && !isOpen) {
     return null
   }
 
@@ -41,9 +48,13 @@ export default function PropertiesPanel() {
     setIsDragging(false)
   }
 
+  const handleClose = () => {
+    setIsOpen(false)
+  }
+
   return (
     <div 
-      className="fixed rounded-lg border border-border bg-card shadow-lg backdrop-blur-sm bg-card/95 w-80 max-h-96 overflow-y-auto"
+      className="fixed rounded-lg border border-border bg-card shadow-lg backdrop-blur-sm bg-card/95 w-80 max-h-96 overflow-y-auto z-50 pointer-events-auto"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         cursor: isDragging ? 'grabbing' : 'default',
@@ -58,12 +69,12 @@ export default function PropertiesPanel() {
         onMouseDown={handleMouseDown}
       >
         <h3 className="text-sm font-semibold">
-          {selectedEdge ? "Connection" : "Properties"}
+          {selectedEdge ? "Connection" : selectedNode ? "Node" : "Properties"}
         </h3>
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setIsOpen(false)}
+          onClick={handleClose}
           className="h-6 w-6"
         >
           <X className="h-4 w-4" />
@@ -71,10 +82,19 @@ export default function PropertiesPanel() {
       </div>
 
       {/* Content */}
-      <div className="p-4">
-        {selectedEdge && <EdgePropertiesPanel />}
-        {selectedNode && !selectedEdge && <NodePropertiesPanel />}
-      </div>
+      {isOpen && hasSelection && (
+        <div className="p-4">
+          {selectedEdge && <EdgePropertiesPanel />}
+          {selectedNode && !selectedEdge && <NodePropertiesPanel />}
+        </div>
+      )}
+
+      {/* Empty State */}
+      {!hasSelection && isOpen && (
+        <div className="p-4 text-center text-sm text-muted-foreground">
+          Select a node or connection to view properties
+        </div>
+      )}
     </div>
   )
 }
