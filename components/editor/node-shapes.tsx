@@ -38,14 +38,12 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   useEffect(() => {
     if (editingLabel && labelRef.current) {
       labelRef.current.focus()
-      labelRef.current.select()
     }
   }, [editingLabel])
 
   useEffect(() => {
     if (editingDesc && descRef.current) {
       descRef.current.focus()
-      descRef.current.select()
     }
   }, [editingDesc])
 
