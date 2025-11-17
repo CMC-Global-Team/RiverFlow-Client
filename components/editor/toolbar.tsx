@@ -15,6 +15,10 @@ import {
   Redo2,
   Undo2,
   GitBranch,
+  Loader2,
+  Check,
+  AlertCircle,
+
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -27,9 +31,28 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { Users, ChevronDown } from "lucide-react"
+
+
 export default function Toolbar() {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo,autoSaveEnabled, setAutoSaveEnabled,
+  saveStatus,
+  isSaving,
+  saveMindmap } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
+
+  const handleSave = async () => {
+  try {
+    await saveMindmap()
+  } catch (error) {
+    console.error("Save failed:", error)
+    toast.error("Failed to save mindmap")
+  }
+}
+
 
   const handleAddNode = (shape: string) => {
     addNode(
@@ -137,6 +160,7 @@ export default function Toolbar() {
   }
 
   return (
+    
     <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
       {/* Add Node Tools */}
       <div className="flex items-center gap-1 border-r border-border pr-3">
@@ -254,16 +278,93 @@ export default function Toolbar() {
 
       {/* Export */}
       <div className="flex items-center gap-1 ml-auto">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDownload}
-          title="Download Mindmap"
-          className="hover:bg-primary/10 hover:text-primary"
-        >
-          <Download className="h-5 w-5" />
-        </Button>
-      </div>
+        
+        <div className="flex items-center gap-2 ml-auto">
+  <div className="flex items-center gap-2 ml-auto">
+
+  
+
+  {/* Theme */}
+  <ThemeSwitcher />
+
+  {/* Auto-save Toggle */}
+  <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
+    <Switch
+      id="auto-save-toolbar"
+      checked={autoSaveEnabled}
+      onCheckedChange={setAutoSaveEnabled}
+    />
+    <Label htmlFor="auto-save" className="text-sm font-medium cursor-pointer">
+      Auto-save
+    </Label>
+  </div>
+
+  
+ <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors">
+              <Users className="h-5 w-5" />
+              <span className="text-sm font-medium">Share</span>
+              <ChevronDown className="h-4 w-4" />
+            </button>
+  {/* Save Button (if auto-save OFF) */}
+  {!autoSaveEnabled && (
+    <Button
+      onClick={handleSave}
+      disabled={isSaving || saveStatus === "saved"}
+      className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium hover:bg-primary/90 disabled:opacity-50"
+    >
+      {saveStatus === "saving" && <Loader2 className="h-4 w-4 animate-spin" />}
+      {saveStatus === "saved" && <Check className="h-4 w-4" />}
+      {saveStatus === "error" && <AlertCircle className="h-4 w-4 text-destructive" />}
+      <span>
+        {saveStatus === "saving"
+          ? "Saving..."
+          : saveStatus === "saved"
+          ? "Saved"
+          : saveStatus === "error"
+          ? "Retry Save"
+          : "Save"}
+      </span>
+    </Button>
+  )}
+
+  {/* Auto-save Status (if auto-save ON) */}
+  {autoSaveEnabled && (
+    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      {saveStatus === "saving" && (
+        <>
+          <Loader2 className="h-4 w-4 animate-spin" />
+          <span>Saving...</span>
+        </>
+      )}
+      {saveStatus === "saved" && (
+        <>
+          <Check className="h-4 w-4 text-green-500" />
+          <span className="text-green-500">Saved</span>
+        </>
+      )}
+      {saveStatus === "error" && (
+        <>
+          <AlertCircle className="h-4 w-4 text-destructive" />
+          <span className="text-destructive">Auto-save failed</span>
+        </>
+      )}
+      {saveStatus === "idle" && <span>Auto-save enabled</span>}
+    </div>
+  )}
+
+  {/* Download */}
+  <Button
+    variant="ghost"
+    size="icon"
+    onClick={handleDownload}
+    title="Download Mindmap"
+    className="hover:bg-primary/10 hover:text-primary"
+  >
+    <Download className="h-5 w-5" />
+  </Button>
+</div>
+</div>
+    </div>
     </div>
   )
 }
