@@ -7,7 +7,7 @@ import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function EdgePropertiesPanel() {
   const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
@@ -16,12 +16,33 @@ export default function EdgePropertiesPanel() {
 
   const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
+  const highlightRef = useRef<HTMLDivElement>(null)
+  const textColorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const close = () => { setShowHighlight(false); setShowTextColor(false) }
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [])
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      
+      if (highlightRef.current && !highlightRef.current.contains(target)) {
+        const highlightBtn = highlightRef.current.closest('.highlight-container')
+        if (!highlightBtn?.contains(target)) {
+          setShowHighlight(false)
+        }
+      }
+      
+      if (textColorRef.current && !textColorRef.current.contains(target)) {
+        const textColorBtn = textColorRef.current.closest('.text-color-container')
+        if (!textColorBtn?.contains(target)) {
+          setShowTextColor(false)
+        }
+      }
+    }
+
+    if (showHighlight || showTextColor) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [showHighlight, showTextColor])
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },
@@ -108,22 +129,32 @@ export default function EdgePropertiesPanel() {
     const current = selectedEdge.labelStyle?.fontWeight
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontWeight: current === 700 || current === '700' || current === 'bold' ? 400 : 700 } })
   }
+
   const toggleItalic = () => {
     const current = selectedEdge.labelStyle?.fontStyle
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontStyle: current === 'italic' ? 'normal' : 'italic' } })
   }
+
   const toggleUnderline = () => {
     const current = selectedEdge.labelStyle?.textDecoration
     const next = current === 'underline' ? 'none' : 'underline'
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, textDecoration: next } })
   }
-  const applyTextColor = (color: string) => handleLabelTextColorChange(color)
-  const applyHighlight = (color: string) => updateEdgeData(selectedEdge.id, {
-    labelShowBg: true,
-    labelBgStyle: { fill: color, fillOpacity: 0.9 },
-    labelBgPadding: [8,4] as [number, number],
-    labelBgBorderRadius: 4,
-  })
+
+  const applyTextColor = (color: string) => {
+    handleLabelTextColorChange(color)
+    setShowTextColor(false)
+  }
+
+  const applyHighlight = (color: string) => {
+    updateEdgeData(selectedEdge.id, {
+      labelShowBg: true,
+      labelBgStyle: { fill: color, fillOpacity: 0.9 },
+      labelBgPadding: [8, 4] as [number, number],
+      labelBgBorderRadius: 4,
+    })
+    setShowHighlight(false)
+  }
 
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
@@ -142,40 +173,90 @@ export default function EdgePropertiesPanel() {
       <div className="p-4 space-y-4">
         {/* TEXT TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleBold()}}><Bold /></Button>
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleItalic()}}><Italic /></Button>
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleUnderline()}}><Underline /></Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }}>
+            <Bold />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleItalic() }}>
+            <Italic />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleUnderline() }}>
+            <Underline />
+          </Button>
 
-          <div className="relative" onClick={(e)=>e.stopPropagation()}>
-            <Button variant="ghost" size="icon" onClick={()=>setShowHighlight(!showHighlight)}>
+          {/* Highlight */}
+          <div className="highlight-container relative" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowHighlight(!showHighlight)
+                setShowTextColor(false)
+              }}
+            >
               <Highlighter />
             </Button>
             {showHighlight && (
-              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={highlightRef}
+                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 {swatches.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={()=>applyHighlight(c)}
+                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyHighlight(c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
             )}
           </div>
 
-          <div className="relative" onClick={(e)=>e.stopPropagation()}>
-            <Button variant="ghost" size="icon" onClick={()=>setShowTextColor(!showTextColor)}>
+          {/* Text Color */}
+          <div className="text-color-container relative" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowTextColor(!showTextColor)
+                setShowHighlight(false)
+              }}
+            >
               <Palette />
             </Button>
             {showTextColor && (
-              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={textColorRef}
+                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 {swatches.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={()=>applyTextColor(c)}
+                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyTextColor(c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
