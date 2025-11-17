@@ -21,6 +21,24 @@ export default function NodePropertiesPanel() {
   const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
 
+  const highlightRef = useRef<HTMLDivElement>(null)
+  const textColorRef = useRef<HTMLDivElement>(null)
+
+  const selectionRef = useRef<Range | null>(null)
+  const saveSelection = () => {
+    const sel = window.getSelection()
+    if (sel && sel.rangeCount > 0) {
+      selectionRef.current = sel.getRangeAt(0)
+    }
+  }
+  const restoreSelection = () => {
+    const sel = window.getSelection()
+    if (selectionRef.current && sel) {
+      sel.removeAllRanges()
+      sel.addRange(selectionRef.current)
+    }
+  }
+
   const COLORS = [
     "#ef4444", "#f97316", "#facc15", "#22c55e", "#3b82f6",
     "#8b5cf6", "#ec4899", "#14b8a6", "#000000", "#ffffff"
@@ -55,6 +73,10 @@ export default function NodePropertiesPanel() {
   const toggleUnderline = () => format("underline")
 
   const applyStyle = (type: "highlight" | "color", color: string) => {
+    // restore selection and refocus the correct field
+    if (focusedField === 'label') labelRef.current?.focus();
+    if (focusedField === 'description') descRef.current?.focus();
+    restoreSelection()
     const cmd = type === "highlight" ? "hiliteColor" : "foreColor"
     // Try preferred command first
     format(cmd, color)
@@ -128,13 +150,14 @@ export default function NodePropertiesPanel() {
           <div
             className="relative"
             onClick={(e) => e.stopPropagation()}
+            onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); saveSelection(); }}
           >
-            <Button variant="ghost" size="icon" onClick={() => setShowHighlight(!showHighlight)}>
+            <Button variant="ghost" size="icon" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowHighlight((v)=>!v); setShowTextColor(false); }}>
               <Highlighter />
             </Button>
 
             {showHighlight && (
-              <div className="absolute bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div ref={highlightRef} className="absolute z-20 left-0 top-full mt-2 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
                 {COLORS.map(c => (
                   <button
                     key={c}
@@ -152,12 +175,12 @@ export default function NodePropertiesPanel() {
             className="relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" onClick={() => setShowTextColor(!showTextColor)}>
+            <Button variant="ghost" size="icon" onMouseDown={saveSelection} onClick={() => setShowTextColor(!showTextColor)}>
               <Palette />
             </Button>
 
             {showTextColor && (
-              <div className="absolute bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div ref={textColorRef} className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
                 {COLORS.map(c => (
                   <button
                     key={c}

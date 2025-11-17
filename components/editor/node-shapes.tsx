@@ -86,7 +86,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         <div
           className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
           style={{ color: data.color || "#3b82f6" }}
-          onDoubleClick={(e) => {
+          onClick={(e) => {
             e.stopPropagation()
             setEditingLabel(true)
           }}
@@ -115,7 +115,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
       ) : (
         <div
           className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
-          onDoubleClick={(e) => {
+          onClick={(e) => {
             e.stopPropagation()
             setEditingDesc(true)
           }}
