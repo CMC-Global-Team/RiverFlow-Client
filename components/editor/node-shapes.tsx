@@ -18,8 +18,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const [description, setDescription] = useState(data.description || "")
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
-  const labelRef = useRef<HTMLTextAreaElement>(null)
-  const descRef = useRef<HTMLTextAreaElement>(null)
+  const labelRef = useRef<HTMLDivElement>(null)
+  const descRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setLabel(data.label || "New Node")
@@ -62,25 +62,21 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     <div className="space-y-1">
       {/* Label */}
       {editingLabel ? (
-        <textarea
+        <div
           ref={labelRef}
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          onBlur={() => {
-            save()
-          }}
+          contentEditable
+          suppressContentEditableWarning
+          className="w-full outline-none font-semibold text-sm bg-transparent border-b border-primary px-1 -mx-1 rounded"
+          onInput={() => setLabel(labelRef.current?.innerHTML || '')}
+          onBlur={() => { save() }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault()
-              labelRef.current?.blur()
-            }
-            if (e.key === "Escape") {
-              setLabel(data.label || "Untitled")
-              setEditingLabel(false)
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setLabel(data.label || 'Untitled');
+              setEditingLabel(false);
             }
           }}
-          className="w-full resize-none outline-none font-semibold text-sm bg-transparent border-b border-primary"
-          rows={1}
+          dangerouslySetInnerHTML={{ __html: label }}
         />
       ) : (
         <div
@@ -90,7 +86,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
             e.stopPropagation()
             setEditingLabel(true)
           }}
-          dangerouslySetInnerHTML={{ __html: label || '<span class="text-muted-foreground">Double-click to add title</span>' }}
+          dangerouslySetInnerHTML={{ __html: label || '<span class="text-muted-foreground">Click to add title</span>' }}
         />
       )}
 
