@@ -176,3 +176,19 @@ export const duplicateMindmap = async (mindmapId: string): Promise<MindmapRespon
   }
 };
 
+/**
+ * Mời cộng tác viên
+ * POST /api/mindmaps/{id}/collaborators/invite
+ */
+export const inviteCollaborator = async (
+  mindmapId: string, 
+  email: string, 
+  role: "EDITOR" | "VIEWER"
+) => {
+  const response = await apiClient.post(`/mindmaps/${mindmapId}/collaborators/invite`, {
+    email,
+    role
+  });
+  return response.data;
+};
+
