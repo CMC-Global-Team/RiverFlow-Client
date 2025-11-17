@@ -160,15 +160,8 @@ export default function EdgePropertiesPanel() {
   }
 
   return (
-    <div className="h-full bg-card overflow-y-auto">
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
-        <h3 className="font-semibold">Connection Properties</h3>
-        <Button variant="ghost" size="icon" onClick={() => setSelectedEdge(null)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
+    <div className="h-full bg-transparent">
+      <div className="space-y-4">
         {/* TEXT TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }}>
