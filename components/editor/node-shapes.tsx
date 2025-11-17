@@ -66,16 +66,18 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           contentEditable
           suppressContentEditableWarning
           className="w-full outline-none font-semibold text-sm bg-transparent border-b border-primary px-1 -mx-1 rounded"
-          onInput={() => setLabel(labelRef.current?.innerHTML || '')}
-          onBlur={() => { save() }}
+          onInput={() => {
+            const html = labelRef.current?.innerHTML || ''
+            updateNodeData(id, { label: html })
+          }}
+          onBlur={finishLabel}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               e.preventDefault();
-              setLabel(data.label || 'Untitled');
-              setEditingLabel(false);
+              finishLabel();
             }
           }}
-          dangerouslySetInnerHTML={{ __html: label }}
+          dangerouslySetInnerHTML={{ __html: data.label || '' }}
         />
       ) : (
         <div
@@ -86,7 +88,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
             e.stopPropagation()
             setEditingLabel(true)
           }}
-          dangerouslySetInnerHTML={{ __html: label || '<span class="text-muted-foreground">Click to add title</span>' }}
+          dangerouslySetInnerHTML={{ __html: data.label || '<span class="text-muted-foreground">Click to add title</span>' }}
         />
       )}
 
@@ -97,22 +99,24 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           contentEditable
           suppressContentEditableWarning
           className="w-full outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1 min-h-6"
-          onInput={() => setDescription(descRef.current?.innerHTML || '')}
-          onBlur={() => { save() }}
+          onInput={() => {
+            const html = descRef.current?.innerHTML || ''
+            updateNodeData(id, { description: html })
+          }}
+          onBlur={finishDesc}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               e.preventDefault();
-              setDescription(data.description || '');
-              setEditingDesc(false);
+              finishDesc();
             }
           }}
-          dangerouslySetInnerHTML={{ __html: description }}
+          dangerouslySetInnerHTML={{ __html: data.description || '' }}
         />
       ) : (
         <div
           className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
-          onMouseDown={(e) => { e.stopPropagation(); setEditingDesc(true) }}
-          dangerouslySetInnerHTML={{ __html: description || '<span class="text-muted-foreground/50">Description</span>' }}
+          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setEditingDesc(true) }}
+          dangerouslySetInnerHTML={{ __html: data.description || '<span class="text-muted-foreground/50">Description</span>' }}
         />
       )}
     </div>
