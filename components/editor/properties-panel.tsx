@@ -56,13 +56,13 @@ export default function PropertiesPanel() {
     }
   }, [isResizing, resizeStart])
 
-  // If nothing selected and panel is closed, don't render
-  if (!hasSelection && !isOpen) {
+  // If panel is closed, don't render (regardless of selection)
+  if (!isOpen) {
     return null
   }
 
-  // If nothing selected and panel is closed, don't render
-  if (!hasSelection && !isOpen) {
+  // If nothing selected, don't render
+  if (!hasSelection) {
     return null
   }
 
