@@ -25,12 +25,14 @@ export default function NodePropertiesPanel() {
   const textColorRef = useRef<HTMLDivElement>(null)
 
   const selectionRef = useRef<Range | null>(null)
+
   const saveSelection = () => {
     const sel = window.getSelection()
     if (sel && sel.rangeCount > 0) {
       selectionRef.current = sel.getRangeAt(0)
     }
   }
+
   const restoreSelection = () => {
     const sel = window.getSelection()
     if (selectionRef.current && sel) {
@@ -46,20 +48,17 @@ export default function NodePropertiesPanel() {
 
   if (!selectedNode) return null
 
-  
   useEffect(() => {
     if (labelRef.current) labelRef.current.innerHTML = selectedNode.data.label || ""
     if (descRef.current) descRef.current.innerHTML = selectedNode.data.description || ""
   }, [selectedNode?.id, selectedNode?.data?.label, selectedNode?.data?.description])
 
-  
   const saveField = (field: "label" | "description") => {
     const ref = field === "label" ? labelRef.current : descRef.current
     if (!ref) return
     updateNodeData(selectedNode.id, { [field]: ref.innerHTML })
   }
 
- 
   const format = (cmd: string, value?: string) => {
     try {
       document.execCommand('styleWithCSS', false, 'true')
@@ -73,7 +72,7 @@ export default function NodePropertiesPanel() {
   const toggleUnderline = () => format("underline")
 
   const applyStyle = (type: "highlight" | "color", color: string) => {
-    // restore selection and refocus the correct field
+    // Restore selection and refocus the correct field
     if (focusedField === 'label') labelRef.current?.focus();
     if (focusedField === 'description') descRef.current?.focus();
     restoreSelection()
@@ -84,19 +83,40 @@ export default function NodePropertiesPanel() {
     if (type === "highlight") {
       try { document.execCommand('backColor', false, color) } catch {}
     }
+    // Close popups after applying
+    setShowHighlight(false)
+    setShowTextColor(false)
   }
 
-  
+  // Close popups when clicking outside
   useEffect(() => {
-    const close = () => {
-      setShowHighlight(false)
-      setShowTextColor(false)
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      
+      // Check if click is outside both the button and popup for highlight
+      if (highlightRef.current && !highlightRef.current.contains(target)) {
+        // Also check if it's not the highlight button itself
+        const highlightBtn = highlightRef.current.closest('.highlight-container')
+        if (!highlightBtn?.contains(target)) {
+          setShowHighlight(false)
+        }
+      }
+      
+      // Check if click is outside both the button and popup for text color
+      if (textColorRef.current && !textColorRef.current.contains(target)) {
+        const textColorBtn = textColorRef.current.closest('.text-color-container')
+        if (!textColorBtn?.contains(target)) {
+          setShowTextColor(false)
+        }
+      }
     }
-    document.addEventListener("click", close)
-    return () => document.removeEventListener("click", close)
-  }, [])
 
-  
+    if (showHighlight || showTextColor) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [showHighlight, showTextColor])
+
   const handleShape = (shape: string) =>
     updateNodeData(selectedNode.id, { shape })
 
@@ -121,7 +141,6 @@ export default function NodePropertiesPanel() {
     "#f3e8ff", "#fee2e2", "#fef9c3", "#d4f4dd"
   ]
 
-  
   const remove = () => {
     deleteNode(selectedNode.id)
     toast.success("Node deleted")
@@ -148,22 +167,43 @@ export default function NodePropertiesPanel() {
 
           {/* Highlight */}
           <div
-            className="relative"
+            className="highlight-container relative"
             onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); saveSelection(); }}
           >
-            <Button variant="ghost" size="icon" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowHighlight((v)=>!v); setShowTextColor(false); }}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => { 
+                e.preventDefault()
+                e.stopPropagation()
+                saveSelection()
+                setShowHighlight(!showHighlight)
+                setShowTextColor(false)
+              }}
+            >
               <Highlighter />
             </Button>
 
             {showHighlight && (
-              <div ref={highlightRef} className="absolute z-20 left-0 top-full mt-2 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={highlightRef} 
+                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={() => applyStyle("highlight", c)}
+                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyStyle("highlight", c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
@@ -172,21 +212,43 @@ export default function NodePropertiesPanel() {
 
           {/* Text Color */}
           <div
-            className="relative"
+            className="text-color-container relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" onMouseDown={(e)=>{ e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTextColor((v)=>!v); setShowHighlight(false);}}>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                saveSelection()
+                setShowTextColor(!showTextColor)
+                setShowHighlight(false)
+              }}
+            >
               <Palette />
             </Button>
 
             {showTextColor && (
-              <div ref={textColorRef} className="absolute z-20 left-0 top-full mt-2 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={textColorRef} 
+                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                onMouseDown={(e) => e.stopPropagation()}
+              >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={() => applyStyle("color", c)}
+                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.2)'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyStyle("color", c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
@@ -200,10 +262,11 @@ export default function NodePropertiesPanel() {
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
-          className="border rounded p-2 min-h-[30px] bg-white"
-          onFocus={() => setFocusedField("label")}
+          className="border rounded p-2 min-h-[30px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          onFocus={() => { setFocusedField("label"); saveSelection() }}
           onInput={() => saveField("label")}
-          onBlur={() => saveField("label")}
+          onBlur={() => { saveField("label"); setFocusedField(null) }}
+          onMouseDown={() => saveSelection()}
         />
 
         {/* DESCRIPTION */}
@@ -212,10 +275,11 @@ export default function NodePropertiesPanel() {
           ref={descRef}
           contentEditable
           suppressContentEditableWarning
-          className="border rounded p-2 min-h-[60px] bg-white"
-          onFocus={() => setFocusedField("description")}
+          className="border rounded p-2 min-h-[60px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          onFocus={() => { setFocusedField("description"); saveSelection() }}
           onInput={() => saveField("description")}
-          onBlur={() => saveField("description")}
+          onBlur={() => { saveField("description"); setFocusedField(null) }}
+          onMouseDown={() => saveSelection()}
         />
 
         {/* SHAPE */}
