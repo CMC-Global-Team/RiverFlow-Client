@@ -93,19 +93,17 @@ export default function NodePropertiesPanel() {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       
-      // Check if click is outside both the button and popup for highlight
+      // Check if click is outside the popups
       if (highlightRef.current && !highlightRef.current.contains(target)) {
-        // Also check if it's not the highlight button itself
-        const highlightBtn = highlightRef.current.closest('.highlight-container')
-        if (!highlightBtn?.contains(target)) {
+        // Check if it's not the highlight button itself
+        if (!target.closest('.highlight-btn')) {
           setShowHighlight(false)
         }
       }
       
-      // Check if click is outside both the button and popup for text color
+      // Check if click is outside the popups for text color
       if (textColorRef.current && !textColorRef.current.contains(target)) {
-        const textColorBtn = textColorRef.current.closest('.text-color-container')
-        if (!textColorBtn?.contains(target)) {
+        if (!target.closest('.text-color-btn')) {
           setShowTextColor(false)
         }
       }
@@ -171,6 +169,7 @@ export default function NodePropertiesPanel() {
             onClick={(e) => e.stopPropagation()}
           >
             <Button 
+              className="highlight-btn"
               variant="ghost" 
               size="icon" 
               onMouseDown={(e) => { 
@@ -187,16 +186,18 @@ export default function NodePropertiesPanel() {
             {showHighlight && (
               <div 
                 ref={highlightRef} 
-                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
               >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
                     style={{ 
                       backgroundColor: c,
-                      borderColor: 'rgba(0,0,0,0.2)'
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault()
@@ -216,6 +217,7 @@ export default function NodePropertiesPanel() {
             onClick={(e) => e.stopPropagation()}
           >
             <Button 
+              className="text-color-btn"
               variant="ghost" 
               size="icon" 
               onMouseDown={(e) => {
@@ -232,16 +234,18 @@ export default function NodePropertiesPanel() {
             {showTextColor && (
               <div 
                 ref={textColorRef} 
-                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
               >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
                     style={{ 
                       backgroundColor: c,
-                      borderColor: 'rgba(0,0,0,0.2)'
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault()
