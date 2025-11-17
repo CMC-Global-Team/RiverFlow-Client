@@ -162,7 +162,7 @@ function EditorInner() {
             >
               <Users className="h-5 w-5" />
               <span className="text-sm font-medium">Share</span>
-              <ChevronDown className="h-4 w-4" /> (Có thể bỏ icon này nếu không dùng dropdown) 
+              <ChevronDown className="h-4 w-4" /> 
             </button>
             
             {!autoSaveEnabled && (
