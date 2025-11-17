@@ -1,10 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Lock, Eye, EyeOff, CheckCircle, AlertCircle } from "lucide-react";
+import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, X } from "lucide-react";
 
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -39,6 +39,30 @@ const ChangePasswordSchema = z
 
 type FormType = z.infer<typeof ChangePasswordSchema>;
 
+// PASSWORD STRENGTH CALCULATOR
+const calculatePasswordStrength = (password: string) => {
+    if (!password) return { score: 0, level: "weak", color: "bg-red-500" };
+
+    let score = 0;
+
+    // Length checks
+    if (password.length >= 6) score += 20;
+    if (password.length >= 8) score += 10;
+    if (password.length >= 12) score += 10;
+
+    // Character type checks
+    if (/[a-z]/.test(password)) score += 10;
+    if (/[A-Z]/.test(password)) score += 10;
+    if (/[0-9]/.test(password)) score += 10;
+    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
+
+    // Determine level and color
+    if (score < 30) return { score: 30, level: "Weak", color: "bg-red-500" };
+    if (score < 60) return { score: 60, level: "Fair", color: "bg-amber-500" };
+    if (score < 80) return { score: 80, level: "Good", color: "bg-amber-400" };
+    return { score: 100, level: "Strong", color: "bg-green-500" };
+};
+
 function ChangePasswordContent() {
     const [successModal, setSuccessModal] = useState(false);
     const [errorModal, setErrorModal] = useState(false);
@@ -46,15 +70,21 @@ function ChangePasswordContent() {
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const [newPasswordValue, setNewPasswordValue] = useState("");
 
     const {
         register,
         handleSubmit,
         formState: { errors, isSubmitting },
         reset,
+        watch,
     } = useForm<FormType>({
         resolver: zodResolver(ChangePasswordSchema),
     });
+
+    const passwordStrength = useMemo(() => {
+        return calculatePasswordStrength(newPasswordValue);
+    }, [newPasswordValue]);
 
     const onSubmit = async (data: FormType) => {
         try {
@@ -62,6 +92,7 @@ function ChangePasswordContent() {
 
             toast.success("Password changed successfully!");
             reset();
+            setNewPasswordValue("");
             setSuccessModal(true);
         } catch (err: any) {
             const msg = err.message || "Failed to change password";
@@ -78,8 +109,8 @@ function ChangePasswordContent() {
             <div className="flex-1 flex flex-col ml-64">
                 <DashboardHeader />
 
-                <main className="flex-1 overflow-y-auto">
-                    <div className="p-6 md:p-12 max-w-2xl">
+                <main className="flex-1 overflow-y-auto flex items-center justify-center p-6">
+                    <div className="w-full max-w-2xl">
 
                         {/* HEADER */}
                         <div className="mb-8">
@@ -95,7 +126,7 @@ function ChangePasswordContent() {
                         </div>
 
                         {/* FORM CARD */}
-                        <div className="bg-card border border-border rounded-2xl shadow-sm p-8 space-y-7">
+                        <div className="bg-card border border-border rounded-2xl shadow-lg p-8 space-y-7">
 
                             {/* CURRENT PASSWORD */}
                             <div className="space-y-3">
@@ -104,7 +135,7 @@ function ChangePasswordContent() {
                                     <Input
                                         type={showCurrentPassword ? "text" : "password"}
                                         placeholder="Enter your current password"
-                                        className="pr-10 h-10"
+                                        className="pr-10 h-11 text-base"
                                         {...register("currentPassword")}
                                     />
                                     <button
@@ -134,8 +165,12 @@ function ChangePasswordContent() {
                                     <Input
                                         type={showNewPassword ? "text" : "password"}
                                         placeholder="Enter your new password (min. 6 characters)"
-                                        className="pr-10 h-10"
+                                        className="pr-10 h-11 text-base"
                                         {...register("newPassword")}
+                                        onChange={(e) => {
+                                            register("newPassword").onChange?.(e);
+                                            setNewPasswordValue(e.target.value);
+                                        }}
                                     />
                                     <button
                                         type="button"
@@ -149,6 +184,30 @@ function ChangePasswordContent() {
                                         )}
                                     </button>
                                 </div>
+
+                                {/* PASSWORD STRENGTH INDICATOR */}
+                                {newPasswordValue && (
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-muted-foreground">Password Strength</span>
+                                            <span className={`font-semibold ${
+                                                passwordStrength.level === "Weak" ? "text-red-500" :
+                                                passwordStrength.level === "Fair" ? "text-amber-500" :
+                                                passwordStrength.level === "Good" ? "text-amber-400" :
+                                                "text-green-500"
+                                            }`}>
+                                                {passwordStrength.level}
+                                            </span>
+                                        </div>
+                                        <div className="h-2.5 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                                                style={{ width: `${passwordStrength.score}%` }}
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
                                 {errors.newPassword && (
                                     <p className="text-red-500 text-sm flex items-center gap-1">
                                         <AlertCircle className="w-4 h-4" />
@@ -164,7 +223,7 @@ function ChangePasswordContent() {
                                     <Input
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Confirm your new password"
-                                        className="pr-10 h-10"
+                                        className="pr-10 h-11 text-base"
                                         {...register("confirmPassword")}
                                     />
                                     <button
@@ -192,7 +251,7 @@ function ChangePasswordContent() {
                                 <Button
                                     disabled={isSubmitting}
                                     onClick={handleSubmit(onSubmit)}
-                                    className="w-full h-10 font-semibold"
+                                    className="w-full h-11 font-semibold text-base"
                                 >
                                     {isSubmitting ? "Updating..." : "Update Password"}
                                 </Button>
@@ -211,49 +270,45 @@ function ChangePasswordContent() {
 
             {/* SUCCESS MODAL */}
             <Dialog open={successModal} onOpenChange={setSuccessModal}>
-                <DialogContent className="w-[420px] rounded-2xl">
-                    <DialogHeader>
+                <DialogContent className="w-full max-w-md rounded-2xl">
+                    <div className="text-center py-8">
                         <div className="flex justify-center mb-4">
-                            <div className="p-3 bg-green-500/10 rounded-full">
-                                <CheckCircle className="w-8 h-8 text-green-600" />
+                            <div className="p-4 bg-green-500/10 rounded-full">
+                                <CheckCircle className="w-12 h-12 text-green-600" />
                             </div>
                         </div>
-                        <DialogTitle className="text-center text-xl font-semibold">
+                        <DialogTitle className="text-2xl font-bold mb-3">
                             Password Updated Successfully
                         </DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription className="text-center text-muted-foreground">
-                        Your password has been changed successfully. Your account is now more secure.
-                    </DialogDescription>
-                    <DialogFooter className="gap-3">
-                        <Button onClick={() => setSuccessModal(false)} className="w-full">
+                        <DialogDescription className="text-base text-muted-foreground mb-6">
+                            Your password has been changed successfully. Your account is now more secure.
+                        </DialogDescription>
+                        <Button onClick={() => setSuccessModal(false)} className="w-full h-11 text-base">
                             Done
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
 
             {/* ERROR MODAL */}
             <Dialog open={errorModal} onOpenChange={setErrorModal}>
-                <DialogContent className="w-[420px] rounded-2xl">
-                    <DialogHeader>
+                <DialogContent className="w-full max-w-md rounded-2xl">
+                    <div className="text-center py-8">
                         <div className="flex justify-center mb-4">
-                            <div className="p-3 bg-red-500/10 rounded-full">
-                                <AlertCircle className="w-8 h-8 text-red-600" />
+                            <div className="p-4 bg-red-500/10 rounded-full">
+                                <AlertCircle className="w-12 h-12 text-red-600" />
                             </div>
                         </div>
-                        <DialogTitle className="text-center text-xl font-semibold text-red-600">
+                        <DialogTitle className="text-2xl font-bold text-red-600 mb-3">
                             Failed to Update Password
                         </DialogTitle>
-                    </DialogHeader>
-                    <DialogDescription className="text-center text-red-600/80">
-                        {errorMsg}
-                    </DialogDescription>
-                    <DialogFooter className="gap-3">
-                        <Button variant="outline" onClick={() => setErrorModal(false)} className="w-full">
+                        <DialogDescription className="text-base text-red-600/80 mb-6">
+                            {errorMsg}
+                        </DialogDescription>
+                        <Button variant="outline" onClick={() => setErrorModal(false)} className="w-full h-11 text-base">
                             Close
                         </Button>
-                    </DialogFooter>
+                    </div>
                 </DialogContent>
             </Dialog>
         </div>
