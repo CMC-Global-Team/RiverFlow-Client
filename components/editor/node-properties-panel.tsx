@@ -43,6 +43,9 @@ export default function NodePropertiesPanel() {
 
  
   const format = (cmd: string, value?: string) => {
+    try {
+      document.execCommand('styleWithCSS', false, 'true')
+    } catch {}
     document.execCommand(cmd, false, value)
     if (focusedField) saveField(focusedField)
   }
@@ -52,7 +55,13 @@ export default function NodePropertiesPanel() {
   const toggleUnderline = () => format("underline")
 
   const applyStyle = (type: "highlight" | "color", color: string) => {
-    format(type === "highlight" ? "hiliteColor" : "foreColor", color)
+    const cmd = type === "highlight" ? "hiliteColor" : "foreColor"
+    // Try preferred command first
+    format(cmd, color)
+    // Fallbacks for broader browser support
+    if (type === "highlight") {
+      try { document.execCommand('backColor', false, color) } catch {}
+    }
   }
 
   

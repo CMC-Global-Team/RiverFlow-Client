@@ -90,9 +90,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
             e.stopPropagation()
             setEditingLabel(true)
           }}
-        >
-          {label || <span className="text-muted-foreground">Double-click to add title</span>}
-        </div>
+          dangerouslySetInnerHTML={{ __html: label || '<span class="text-muted-foreground">Double-click to add title</span>' }}
+        />
       )}
 
       {/* Description */}
@@ -120,9 +119,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
             e.stopPropagation()
             setEditingDesc(true)
           }}
-        >
-          {description || <span className="text-muted-foreground/50">Description</span>}
-        </div>
+          dangerouslySetInnerHTML={{ __html: description || '<span class="text-muted-foreground/50">Description</span>' }}
+        />
       )}
     </div>
   )

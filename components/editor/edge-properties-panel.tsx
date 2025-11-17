@@ -1,17 +1,27 @@
 "use client"
 
-import { X, Trash2 } from "lucide-react"
+import { X, Trash2, Bold, Italic, Underline, Highlighter, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
+import { useState, useEffect } from "react"
 
 export default function EdgePropertiesPanel() {
   const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
 
   if (!selectedEdge) return null
+
+  const [showHighlight, setShowHighlight] = useState(false)
+  const [showTextColor, setShowTextColor] = useState(false)
+
+  useEffect(() => {
+    const close = () => { setShowHighlight(false); setShowTextColor(false) }
+    document.addEventListener('click', close)
+    return () => document.removeEventListener('click', close)
+  }, [])
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },
@@ -92,6 +102,28 @@ export default function EdgePropertiesPanel() {
   }
 
   const colors = ["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#ef4444", "#14b8a6"]
+  const swatches = ["#ef4444", "#f97316", "#facc15", "#22c55e", "#3b82f6", "#8b5cf6", "#ec4899", "#14b8a6", "#000000", "#ffffff"]
+
+  const toggleBold = () => {
+    const current = selectedEdge.labelStyle?.fontWeight
+    updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontWeight: current === 700 || current === '700' || current === 'bold' ? 400 : 700 } })
+  }
+  const toggleItalic = () => {
+    const current = selectedEdge.labelStyle?.fontStyle
+    updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontStyle: current === 'italic' ? 'normal' : 'italic' } })
+  }
+  const toggleUnderline = () => {
+    const current = selectedEdge.labelStyle?.textDecoration
+    const next = current === 'underline' ? 'none' : 'underline'
+    updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, textDecoration: next } })
+  }
+  const applyTextColor = (color: string) => handleLabelTextColorChange(color)
+  const applyHighlight = (color: string) => updateEdgeData(selectedEdge.id, {
+    labelShowBg: true,
+    labelBgStyle: { fill: color, fillOpacity: 0.9 },
+    labelBgPadding: [8,4] as [number, number],
+    labelBgBorderRadius: 4,
+  })
 
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
@@ -108,6 +140,49 @@ export default function EdgePropertiesPanel() {
       </div>
 
       <div className="p-4 space-y-4">
+        {/* TEXT TOOLBAR */}
+        <div className="flex gap-2 mb-2 flex-wrap">
+          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleBold()}}><Bold /></Button>
+          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleItalic()}}><Italic /></Button>
+          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleUnderline()}}><Underline /></Button>
+
+          <div className="relative" onClick={(e)=>e.stopPropagation()}>
+            <Button variant="ghost" size="icon" onClick={()=>setShowHighlight(!showHighlight)}>
+              <Highlighter />
+            </Button>
+            {showHighlight && (
+              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+                {swatches.map(c => (
+                  <button
+                    key={c}
+                    className="w-6 h-6 rounded-full border"
+                    style={{ backgroundColor: c }}
+                    onClick={()=>applyHighlight(c)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div className="relative" onClick={(e)=>e.stopPropagation()}>
+            <Button variant="ghost" size="icon" onClick={()=>setShowTextColor(!showTextColor)}>
+              <Palette />
+            </Button>
+            {showTextColor && (
+              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+                {swatches.map(c => (
+                  <button
+                    key={c}
+                    className="w-6 h-6 rounded-full border"
+                    style={{ backgroundColor: c }}
+                    onClick={()=>applyTextColor(c)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="space-y-2">
           <Label htmlFor="edge-label">Connection Label</Label>
           <Input
