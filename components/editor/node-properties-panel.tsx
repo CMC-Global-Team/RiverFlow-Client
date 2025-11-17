@@ -2,7 +2,7 @@
 
 import {
   X, Trash2, Bold, Italic, Underline,
-  Highlighter, Palette
+  Highlighter, Palette, Plus, Minus
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -181,6 +181,20 @@ export default function NodePropertiesPanel() {
 
   const handleBg = (bgColor?: string) =>
     updateNodeData(selectedNode.id, { bgColor })
+
+  const handleScaleIncrease = () => {
+    const currentScale = selectedNode.data.scale || 1
+    const newScale = Math.min(currentScale + 0.2, 2) // Max 2x
+    updateNodeData(selectedNode.id, { scale: newScale })
+  }
+
+  const handleScaleDecrease = () => {
+    const currentScale = selectedNode.data.scale || 1
+    const newScale = Math.max(currentScale - 0.2, 0.6) // Min 0.6x
+    updateNodeData(selectedNode.id, { scale: newScale })
+  }
+
+  const currentScale = (selectedNode.data.scale || 1).toFixed(1)
 
   const shapes = [
     { value: "rectangle", label: "Rectangle", icon: "▭" },
@@ -433,6 +447,34 @@ export default function NodePropertiesPanel() {
             >
               <X className="w-4 h-4 text-gray-500" />
             </button>
+          </div>
+        </div>
+
+        {/* SIZE / SCALE */}
+        <div className="space-y-2">
+          <Label>Node Size</Label>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleScaleDecrease}
+              disabled={currentScale === '0.6'}
+              title="Decrease node size (Min: 0.6x)"
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 text-center">
+              <span className="text-sm font-medium">{currentScale}x</span>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleScaleIncrease}
+              disabled={currentScale === '2.0'}
+              title="Increase node size (Max: 2.0x)"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 

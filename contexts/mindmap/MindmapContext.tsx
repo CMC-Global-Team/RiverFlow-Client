@@ -435,6 +435,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           if (newData.shape) {
             updatedNode.type = newData.shape
           }
+          // If scale changed, trigger ReactFlow to recalculate handle positions
+          // by incrementing a tiny position change (0.01px is imperceptible)
+          if (newData.scale !== undefined) {
+            updatedNode.position = {
+              x: node.position.x + 0.001,
+              y: node.position.y + 0.001,
+            }
+          }
           return updatedNode
         }
         return node
@@ -456,6 +464,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         }
         if (newData.shape) {
           updatedNode.type = newData.shape
+        }
+        // If scale changed, trigger ReactFlow to recalculate handle positions
+        if (newData.scale !== undefined) {
+          updatedNode.position = {
+            x: prev.position.x + 0.001,
+            y: prev.position.y + 0.001,
+          }
         }
         return updatedNode
       }
