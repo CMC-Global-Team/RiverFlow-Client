@@ -14,6 +14,9 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import ShareModal from "@/components/mindmap/ShareModal"
+import { inviteCollaborator } from "@/services/mindmap/mindmap.service"
+import { useToast } from "@/hooks/use-toast" 
 function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
@@ -30,7 +33,9 @@ function EditorInner() {
     saveStatus,
   } = useMindmapContext()
   
+    const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
 
   // Load mindmap on mount
   useEffect(() => {
@@ -69,6 +74,28 @@ function EditorInner() {
         duration: 0.2,
         ease: "power2.out",
       })
+    }
+  }
+
+  const handleInvite = async (email: string, role: "EDITOR" | "VIEWER") => {
+    if (!mindmapId) return;
+    
+    try {
+      await inviteCollaborator(mindmapId, email, role)
+      
+      toast({
+        title: "Đã gửi lời mời!",
+        description: `Đã gửi email mời tới ${email}`,
+      })
+    } catch (error: any) {
+      console.error(error)
+      const errorMsg = error.response?.data?.message || "Không thể gửi lời mời.";
+      toast({
+        variant: "destructive",
+        title: "Gửi thất bại",
+        description: errorMsg,
+      })
+      throw error;
     }
   }
 
@@ -129,10 +156,13 @@ function EditorInner() {
               </Label>
             </div>
 
-            <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors">
+            <button 
+              onClick={() => setIsShareOpen(true)} // <-- THÊM SỰ KIỆN CLICK
+              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors"
+            >
               <Users className="h-5 w-5" />
               <span className="text-sm font-medium">Share</span>
-              <ChevronDown className="h-4 w-4" />
+              <ChevronDown className="h-4 w-4" /> 
             </button>
             
             {!autoSaveEnabled && (
@@ -201,6 +231,12 @@ function EditorInner() {
         {/* Properties Panel */}
         <PropertiesPanel />
       </div>
+      <ShareModal
+         isOpen={isShareOpen}
+         onClose={() => setIsShareOpen(false)}
+         onInvite={handleInvite}
+         mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+       />
     </div>
   )
 }
