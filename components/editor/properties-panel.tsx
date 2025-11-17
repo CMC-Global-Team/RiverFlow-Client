@@ -11,7 +11,10 @@ export default function PropertiesPanel() {
   const { selectedNode, selectedEdge } = useMindmapContext()
   const [isOpen, setIsOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
-  const [position, setPosition] = useState({ x: window.innerWidth - 350, y: 100 })
+  const [position, setPosition] = useState({ 
+    x: typeof window !== 'undefined' ? window.innerWidth - 350 : 0, 
+    y: 100 
+  })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
 
   const hasSelection = selectedNode || selectedEdge
@@ -38,6 +41,7 @@ export default function PropertiesPanel() {
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!isDragging) return
+    e.stopPropagation()
     setPosition({
       x: e.clientX - dragStart.x,
       y: e.clientY - dragStart.y,
@@ -54,7 +58,7 @@ export default function PropertiesPanel() {
 
   return (
     <div 
-      className="fixed rounded-lg border border-border bg-card shadow-lg backdrop-blur-sm bg-card/95 w-80 max-h-96 overflow-y-auto z-50 pointer-events-auto"
+      className="fixed rounded-lg border border-border bg-card shadow-2xl backdrop-blur-sm bg-card/95 w-80 max-h-96 overflow-y-auto z-50 pointer-events-auto"
       style={{
         transform: `translate(${position.x}px, ${position.y}px)`,
         cursor: isDragging ? 'grabbing' : 'default',
@@ -65,10 +69,10 @@ export default function PropertiesPanel() {
     >
       {/* Header - Draggable */}
       <div
-        className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors"
+        className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0"
         onMouseDown={handleMouseDown}
       >
-        <h3 className="text-sm font-semibold">
+        <h3 className="text-sm font-semibold text-foreground">
           {selectedEdge ? "Connection" : selectedNode ? "Node" : "Properties"}
         </h3>
         <Button

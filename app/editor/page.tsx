@@ -119,29 +119,29 @@ function EditorInner() {
         </div>
 
         {/* Floating Toolbar with Header Items */}
-        <div className="absolute top-4 left-4 right-4 z-50">
-          <Toolbar 
-            mindmap={mindmap}
-            isEditing={isEditing}
-            setIsEditing={setIsEditing}
-            titleRef={titleRef}
-            handleTitleChange={handleTitleChange}
-            handleTitleHover={handleTitleHover}
-            handleTitleLeave={handleTitleLeave}
-            autoSaveEnabled={autoSaveEnabled}
-            setAutoSaveEnabled={setAutoSaveEnabled}
-            isSaving={isSaving}
-            saveStatus={saveStatus}
-            handleSave={handleSave}
-            onShareClick={() => setIsShareOpen(true)}
-          />
-        </div>
-
-        {/* Floating Properties Panel */}
-        <div className="absolute bottom-4 right-4 z-40">
-          <PropertiesPanel />
+        <div className="absolute top-4 left-4 right-4 z-50 pointer-events-none">
+          <div className="pointer-events-auto">
+            <Toolbar 
+              mindmap={mindmap}
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+              titleRef={titleRef}
+              handleTitleChange={handleTitleChange}
+              handleTitleHover={handleTitleHover}
+              handleTitleLeave={handleTitleLeave}
+              autoSaveEnabled={autoSaveEnabled}
+              setAutoSaveEnabled={setAutoSaveEnabled}
+              isSaving={isSaving}
+              saveStatus={saveStatus}
+              handleSave={handleSave}
+              onShareClick={() => setIsShareOpen(true)}
+            />
+          </div>
         </div>
       </div>
+
+      {/* Floating Properties Panel - Outside relative container */}
+      <PropertiesPanel />
 
       <ShareModal
          isOpen={isShareOpen}
