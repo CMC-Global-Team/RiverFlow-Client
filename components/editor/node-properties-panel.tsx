@@ -346,10 +346,9 @@ export default function NodePropertiesPanel() {
           contentEditable
           suppressContentEditableWarning
           className="border rounded p-2 min-h-[30px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-          onFocus={() => { setFocusedField("label"); saveSelection() }}
+          onFocus={() => { setFocusedField("label") }}
           onInput={() => saveField("label")}
           onBlur={() => { saveField("label"); setFocusedField(null) }}
-          onMouseDown={() => saveSelection()}
         />
 
         {/* DESCRIPTION */}
@@ -359,10 +358,9 @@ export default function NodePropertiesPanel() {
           contentEditable
           suppressContentEditableWarning
           className="border rounded p-2 min-h-[60px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
-          onFocus={() => { setFocusedField("description"); saveSelection() }}
+          onFocus={() => { setFocusedField("description") }}
           onInput={() => saveField("description")}
           onBlur={() => { saveField("description"); setFocusedField(null) }}
-          onMouseDown={() => saveSelection()}
         />
 
         {/* SHAPE */}
