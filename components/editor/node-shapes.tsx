@@ -18,6 +18,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const initialLabelHtml = useRef<string>('')
   const initialDescHtml = useRef<string>('')
 
@@ -92,8 +93,22 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     }
   }
 
+  // Handle click on container to enable editing when text has styles
+  const handleContainerClick = (e: React.MouseEvent, isLabel: boolean) => {
+    // Only trigger on direct click on the content area, not on nested elements
+    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('div') === e.currentTarget) {
+      e.preventDefault()
+      e.stopPropagation()
+      if (isLabel) {
+        setEditingLabel(true)
+      } else {
+        setEditingDesc(true)
+      }
+    }
+  }
+
   return (
-    <div className="space-y-1">
+    <div ref={containerRef} className="space-y-1 w-full">
       {/* Label */}
       {editingLabel ? (
         <div
@@ -108,12 +123,12 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       ) : (
         <div
-          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors"
-          style={{ color: data.color || "#3b82f6", minHeight: '20px' }}
+          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full"
+          style={{ color: data.color || "#3b82f6", minHeight: '24px' }}
+          onClick={(e) => handleContainerClick(e, true)}
           onMouseDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            setEditingLabel(true)
           }}
           dangerouslySetInnerHTML={{ __html: data.label || '<span class="opacity-50">Click to edit</span>' }}
         />
@@ -133,12 +148,12 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       ) : (
         <div
-          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-6"
+          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center"
           style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
+          onClick={(e) => handleContainerClick(e, false)}
           onMouseDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
-            setEditingDesc(true)
           }}
           dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
         />
@@ -152,7 +167,7 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
+      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -187,7 +202,7 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
+        />      <div className="space-y-1 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -229,7 +244,7 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center ${
+      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -264,7 +279,7 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-3">
+        />      <div className="text-center px-3 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -334,7 +349,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%"}}
         />      <div
-        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
+        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all cursor-pointer ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
         style={{
@@ -342,7 +357,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           backgroundColor: data.bgColor || "transparent"
          }}
       />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
         <div className="text-center px-3 max-w-[80px]">
           <EditableContent data={data} id={id} />
         </div>
@@ -415,7 +430,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             style={{ background: color, top: "50%", left: "3%" }}
         />      <svg
         viewBox="0 0 100 87"
-        className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
+        className={`w-full h-full transition-all cursor-pointer ${selected ? "drop-shadow-lg" : ""}`}
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
@@ -425,7 +440,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           className={selected ? "stroke-[3]" : ""}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
         <div className="text-center px-4">
           <EditableContent data={data} id={id} />
         </div>
@@ -469,7 +484,7 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center ${
+      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -504,7 +519,7 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-4">
+        />      <div className="text-center px-4 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -546,7 +561,7 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
 
   return (
     <div
-      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] ${
+      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
         selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
@@ -581,7 +596,7 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
+        />      <div className="space-y-1 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
