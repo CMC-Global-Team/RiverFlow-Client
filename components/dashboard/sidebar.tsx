@@ -2,13 +2,29 @@
 
 import { useState } from "react"
 import Link from "next/link"
-import { LayoutGrid, FileText, Settings, LogOut, Plus, ChevronDown } from "lucide-react"
+import {
+    LayoutGrid,
+    FileText,
+    Settings,
+    LogOut,
+    Plus,
+    ChevronDown,
+    ChevronRight,
+    Shield,
+    Lock
+} from "lucide-react"
 import { useLogout } from "@/hooks/auth/useLogout"
 
 export default function Sidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout, isLoading } = useLogout()
+    const [settingsOpen, setSettingsOpen] = useState(false)
 
+
+    const toggleSettings = () => {
+        if (isCollapsed) return
+        setSettingsOpen(!settingsOpen)
+    }
   return (
     <aside
       className={`fixed left-0 top-0 h-screen border-r border-border bg-card transition-all duration-300 ${
@@ -50,19 +66,43 @@ export default function Sidebar() {
             {!isCollapsed && <span className="text-sm font-medium">My Mindmaps</span>}
           </Link>
 
-          <Link
-            href="/dashboard/settings"
-            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-          >
-            <Settings className="h-5 w-5" />
-            {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
-          </Link>
+            <div className="space-y-1">
+                <button
+                    onClick={toggleSettings}
+                    className="flex w-full items-center justify-between rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                >
+                    <div className="flex items-center gap-3">
+                        <Settings className="h-5 w-5" />
+                        {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
+                    </div>
+
+                    {!isCollapsed && (
+                        <ChevronRight
+                            className={`h-4 w-4 transition-transform ${settingsOpen ? "rotate-90" : ""}`}
+                        />
+                    )}
+                </button>
+
+                {/* SUBMENU */}
+                {!isCollapsed && settingsOpen && (
+                    <div className="ml-10 mt-1 flex flex-col gap-1 animate-in slide-in-from-top-2 fade-in">
+                        <Link
+                            href="/dashboard/changepassword"
+                            className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        >
+                            <Lock className="h-4 w-4" /> Change Password
+                        </Link>
+
+
+                    </div>
+                )}
+            </div>
         </div>
       </nav>
 
       {/* Logout */}
       <div className="absolute bottom-4 left-4 right-4">
-        <button 
+        <button
           onClick={() => logout()}
           disabled={isLoading}
           className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-all disabled:opacity-50"
