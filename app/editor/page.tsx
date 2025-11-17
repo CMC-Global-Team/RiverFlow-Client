@@ -158,9 +158,9 @@ function EditorInner() {
 
           {/* Right Actions */}
           <div className="flex items-center gap-4">
-             <ThemeSwitcher/>
+             {/* <ThemeSwitcher/> */}
             {/* Auto-save Toggle */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
+            {/* <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
               <Switch
                 id="auto-save"
                 checked={autoSave}
@@ -169,15 +169,15 @@ function EditorInner() {
               <Label htmlFor="auto-save" className="text-sm font-medium cursor-pointer">
                 Auto-save
               </Label>
-            </div>
+            </div> */}
 
-            <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors">
+            {/* <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors">
               <Users className="h-5 w-5" />
               <span className="text-sm font-medium">Share</span>
               <ChevronDown className="h-4 w-4" />
-            </button>
+            </button> */}
             
-            {!autoSave && (
+            {/* {!autoSave && (
               <button 
                 onClick={handleSave}
                 disabled={isSaving || saveStatus === 'saved'}
@@ -189,10 +189,10 @@ function EditorInner() {
                   {saveStatus === 'saving' ? 'Saving...' : saveStatus === 'saved' ? 'Saved' : 'Save'}
                 </span>
               </button>
-            )}
+            )} */}
 
             {/* Auto-save Status Indicator */}
-            {autoSave && (
+            {/* {autoSave && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {saveStatus === 'saving' && (
                   <>
@@ -210,7 +210,7 @@ function EditorInner() {
                   <span>Auto-save enabled</span>
                 )}
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </header>
