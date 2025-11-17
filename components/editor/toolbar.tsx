@@ -15,6 +15,8 @@ import {
   Redo2,
   Undo2,
   GitBranch,
+  Palette,
+  Baseline,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -26,9 +28,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { ColorPicker } from "@/components/ui/color-picker"
 
 export default function Toolbar() {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo, updateNodeData } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
 
   const handleAddNode = (shape: string) => {
@@ -178,6 +181,38 @@ export default function Toolbar() {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+      </div>
+
+      {/* Color Tools */}
+      <div className="flex items-center gap-1 border-r border-border pr-3">
+        <ColorPicker
+          color={selectedNode?.data.color || "#000000"}
+          setColor={(color) => updateNodeData(selectedNode!.id, { color })}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Node Color"
+            disabled={!selectedNode}
+            className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+          >
+            <Palette className="h-5 w-5" />
+          </Button>
+        </ColorPicker>
+        <ColorPicker
+          color={selectedNode?.data.textColor || "#ffffff"}
+          setColor={(textColor) => updateNodeData(selectedNode!.id, { textColor })}
+        >
+          <Button
+            variant="ghost"
+            size="icon"
+            title="Text Color"
+            disabled={!selectedNode}
+            className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+          >
+            <Baseline className="h-5 w-5" />
+          </Button>
+        </ColorPicker>
       </div>
 
       {/* Edit Tools */}

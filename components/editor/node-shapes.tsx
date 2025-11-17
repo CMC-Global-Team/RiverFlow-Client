@@ -8,81 +8,84 @@ interface NodeData {
   label: string
   description?: string
   color?: string
+  textColor?: string
   bgColor?: string
   shape?: string
   isEditing?: boolean
 }
+
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
+
+  const [label, setLabel] = useState(data.label)
+  const [description, setDescription] = useState(data.description)
+
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
 
-  // Auto-enable editing when isEditing prop is set
   useEffect(() => {
-    if (data.isEditing && !editingLabel) {
+    if (data.isEditing) {
       setEditingLabel(true)
       updateNodeData(id, { isEditing: false })
     }
-  }, [data.isEditing, editingLabel, id, updateNodeData])
+  }, [data.isEditing, id, updateNodeData])
 
   useEffect(() => {
     if (editingLabel && labelRef.current) {
       labelRef.current.focus()
-      // Initialize content with current data when entering edit mode
-      labelRef.current.innerHTML = data.label || ""
+      const range = document.createRange()
+      range.selectNodeContents(labelRef.current)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
-  }, [editingLabel, data.label])
+  }, [editingLabel])
 
   useEffect(() => {
     if (editingDesc && descRef.current) {
       descRef.current.focus()
-      descRef.current.innerHTML = data.description || ""
+      const range = document.createRange()
+      range.selectNodeContents(descRef.current)
+      const sel = window.getSelection()
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
-  }, [editingDesc, data.description])
+  }, [editingDesc])
 
   const finishLabel = () => {
-    if (labelRef.current) {
-      const html = labelRef.current.innerHTML
-      updateNodeData(id, { label: html })
-    }
+    updateNodeData(id, { label })
     setEditingLabel(false)
   }
+
   const finishDesc = () => {
-    if (descRef.current) {
-      const html = descRef.current.innerHTML
-      updateNodeData(id, { description: html })
-    }
+    updateNodeData(id, { description })
     setEditingDesc(false)
   }
 
   return (
     <div className="space-y-1">
-      {/* Label */}
       {editingLabel ? (
         <div
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
           className="w-full outline-none font-semibold text-sm bg-transparent border-b border-primary px-1 -mx-1 rounded"
-          onInput={() => {
-            const html = labelRef.current?.innerHTML || ''
-            updateNodeData(id, { label: html })
-          }}
+          onInput={(e) => setLabel(e.currentTarget.innerHTML)}
           onBlur={finishLabel}
           onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              finishLabel();
+            if (e.key === 'Enter' || e.key === 'Escape') {
+              e.preventDefault()
+              finishLabel()
             }
           }}
-          dangerouslySetInnerHTML={{ __html: data.label || '' }}
+          dangerouslySetInnerHTML={{ __html: label || '' }}
         />
       ) : (
         <div
           className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
-          style={{ color: data.color || "#3b82f6" }}
+          style={{ color: data.textColor || "#ffffff" }}
           onMouseDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
@@ -92,25 +95,21 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       )}
 
-      {/* Description */}
       {editingDesc ? (
         <div
           ref={descRef}
           contentEditable
           suppressContentEditableWarning
           className="w-full outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1 min-h-6"
-          onInput={() => {
-            const html = descRef.current?.innerHTML || ''
-            updateNodeData(id, { description: html })
-          }}
+          onInput={(e) => setDescription(e.currentTarget.innerHTML)}
           onBlur={finishDesc}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
-              e.preventDefault();
-              finishDesc();
+              e.preventDefault()
+              finishDesc()
             }
           }}
-          dangerouslySetInnerHTML={{ __html: data.description || '' }}
+          dangerouslySetInnerHTML={{ __html: description || '' }}
         />
       ) : (
         <div
@@ -122,283 +121,93 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     </div>
   )
 })
-// Rectangle Node (default)
-export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
+EditableContent.displayName = 'EditableContent';
+
+// Base Node component to avoid repetition
+const BaseNode = memo(({ data, selected, id, children, className }: NodeProps<NodeData> & { children: React.ReactNode, className?: string }) => {
+  const color = data.color || "#3b82f6";
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
+      className={`${className} ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        backgroundColor: color,
+        borderColor: color
       }}
     >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />    </div>
-  )
-})
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="target" position={Position.Right} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="target" position={Position.Bottom} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-slate-300" />
+      {children}
+      <EditableContent data={data} id={id} />
+      <Handle type="source" position={Position.Top} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-slate-300" />
+      <Handle type="source" position={Position.Left} className="w-2 h-2 !bg-slate-300" />
+    </div>
+  );
+});
+BaseNode.displayName = 'BaseNode';
 
-RectangleNode.displayName = "RectangleNode"
+export const RectangleNode = (props: NodeProps<NodeData>) => (
+  <BaseNode {...props} className="px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px]">
+    <div/>
+  </BaseNode>
+);
+RectangleNode.displayName = "RectangleNode";
 
-// Circle Node
-export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
+export const CircleNode = (props: NodeProps<NodeData>) => (
+  <BaseNode {...props} className="rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center text-center px-3">
+    <div/>
+  </BaseNode>
+);
+CircleNode.displayName = "CircleNode";
 
-  return (
-    <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
-      }}
-    >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-3">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />    </div>
-  )
-})
-
-CircleNode.displayName = "CircleNode"
-
-// Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
-
+  const color = data.color || "#3b82f6";
   return (
-    <div className="relative w-32 h-32">
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "-21%"}}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "-21%"}}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "-21%"}}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "-21%"}}
-        />      <div
-        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-        }`}
-        style={{
-          borderColor: color,
-          backgroundColor: data.bgColor || "transparent"
-         }}
+    <div className={`relative w-32 h-32 ${selected ? "z-10" : ""}`}>
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-slate-300 !top-[-6px]" />
+      <Handle type="target" position={Position.Right} className="w-2 h-2 !bg-slate-300 !right-[-6px]" />
+      <Handle type="target" position={Position.Bottom} className="w-2 h-2 !bg-slate-300 !bottom-[-6px]" />
+      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-slate-300 !left-[-6px]" />
+      <div
+        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${selected ? "ring-2 ring-primary ring-offset-2" : ""}`}
+        style={{ backgroundColor: color, borderColor: color }}
       />
       <div className="absolute inset-0 flex items-center justify-center">
         <div className="text-center px-3 max-w-[80px]">
           <EditableContent data={data} id={id} />
         </div>
       </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "-21%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "-21%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "-21%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "-21%" }}
-        />    </div>
-  )
-})
+      <Handle type="source" position={Position.Top} className="w-2 h-2 !bg-slate-300 !top-[-6px]" />
+      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-slate-300 !right-[-6px]" />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-slate-300 !bottom-[-6px]" />
+      <Handle type="source" position={Position.Left} className="w-2 h-2 !bg-slate-300 !left-[-6px]" />
+    </div>
+  );
+});
+DiamondNode.displayName = "DiamondNode";
 
-DiamondNode.displayName = "DiamondNode"
-
-// Hexagon Node
 export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
-
+  const color = data.color || "#3b82f6";
   return (
-    <div className="relative w-36 h-32">
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "3%" }}
-        />      <svg
+    <div className="relative w-36 h-[138px]">
+      <Handle type="target" position={Position.Top} className="w-2 h-2 !bg-slate-300 !top-[-2px]" />
+      <Handle type="target" position={Position.Right} className="w-2 h-2 !bg-slate-300 !right-[-2px]" />
+      <Handle type="target" position={Position.Bottom} className="w-2 h-2 !bg-slate-300 !bottom-[-2px]" />
+      <Handle type="target" position={Position.Left} className="w-2 h-2 !bg-slate-300 !left-[-2px]" />
+      <svg
         viewBox="0 0 100 87"
         className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
       >
         <polygon
-          points="50,5 95,25 95,65 50,85 5,65 5,25"
-          fill={data.bgColor || "#ffffff"}
+          points="50,0 100,25 100,75 50,100 0,75 0,25"
+          fill={color}
           stroke={color}
-          strokeWidth="2"
-          className={selected ? "stroke-[3]" : ""}
+          strokeWidth="4"
+          className={`${selected ? "stroke-blue-500" : ""}`}
         />
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
@@ -406,190 +215,25 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           <EditableContent data={data} id={id} />
         </div>
       </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "3%" }}
-        />    </div>
-  )
-})
+      <Handle type="source" position={Position.Top} className="w-2 h-2 !bg-slate-300 !top-[-2px]" />
+      <Handle type="source" position={Position.Right} className="w-2 h-2 !bg-slate-300 !right-[-2px]" />
+      <Handle type="source" position={Position.Bottom} className="w-2 h-2 !bg-slate-300 !bottom-[-2px]" />
+      <Handle type="source" position={Position.Left} className="w-2 h-2 !bg-slate-300 !left-[-2px]" />
+    </div>
+  );
+});
+HexagonNode.displayName = "HexagonNode";
 
-HexagonNode.displayName = "HexagonNode"
+export const EllipseNode = (props: NodeProps<NodeData>) => (
+  <BaseNode {...props} className="rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center text-center px-4">
+    <div/>
+  </BaseNode>
+);
+EllipseNode.displayName = "EllipseNode";
 
-// Ellipse Node
-export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
-
-  return (
-    <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
-      }}
-    >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-4">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />    </div>
-  )
-})
-
-EllipseNode.displayName = "EllipseNode"
-
-// Rounded Rectangle Node
-export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
-
-  return (
-    <div
-      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
-      }}
-    >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />    </div>
-  )
-})
-
-RoundedRectangleNode.displayName = "RoundedRectangleNode"
-
+export const RoundedRectangleNode = (props: NodeProps<NodeData>) => (
+  <BaseNode {...props} className="px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px]">
+    <div/>
+  </BaseNode>
+);
+RoundedRectangleNode.displayName = "RoundedRectangleNode";

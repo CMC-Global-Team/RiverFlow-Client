@@ -231,6 +231,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           label: 'Node',
           description: '',
           color: '#3b82f6',
+          textColor: '#ffffff',
           ...node.data,
           shape: node.data?.shape || nodeShape,
         }
@@ -368,6 +369,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         label: 'New Node',
         description: 'Add description',
         color: '#3b82f6',
+        textColor: '#ffffff',
         shape,
       },
     }
