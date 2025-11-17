@@ -11,7 +11,106 @@ interface NodeData {
   bgColor?: string
   shape?: string
   isEditing?: boolean
+  scale?: number
 }
+
+// Resize Handle Component
+const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentScale: number }) => {
+  const { updateNodeData } = useMindmapContext()
+  const [isResizing, setIsResizing] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const startScaleRef = useRef(currentScale)
+  const startPosRef = useRef({ x: 0, y: 0 })
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizing(true)
+    startPosRef.current = { x: e.clientX, y: e.clientY }
+    startScaleRef.current = currentScale
+  }
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startPosRef.current.x
+      const deltaY = e.clientY - startPosRef.current.y
+      const delta = (deltaX + deltaY) / 200 // Sensitivity: larger number = slower resize
+      
+      let newScale = startScaleRef.current + delta
+      newScale = Math.max(0.6, Math.min(2.0, newScale)) // Clamp between 0.6 and 2.0
+      
+      updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, nodeId, currentScale, updateNodeData])
+
+  const handleStyle = {
+    width: '12px',
+    height: '12px',
+    background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
+    borderRadius: '2px',
+    opacity: hovering || isResizing ? 1 : 0,
+    transition: 'opacity 0.2s',
+    pointerEvents: 'auto' as const,
+  }
+
+  return (
+    <>
+      {/* Top-Left */}
+      <div
+        className="absolute top-0 left-0"
+        style={{...handleStyle, cursor: 'nwse-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Top-Right */}
+      <div
+        className="absolute top-0 right-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Left */}
+      <div
+        className="absolute bottom-0 left-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Right */}
+      <div
+        className="absolute bottom-0 right-0"
+        style={{...handleStyle, cursor: 'se-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+    </>
+  )
+})
+
+ResizeHandle.displayName = "ResizeHandle"
+
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
   const [editingLabel, setEditingLabel] = useState(false)
@@ -155,17 +254,25 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -223,7 +330,10 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -232,17 +342,25 @@ RectangleNode.displayName = "RectangleNode"
 // Circle Node
 export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -300,7 +418,10 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -309,9 +430,17 @@ CircleNode.displayName = "CircleNode"
 // Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-32 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-32 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -340,7 +469,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%"}}
         />      <div
-        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all cursor-pointer ${
+        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all cursor-pointer relative ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
         style={{
@@ -380,7 +509,10 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -389,9 +521,17 @@ DiamondNode.displayName = "DiamondNode"
 // Hexagon Node
 export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-36 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-36 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -421,7 +561,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             style={{ background: color, top: "50%", left: "3%" }}
         />      <svg
         viewBox="0 0 100 87"
-        className={`w-full h-full transition-all cursor-pointer ${selected ? "drop-shadow-lg" : ""}`}
+        className={`w-full h-full transition-all cursor-pointer relative ${selected ? "drop-shadow-lg" : ""}`}
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
@@ -463,7 +603,10 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "3%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -472,12 +615,20 @@ HexagonNode.displayName = "HexagonNode"
 // Ellipse Node
 export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
       style={{
         borderColor: color,
         backgroundColor: data.bgColor || "transparent"
@@ -540,7 +691,10 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -549,11 +703,19 @@ EllipseNode.displayName = "EllipseNode"
 // Rounded Rectangle Node
 export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
         borderColor: color,
@@ -617,7 +779,10 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
