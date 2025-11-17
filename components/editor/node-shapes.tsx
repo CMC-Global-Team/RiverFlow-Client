@@ -11,6 +11,7 @@ interface NodeData {
   bgColor?: string
   shape?: string
   isEditing?: boolean
+  scale?: number
 }
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
@@ -155,17 +156,25 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -223,7 +232,9 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
@@ -232,17 +243,25 @@ RectangleNode.displayName = "RectangleNode"
 // Circle Node
 export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -300,7 +319,9 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
@@ -309,9 +330,17 @@ CircleNode.displayName = "CircleNode"
 // Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-32 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-32 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -380,7 +409,9 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
@@ -389,9 +420,17 @@ DiamondNode.displayName = "DiamondNode"
 // Hexagon Node
 export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-36 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-36 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -463,7 +502,9 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "3%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
@@ -472,12 +513,20 @@ HexagonNode.displayName = "HexagonNode"
 // Ellipse Node
 export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
       style={{
         borderColor: color,
         backgroundColor: data.bgColor || "transparent"
@@ -540,7 +589,9 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
@@ -549,11 +600,19 @@ EllipseNode.displayName = "EllipseNode"
 // Rounded Rectangle Node
 export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
         borderColor: color,
@@ -617,7 +676,9 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+      </div>
+    </div>
   )
 })
 
