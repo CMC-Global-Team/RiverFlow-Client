@@ -146,10 +146,7 @@ export default function EdgePropertiesPanel() {
 
   const applyHighlight = (color: string) => {
     updateEdgeData(selectedEdge.id, {
-      labelShowBg: true,
-      labelBgStyle: { fill: color, fillOpacity: 0.9 },
-      labelBgPadding: [8, 4] as [number, number],
-      labelBgBorderRadius: 4,
+      labelStyle: { ...selectedEdge.labelStyle, backgroundColor: color }
     })
     setShowHighlight(false)
   }
@@ -274,24 +271,7 @@ export default function EdgePropertiesPanel() {
         {selectedEdge.label && (
           <>
             <div className="space-y-2">
-              <Label>Label Text Color</Label>
-              <div className="flex gap-2 flex-wrap">
-                {["#000000", "#ffffff", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#ef4444"].map((color) => (
-                  <button
-                    key={color}
-                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
-                    style={{
-                      backgroundColor: color,
-                      borderColor: selectedEdge.labelStyle?.fill === color ? "#000" : "transparent",
-                    }}
-                    onClick={() => handleLabelTextColorChange(color)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Label Background Color</Label>
+              <Label>Label Background</Label>
               <div className="flex gap-2 flex-wrap">
                 {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
                   <button
