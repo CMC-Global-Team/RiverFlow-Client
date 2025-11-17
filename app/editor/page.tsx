@@ -109,128 +109,40 @@ function EditorInner() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <div 
-              onClick={() => setIsEditing(true)} 
-              className="cursor-pointer" 
-              onBlur={() => setIsEditing(false)}
-              onMouseEnter={handleTitleHover}
-              onMouseLeave={handleTitleLeave}
-            >
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={mindmap?.title || "Untitled Mindmap"}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  onBlur={() => setIsEditing(false)}
-                  autoFocus
-                  className="text-xl font-bold text-foreground bg-input border-2 border-primary rounded px-3 py-1"
-                />
-              ) : (
-                <h1 
-                  ref={titleRef}
-                  className="text-xl font-bold text-foreground hover:text-primary transition-colors px-3 py-1 border-2 border-dashed border-muted-foreground/30 hover:border-primary rounded"
-                >
-                  {mindmap?.title || "Untitled Mindmap"}
-                </h1>
-              )}
-            </div>
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-             <ThemeSwitcher/>
-            {/* Auto-save Toggle */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
-              <Switch
-                id="auto-save"
-                checked={autoSaveEnabled}
-                onCheckedChange={setAutoSaveEnabled}
-              />
-              <Label htmlFor="auto-save" className="text-sm font-medium cursor-pointer">
-                Auto-save
-              </Label>
-            </div>
-
-            <button 
-              onClick={() => setIsShareOpen(true)} // <-- THÊM SỰ KIỆN CLICK
-              className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors"
-            >
-              <Users className="h-5 w-5" />
-              <span className="text-sm font-medium">Share</span>
-              <ChevronDown className="h-4 w-4" /> 
-            </button>
-            
-            {!autoSaveEnabled && (
-              <button 
-                onClick={handleSave}
-                disabled={isSaving || saveStatus === 'saved'}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saveStatus === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />}
-                {saveStatus === 'saved' && <Check className="h-4 w-4" />}
-                {saveStatus === 'error' && <AlertCircle className="h-4 w-4 text-destructive" />}
-                <span>
-                  {saveStatus === 'saving'
-                    ? 'Saving...'
-                    : saveStatus === 'saved'
-                      ? 'Saved'
-                      : saveStatus === 'error'
-                        ? 'Retry Save'
-                        : 'Save'}
-                </span>
-              </button>
-            )}
-
-            {/* Auto-save Status Indicator */}
-            {autoSaveEnabled && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {saveStatus === 'saving' && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                )}
-                {saveStatus === 'saved' && (
-                  <>
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-green-500">Saved</span>
-                  </>
-                )}
-                {saveStatus === 'error' && (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-destructive">Auto-save failed</span>
-                  </>
-                )}
-                {saveStatus === 'idle' && (
-                  <span>Auto-save enabled</span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content - Full Screen */}
+      <div className="flex-1 overflow-hidden relative">
         {/* Canvas Area */}
-        <div className="flex-1 flex flex-col p-4">
-          <div className="mb-4">
-            <Toolbar />
-          </div>
-          <div className="flex-1 rounded-lg border border-border overflow-hidden">
+        <div className="w-full h-full flex flex-col">
+          <div className="flex-1 rounded-lg overflow-hidden">
             <Canvas />
           </div>
         </div>
 
-        {/* Properties Panel */}
-        <PropertiesPanel />
+        {/* Floating Toolbar with Header Items */}
+        <div className="absolute top-4 left-4 right-4 z-50">
+          <Toolbar 
+            mindmap={mindmap}
+            isEditing={isEditing}
+            setIsEditing={setIsEditing}
+            titleRef={titleRef}
+            handleTitleChange={handleTitleChange}
+            handleTitleHover={handleTitleHover}
+            handleTitleLeave={handleTitleLeave}
+            autoSaveEnabled={autoSaveEnabled}
+            setAutoSaveEnabled={setAutoSaveEnabled}
+            isSaving={isSaving}
+            saveStatus={saveStatus}
+            handleSave={handleSave}
+            onShareClick={() => setIsShareOpen(true)}
+          />
+        </div>
+
+        {/* Floating Properties Panel */}
+        <div className="absolute bottom-4 right-4 z-40">
+          <PropertiesPanel />
+        </div>
       </div>
+
       <ShareModal
          isOpen={isShareOpen}
          onClose={() => setIsShareOpen(false)}
