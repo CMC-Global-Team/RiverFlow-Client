@@ -68,16 +68,18 @@ export default function NodePropertiesPanel() {
   }
 
   // Select all text in focused field if no selection exists
-  const ensureSelection = () => {
+  const ensureSelection = (field?: "label" | "description") => {
     const sel = window.getSelection()
+    const targetField = field || focusedField
+    
     if (!sel || sel.toString().length === 0) {
       // No selection, select all text in focused field
-      if (focusedField === 'label' && labelRef.current) {
+      if (targetField === 'label' && labelRef.current) {
         const range = document.createRange()
         range.selectNodeContents(labelRef.current)
         sel?.removeAllRanges()
         sel?.addRange(range)
-      } else if (focusedField === 'description' && descRef.current) {
+      } else if (targetField === 'description' && descRef.current) {
         const range = document.createRange()
         range.selectNodeContents(descRef.current)
         sel?.removeAllRanges()
@@ -87,17 +89,37 @@ export default function NodePropertiesPanel() {
     saveSelection()
   }
 
-  const toggleBold = () => { ensureSelection(); format("bold") }
-  const toggleItalic = () => { ensureSelection(); format("italic") }
-  const toggleUnderline = () => { ensureSelection(); format("underline") }
+  const toggleBold = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("bold") 
+  }
+  const toggleItalic = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("italic") 
+  }
+  const toggleUnderline = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("underline") 
+  }
 
-  const applyStyle = (type: "highlight" | "color", color: string) => {
-    // Restore selection and refocus the correct field
-    if (focusedField === 'label') labelRef.current?.focus();
-    if (focusedField === 'description') descRef.current?.focus();
+  const applyStyle = (type: "highlight" | "color", color: string, field?: "label" | "description") => {
+    const targetField = field || focusedField
+    
+    // Focus the target field
+    if (targetField === 'label') labelRef.current?.focus();
+    if (targetField === 'description') descRef.current?.focus();
     
     // Ensure selection exists (select all if no selection)
-    ensureSelection()
+    ensureSelection(targetField)
     
     if (type === "highlight") {
       // For highlight, try multiple methods
@@ -176,9 +198,39 @@ export default function NodePropertiesPanel() {
 
         {/* TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={toggleBold}><Bold /></Button>
-          <Button variant="ghost" size="icon" onClick={toggleItalic}><Italic /></Button>
-          <Button variant="ghost" size="icon" onClick={toggleUnderline}><Underline /></Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleBold()
+            }}
+            title="Bold (Ctrl+B)"
+          >
+            <Bold />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleItalic()
+            }}
+            title="Italic (Ctrl+I)"
+          >
+            <Italic />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleUnderline()
+            }}
+            title="Underline (Ctrl+U)"
+          >
+            <Underline />
+          </Button>
 
           {/* Highlight */}
           <div
@@ -192,10 +244,12 @@ export default function NodePropertiesPanel() {
               onMouseDown={(e) => { 
                 e.preventDefault()
                 e.stopPropagation()
+                if (!focusedField) labelRef.current?.focus()
                 saveSelection()
                 setShowHighlight(!showHighlight)
                 setShowTextColor(false)
               }}
+              title="Highlight text"
             >
               <Highlighter />
             </Button>
@@ -240,10 +294,12 @@ export default function NodePropertiesPanel() {
               onMouseDown={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
+                if (!focusedField) labelRef.current?.focus()
                 saveSelection()
                 setShowTextColor(!showTextColor)
                 setShowHighlight(false)
               }}
+              title="Text color"
             >
               <Palette />
             </Button>

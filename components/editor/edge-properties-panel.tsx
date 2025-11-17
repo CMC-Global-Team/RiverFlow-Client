@@ -145,8 +145,15 @@ export default function EdgePropertiesPanel() {
   }
 
   const applyHighlight = (color: string) => {
+    // Store highlight color with text color for contrast
+    const textColor = selectedEdge.labelStyle?.fill || '#000000'
     updateEdgeData(selectedEdge.id, {
-      labelHighlightColor: color
+      labelStyle: { 
+        ...selectedEdge.labelStyle,
+        // Use text decoration or paint approach
+        textDecoration: `underline wavy ${color}`,
+        textDecorationThickness: '3px'
+      }
     })
     setShowHighlight(false)
   }
