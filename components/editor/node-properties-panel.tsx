@@ -67,22 +67,47 @@ export default function NodePropertiesPanel() {
     if (focusedField) saveField(focusedField)
   }
 
-  const toggleBold = () => format("bold")
-  const toggleItalic = () => format("italic")
-  const toggleUnderline = () => format("underline")
+  // Select all text in focused field if no selection exists
+  const ensureSelection = () => {
+    const sel = window.getSelection()
+    if (!sel || sel.toString().length === 0) {
+      // No selection, select all text in focused field
+      if (focusedField === 'label' && labelRef.current) {
+        const range = document.createRange()
+        range.selectNodeContents(labelRef.current)
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+      } else if (focusedField === 'description' && descRef.current) {
+        const range = document.createRange()
+        range.selectNodeContents(descRef.current)
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+      }
+    }
+    saveSelection()
+  }
+
+  const toggleBold = () => { ensureSelection(); format("bold") }
+  const toggleItalic = () => { ensureSelection(); format("italic") }
+  const toggleUnderline = () => { ensureSelection(); format("underline") }
 
   const applyStyle = (type: "highlight" | "color", color: string) => {
     // Restore selection and refocus the correct field
     if (focusedField === 'label') labelRef.current?.focus();
     if (focusedField === 'description') descRef.current?.focus();
-    restoreSelection()
-    const cmd = type === "highlight" ? "hiliteColor" : "foreColor"
-    // Try preferred command first
-    format(cmd, color)
-    // Fallbacks for broader browser support
+    
+    // Ensure selection exists (select all if no selection)
+    ensureSelection()
+    
     if (type === "highlight") {
+      // For highlight, try multiple methods
+      try { document.execCommand('hiliteColor', false, color) } catch {}
       try { document.execCommand('backColor', false, color) } catch {}
+    } else {
+      // For text color
+      format("foreColor", color)
     }
+    
     // Close popups after applying
     setShowHighlight(false)
     setShowTextColor(false)

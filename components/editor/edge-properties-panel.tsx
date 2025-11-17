@@ -146,7 +146,7 @@ export default function EdgePropertiesPanel() {
 
   const applyHighlight = (color: string) => {
     updateEdgeData(selectedEdge.id, {
-      labelStyle: { ...selectedEdge.labelStyle, backgroundColor: color }
+      labelHighlightColor: color
     })
     setShowHighlight(false)
   }
