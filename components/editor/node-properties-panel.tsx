@@ -49,9 +49,14 @@ export default function NodePropertiesPanel() {
   if (!selectedNode) return null
 
   useEffect(() => {
-    if (labelRef.current) labelRef.current.innerHTML = selectedNode.data.label || ""
-    if (descRef.current) descRef.current.innerHTML = selectedNode.data.description || ""
-  }, [selectedNode?.id, selectedNode?.data?.label, selectedNode?.data?.description])
+    // Only update innerHTML when node ID changes (switching nodes), not while editing
+    if (labelRef.current && labelRef.current !== document.activeElement) {
+      labelRef.current.innerHTML = selectedNode.data.label || ""
+    }
+    if (descRef.current && descRef.current !== document.activeElement) {
+      descRef.current.innerHTML = selectedNode.data.description || ""
+    }
+  }, [selectedNode?.id])
 
   const saveField = (field: "label" | "description") => {
     const ref = field === "label" ? labelRef.current : descRef.current
