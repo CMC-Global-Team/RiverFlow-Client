@@ -94,28 +94,27 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   }
 
   // Handle click on container to enable editing when text has styles
-  const handleContainerClick = (e: React.MouseEvent, isLabel: boolean) => {
-    // Only trigger on direct click on the content area, not on nested elements
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('div') === e.currentTarget) {
-      e.preventDefault()
-      e.stopPropagation()
-      if (isLabel) {
-        setEditingLabel(true)
-      } else {
-        setEditingDesc(true)
-      }
-    }
+  const handleLabelClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingLabel(true)
+  }
+
+  const handleDescClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingDesc(true)
   }
 
   return (
-    <div ref={containerRef} className="space-y-1 w-full">
+    <div ref={containerRef} className="space-y-1 w-full pointer-events-auto">
       {/* Label */}
       {editingLabel ? (
         <div
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
-          className="w-full outline-none font-semibold text-sm bg-transparent border-b-2 border-primary px-1 -mx-1 py-0.5 rounded transition-all"
+          className="w-full outline-none font-semibold text-sm bg-transparent border-b-2 border-primary px-1 -mx-1 py-0.5 rounded transition-all pointer-events-auto"
           style={{ color: data.color || "#3b82f6" }}
           onBlur={finishLabel}
           onKeyDown={handleLabelKeyDown}
@@ -123,13 +122,9 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       ) : (
         <div
-          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full"
+          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto"
           style={{ color: data.color || "#3b82f6", minHeight: '24px' }}
-          onClick={(e) => handleContainerClick(e, true)}
-          onMouseDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
+          onMouseDown={handleLabelClick}
           dangerouslySetInnerHTML={{ __html: data.label || '<span class="opacity-50">Click to edit</span>' }}
         />
       )}
@@ -140,7 +135,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           ref={descRef}
           contentEditable
           suppressContentEditableWarning
-          className="w-full outline-none text-xs bg-transparent border border-primary/30 rounded p-1 min-h-6 transition-all"
+          className="w-full outline-none text-xs bg-transparent border border-primary/30 rounded p-1 min-h-6 transition-all pointer-events-auto"
           style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
           onBlur={finishDesc}
           onKeyDown={handleDescKeyDown}
@@ -148,13 +143,9 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       ) : (
         <div
-          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center"
+          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center pointer-events-auto"
           style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
-          onClick={(e) => handleContainerClick(e, false)}
-          onMouseDown={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
+          onMouseDown={handleDescClick}
           dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
         />
       )}

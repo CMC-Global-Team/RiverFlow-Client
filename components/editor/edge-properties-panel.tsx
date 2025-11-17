@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Trash2, Bold, Italic, Underline, Highlighter, Palette } from "lucide-react"
+import { X, Trash2, Bold, Italic, Underline, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -14,35 +14,25 @@ export default function EdgePropertiesPanel() {
 
   if (!selectedEdge) return null
 
-  const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
-  const highlightRef = useRef<HTMLDivElement>(null)
   const textColorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       
-      if (highlightRef.current && !highlightRef.current.contains(target)) {
-        const highlightBtn = highlightRef.current.closest('.highlight-container')
-        if (!highlightBtn?.contains(target)) {
-          setShowHighlight(false)
-        }
-      }
-      
       if (textColorRef.current && !textColorRef.current.contains(target)) {
-        const textColorBtn = textColorRef.current.closest('.text-color-container')
-        if (!textColorBtn?.contains(target)) {
+        if (!target.closest('.text-color-btn')) {
           setShowTextColor(false)
         }
       }
     }
 
-    if (showHighlight || showTextColor) {
+    if (showTextColor) {
       document.addEventListener("mousedown", handleClickOutside)
       return () => document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [showHighlight, showTextColor])
+  }, [showTextColor])
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },
@@ -146,31 +136,14 @@ export default function EdgePropertiesPanel() {
     setShowTextColor(false)
   }
 
-  const applyHighlight = (color: string) => {
-    updateEdgeData(selectedEdge.id, {
-      labelShowBg: true,
-      labelBgStyle: { fill: color, fillOpacity: 0.9 },
-      labelBgPadding: [8, 4] as [number, number],
-      labelBgBorderRadius: 4,
-    })
-    setShowHighlight(false)
-  }
-
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
     toast.success('Connection deleted')
   }
 
   return (
-    <div className="h-full bg-card overflow-y-auto">
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
-        <h3 className="font-semibold">Connection Properties</h3>
-        <Button variant="ghost" size="icon" onClick={() => setSelectedEdge(null)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
+    <div className="h-full bg-transparent">
+      <div className="space-y-4">
         {/* TEXT TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }}>
@@ -183,49 +156,10 @@ export default function EdgePropertiesPanel() {
             <Underline />
           </Button>
 
-          {/* Highlight */}
-          <div className="highlight-container relative" onClick={(e) => e.stopPropagation()}>
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onMouseDown={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowHighlight(!showHighlight)
-                setShowTextColor(false)
-              }}
-            >
-              <Highlighter />
-            </Button>
-            {showHighlight && (
-              <div 
-                ref={highlightRef}
-                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
-                onMouseDown={(e) => e.stopPropagation()}
-              >
-                {swatches.map(c => (
-                  <button
-                    key={c}
-                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
-                    style={{ 
-                      backgroundColor: c,
-                      borderColor: 'rgba(0,0,0,0.2)'
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      applyHighlight(c)
-                    }}
-                    title={c}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
           {/* Text Color */}
           <div className="text-color-container relative" onClick={(e) => e.stopPropagation()}>
             <Button 
+              className="text-color-btn"
               variant="ghost" 
               size="icon" 
               onMouseDown={(e) => {
@@ -240,16 +174,18 @@ export default function EdgePropertiesPanel() {
             {showTextColor && (
               <div 
                 ref={textColorRef}
-                className="absolute z-50 left-0 top-full mt-2 bg-white dark:bg-slate-900 border border-border rounded shadow-lg p-2 grid grid-cols-5 gap-1"
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
               >
                 {swatches.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border-2 hover:scale-110 transition-transform"
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
                     style={{ 
                       backgroundColor: c,
-                      borderColor: 'rgba(0,0,0,0.2)'
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
                     }}
                     onMouseDown={(e) => {
                       e.preventDefault()
@@ -277,24 +213,7 @@ export default function EdgePropertiesPanel() {
         {selectedEdge.label && (
           <>
             <div className="space-y-2">
-              <Label>Label Text Color</Label>
-              <div className="flex gap-2 flex-wrap">
-                {["#000000", "#ffffff", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#ef4444"].map((color) => (
-                  <button
-                    key={color}
-                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
-                    style={{
-                      backgroundColor: color,
-                      borderColor: selectedEdge.labelStyle?.fill === color ? "#000" : "transparent",
-                    }}
-                    onClick={() => handleLabelTextColorChange(color)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Label Background Color</Label>
+              <Label>Label Background</Label>
               <div className="flex gap-2 flex-wrap">
                 {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
                   <button
