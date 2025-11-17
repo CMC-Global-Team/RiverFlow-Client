@@ -30,6 +30,37 @@ export default function PropertiesPanel() {
     }
   }, [hasSelection, selectedNode, selectedEdge])
 
+  // Resize event listener - always register, not conditional
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      if (isResizing) {
+        const deltaX = e.clientX - resizeStart.x
+        const deltaY = e.clientY - resizeStart.y
+        setSize({
+          width: Math.max(300, resizeStart.width + deltaX),
+          height: Math.max(250, resizeStart.height + deltaY),
+        })
+      }
+    }
+
+    const handleGlobalMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
+    }
+  }, [isResizing, resizeStart])
+
+  // If nothing selected and panel is closed, don't render
+  if (!hasSelection && !isOpen) {
+    return null
+  }
+
   // If nothing selected and panel is closed, don't render
   if (!hasSelection && !isOpen) {
     return null
@@ -68,31 +99,6 @@ export default function PropertiesPanel() {
   const handleMouseUp = () => {
     setIsDragging(false)
   }
-
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isResizing) {
-        const deltaX = e.clientX - resizeStart.x
-        const deltaY = e.clientY - resizeStart.y
-        setSize({
-          width: Math.max(300, resizeStart.width + deltaX),
-          height: Math.max(250, resizeStart.height + deltaY),
-        })
-      }
-    }
-
-    const handleGlobalMouseUp = () => {
-      setIsResizing(false)
-    }
-
-    document.addEventListener('mousemove', handleGlobalMouseMove)
-    document.addEventListener('mouseup', handleGlobalMouseUp)
-    
-    return () => {
-      document.removeEventListener('mousemove', handleGlobalMouseMove)
-      document.removeEventListener('mouseup', handleGlobalMouseUp)
-    }
-  }, [isResizing, resizeStart])
 
   const handleClose = () => {
     setIsOpen(false)
