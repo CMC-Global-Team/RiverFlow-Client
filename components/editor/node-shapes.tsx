@@ -57,20 +57,55 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
     }
   }, [isResizing, nodeId, currentScale, updateNodeData])
 
+  const handleStyle = {
+    width: '12px',
+    height: '12px',
+    background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
+    borderRadius: '2px',
+    opacity: hovering || isResizing ? 1 : 0,
+    transition: 'opacity 0.2s',
+    pointerEvents: 'auto' as const,
+  }
+
   return (
-    <div
-      className={`absolute bottom-0 right-0 w-4 h-4 cursor-se-resize transition-opacity ${
-        hovering || isResizing ? 'opacity-100' : 'opacity-0'
-      }`}
-      style={{
-        background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
-        borderRadius: '0 0 4px 0',
-      }}
-      onMouseDown={handleMouseDown}
-      onMouseEnter={() => setHovering(true)}
-      onMouseLeave={() => !isResizing && setHovering(false)}
-      title="Drag to resize"
-    />
+    <>
+      {/* Top-Left */}
+      <div
+        className="absolute top-0 left-0"
+        style={{...handleStyle, cursor: 'nwse-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Top-Right */}
+      <div
+        className="absolute top-0 right-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Left */}
+      <div
+        className="absolute bottom-0 left-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Right */}
+      <div
+        className="absolute bottom-0 right-0"
+        style={{...handleStyle, cursor: 'se-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+    </>
   )
 })
 
