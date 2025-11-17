@@ -48,19 +48,16 @@ export default function ShareModal({
     setIsLoading(true)
     try {
       await onInvite(email, role)
-      setEmail("") // Reset form sau khi gửi thành công
-      // Không đóng modal ngay để họ có thể mời tiếp người khác
+      setEmail("")
     } catch (error) {
-      // Lỗi đã được xử lý ở component cha, nhưng ta catch ở đây để tắt loading
       console.error(error)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Chức năng copy link (Optional - làm sẵn cho đẹp)
   const handleCopyLink = () => {
-    const url = window.location.href
+    const url = typeof window !== 'undefined' ? window.location.href : ''
     navigator.clipboard.writeText(url)
     setCopied(true)
     toast({ description: "Đã sao chép liên kết vào bộ nhớ tạm" })
@@ -69,27 +66,33 @@ export default function ShareModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Chia sẻ Mindmap</DialogTitle>
           <DialogDescription>
-            Mời người khác cùng cộng tác trên <strong>{mindmapTitle}</strong>.
+            Mời người khác cùng cộng tác trên <span className="font-medium text-foreground">{mindmapTitle}</span>.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Phần copy link nhanh */}
+        <div className="space-y-6 py-2">
           <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">Đường dẫn công khai</Label>
-            <div className="flex items-center space-x-2">
-              <div className="grid flex-1 gap-2">
-                <div className="flex items-center border rounded-md px-3 py-2 bg-muted/50 text-sm text-muted-foreground">
-                  <LinkIcon className="h-4 w-4 mr-2 opacity-50" />
-                  <span className="truncate select-all">{typeof window !== 'undefined' ? window.location.href : '...'}</span>
-                </div>
+            <Label className="text-sm font-medium">Đường dẫn công khai</Label>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <LinkIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  readOnly 
+                  value={typeof window !== 'undefined' ? window.location.href : '...'}
+                  className="pl-9 bg-muted/50 text-muted-foreground cursor-text"
+                />
               </div>
-              <Button size="sm" variant="secondary" className="px-3" onClick={handleCopyLink}>
-                {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              <Button 
+                size="icon" 
+                variant="secondary" 
+                className="shrink-0 border shadow-sm" 
+                onClick={handleCopyLink}
+              >
+                {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
               </Button>
             </div>
           </div>
@@ -99,37 +102,37 @@ export default function ShareModal({
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">Hoặc gửi lời mời</span>
+              <span className="bg-background px-2 text-muted-foreground">HOẶC GỬI LỜI MỜI</span>
             </div>
           </div>
 
-          {/* Form mời qua email */}
+          {/* === FORM MỜI EMAIL === */}
           <form onSubmit={handleInvite} className="space-y-4">
-            <div className="grid gap-4">
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email người nhận</Label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      id="email"
-                      placeholder="name@example.com"
-                      type="email"
-                      className="pl-9"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium">Email người nhận</Label>
+              <div className="flex items-start gap-2">
+                <div className="relative flex-1">
+                  <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    placeholder="name@example.com"
+                    type="email"
+                    className="pl-9"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                <div className="w-[110px] shrink-0">
                   <Select 
                     value={role} 
                     onValueChange={(value: "EDITOR" | "VIEWER") => setRole(value)}
                   >
-                    <SelectTrigger className="w-[110px]">
+                    <SelectTrigger>
                       <SelectValue placeholder="Quyền" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent align="end">
                       <SelectItem value="VIEWER">Viewer</SelectItem>
                       <SelectItem value="EDITOR">Editor</SelectItem>
                     </SelectContent>
@@ -138,13 +141,11 @@ export default function ShareModal({
               </div>
             </div>
 
-            <DialogFooter>
-               {/* Nút Cancel */}
+            <DialogFooter className="pt-2">
               <Button type="button" variant="outline" onClick={onClose}>
                 Đóng
               </Button>
-              {/* Nút Submit */}
-              <Button type="submit" disabled={isLoading || !email}>
+              <Button type="submit" disabled={isLoading || !email} className="bg-primary text-primary-foreground">
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Gửi lời mời
               </Button>
