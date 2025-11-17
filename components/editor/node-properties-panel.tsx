@@ -145,17 +145,9 @@ export default function NodePropertiesPanel() {
   }
 
   return (
-    <div className="h-full bg-card overflow-y-auto">
+    <div className="h-full bg-transparent">
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
-        <h3 className="font-semibold">Node Properties</h3>
-        <Button variant="ghost" size="icon" onClick={() => setSelectedNode(null)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
+      <div className="space-y-4">
 
         {/* TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import NodePropertiesPanel from "./node-properties-panel"
 import EdgePropertiesPanel from "./edge-properties-panel"
-import { X, GripHorizontal } from "lucide-react"
+import { X, GripVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
 export default function PropertiesPanel() {
@@ -85,13 +85,12 @@ export default function PropertiesPanel() {
       setIsResizing(false)
     }
 
-    if (isResizing) {
-      document.addEventListener('mousemove', handleGlobalMouseMove)
-      document.addEventListener('mouseup', handleGlobalMouseUp)
-      return () => {
-        document.removeEventListener('mousemove', handleGlobalMouseMove)
-        document.removeEventListener('mouseup', handleGlobalMouseUp)
-      }
+    document.addEventListener('mousemove', handleGlobalMouseMove)
+    document.addEventListener('mouseup', handleGlobalMouseUp)
+    
+    return () => {
+      document.removeEventListener('mousemove', handleGlobalMouseMove)
+      document.removeEventListener('mouseup', handleGlobalMouseUp)
     }
   }, [isResizing, resizeStart])
 
@@ -115,17 +114,18 @@ export default function PropertiesPanel() {
     >
       {/* Header - Draggable */}
       <div
-        className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0"
+        className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0 gap-2"
         onMouseDown={handleMouseDown}
       >
-        <h3 className="text-sm font-semibold text-foreground">
+        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <h3 className="text-sm font-semibold text-foreground flex-1 min-w-0">
           {selectedEdge ? "Connection" : selectedNode ? "Node" : "Properties"}
         </h3>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleClose}
-          className="h-6 w-6"
+          className="h-6 w-6 flex-shrink-0"
         >
           <X className="h-4 w-4" />
         </Button>
