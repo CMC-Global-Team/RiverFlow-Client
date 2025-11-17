@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Trash2, Bold, Italic, Underline, Highlighter, Palette } from "lucide-react"
+import { X, Trash2, Bold, Italic, Underline, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -14,20 +14,12 @@ export default function EdgePropertiesPanel() {
 
   if (!selectedEdge) return null
 
-  const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
-  const highlightRef = useRef<HTMLDivElement>(null)
   const textColorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
-      
-      if (highlightRef.current && !highlightRef.current.contains(target)) {
-        if (!target.closest('.highlight-btn')) {
-          setShowHighlight(false)
-        }
-      }
       
       if (textColorRef.current && !textColorRef.current.contains(target)) {
         if (!target.closest('.text-color-btn')) {
@@ -36,11 +28,11 @@ export default function EdgePropertiesPanel() {
       }
     }
 
-    if (showHighlight || showTextColor) {
+    if (showTextColor) {
       document.addEventListener("mousedown", handleClickOutside)
       return () => document.removeEventListener("mousedown", handleClickOutside)
     }
-  }, [showHighlight, showTextColor])
+  }, [showTextColor])
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },
@@ -144,20 +136,6 @@ export default function EdgePropertiesPanel() {
     setShowTextColor(false)
   }
 
-  const applyHighlight = (color: string) => {
-    // Store highlight color with text color for contrast
-    const textColor = selectedEdge.labelStyle?.fill || '#000000'
-    updateEdgeData(selectedEdge.id, {
-      labelStyle: { 
-        ...selectedEdge.labelStyle,
-        // Use text decoration or paint approach
-        textDecoration: `underline wavy ${color}`,
-        textDecorationThickness: '3px'
-      }
-    })
-    setShowHighlight(false)
-  }
-
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
     toast.success('Connection deleted')
@@ -177,49 +155,6 @@ export default function EdgePropertiesPanel() {
           <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleUnderline() }}>
             <Underline />
           </Button>
-
-          {/* Highlight */}
-          <div className="highlight-container relative" onClick={(e) => e.stopPropagation()}>
-            <Button 
-              className="highlight-btn"
-              variant="ghost" 
-              size="icon" 
-              onMouseDown={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                setShowHighlight(!showHighlight)
-                setShowTextColor(false)
-              }}
-            >
-              <Highlighter />
-            </Button>
-            {showHighlight && (
-              <div 
-                ref={highlightRef}
-                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
-                onMouseDown={(e) => e.stopPropagation()}
-                style={{ pointerEvents: 'auto' }}
-              >
-                {swatches.map(c => (
-                  <button
-                    key={c}
-                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
-                    style={{ 
-                      backgroundColor: c,
-                      borderColor: 'rgba(0,0,0,0.3)',
-                      cursor: 'pointer'
-                    }}
-                    onMouseDown={(e) => {
-                      e.preventDefault()
-                      e.stopPropagation()
-                      applyHighlight(c)
-                    }}
-                    title={c}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
 
           {/* Text Color */}
           <div className="text-color-container relative" onClick={(e) => e.stopPropagation()}>

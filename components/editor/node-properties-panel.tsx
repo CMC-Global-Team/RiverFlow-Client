@@ -72,21 +72,27 @@ export default function NodePropertiesPanel() {
     const sel = window.getSelection()
     const targetField = field || focusedField
     
-    if (!sel || sel.toString().length === 0) {
+    // Check if there's already a selection with content
+    const hasSelection = sel && sel.toString().length > 0
+    
+    if (!hasSelection) {
       // No selection, select all text in focused field
       if (targetField === 'label' && labelRef.current) {
         const range = document.createRange()
         range.selectNodeContents(labelRef.current)
         sel?.removeAllRanges()
         sel?.addRange(range)
+        return true // Indicate we selected all
       } else if (targetField === 'description' && descRef.current) {
         const range = document.createRange()
         range.selectNodeContents(descRef.current)
         sel?.removeAllRanges()
         sel?.addRange(range)
+        return true // Indicate we selected all
       }
     }
     saveSelection()
+    return false // Had existing selection
   }
 
   const toggleBold = (field?: "label" | "description") => { 
