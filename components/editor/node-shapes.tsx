@@ -80,7 +80,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         <div
           className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
           style={{ color: data.color || "#3b82f6" }}
-          onClick={(e) => {
+          onMouseDown={(e) => {
+            e.preventDefault()
             e.stopPropagation()
             setEditingLabel(true)
           }}
@@ -90,29 +91,26 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 
       {/* Description */}
       {editingDesc ? (
-        <textarea
+        <div
           ref={descRef}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={() => {
-            save()
-          }}
+          contentEditable
+          suppressContentEditableWarning
+          className="w-full outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1 min-h-6"
+          onInput={() => setDescription(descRef.current?.innerHTML || '')}
+          onBlur={() => { save() }}
           onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setDescription(data.description || "")
-              setEditingDesc(false)
+            if (e.key === 'Escape') {
+              e.preventDefault();
+              setDescription(data.description || '');
+              setEditingDesc(false);
             }
           }}
-          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1"
-          rows={2}
+          dangerouslySetInnerHTML={{ __html: description }}
         />
       ) : (
         <div
           className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
-          onClick={(e) => {
-            e.stopPropagation()
-            setEditingDesc(true)
-          }}
+          onMouseDown={(e) => { e.stopPropagation(); setEditingDesc(true) }}
           dangerouslySetInnerHTML={{ __html: description || '<span class="text-muted-foreground/50">Description</span>' }}
         />
       )}

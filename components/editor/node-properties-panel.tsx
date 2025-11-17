@@ -175,12 +175,12 @@ export default function NodePropertiesPanel() {
             className="relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" onMouseDown={saveSelection} onClick={() => setShowTextColor(!showTextColor)}>
+            <Button variant="ghost" size="icon" onMouseDown={(e)=>{ e.preventDefault(); e.stopPropagation(); saveSelection(); setShowTextColor((v)=>!v); setShowHighlight(false);}}>
               <Palette />
             </Button>
 
             {showTextColor && (
-              <div ref={textColorRef} className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div ref={textColorRef} className="absolute z-20 left-0 top-full mt-2 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
                 {COLORS.map(c => (
                   <button
                     key={c}
