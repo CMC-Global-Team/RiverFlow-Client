@@ -18,6 +18,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
+  const initialLabelHtml = useRef<string>('')
+  const initialDescHtml = useRef<string>('')
 
   // Auto-enable editing when isEditing prop is set
   useEffect(() => {
@@ -27,34 +29,67 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     }
   }, [data.isEditing, editingLabel, id, updateNodeData])
 
+  // Set up label edit mode - preserve HTML content
   useEffect(() => {
     if (editingLabel && labelRef.current) {
+      initialLabelHtml.current = data.label || ""
+      labelRef.current.innerHTML = initialLabelHtml.current
       labelRef.current.focus()
-      // Initialize content with current data when entering edit mode
-      labelRef.current.innerHTML = data.label || ""
+      // Select all text on focus
+      const range = document.createRange()
+      const sel = window.getSelection()
+      range.selectNodeContents(labelRef.current)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
-  }, [editingLabel, data.label])
+  }, [editingLabel])
 
+  // Set up description edit mode - preserve HTML content
   useEffect(() => {
     if (editingDesc && descRef.current) {
+      initialDescHtml.current = data.description || ""
+      descRef.current.innerHTML = initialDescHtml.current
       descRef.current.focus()
-      descRef.current.innerHTML = data.description || ""
     }
-  }, [editingDesc, data.description])
+  }, [editingDesc])
 
   const finishLabel = () => {
     if (labelRef.current) {
       const html = labelRef.current.innerHTML
-      updateNodeData(id, { label: html })
+      // Only update if changed to avoid unnecessary saves
+      if (html !== initialLabelHtml.current) {
+        updateNodeData(id, { label: html })
+      }
     }
     setEditingLabel(false)
   }
+
   const finishDesc = () => {
     if (descRef.current) {
       const html = descRef.current.innerHTML
-      updateNodeData(id, { description: html })
+      // Only update if changed
+      if (html !== initialDescHtml.current) {
+        updateNodeData(id, { description: html })
+      }
     }
     setEditingDesc(false)
+  }
+
+  const handleLabelKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingLabel(false)
+    } else if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault()
+      finishLabel()
+    }
+  }
+
+  const handleDescKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingDesc(false)
+    }
   }
 
   return (
@@ -65,30 +100,22 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
-          className="w-full outline-none font-semibold text-sm bg-transparent border-b border-primary px-1 -mx-1 rounded"
-          onInput={() => {
-            const html = labelRef.current?.innerHTML || ''
-            updateNodeData(id, { label: html })
-          }}
+          className="w-full outline-none font-semibold text-sm bg-transparent border-b-2 border-primary px-1 -mx-1 py-0.5 rounded transition-all"
+          style={{ color: data.color || "#3b82f6" }}
           onBlur={finishLabel}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              finishLabel();
-            }
-          }}
-          dangerouslySetInnerHTML={{ __html: data.label || '' }}
+          onKeyDown={handleLabelKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
         />
       ) : (
         <div
-          className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
-          style={{ color: data.color || "#3b82f6" }}
+          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors"
+          style={{ color: data.color || "#3b82f6", minHeight: '20px' }}
           onMouseDown={(e) => {
             e.preventDefault()
             e.stopPropagation()
             setEditingLabel(true)
           }}
-          dangerouslySetInnerHTML={{ __html: data.label || '<span class="text-muted-foreground">Click to add title</span>' }}
+          dangerouslySetInnerHTML={{ __html: data.label || '<span class="opacity-50">Click to edit</span>' }}
         />
       )}
 
@@ -98,25 +125,22 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           ref={descRef}
           contentEditable
           suppressContentEditableWarning
-          className="w-full outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1 min-h-6"
-          onInput={() => {
-            const html = descRef.current?.innerHTML || ''
-            updateNodeData(id, { description: html })
-          }}
+          className="w-full outline-none text-xs bg-transparent border border-primary/30 rounded p-1 min-h-6 transition-all"
+          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
           onBlur={finishDesc}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              finishDesc();
-            }
-          }}
-          dangerouslySetInnerHTML={{ __html: data.description || '' }}
+          onKeyDown={handleDescKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
         />
       ) : (
         <div
-          className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
-          onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setEditingDesc(true) }}
-          dangerouslySetInnerHTML={{ __html: data.description || '<span class="text-muted-foreground/50">Description</span>' }}
+          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-6"
+          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
+          onMouseDown={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+            setEditingDesc(true)
+          }}
+          dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
         />
       )}
     </div>
