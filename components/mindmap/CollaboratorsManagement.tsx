@@ -174,7 +174,7 @@ export default function CollaboratorsManagement({
                     size="sm"
                     className="h-7 px-2 text-xs"
                     onClick={() => handleRemove(collaborator.email)}
-                    disabled={loadingEmails.has(collaborator.email)}
+                    disabled={loadingEmails.has(collaborator.email) || collaborator.status === "accepted"}
                   >
                     {loadingEmails.has(collaborator.email) ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -196,13 +196,17 @@ export default function CollaboratorsManagement({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0"
+                  className={`h-9 w-9 p-0 ${
+                    collaborator.status === "accepted" 
+                      ? "cursor-not-allowed opacity-60" 
+                      : ""
+                  }`}
                   onClick={() => {
                     if (collaborator.status === "pending") {
                       setConfirmDeleteEmail(collaborator.email)
                     }
                   }}
-                  disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status === "accepted"}
+                  disabled={loadingEmails.has(collaborator.email) || isLoading}
                   title={collaborator.status === "accepted" ? "Không thể xóa thành viên đã chấp nhận" : "Xóa"}
                 >
                   {loadingEmails.has(collaborator.email) ? (
@@ -210,7 +214,7 @@ export default function CollaboratorsManagement({
                   ) : (
                     <Trash2 className={`h-4 w-4 ${
                       collaborator.status === "accepted" 
-                        ? "text-muted-foreground cursor-not-allowed" 
+                        ? "text-muted-foreground" 
                         : "text-destructive hover:text-destructive/80"
                     }`} />
                   )}
