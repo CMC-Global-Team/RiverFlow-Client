@@ -147,10 +147,10 @@ export default function CollaboratorsManagement({
             >
               <div className="flex items-center gap-3 flex-1">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/20 text-primary text-sm font-semibold">
-                  {collaborator.email.charAt(0).toUpperCase()}
+                  {collaborator.email?.charAt(0)?.toUpperCase() || '?'}
                 </div>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-foreground">{collaborator.email}</p>
+                  <p className="text-sm font-medium text-foreground">{collaborator.email || 'Unknown'}</p>
                   <div className="flex items-center gap-2 mt-1">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       collaborator.role === "EDITOR" 
