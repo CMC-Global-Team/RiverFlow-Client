@@ -59,19 +59,25 @@ function EditorInner() {
           ])
 
           // Map pending invitations to collaborator format
-          const pendingCollaborators = pendingInvites.map((invitation: any) => ({
-            email: invitation.invitedEmail,
-            role: invitation.role,
-            invitedAt: invitation.createdAt,
-            acceptedAt: null,
-            status: 'pending',
-            invitedBy: invitation.invitedByUserId
-          }))
+          const pendingCollaborators = (pendingInvites || [])
+            .filter((invitation: any) => invitation?.invitedEmail) // Filter out null emails
+            .map((invitation: any) => ({
+              email: invitation.invitedEmail,
+              role: invitation.role,
+              invitedAt: invitation.createdAt,
+              acceptedAt: null,
+              status: 'pending',
+              invitedBy: invitation.invitedByUserId
+            }))
 
           // Combine and deduplicate (accepted takes precedence over pending)
-          const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+          const collaboratorEmails = new Set(
+            (acceptedCollab || [])
+              .filter((c: any) => c?.email)
+              .map((c: any) => c.email)
+          )
           const combinedList = [
-            ...acceptedCollab,
+            ...(acceptedCollab || []).filter((c: any) => c?.email),
             ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
           ]
 
@@ -142,19 +148,25 @@ function EditorInner() {
       ])
 
       // Map pending invitations to collaborator format
-      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
-        email: invitation.invitedEmail,
-        role: invitation.role,
-        invitedAt: invitation.createdAt,
-        acceptedAt: null,
-        status: 'pending',
-        invitedBy: invitation.invitedByUserId
-      }))
+      const pendingCollaborators = (pendingInvites || [])
+        .filter((invitation: any) => invitation?.invitedEmail) // Filter out null emails
+        .map((invitation: any) => ({
+          email: invitation.invitedEmail,
+          role: invitation.role,
+          invitedAt: invitation.createdAt,
+          acceptedAt: null,
+          status: 'pending',
+          invitedBy: invitation.invitedByUserId
+        }))
 
       // Combine and deduplicate
-      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const collaboratorEmails = new Set(
+        (acceptedCollab || [])
+          .filter((c: any) => c?.email)
+          .map((c: any) => c.email)
+      )
       const combinedList = [
-        ...acceptedCollab,
+        ...(acceptedCollab || []).filter((c: any) => c?.email),
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
@@ -190,19 +202,25 @@ function EditorInner() {
       ])
 
       // Map pending invitations to collaborator format
-      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
-        email: invitation.invitedEmail,
-        role: invitation.role,
-        invitedAt: invitation.createdAt,
-        acceptedAt: null,
-        status: 'pending',
-        invitedBy: invitation.invitedByUserId
-      }))
+      const pendingCollaborators = (pendingInvites || [])
+        .filter((invitation: any) => invitation?.invitedEmail) // Filter out null emails
+        .map((invitation: any) => ({
+          email: invitation.invitedEmail,
+          role: invitation.role,
+          invitedAt: invitation.createdAt,
+          acceptedAt: null,
+          status: 'pending',
+          invitedBy: invitation.invitedByUserId
+        }))
 
       // Combine and deduplicate
-      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const collaboratorEmails = new Set(
+        (acceptedCollab || [])
+          .filter((c: any) => c?.email)
+          .map((c: any) => c.email)
+      )
       const combinedList = [
-        ...acceptedCollab,
+        ...(acceptedCollab || []).filter((c: any) => c?.email),
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
@@ -235,19 +253,25 @@ function EditorInner() {
       ])
 
       // Map pending invitations to collaborator format
-      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
-        email: invitation.invitedEmail,
-        role: invitation.role,
-        invitedAt: invitation.createdAt,
-        acceptedAt: null,
-        status: 'pending',
-        invitedBy: invitation.invitedByUserId
-      }))
+      const pendingCollaborators = (pendingInvites || [])
+        .filter((invitation: any) => invitation?.invitedEmail) // Filter out null emails
+        .map((invitation: any) => ({
+          email: invitation.invitedEmail,
+          role: invitation.role,
+          invitedAt: invitation.createdAt,
+          acceptedAt: null,
+          status: 'pending',
+          invitedBy: invitation.invitedByUserId
+        }))
 
       // Combine and deduplicate
-      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const collaboratorEmails = new Set(
+        (acceptedCollab || [])
+          .filter((c: any) => c?.email)
+          .map((c: any) => c.email)
+      )
       const combinedList = [
-        ...acceptedCollab,
+        ...(acceptedCollab || []).filter((c: any) => c?.email),
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
