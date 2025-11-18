@@ -95,35 +95,8 @@ function PublicMindmapInner() {
     }
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="max-w-md text-center">
-          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error Loading Mindmap</h2>
-          <p className="text-muted-foreground">{error}</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!mindmap) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
-
   // Determine user's role on this mindmap (similar to editor page logic)
+  // MUST be called before any early returns to follow Rules of Hooks
   useEffect(() => {
     if (mindmap) {
       if (user && mindmap.mysqlUserId === user.userId) {
@@ -156,11 +129,40 @@ function PublicMindmapInner() {
   }, [mindmap, user])
 
   // Disable auto-save for VIEWER users
+  // MUST be called before any early returns to follow Rules of Hooks
   useEffect(() => {
     if (userRole === 'viewer') {
       setAutoSaveEnabled(false)
     }
   }, [userRole, setAutoSaveEnabled])
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="max-w-md text-center">
+          <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-xl font-semibold mb-2">Error Loading Mindmap</h2>
+          <p className="text-muted-foreground">{error}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!mindmap) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
 
   const handleSave = async () => {
     // Empty handler for public view - save is not allowed
