@@ -164,35 +164,45 @@ function EditorInner() {
           // If load fails with 401/403, try loading as public mindmap
           if (error?.response?.status === 401 || error?.response?.status === 403) {
             try {
-              // Try to get shareToken from URL
-              const shareToken = searchParams.get('token')
-              if (shareToken) {
-                const publicMindmap = await getPublicMindmap(shareToken)
-                setFullMindmapState(publicMindmap)
-              } else {
-                // If no shareToken but mindmap might be public, try to get shareToken from error response
-                // or show helpful error message
+              // Try to get shareToken from URL first
+              let shareToken = searchParams.get('token')
+              
+              // If no token in URL, try to get from error response (backend returns shareToken for public mindmaps)
+              if (!shareToken) {
                 const errorData = error?.response?.data
+                console.log('Error response data:', errorData)
                 if (errorData?.shareToken) {
-                  const publicMindmap = await getPublicMindmap(errorData.shareToken)
-                  setFullMindmapState(publicMindmap)
-                } else {
-                  // If no shareToken, show error
-                  toast({
-                    title: "Access Denied",
-                    description: "You don't have permission to view this mindmap. If it's public, please use the public share link with token parameter.",
-                    variant: "destructive",
-                  })
+                  shareToken = errorData.shareToken
+                  console.log('Found shareToken in error response:', shareToken)
                 }
               }
-            } catch (publicError) {
+              
+              if (shareToken) {
+                // Load public mindmap using shareToken
+                console.log('Loading public mindmap with token:', shareToken)
+                const publicMindmap = await getPublicMindmap(shareToken)
+                console.log('Successfully loaded public mindmap:', publicMindmap)
+                setFullMindmapState(publicMindmap)
+              } else {
+                // If no shareToken available, show error
+                console.warn('No shareToken found for public mindmap access')
+                toast({
+                  title: "Access Denied",
+                  description: "You don't have permission to view this mindmap. If it's public, please use the public share link.",
+                  variant: "destructive",
+                })
+              }
+            } catch (publicError: any) {
+              console.error('Failed to load public mindmap:', publicError)
               toast({
                 title: "Error",
-                description: "Failed to load mindmap. Please check your access or use the public share link.",
+                description: publicError?.response?.data?.message || publicError?.message || "Failed to load mindmap. Please check your access or use the public share link.",
                 variant: "destructive",
               })
             }
           } else {
+            // Other errors (network, server error, etc.)
+            console.error('Error loading mindmap:', error)
             throw error
           }
         }
