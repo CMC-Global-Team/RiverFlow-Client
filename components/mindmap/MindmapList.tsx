@@ -1,8 +1,9 @@
 "use client"
 
-import { Star, Share2, Archive, Trash2, Calendar, Network, Edit, Copy } from "lucide-react"
+import { Star, Share2, Archive, Trash2, Calendar, Network, Edit, Copy, LogOut } from "lucide-react"
 import { formatDistanceToNow } from "date-fns"
 import { MindmapSummary } from "@/types/mindmap.types"
+import { useAuth } from "@/hooks/auth/useAuth"
 
 interface MindmapListProps {
   mindmaps: MindmapSummary[]
@@ -14,6 +15,7 @@ interface MindmapListProps {
   onClick: (id: string) => void
   actionLoading: string | null
     onUnarchive?: (id: string) => void
+    onLeave?: (id: string) => void
 }
 
 export default function MindmapList({
@@ -25,8 +27,10 @@ export default function MindmapList({
   onDuplicate,
   onClick,
   actionLoading,
-    onUnarchive
+    onUnarchive,
+    onLeave
 }: MindmapListProps) {
+  const { user } = useAuth()
   const formatDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true })
@@ -37,16 +41,18 @@ export default function MindmapList({
 
   return (
     <div className="space-y-3">
-      {mindmaps.map((mindmap) => (
-        <div
-          key={mindmap.id}
-          onClick={() => onClick(mindmap.id)}
-          className={`
-            group flex items-center gap-4 p-4 rounded-lg border border-border bg-card
-            hover:border-primary/50 hover:shadow-md transition-all cursor-pointer
-            ${actionLoading === mindmap.id ? "opacity-50 pointer-events-none" : ""}
-          `}
-        >
+      {mindmaps.map((mindmap) => {
+        const isOwner = mindmap.mysqlUserId === user?.userId
+        return (
+          <div
+            key={mindmap.id}
+            onClick={() => onClick(mindmap.id)}
+            className={`
+              group flex items-center gap-4 p-4 rounded-lg border border-border bg-card
+              hover:border-primary/50 hover:shadow-md transition-all cursor-pointer
+              ${actionLoading === mindmap.id ? "opacity-50 pointer-events-none" : ""}
+            `}
+          >
           {/* Icon/Thumbnail */}
           <div className="flex-shrink-0">
             <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -81,6 +87,21 @@ export default function MindmapList({
                 <span className="px-2 py-0.5 rounded-md bg-muted">
                   {mindmap.category}
                 </span>
+              )}
+              {!isOwner && mindmap.ownerName && (
+                <>
+                  <span className="w-px h-3 bg-border" />
+                  <span className="flex items-center gap-1">
+                    {mindmap.ownerAvatar && (
+                      <img 
+                        src={mindmap.ownerAvatar} 
+                        alt={mindmap.ownerName}
+                        className="w-4 h-4 rounded-full object-cover"
+                      />
+                    )}
+                    <span className="font-medium">Owner: {mindmap.ownerName}</span>
+                  </span>
+                </>
               )}
             </div>
           </div>
@@ -140,19 +161,33 @@ export default function MindmapList({
                       <Archive className="h-4 w-4" />
                   </button>
               )}
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onDelete(mindmap.id)
-              }}
-              className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-              title="Delete"
-            >
-              <Trash2 className="h-4 w-4" />
-            </button>
+              {isOwner ? (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onDelete(mindmap.id)
+                  }}
+                  className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                  title="Delete"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onLeave?.(mindmap.id)
+                  }}
+                  className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                  title="Leave project"
+                >
+                  <LogOut className="h-4 w-4" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
