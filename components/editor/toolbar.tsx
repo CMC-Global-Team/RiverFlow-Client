@@ -1,5 +1,6 @@
 "use client"
 
+import { useEffect } from "react"
 import {
   Plus,
   Trash2,
@@ -74,6 +75,11 @@ export default function Toolbar({
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
+
+  // Debug logging for userRole
+  useEffect(() => {
+    console.log('Toolbar - userRole:', userRole, 'isViewer:', userRole === 'viewer')
+  }, [userRole])
 
   const handleAddNode = (shape: string) => {
     addNode(

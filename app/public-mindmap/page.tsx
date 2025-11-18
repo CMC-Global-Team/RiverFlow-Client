@@ -12,11 +12,13 @@ import gsap from "gsap"
 import PublicShareModal from "@/components/mindmap/PublicShareModal"
 import { getPublicMindmap } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/auth/useAuth"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
   const shareToken = searchParams.get('token')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
+  const { user } = useAuth()
   
   const {
     mindmap,
@@ -34,6 +36,9 @@ function PublicMindmapInner() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
+  // Initialize userRole based on mindmap if available, otherwise null
+  // For public mindmaps accessed via /public-mindmap route, default to viewer if publicAccessLevel is 'view'
+  const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
 
   // Load public mindmap by share token
   useEffect(() => {
@@ -50,6 +55,14 @@ function PublicMindmapInner() {
           setFullMindmapState(data)
           setLoadedToken(shareToken)
           setError(null)
+          
+          // Immediately set userRole based on publicAccessLevel after loading
+          // This ensures toolbar gets the correct role right away
+          if (data.isPublic) {
+            const initialRole = data.publicAccessLevel === 'view' ? 'viewer' : 'editor'
+            console.log('Setting initial userRole after load:', initialRole)
+            setUserRole(initialRole)
+          }
         } catch (err) {
           console.error('Failed to load public mindmap:', err)
           const errorMsg = err instanceof Error ? err.message : 'Failed to load mindmap. The link may be invalid or expired.'
@@ -92,6 +105,63 @@ function PublicMindmapInner() {
     }
   }
 
+  // Determine user's role on this mindmap (similar to editor page logic)
+  // MUST be called before any early returns to follow Rules of Hooks
+  useEffect(() => {
+    if (mindmap) {
+      let role: 'owner' | 'editor' | 'viewer' | null = null
+      
+      if (user && mindmap.mysqlUserId === user.userId) {
+        // User is the owner
+        role = 'owner'
+      } else {
+        // Check collaborators if user is logged in
+        if (user) {
+          const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
+          if (collabEntry && collabEntry.status === 'accepted') {
+            // User is a collaborator
+            role = collabEntry.role === 'EDITOR' ? 'editor' : 'viewer'
+          } else if (mindmap.isPublic) {
+            // User is logged in but not owner/collaborator, check public access level
+            role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
+          } else {
+            // Not public and not collaborator
+            role = null
+          }
+        } else {
+          // User not logged in, check public access level
+          if (mindmap.isPublic) {
+            role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
+          } else {
+            role = null
+          }
+        }
+      }
+      
+      console.log('PublicMindmap - Setting userRole:', {
+        role,
+        isPublic: mindmap.isPublic,
+        publicAccessLevel: mindmap.publicAccessLevel,
+        userId: user?.userId,
+        mindmapOwnerId: mindmap.mysqlUserId,
+        isOwner: user && mindmap.mysqlUserId === user.userId
+      })
+      
+      setUserRole(role)
+    } else {
+      // Reset role when mindmap is not available
+      setUserRole(null)
+    }
+  }, [mindmap, user])
+
+  // Disable auto-save for VIEWER users
+  // MUST be called before any early returns to follow Rules of Hooks
+  useEffect(() => {
+    if (userRole === 'viewer') {
+      setAutoSaveEnabled(false)
+    }
+  }, [userRole, setAutoSaveEnabled])
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -119,16 +189,6 @@ function PublicMindmapInner() {
       </div>
     )
   }
-
-  const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
-
-  // Disable auto-save for VIEWER users (same as editor page)
-  // Also ensure autoSaveEnabled is always false for public view (no saving allowed)
-  useEffect(() => {
-    // Always disable auto-save for public mindmap view (viewer or editor)
-    // Public mindmaps should not be editable through this route
-    setAutoSaveEnabled(false)
-  }, [setAutoSaveEnabled])
 
   const handleSave = async () => {
     // Empty handler for public view - save is not allowed
