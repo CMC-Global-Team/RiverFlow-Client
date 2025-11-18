@@ -167,14 +167,14 @@ export default function CollaboratorsManagement({
               )}
 
               {/* Delete Button with Confirmation */}
-              {confirmDeleteEmail === collaborator.email ? (
+              {confirmDeleteEmail === collaborator.email && collaborator.status === "pending" ? (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="destructive"
                     size="sm"
                     className="h-7 px-2 text-xs"
                     onClick={() => handleRemove(collaborator.email)}
-                    disabled={loadingEmails.has(collaborator.email) || collaborator.status === "accepted"}
+                    disabled={loadingEmails.has(collaborator.email)}
                   >
                     {loadingEmails.has(collaborator.email) ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
@@ -206,7 +206,7 @@ export default function CollaboratorsManagement({
                       setConfirmDeleteEmail(collaborator.email)
                     }
                   }}
-                  disabled={loadingEmails.has(collaborator.email) || isLoading}
+                  disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status === "accepted"}
                   title={collaborator.status === "accepted" ? "Không thể xóa thành viên đã chấp nhận" : "Xóa"}
                 >
                   {loadingEmails.has(collaborator.email) ? (
