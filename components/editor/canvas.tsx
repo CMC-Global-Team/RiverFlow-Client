@@ -21,11 +21,16 @@ import {
 } from './node-shapes'
 import { Plus } from 'lucide-react'
 
+const LONG_PRESS_DELAY = 1000 // ms
+const BUTTON_HIDE_DELAY = 500 // ms
+
 // Component to handle add button
-function AddChildButton({ screenPosition, onAddChild, onClose }: {
+function AddChildButton({ screenPosition, onAddChild, onClose, onStayVisible, onScheduleHide }: {
   screenPosition: { x: number; y: number }
   onAddChild: () => void
   onClose: () => void
+  onStayVisible: () => void
+  onScheduleHide: () => void
 }) {
   return (
     <div
@@ -39,6 +44,14 @@ function AddChildButton({ screenPosition, onAddChild, onClose }: {
         e.stopPropagation()
         onAddChild()
         onClose()
+      }}
+      onMouseEnter={(e) => {
+        e.stopPropagation()
+        onStayVisible()
+      }}
+      onMouseLeave={(e) => {
+        e.stopPropagation()
+        onScheduleHide()
       }}
     >
       <button
@@ -91,40 +104,143 @@ export default function Canvas() {
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   
   // State for long press detection
-  const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number } } | null>(null)
+  const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number }; dimensions: { width?: number; height?: number } } | null>(null)
   const [buttonScreenPosition, setButtonScreenPosition] = useState<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<NodeJS.Timeout | null>(null)
   const longPressNodeRef = useRef<string | null>(null)
+  const hideButtonTimer = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate screen position from flow position
-  const calculateScreenPosition = useCallback((flowPosition: { x: number; y: number }) => {
-    if (!reactFlowInstance.current) return null
-    
-    const viewport = reactFlowInstance.current.getViewport()
-    const screenX = (flowPosition.x * viewport.zoom) + viewport.x
-    const screenY = (flowPosition.y * viewport.zoom) + viewport.y
-    
-    return { x: screenX, y: screenY - 40 } // Position above the node
+  const calculateScreenPosition = useCallback(
+    (flowPosition?: { x?: number; y?: number }, dimensions: { width?: number; height?: number } = {}) => {
+      if (!reactFlowInstance.current || !flowPosition) return null
+
+      const { x, y } = flowPosition
+      if (typeof x !== "number" || typeof y !== "number") {
+        return null
+      }
+
+      const viewport = reactFlowInstance.current.getViewport()
+      // Sử dụng kích thước mặc định an toàn cho các loại node
+      const width = dimensions.width ?? 150
+      const height = dimensions.height ?? 80
+
+      const nodeRightEdge = x + width
+      const nodeMiddleY = y + height / 2
+
+      const screenX = nodeRightEdge * viewport.zoom + viewport.x + 24
+      const screenY = nodeMiddleY * viewport.zoom + viewport.y
+
+      return { x: screenX, y: screenY }
+    },
+    []
+  )
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimer.current) {
+      clearTimeout(longPressTimer.current)
+      longPressTimer.current = null
+    }
   }, [])
+
+  const clearHideButtonTimer = useCallback(() => {
+    if (hideButtonTimer.current) {
+      clearTimeout(hideButtonTimer.current)
+      hideButtonTimer.current = null
+    }
+  }, [])
+
+  const hideButton = useCallback(() => {
+    setLongPressedNode(null)
+    setButtonScreenPosition(null)
+    clearHideButtonTimer()
+  }, [clearHideButtonTimer])
+
+  const scheduleHideButton = useCallback((nodeId?: string) => {
+    clearHideButtonTimer()
+    hideButtonTimer.current = setTimeout(() => {
+      if (!nodeId || longPressedNode?.id === nodeId) {
+        hideButton()
+      }
+    }, BUTTON_HIDE_DELAY)
+  }, [clearHideButtonTimer, hideButton, longPressedNode])
 
   // Create node types with long press handlers
   const nodeTypes = useMemo(() => {
     const createNodeWithLongPress = (NodeComponent: any) => {
       const WrappedNode = (props: any) => {
-        const handleLongPress = () => {
-          if (reactFlowInstance.current) {
-            setLongPressedNode({
-              id: props.id,
-              position: props.position,
-            })
-            const screenPos = calculateScreenPosition(props.position)
-            if (screenPos) {
-              setButtonScreenPosition(screenPos)
-            }
+        const triggerLongPress = () => {
+          console.log('[AddChildButton] pointer enter on node', props.id)
+          if (!reactFlowInstance.current) return
+
+          const nodePosition =
+            (props as { positionAbsolute?: { x?: number; y?: number } }).positionAbsolute ||
+            (props as { position?: { x?: number; y?: number } }).position
+
+          if (!nodePosition) {
+            console.warn('[AddChildButton] missing node position for', props.id)
+            return
+          }
+
+          const { x, y } = nodePosition
+          if (typeof x !== "number" || typeof y !== "number") {
+            console.warn('[AddChildButton] invalid node position values', { x, y, nodeId: props.id })
+            return
+          }
+          // ReactFlow có thể không cung cấp width/height trong props
+          // Sử dụng giá trị mặc định an toàn
+          const nodeDimensions = { 
+            width: (props as any).width || (props as any).measured?.width || 150,
+            height: (props as any).height || (props as any).measured?.height || 80
+          }
+          console.log('[AddChildButton] long-press dimensions', { nodeId: props.id, nodeDimensions, position: { x, y } })
+          setLongPressedNode({
+            id: props.id,
+            position: { x, y },
+            dimensions: nodeDimensions,
+          })
+          const screenPos = calculateScreenPosition({ x, y }, nodeDimensions)
+          if (screenPos) {
+            console.log('[AddChildButton] computed screen position', screenPos)
+            setButtonScreenPosition(screenPos)
+          } else {
+            console.warn('[AddChildButton] could not compute screen position', { nodeId: props.id })
           }
         }
 
-        return <NodeComponent {...props} onLongPress={handleLongPress} />
+        const handlePointerEnter = () => {
+          clearLongPressTimer()
+          clearHideButtonTimer()
+          longPressNodeRef.current = props.id
+          longPressTimer.current = setTimeout(() => {
+            if (longPressNodeRef.current === props.id) {
+              triggerLongPress()
+            }
+          }, LONG_PRESS_DELAY)
+        }
+
+        const handlePointerLeave = () => {
+          clearLongPressTimer()
+          longPressNodeRef.current = null
+          if (longPressedNode?.id === props.id) {
+            scheduleHideButton(props.id)
+          }
+        }
+
+        const handlePointerDown = () => {
+          clearLongPressTimer()
+          scheduleHideButton(props.id)
+        }
+
+        return (
+          <div
+            onMouseEnter={handlePointerEnter}
+            onMouseLeave={handlePointerLeave}
+            onMouseDown={handlePointerDown}
+          >
+            <NodeComponent {...props} />
+          </div>
+        )
       }
       return WrappedNode
     }
@@ -137,7 +253,7 @@ export default function Canvas() {
       ellipse: createNodeWithLongPress(EllipseNode),
       roundedRectangle: createNodeWithLongPress(RoundedRectangleNode),
     }
-  }, [calculateScreenPosition])
+  }, [calculateScreenPosition, clearLongPressTimer, clearHideButtonTimer, scheduleHideButton, longPressedNode])
 
   const defaultEdgeOptions = {
     animated: true,
@@ -369,14 +485,21 @@ export default function Canvas() {
   }, [longPressedNode, nodes, createChildNode])
 
   const handleCloseAddButton = useCallback(() => {
-    setLongPressedNode(null)
-    setButtonScreenPosition(null)
-  }, [])
+    hideButton()
+  }, [hideButton])
+
+  const handleStayVisible = useCallback(() => {
+    clearHideButtonTimer()
+  }, [clearHideButtonTimer])
+
+  const handleScheduleHide = useCallback(() => {
+    scheduleHideButton(longPressedNode?.id)
+  }, [scheduleHideButton, longPressedNode])
 
   // Update button position when long-pressed node changes
   useEffect(() => {
     if (longPressedNode && reactFlowInstance.current) {
-      const screenPos = calculateScreenPosition(longPressedNode.position)
+      const screenPos = calculateScreenPosition(longPressedNode.position, longPressedNode.dimensions)
       if (screenPos) {
         setButtonScreenPosition(screenPos)
       }
@@ -420,6 +543,8 @@ export default function Canvas() {
           screenPosition={buttonScreenPosition}
           onAddChild={handleAddChildFromButton}
           onClose={handleCloseAddButton}
+          onStayVisible={handleStayVisible}
+          onScheduleHide={handleScheduleHide}
         />
       )}
     </div>

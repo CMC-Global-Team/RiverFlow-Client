@@ -5,6 +5,12 @@
 import axios from "axios";
 import type { ApiErrorResponse } from "@/types/auth.types";
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error("NEXT_PUBLIC_API_URL is not defined. Please verify .env.production.");
+}
+
 interface RefreshTokenResponse {
   accessToken: string;
   refreshToken: string;
@@ -20,7 +26,7 @@ interface RefreshTokenResponse {
 export const refreshAccessToken = async (refreshToken: string): Promise<RefreshTokenResponse> => {
   try {
     const response = await axios.post<RefreshTokenResponse>(
-      `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
+      `${API_BASE_URL}/auth/refresh`,
       { refreshToken },
       {
         headers: {
