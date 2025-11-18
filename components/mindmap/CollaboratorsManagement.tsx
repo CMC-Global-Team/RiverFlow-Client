@@ -43,6 +43,7 @@ export default function CollaboratorsManagement({
   isLoading = false
 }: CollaboratorsManagementProps) {
   const [loadingEmails, setLoadingEmails] = useState<Set<string>>(new Set())
+  const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null)
   const { toast } = useToast()
 
   const handleUpdateRole = async (email: string, role: "EDITOR" | "VIEWER") => {
@@ -71,14 +72,11 @@ export default function CollaboratorsManagement({
     }
   }
 
-  const handleRemove = async (email: string, status?: string) => {
-    if (!confirm(`Bạn có chắc muốn xóa ${email} khỏi mindmap này?`)) {
-      return
-    }
-
+  const handleRemove = async (email: string) => {
     setLoadingEmails(prev => new Set(prev).add(email))
     try {
       await onRemove(email)
+      setConfirmDeleteEmail(null)
       toast({ 
         description: `Đã xóa ${email} khỏi mindmap`
       })
@@ -168,23 +166,54 @@ export default function CollaboratorsManagement({
                 </Select>
               )}
 
-              {/* Delete Button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-9 w-9 p-0"
-                onClick={() => handleRemove(collaborator.email, collaborator.status)}
-                disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status === "accepted"}
-                title={collaborator.status === "accepted" ? "Không thể xóa thành viên đã chấp nhận" : "Xóa"}
-              >
-                {loadingEmails.has(collaborator.email) ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : collaborator.status === "accepted" ? (
-                  <AlertCircle className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
-                )}
-              </Button>
+              {/* Delete Button with Confirmation */}
+              {confirmDeleteEmail === collaborator.email ? (
+                <div className="flex items-center gap-1">
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => handleRemove(collaborator.email)}
+                    disabled={loadingEmails.has(collaborator.email)}
+                  >
+                    {loadingEmails.has(collaborator.email) ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "Xóa"
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => setConfirmDeleteEmail(null)}
+                    disabled={loadingEmails.has(collaborator.email)}
+                  >
+                    Hủy
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 w-9 p-0"
+                  onClick={() => {
+                    if (collaborator.status === "pending") {
+                      setConfirmDeleteEmail(collaborator.email)
+                    }
+                  }}
+                  disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status === "accepted"}
+                  title={collaborator.status === "accepted" ? "Không thể xóa thành viên đã chấp nhận" : "Xóa"}
+                >
+                  {loadingEmails.has(collaborator.email) ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : collaborator.status === "accepted" ? (
+                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         ))}
