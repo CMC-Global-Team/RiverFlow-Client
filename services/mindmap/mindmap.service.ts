@@ -238,6 +238,15 @@ export const getPendingInvitations = async (mindmapId: string) => {
 };
 
 /**
+ * Rời khỏi collaboration trên mindmap
+ * POST /api/mindmaps/{id}/leave-collaboration
+ */
+export const leaveCollaboration = async (mindmapId: string) => {
+  const response = await apiClient.post(`/mindmaps/${mindmapId}/leave-collaboration`);
+  return response.data;
+};
+
+/**
  * Cập nhật quyền truy cập công khai của mindmap
  * PUT /api/mindmaps/{id}/public-access
  */

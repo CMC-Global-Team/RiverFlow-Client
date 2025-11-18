@@ -95,6 +95,8 @@ export interface MindmapSummary {
   aiWorkflowId?: number;
   createdAt: string;
   updatedAt: string;
+  ownerName?: string;
+  ownerAvatar?: string;
 }
 
 // Create mindmap request
