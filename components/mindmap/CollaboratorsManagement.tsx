@@ -167,7 +167,7 @@ export default function CollaboratorsManagement({
               )}
 
               {/* Delete Button with Confirmation */}
-              {confirmDeleteEmail === collaborator.email && collaborator.status === "pending" ? (
+              {confirmDeleteEmail === collaborator.email ? (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="destructive"
@@ -196,27 +196,15 @@ export default function CollaboratorsManagement({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className={`h-9 w-9 p-0 ${
-                    collaborator.status === "accepted" 
-                      ? "cursor-not-allowed opacity-60" 
-                      : ""
-                  }`}
-                  onClick={() => {
-                    if (collaborator.status === "pending") {
-                      setConfirmDeleteEmail(collaborator.email)
-                    }
-                  }}
-                  disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status === "accepted"}
-                  title={collaborator.status === "accepted" ? "Không thể xóa thành viên đã chấp nhận" : "Xóa"}
+                  className="h-9 w-9 p-0"
+                  onClick={() => setConfirmDeleteEmail(collaborator.email)}
+                  disabled={loadingEmails.has(collaborator.email) || isLoading}
+                  title="Xóa"
                 >
                   {loadingEmails.has(collaborator.email) ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    <Trash2 className={`h-4 w-4 ${
-                      collaborator.status === "accepted" 
-                        ? "text-muted-foreground" 
-                        : "text-destructive hover:text-destructive/80"
-                    }`} />
+                    <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
                   )}
                 </Button>
               )}
