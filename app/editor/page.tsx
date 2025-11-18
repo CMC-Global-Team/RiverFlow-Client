@@ -23,11 +23,14 @@ import {
   getCollaborators,
   getPendingInvitations
 } from "@/services/mindmap/mindmap.service"
-import { useToast } from "@/hooks/use-toast" 
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/auth/useAuth"
+
 function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
   const titleRef = useRef<HTMLHeadingElement>(null)
+  const { user } = useAuth()
   
   const {
     mindmap,
@@ -398,6 +401,7 @@ function EditorInner() {
         collaborators={collaborators}
         isPublic={mindmap?.isPublic || false}
         publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+        isOwner={user?.userId === mindmap?.mysqlUserId}
       />
     </div>
   )
