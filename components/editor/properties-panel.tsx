@@ -13,13 +13,23 @@ export default function PropertiesPanel() {
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
   const [position, setPosition] = useState({ 
-    x: typeof window !== 'undefined' ? window.innerWidth - 450 : 0, 
+    x: 0, 
     y: 100 
   })
   const [size, setSize] = useState({ width: 400, height: 500 })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const panelRef = useRef<HTMLDivElement>(null)
+
+  // Set initial position after mount to avoid hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPosition({ 
+        x: window.innerWidth - 450, 
+        y: 100 
+      })
+    }
+  }, [])
 
   const hasSelection = selectedNode || selectedEdge
 
