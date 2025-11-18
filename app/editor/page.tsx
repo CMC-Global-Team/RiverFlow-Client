@@ -48,6 +48,34 @@ function EditorInner() {
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [collaborators, setCollaborators] = useState([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
+  const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
+
+  // Determine user's role on this mindmap
+  useEffect(() => {
+    if (mindmap && user) {
+      if (mindmap.mysqlUserId === user.userId) {
+        setUserRole('owner')
+      } else {
+        // Check collaborators
+        const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
+        if (collabEntry && collabEntry.status === 'accepted') {
+          setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
+        } else if (mindmap.isPublic) {
+          // Public mindmap - check access level
+          setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+        } else {
+          setUserRole(null)
+        }
+      }
+    }
+  }, [mindmap, user])
+
+  // Disable auto-save for VIEWER users
+  useEffect(() => {
+    if (userRole === 'viewer') {
+      setAutoSaveEnabled(false)
+    }
+  }, [userRole, setAutoSaveEnabled])
 
   // Load collaborators when mindmap is loaded
   useEffect(() => {
