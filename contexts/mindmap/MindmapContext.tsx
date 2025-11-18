@@ -13,8 +13,6 @@ interface MindmapContextType {
   selectedNode: Node | null
   selectedEdge: Edge | null
   isSaving: boolean
-  isEditMode: boolean
-  setIsEditMode: (enabled: boolean) => void
   onNodesChange: (changes: NodeChange[]) => void
   onEdgesChange: (changes: EdgeChange[]) => void
   onConnect: (connection: Connection) => void
@@ -36,9 +34,8 @@ interface MindmapContextType {
   canRedo: boolean 
   undo: () => Promise<void> 
   redo: () => Promise<void> 
-}
-
-const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
+  setFullMindmapState: (data: MindmapResponse | null) => void
+}const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -196,7 +193,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [selectedNode, setSelectedNode] = useState<Node | null>(null)
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const [isEditMode, setIsEditMode] = useState(false)
   const { toast } = useToast()
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
@@ -552,39 +548,38 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
   }, [mindmap?.id, canRedo, cancelScheduledSave, markSynced, toast, setFullMindmapState]);
 
-  const value: MindmapContextType = {
-    mindmap,
-    nodes,
-    edges,
-    selectedNode,
-    selectedEdge,
-    isSaving,
-    isEditMode,
-    setIsEditMode,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    setSelectedNode,
-    setSelectedEdge,
-    addNode,
-    deleteNode,
-    deleteEdge,
-    updateNodeData,
-    updateEdgeData,
-    saveMindmap,
-    loadMindmap,
-    setTitle,
-    onViewportChange,
-    autoSaveEnabled,
-    setAutoSaveEnabled,
-    saveStatus,
+  const value: MindmapContextType = {
+    mindmap,
+    nodes,
+    edges,
+    selectedNode,
+    selectedEdge,
+    isSaving,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    setSelectedNode,
+    setSelectedEdge,
+    addNode,
+    deleteNode,
+    deleteEdge,
+    updateNodeData,
+    updateEdgeData,
+    saveMindmap,
+    loadMindmap,
+    setTitle,
+    onViewportChange,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
     canUndo,
     canRedo,
     undo,
     redo,
-  }
+    setFullMindmapState,
+  }
 
-  return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
+  return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
 }
 
 // (Hook useMindmapContext giữ nguyên)
