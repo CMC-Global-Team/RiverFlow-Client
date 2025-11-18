@@ -149,22 +149,24 @@ export default function CollaboratorsManagement({
 
             {/* Right: Actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* Role Selector */}
-              <Select
-                value={collaborator.role}
-                onValueChange={(value: "EDITOR" | "VIEWER") => 
-                  handleUpdateRole(collaborator.email, value)
-                }
-                disabled={loadingEmails.has(collaborator.email) || isLoading || collaborator.status !== "accepted"}
-              >
-                <SelectTrigger className="w-[100px] h-9 text-xs">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="VIEWER">Xem</SelectItem>
-                  <SelectItem value="EDITOR">Chỉnh sửa</SelectItem>
-                </SelectContent>
-              </Select>
+              {/* Role Selector - only for accepted collaborators */}
+              {collaborator.status === "accepted" && (
+                <Select
+                  value={collaborator.role}
+                  onValueChange={(value: "EDITOR" | "VIEWER") => 
+                    handleUpdateRole(collaborator.email, value)
+                  }
+                  disabled={loadingEmails.has(collaborator.email) || isLoading}
+                >
+                  <SelectTrigger className="w-[100px] h-9 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="VIEWER">Xem</SelectItem>
+                    <SelectItem value="EDITOR">Chỉnh sửa</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
 
               {/* Delete Button */}
               <Button
