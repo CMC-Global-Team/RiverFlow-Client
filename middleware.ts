@@ -16,6 +16,13 @@ const publicOnlyRoutes: string[] = [
   // Ví dụ: "/login", "/register" nếu có page riêng
 ];
 
+// Danh sách các route public (không cần authentication)
+const publicRoutes = [
+  "/accept-invitation",
+  "/reject-invitation",
+  "/verify-invitation",
+];
+
 /**
  * Middleware function
  */
@@ -27,6 +34,16 @@ export function middleware(request: NextRequest) {
   const accessToken = request.cookies.get("accessToken")?.value;
   
   const isAuthenticated = !!accessToken;
+
+  // Check if route is public (allowed for everyone)
+  const isPublicRoute = publicRoutes.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  // If public route, allow access regardless of authentication
+  if (isPublicRoute) {
+    return NextResponse.next();
+  }
 
   // Check protected routes
   const isProtectedRoute = protectedRoutes.some((route) =>
