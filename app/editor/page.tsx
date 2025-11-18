@@ -76,8 +76,17 @@ function EditorInner() {
               .filter((c: any) => c?.email)
               .map((c: any) => c.email)
           )
+          
+          // Add status field to accepted collaborators
+          const acceptedWithStatus = (acceptedCollab || [])
+            .filter((c: any) => c?.email)
+            .map((c: any) => ({
+              ...c,
+              status: 'accepted'
+            }))
+          
           const combinedList = [
-            ...(acceptedCollab || []).filter((c: any) => c?.email),
+            ...acceptedWithStatus,
             ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
           ]
 
@@ -165,8 +174,17 @@ function EditorInner() {
           .filter((c: any) => c?.email)
           .map((c: any) => c.email)
       )
+      
+      // Add status field to accepted collaborators
+      const acceptedWithStatus = (acceptedCollab || [])
+        .filter((c: any) => c?.email)
+        .map((c: any) => ({
+          ...c,
+          status: 'accepted'
+        }))
+      
       const combinedList = [
-        ...(acceptedCollab || []).filter((c: any) => c?.email),
+        ...acceptedWithStatus,
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
@@ -219,8 +237,17 @@ function EditorInner() {
           .filter((c: any) => c?.email)
           .map((c: any) => c.email)
       )
+      
+      // Add status field to accepted collaborators
+      const acceptedWithStatus = (acceptedCollab || [])
+        .filter((c: any) => c?.email)
+        .map((c: any) => ({
+          ...c,
+          status: 'accepted'
+        }))
+      
       const combinedList = [
-        ...(acceptedCollab || []).filter((c: any) => c?.email),
+        ...acceptedWithStatus,
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
@@ -270,16 +297,21 @@ function EditorInner() {
           .filter((c: any) => c?.email)
           .map((c: any) => c.email)
       )
+      
+      // Add status field to accepted collaborators
+      const acceptedWithStatus = (acceptedCollab || [])
+        .filter((c: any) => c?.email)
+        .map((c: any) => ({
+          ...c,
+          status: 'accepted'
+        }))
+      
       const combinedList = [
-        ...(acceptedCollab || []).filter((c: any) => c?.email),
+        ...acceptedWithStatus,
         ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
       ]
 
       setCollaborators(combinedList)
-      
-      toast({
-        description: `Đã xóa ${email}`,
-      })
     } catch (error: any) {
       console.error(error)
       toast({
