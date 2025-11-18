@@ -120,13 +120,15 @@ function PublicMindmapInner() {
     )
   }
 
-  const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
+  // For public mindmap view, always set userRole to 'viewer' to disable all editing features
+  // This ensures toolbar behavior matches collaborator viewer role
+  // Note: Even if publicAccessLevel is 'edit', we treat it as 'viewer' in public-mindmap route
+  // because saving is not allowed through this route
+  const userRole: 'viewer' = 'viewer'
 
-  // Disable auto-save for VIEWER users (same as editor page)
-  // Also ensure autoSaveEnabled is always false for public view (no saving allowed)
+  // Disable auto-save for public view (always viewer role)
   useEffect(() => {
-    // Always disable auto-save for public mindmap view (viewer or editor)
-    // Public mindmaps should not be editable through this route
+    // Always disable auto-save for public mindmap view
     setAutoSaveEnabled(false)
   }, [setAutoSaveEnabled])
 
@@ -141,7 +143,7 @@ function PublicMindmapInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas readOnly={userRole === 'viewer'} />
+            <Canvas readOnly={true} />
           </div>
         </div>
 
