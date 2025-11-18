@@ -12,11 +12,13 @@ import gsap from "gsap"
 import PublicShareModal from "@/components/mindmap/PublicShareModal"
 import { getPublicMindmap } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/hooks/auth/useAuth"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
   const shareToken = searchParams.get('token')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
+  const { user } = useAuth()
   
   const {
     mindmap,
@@ -34,6 +36,7 @@ function PublicMindmapInner() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
 
   // Load public mindmap by share token
   useEffect(() => {
@@ -120,17 +123,44 @@ function PublicMindmapInner() {
     )
   }
 
-  // For public mindmap view, always set userRole to 'viewer' to disable all editing features
-  // This ensures toolbar behavior matches collaborator viewer role
-  // Note: Even if publicAccessLevel is 'edit', we treat it as 'viewer' in public-mindmap route
-  // because saving is not allowed through this route
-  const userRole: 'viewer' = 'viewer'
-
-  // Disable auto-save for public view (always viewer role)
+  // Determine user's role on this mindmap (similar to editor page logic)
   useEffect(() => {
-    // Always disable auto-save for public mindmap view
-    setAutoSaveEnabled(false)
-  }, [setAutoSaveEnabled])
+    if (mindmap) {
+      if (user && mindmap.mysqlUserId === user.userId) {
+        // User is the owner
+        setUserRole('owner')
+      } else {
+        // Check collaborators if user is logged in
+        if (user) {
+          const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
+          if (collabEntry && collabEntry.status === 'accepted') {
+            // User is a collaborator
+            setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
+          } else if (mindmap.isPublic) {
+            // User is logged in but not owner/collaborator, check public access level
+            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+          } else {
+            // Not public and not collaborator
+            setUserRole(null)
+          }
+        } else {
+          // User not logged in, check public access level
+          if (mindmap.isPublic) {
+            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+          } else {
+            setUserRole(null)
+          }
+        }
+      }
+    }
+  }, [mindmap, user])
+
+  // Disable auto-save for VIEWER users
+  useEffect(() => {
+    if (userRole === 'viewer') {
+      setAutoSaveEnabled(false)
+    }
+  }, [userRole, setAutoSaveEnabled])
 
   const handleSave = async () => {
     // Empty handler for public view - save is not allowed
@@ -143,7 +173,7 @@ function PublicMindmapInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas readOnly={true} />
+            <Canvas readOnly={userRole === 'viewer'} />
           </div>
         </div>
 
