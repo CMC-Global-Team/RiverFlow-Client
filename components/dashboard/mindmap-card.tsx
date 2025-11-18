@@ -1,6 +1,6 @@
 "use client"
 
-import { MoreVertical, Share2, Trash2, Edit, Star, Archive, Copy } from "lucide-react"
+import { MoreVertical, Share2, Trash2, Edit, Star, Archive, Copy, LogOut } from "lucide-react"
 import { useState } from "react"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { formatDistanceToNow } from "date-fns"
@@ -8,35 +8,39 @@ import { createPortal } from "react-dom"
 
 interface MindmapCardProps {
   mindmap: MindmapSummary
+  isOwner?: boolean
   onDelete?: (id: string) => void
   onToggleFavorite?: (id: string) => void
   onArchive?: (id: string) => void
   onEdit?: (id: string) => void
   onDuplicate?: (id: string) => void
-    onUnarchive?: (id: string) => void
-    onClick?: (id: string) => void
+  onUnarchive?: (id: string) => void
+  onLeave?: (id: string) => void
+  onClick?: (id: string) => void
 }
 
 export default function MindmapCard({
   mindmap,
+  isOwner = true,
   onDelete,
   onToggleFavorite,
   onArchive,
-    onUnarchive,
+  onUnarchive,
   onEdit,
   onDuplicate,
+  onLeave,
   onClick
 }: MindmapCardProps) {
   const [showMenu, setShowMenu] = useState(false)
-    const isArchived = (mindmap as any).isArchived === true || (mindmap as any).status === "archived"
-    const formatDate = (dateString: string) => {
+  const isArchived = (mindmap as any).isArchived === true || (mindmap as any).status === "archived"
+  const formatDate = (dateString: string) => {
     try {
       return formatDistanceToNow(new Date(dateString), { addSuffix: true })
     } catch {
       return dateString
     }
   }
-    const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
+  const [menuPos, setMenuPos] = useState({ x: 0, y: 0 })
 
   return (
     <div
@@ -61,6 +65,21 @@ export default function MindmapCard({
           <p className="mt-1 text-sm text-muted-foreground">
             {mindmap.description || 'No description'}
           </p>
+          
+          {/* Owner Info */}
+          {!isOwner && mindmap.ownerName && (
+            <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+              {mindmap.ownerAvatar && (
+                <img 
+                  src={mindmap.ownerAvatar} 
+                  alt={mindmap.ownerName}
+                  className="w-5 h-5 rounded-full object-cover"
+                />
+              )}
+              <span>Owner: <span className="font-medium text-foreground">{mindmap.ownerName}</span></span>
+            </div>
+          )}
+          
           {mindmap.tags && mindmap.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
               {mindmap.tags.slice(0, 3).map((tag, index) => (
@@ -114,65 +133,83 @@ export default function MindmapCard({
                   <Edit className="h-4 w-4" />
                   Edit Name & Description
                 </button>
-                <button 
-                 className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                 onClick={(e) => {
-                 e.stopPropagation()
-                 setShowMenu(false)
-                 onDuplicate?.(mindmap.id)
-                 }}
-                 >
-                 <Copy className="h-4 w-4" />
-                 Duplicate
-                </button>
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onToggleFavorite?.(mindmap.id)
-                  }}
-                >
-                  <Star className="h-4 w-4" />
-                  {mindmap.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                </button>
-                     {!isArchived ? (
-                        <button
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setShowMenu(false)
-                                onArchive?.(mindmap.id)
-                            }}
-                        >
-                            <Archive className="h-4 w-4" />
-                            Archive
-                        </button>
+                {isOwner && (
+                  <>
+                    <button 
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowMenu(false)
+                        onDuplicate?.(mindmap.id)
+                      }}
+                    >
+                      <Copy className="h-4 w-4" />
+                      Duplicate
+                    </button>
+                    <button
+                      className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        setShowMenu(false)
+                        onToggleFavorite?.(mindmap.id)
+                      }}
+                    >
+                      <Star className="h-4 w-4" />
+                      {mindmap.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                    </button>
+                    {!isArchived ? (
+                      <button
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowMenu(false)
+                          onArchive?.(mindmap.id)
+                        }}
+                      >
+                        <Archive className="h-4 w-4" />
+                        Archive
+                      </button>
                     ) : (
-                        <button
-                            className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
-                            onClick={(e) => {
-                                e.stopPropagation()
-                                setShowMenu(false)
-                                onUnarchive?.(mindmap.id)
-                            }}
-                        >
-                            <Archive className="h-4 w-4" />
-                            Unarchive
-                        </button>
+                      <button
+                        className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setShowMenu(false)
+                          onUnarchive?.(mindmap.id)
+                        }}
+                      >
+                        <Archive className="h-4 w-4" />
+                        Unarchive
+                      </button>
                     )}
+                  </>
+                )}
 
-                <button
-                  className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    setShowMenu(false)
-                    onDelete?.(mindmap.id)
-                  }}
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete
-                </button>
+                {isOwner ? (
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowMenu(false)
+                      onDelete?.(mindmap.id)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Delete
+                  </button>
+                ) : (
+                  <button
+                    className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-destructive hover:bg-muted transition-colors rounded-b-lg"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      setShowMenu(false)
+                      onLeave?.(mindmap.id)
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Leave Project
+                  </button>
+                )}
               </div>
             </>
           , document.body)}

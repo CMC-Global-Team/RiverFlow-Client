@@ -16,7 +16,7 @@ import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
 import { useToast } from "@/hooks/use-toast"
-import { duplicateMindmap } from "@/services/mindmap/mindmap.service"
+import { duplicateMindmap, leaveCollaboration } from "@/services/mindmap/mindmap.service"
 
 function DashboardContent() {
   const containerRef = useRef<HTMLDivElement>(null)
@@ -150,32 +150,53 @@ function DashboardContent() {
       }
     }
 
-    const handleDuplicate = async (id: string) => {
-    setActionLoading(id);
-    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." });
+  const handleDuplicate = async (id: string) => {
+    setActionLoading(id);
+    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." });
 
-    try {
-      const newMindmap = await duplicateMindmap(id);
-      
-      toast({ 
-        title: "Nhân bản thành công!",
-        description: `Đã tạo "${newMindmap.title}".`
-      });
-      await refetch();
+    try {
+      const newMindmap = await duplicateMindmap(id);
+      
+      toast({ 
+        title: "Nhân bản thành công!",
+        description: `Đã tạo "${newMindmap.title}".`
+      });
+      await refetch();
 
-    } catch (error) {
-      console.error("Duplicate failed:", error);
-      toast({ 
-        variant: "destructive", 
-        title: "Lỗi", 
-        description: "Không thể nhân bản mind map." 
-      });
-    } finally {
-      setActionLoading(null); 
-    }
-  };
+    } catch (error) {
+      console.error("Duplicate failed:", error);
+      toast({ 
+        variant: "destructive", 
+        title: "Lỗi", 
+        description: "Không thể nhân bản mind map." 
+      });
+    } finally {
+      setActionLoading(null); 
+    }
+  };
 
-  return (
+  const handleLeave = async (id: string) => {
+    if (!confirm('Are you sure you want to leave this project?')) return
+    
+    setActionLoading(id)
+    try {
+      await leaveCollaboration(id)
+      toast({ 
+        title: "Left project",
+        description: "You have successfully left the project."
+      })
+      await refetch()
+    } catch (error) {
+      console.error("Leave failed:", error)
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Failed to leave the project." 
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }  return (
     <div className="flex h-screen bg-background">
       <Sidebar />
 
@@ -265,12 +286,14 @@ function DashboardContent() {
                   >
                       <MindmapCard
                           mindmap={mindmap}
+                          isOwner={mindmap.mysqlUserId === user?.userId}
                           onDelete={handleDeleteClick}
                           onToggleFavorite={handleToggleFavorite}
                           onArchive={handleArchive}
                           onEdit={handleEditInfo}
                           onClick={(id) => router.push(`/editor?id=${id}`)}
                           onDuplicate={handleDuplicate}
+                          onLeave={handleLeave}
                       />
                   </div>
                 ))}
