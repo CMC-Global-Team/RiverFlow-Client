@@ -207,10 +207,12 @@ export default function CollaboratorsManagement({
                 >
                   {loadingEmails.has(collaborator.email) ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : collaborator.status === "accepted" ? (
-                    <AlertCircle className="h-4 w-4 text-muted-foreground" />
                   ) : (
-                    <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
+                    <Trash2 className={`h-4 w-4 ${
+                      collaborator.status === "accepted" 
+                        ? "text-muted-foreground cursor-not-allowed" 
+                        : "text-destructive hover:text-destructive/80"
+                    }`} />
                   )}
                 </Button>
               )}
