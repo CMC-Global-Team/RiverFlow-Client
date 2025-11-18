@@ -21,6 +21,7 @@ const publicRoutes = [
   "/accept-invitation",
   "/reject-invitation",
   "/verify-invitation",
+  "/public-mindmap",
 ];
 
 /**

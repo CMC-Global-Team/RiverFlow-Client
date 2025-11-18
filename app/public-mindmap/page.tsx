@@ -118,6 +118,8 @@ function PublicMindmapInner() {
     )
   }
 
+  const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
+
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Main Content - Full Screen */}
@@ -125,7 +127,7 @@ function PublicMindmapInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas />
+            <Canvas readOnly={userRole === 'viewer'} />
           </div>
         </div>
 
@@ -146,13 +148,14 @@ function PublicMindmapInner() {
               saveStatus={saveStatus}
               handleSave={() => {}}
               onShareClick={() => setIsShareOpen(true)}
+              userRole={userRole}
             />
           </div>
         </div>
       </div>
 
       {/* Floating Properties Panel - Outside relative container */}
-      <PropertiesPanel />
+      {userRole !== 'viewer' && <PropertiesPanel />}
 
       <PublicShareModal
         isOpen={isShareOpen}
