@@ -22,7 +22,8 @@ import {
   removeCollaborator,
   updatePublicAccess,
   getCollaborators,
-  getPendingInvitations
+  getPendingInvitations,
+  getPublicMindmap
 } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
@@ -42,6 +43,7 @@ function EditorInner() {
     autoSaveEnabled,
     setAutoSaveEnabled,
     saveStatus,
+    setFullMindmapState,
   } = useMindmapContext()
   
   const { toast } = useToast()
@@ -53,16 +55,23 @@ function EditorInner() {
 
   // Determine user's role on this mindmap
   useEffect(() => {
-    if (mindmap && user) {
-      if (mindmap.mysqlUserId === user.userId) {
+    if (mindmap) {
+      if (user && mindmap.mysqlUserId === user.userId) {
         setUserRole('owner')
       } else {
-        // Check collaborators
-        const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
-        if (collabEntry && collabEntry.status === 'accepted') {
-          setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
+        // Check collaborators if user is logged in
+        if (user) {
+          const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
+          if (collabEntry && collabEntry.status === 'accepted') {
+            setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
+          } else if (mindmap.isPublic) {
+            // Public mindmap - check access level
+            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+          } else {
+            setUserRole(null)
+          }
         } else if (mindmap.isPublic) {
-          // Public mindmap - check access level
+          // User not logged in but mindmap is public
           setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
         } else {
           setUserRole(null)
@@ -145,12 +154,52 @@ function EditorInner() {
     }
   }, [isShareOpen, mindmapId])
 
-  // Load mindmap on mount
+  // Load mindmap on mount - try public API if regular load fails
   useEffect(() => {
     if (mindmapId) {
-      loadMindmap(mindmapId)
+      const loadMindmapWithFallback = async () => {
+        try {
+          await loadMindmap(mindmapId)
+        } catch (error: any) {
+          // If load fails with 401/403, try loading as public mindmap
+          if (error?.response?.status === 401 || error?.response?.status === 403) {
+            try {
+              // Try to get shareToken from URL
+              const shareToken = searchParams.get('token')
+              if (shareToken) {
+                const publicMindmap = await getPublicMindmap(shareToken)
+                setFullMindmapState(publicMindmap)
+              } else {
+                // If no shareToken but mindmap might be public, try to get shareToken from error response
+                // or show helpful error message
+                const errorData = error?.response?.data
+                if (errorData?.shareToken) {
+                  const publicMindmap = await getPublicMindmap(errorData.shareToken)
+                  setFullMindmapState(publicMindmap)
+                } else {
+                  // If no shareToken, show error
+                  toast({
+                    title: "Access Denied",
+                    description: "You don't have permission to view this mindmap. If it's public, please use the public share link with token parameter.",
+                    variant: "destructive",
+                  })
+                }
+              }
+            } catch (publicError) {
+              toast({
+                title: "Error",
+                description: "Failed to load mindmap. Please check your access or use the public share link.",
+                variant: "destructive",
+              })
+            }
+          } else {
+            throw error
+          }
+        }
+      }
+      loadMindmapWithFallback()
     }
-  }, [mindmapId, loadMindmap])
+  }, [mindmapId, loadMindmap, searchParams, toast, setFullMindmapState])
 
   const handleSave = async () => {
     try {
@@ -407,7 +456,7 @@ function EditorInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas />
+            <Canvas readOnly={userRole === 'viewer'} />
           </div>
         </div>
 
@@ -478,8 +527,10 @@ function EditorContent() {
 }
 
 export default function EditorPage() {
+  // Allow access to editor page without auth if accessing public mindmap
+  // The page will handle loading public mindmap if needed
   return (
-    <ProtectedRoute>
+    <ProtectedRoute requireAuth={false}>
       <EditorContent />
     </ProtectedRoute>
   )

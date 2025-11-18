@@ -45,22 +45,12 @@ export const getMindmapById = async (id: string): Promise<MindmapResponse> => {
  */
 export const getPublicMindmap = async (shareToken: string): Promise<MindmapResponse> => {
   try {
-    const response = await fetch(`/api${MINDMAP_API_BASE}/public/${shareToken}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    
-    if (!response.ok) {
-      throw new Error('Failed to fetch public mindmap');
-    }
-    
-    const data = await response.json();
-    return data;
+    // Use configured API client to call backend directly (handles baseURL and CORS)
+    const response = await apiClient.get<MindmapResponse>(`${MINDMAP_API_BASE}/public/${shareToken}`);
+    return response.data;
   } catch (error) {
     console.error('Error fetching public mindmap:', error);
-    throw error;
+    throw error as Error;
   }
 };
 

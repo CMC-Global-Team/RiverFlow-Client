@@ -24,6 +24,8 @@ function PublicMindmapInner() {
     setTitle,
     saveStatus,
     setFullMindmapState,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
   } = useMindmapContext()
   
   const { toast } = useToast()
@@ -118,6 +120,20 @@ function PublicMindmapInner() {
     )
   }
 
+  const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
+
+  // Disable auto-save for VIEWER users (same as editor page)
+  // Also ensure autoSaveEnabled is always false for public view (no saving allowed)
+  useEffect(() => {
+    // Always disable auto-save for public mindmap view (viewer or editor)
+    // Public mindmaps should not be editable through this route
+    setAutoSaveEnabled(false)
+  }, [setAutoSaveEnabled])
+
+  const handleSave = async () => {
+    // Empty handler for public view - save is not allowed
+  }
+
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Main Content - Full Screen */}
@@ -125,7 +141,7 @@ function PublicMindmapInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas />
+            <Canvas readOnly={userRole === 'viewer'} />
           </div>
         </div>
 
@@ -140,18 +156,19 @@ function PublicMindmapInner() {
               handleTitleChange={handleTitleChange}
               handleTitleHover={handleTitleHover}
               handleTitleLeave={handleTitleLeave}
-              autoSaveEnabled={false}
-              setAutoSaveEnabled={() => {}}
+              autoSaveEnabled={autoSaveEnabled}
+              setAutoSaveEnabled={setAutoSaveEnabled}
               isSaving={isSaving}
               saveStatus={saveStatus}
-              handleSave={() => {}}
+              handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
+              userRole={userRole}
             />
           </div>
         </div>
       </div>
 
-      {/* Floating Properties Panel - Outside relative container */}
+      {/* Floating Properties Panel - Outside relative container (same as editor page) */}
       <PropertiesPanel />
 
       <PublicShareModal
