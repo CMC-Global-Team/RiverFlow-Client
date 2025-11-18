@@ -123,11 +123,12 @@ function PublicMindmapInner() {
   const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
 
   // Disable auto-save for VIEWER users (same as editor page)
+  // Also ensure autoSaveEnabled is always false for public view (no saving allowed)
   useEffect(() => {
-    if (userRole === 'viewer') {
-      setAutoSaveEnabled(false)
-    }
-  }, [userRole, setAutoSaveEnabled])
+    // Always disable auto-save for public mindmap view (viewer or editor)
+    // Public mindmaps should not be editable through this route
+    setAutoSaveEnabled(false)
+  }, [setAutoSaveEnabled])
 
   const handleSave = async () => {
     // Empty handler for public view - save is not allowed
