@@ -15,7 +15,13 @@ import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
-import { inviteCollaborator } from "@/services/mindmap/mindmap.service"
+import { 
+  inviteCollaborator,
+  updateCollaboratorRole,
+  removeCollaborator,
+  updatePublicAccess,
+  getCollaborators
+} from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast" 
 function EditorInner() {
   const searchParams = useSearchParams()
@@ -36,6 +42,29 @@ function EditorInner() {
     const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [collaborators, setCollaborators] = useState([])
+  const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
+
+  // Load collaborators when mindmap is loaded
+  useEffect(() => {
+    const loadCollaborators = async () => {
+      if (mindmapId) {
+        setIsLoadingCollaborators(true)
+        try {
+          const data = await getCollaborators(mindmapId)
+          setCollaborators(data)
+        } catch (error) {
+          console.error('Failed to load collaborators:', error)
+        } finally {
+          setIsLoadingCollaborators(false)
+        }
+      }
+    }
+
+    if (isShareOpen) {
+      loadCollaborators()
+    }
+  }, [isShareOpen, mindmapId])
 
   // Load mindmap on mount
   useEffect(() => {
@@ -83,6 +112,10 @@ function EditorInner() {
     try {
       await inviteCollaborator(mindmapId, email, role)
       
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
       toast({
         title: "Đã gửi lời mời!",
         description: `Đã gửi email mời tới ${email}`,
@@ -94,6 +127,74 @@ function EditorInner() {
         variant: "destructive",
         title: "Gửi thất bại",
         description: errorMsg,
+      })
+      throw error;
+    }
+  }
+
+  const handleUpdateRole = async (email: string, role: "EDITOR" | "VIEWER") => {
+    if (!mindmapId) return;
+    
+    try {
+      await updateCollaboratorRole(mindmapId, email, role)
+      
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
+      toast({
+        description: "Đã cập nhật quyền",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật quyền",
+      })
+      throw error;
+    }
+  }
+
+  const handleRemoveCollaborator = async (email: string) => {
+    if (!mindmapId) return;
+    
+    try {
+      await removeCollaborator(mindmapId, email)
+      
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
+      toast({
+        description: `Đã xóa ${email}`,
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể xóa collaborator",
+      })
+      throw error;
+    }
+  }
+
+  const handleTogglePublic = async (isPublic: boolean, accessLevel?: "view" | "edit" | "private") => {
+    if (!mindmapId) return;
+    
+    try {
+      await updatePublicAccess(mindmapId, isPublic, accessLevel)
+      
+      toast({
+        description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái công khai",
       })
       throw error;
     }
@@ -144,11 +245,17 @@ function EditorInner() {
       <PropertiesPanel />
 
       <ShareModal
-         isOpen={isShareOpen}
-         onClose={() => setIsShareOpen(false)}
-         onInvite={handleInvite}
-         mindmapTitle={mindmap?.title || "Untitled Mindmap"}
-       />
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        onInvite={handleInvite}
+        onUpdateRole={handleUpdateRole}
+        onRemoveCollaborator={handleRemoveCollaborator}
+        onTogglePublic={handleTogglePublic}
+        mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+        collaborators={collaborators}
+        isPublic={mindmap?.isPublic || false}
+        publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+      />
     </div>
   )
 }
