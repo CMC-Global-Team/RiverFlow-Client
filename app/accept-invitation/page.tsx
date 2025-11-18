@@ -73,8 +73,13 @@ function AcceptInvitationContent() {
       const response = await apiClient.post(`/mindmaps/accept-invitation/${token}`);
       
       if (response.data.success || response.status === 200) {
-        // Redirect to the mindmap editor
-        router.push(`/editor/${mindmapId}`);
+        // Use mindmapId from response, fallback to state if available
+        const redirectId = response.data.mindmapId || mindmapId;
+        if (redirectId) {
+          router.push(`/editor/${redirectId}`);
+        } else {
+          setError('Unable to determine mindmap ID. Please try again.');
+        }
       } else {
         setError(response.data.message || 'Failed to accept invitation.');
       }
