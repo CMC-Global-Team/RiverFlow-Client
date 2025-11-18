@@ -7,36 +7,35 @@ import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
 
 interface MindmapContextType {
-  mindmap: MindmapResponse | null
-  nodes: Node[]
-  edges: Edge[]
-  selectedNode: Node | null
-  selectedEdge: Edge | null
-  isSaving: boolean
-  onNodesChange: (changes: NodeChange[]) => void
-  onEdgesChange: (changes: EdgeChange[]) => void
-  onConnect: (connection: Connection) => void
-  setSelectedNode: (node: Node | null) => void
-  setSelectedEdge: (edge: Edge | null) => void
-  addNode: (position: { x: number; y: number }, shape?: string) => string
-  deleteNode: (nodeId: string) => void
-  deleteEdge: (edgeId: string) => void
-  updateNodeData: (nodeId: string, data: any) => void
-  updateEdgeData: (edgeId: string, updates: any) => void
-  saveMindmap: () => Promise<void>
-  loadMindmap: (id: string) => Promise<void>
-  setTitle: (title: string) => void
-  onViewportChange: (viewport: Viewport) => void
-  autoSaveEnabled: boolean
-  setAutoSaveEnabled: (enabled: boolean) => void
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
-  canUndo: boolean 
-  canRedo: boolean 
-  undo: () => Promise<void> 
-  redo: () => Promise<void> 
-}
-
-const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
+  mindmap: MindmapResponse | null
+  nodes: Node[]
+  edges: Edge[]
+  selectedNode: Node | null
+  selectedEdge: Edge | null
+  isSaving: boolean
+  onNodesChange: (changes: NodeChange[]) => void
+  onEdgesChange: (changes: EdgeChange[]) => void
+  onConnect: (connection: Connection) => void
+  setSelectedNode: (node: Node | null) => void
+  setSelectedEdge: (edge: Edge | null) => void
+  addNode: (position: { x: number; y: number }, shape?: string) => string
+  deleteNode: (nodeId: string) => void
+  deleteEdge: (edgeId: string) => void
+  updateNodeData: (nodeId: string, data: any) => void
+  updateEdgeData: (edgeId: string, updates: any) => void
+  saveMindmap: () => Promise<void>
+  loadMindmap: (id: string) => Promise<void>
+  setTitle: (title: string) => void
+  onViewportChange: (viewport: Viewport) => void
+  autoSaveEnabled: boolean
+  setAutoSaveEnabled: (enabled: boolean) => void
+  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
+  canUndo: boolean 
+  canRedo: boolean 
+  undo: () => Promise<void> 
+  redo: () => Promise<void> 
+  setFullMindmapState: (data: MindmapResponse | null) => void
+}const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
@@ -549,37 +548,38 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
   }, [mindmap?.id, canRedo, cancelScheduledSave, markSynced, toast, setFullMindmapState]);
 
-  const value: MindmapContextType = {
-    mindmap,
-    nodes,
-    edges,
-    selectedNode,
-    selectedEdge,
-    isSaving,
-    onNodesChange,
-    onEdgesChange,
-    onConnect,
-    setSelectedNode,
-    setSelectedEdge,
-    addNode,
-    deleteNode,
-    deleteEdge,
-    updateNodeData,
-    updateEdgeData,
-    saveMindmap,
-    loadMindmap,
-    setTitle,
-    onViewportChange,
-    autoSaveEnabled,
-    setAutoSaveEnabled,
-    saveStatus,
+  const value: MindmapContextType = {
+    mindmap,
+    nodes,
+    edges,
+    selectedNode,
+    selectedEdge,
+    isSaving,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    setSelectedNode,
+    setSelectedEdge,
+    addNode,
+    deleteNode,
+    deleteEdge,
+    updateNodeData,
+    updateEdgeData,
+    saveMindmap,
+    loadMindmap,
+    setTitle,
+    onViewportChange,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
     canUndo,
     canRedo,
     undo,
     redo,
-  }
+    setFullMindmapState,
+  }
 
-  return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
+  return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
 }
 
 // (Hook useMindmapContext giữ nguyên)
