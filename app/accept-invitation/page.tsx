@@ -30,8 +30,9 @@ function AcceptInvitationContent() {
     // Check if user is authenticated
     if (!isAuthenticated) {
       // Redirect to login with return URL
-      router.push(`/auth?returnUrl=/accept-invitation?token=${token}`);
-      return;
+      const returnUrl = `/accept-invitation?token=${token}`
+      router.push(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`)
+      return
     }
 
     // Verify the invitation token
