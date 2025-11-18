@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
+import PublicShareModal from "@/components/mindmap/PublicShareModal"
 import { 
   inviteCollaborator,
   updateCollaboratorRole,
@@ -418,19 +419,32 @@ function EditorInner() {
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel />
 
-      <ShareModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        onInvite={handleInvite}
-        onUpdateRole={handleUpdateRole}
-        onRemoveCollaborator={handleRemoveCollaborator}
-        onTogglePublic={handleTogglePublic}
-        mindmapTitle={mindmap?.title || "Untitled Mindmap"}
-        collaborators={collaborators}
-        isPublic={mindmap?.isPublic || false}
-        publicAccessLevel={mindmap?.publicAccessLevel || "private"}
-        isOwner={user?.userId === mindmap?.mysqlUserId}
-      />
+      {/* Show PublicShareModal for non-owners, ShareModal for owners */}
+      {user?.userId === mindmap?.mysqlUserId ? (
+        <ShareModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          onInvite={handleInvite}
+          onUpdateRole={handleUpdateRole}
+          onRemoveCollaborator={handleRemoveCollaborator}
+          onTogglePublic={handleTogglePublic}
+          mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+          collaborators={collaborators}
+          isPublic={mindmap?.isPublic || false}
+          publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+          isOwner={true}
+        />
+      ) : (
+        <PublicShareModal
+          isOpen={isShareOpen}
+          onClose={() => setIsShareOpen(false)}
+          mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+          shareToken={mindmap?.shareToken}
+          ownerName={mindmap?.ownerName}
+          ownerAvatar={mindmap?.ownerAvatar}
+          publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+        />
+      )}
     </div>
   )
 }

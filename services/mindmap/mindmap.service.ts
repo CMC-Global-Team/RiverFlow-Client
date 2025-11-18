@@ -41,6 +41,30 @@ export const getMindmapById = async (id: string): Promise<MindmapResponse> => {
 };
 
 /**
+ * Get public mindmap by share token (NO AUTH REQUIRED)
+ */
+export const getPublicMindmap = async (shareToken: string): Promise<MindmapResponse> => {
+  try {
+    const response = await fetch(`/api${MINDMAP_API_BASE}/public/${shareToken}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch public mindmap');
+    }
+    
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching public mindmap:', error);
+    throw error;
+  }
+};
+
+/**
  * Update mindmap
  */
 export const updateMindmap = async (
