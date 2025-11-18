@@ -42,6 +42,8 @@ interface ShareModalProps {
   isPublic?: boolean
   publicAccessLevel?: "view" | "edit" | "private"
   isOwner?: boolean
+  shareToken?: string
+  mindmapId?: string
 }
 
 export default function ShareModal({ 
@@ -55,7 +57,9 @@ export default function ShareModal({
   collaborators = [],
   isPublic = false,
   publicAccessLevel = "private",
-  isOwner = false
+  isOwner = false,
+  shareToken,
+  mindmapId
 }: ShareModalProps) {
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<"EDITOR" | "VIEWER">("VIEWER")
@@ -89,11 +93,37 @@ export default function ShareModal({
   }
 
   const handleCopyLink = () => {
-    const url = typeof window !== 'undefined' ? window.location.href : ''
-    navigator.clipboard.writeText(url)
+    // Generate public link based on access level and shareToken
+    let publicUrl = ''
+    if (isPublic && shareToken) {
+      // For public mindmaps, always use /public-mindmap route with token
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      publicUrl = `${origin}/public-mindmap?token=${shareToken}`
+    } else if (mindmapId) {
+      // Fallback to editor link if no shareToken
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      publicUrl = `${origin}/editor?id=${mindmapId}`
+    } else {
+      // Last resort: current URL
+      publicUrl = typeof window !== 'undefined' ? window.location.href : ''
+    }
+    
+    navigator.clipboard.writeText(publicUrl)
     setCopied(true)
     toast({ description: "Đã sao chép liên kết vào bộ nhớ tạm" })
     setTimeout(() => setCopied(false), 2000)
+  }
+
+  // Generate public URL for display
+  const getPublicUrl = () => {
+    if (isPublic && shareToken) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      return `${origin}/public-mindmap?token=${shareToken}`
+    } else if (mindmapId) {
+      const origin = typeof window !== 'undefined' ? window.location.origin : ''
+      return `${origin}/editor?id=${mindmapId}`
+    }
+    return typeof window !== 'undefined' ? window.location.href : '...'
   }
 
   const handleTogglePublic = async (newIsPublic: boolean) => {
@@ -225,7 +255,7 @@ export default function ShareModal({
                       <LinkIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input 
                         readOnly 
-                        value={typeof window !== 'undefined' ? window.location.href : '...'}
+                        value={getPublicUrl()}
                         className="pl-9 bg-muted/50 text-muted-foreground cursor-text text-sm"
                       />
                     </div>
