@@ -20,7 +20,8 @@ import {
   updateCollaboratorRole,
   removeCollaborator,
   updatePublicAccess,
-  getCollaborators
+  getCollaborators,
+  getPendingInvitations
 } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast" 
 function EditorInner() {
@@ -51,8 +52,30 @@ function EditorInner() {
       if (mindmapId) {
         setIsLoadingCollaborators(true)
         try {
-          const data = await getCollaborators(mindmapId)
-          setCollaborators(data)
+          // Get accepted collaborators and pending invitations
+          const [acceptedCollab, pendingInvites] = await Promise.all([
+            getCollaborators(mindmapId),
+            getPendingInvitations(mindmapId)
+          ])
+
+          // Map pending invitations to collaborator format
+          const pendingCollaborators = pendingInvites.map((invitation: any) => ({
+            email: invitation.invitedEmail,
+            role: invitation.role,
+            invitedAt: invitation.createdAt,
+            acceptedAt: null,
+            status: 'pending',
+            invitedBy: invitation.invitedByUserId
+          }))
+
+          // Combine and deduplicate (accepted takes precedence over pending)
+          const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+          const combinedList = [
+            ...acceptedCollab,
+            ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
+          ]
+
+          setCollaborators(combinedList)
         } catch (error) {
           console.error('Failed to load collaborators:', error)
         } finally {
@@ -112,9 +135,30 @@ function EditorInner() {
     try {
       await inviteCollaborator(mindmapId, email, role)
       
-      // Reload collaborators
-      const data = await getCollaborators(mindmapId)
-      setCollaborators(data)
+      // Reload both accepted collaborators and pending invitations
+      const [acceptedCollab, pendingInvites] = await Promise.all([
+        getCollaborators(mindmapId),
+        getPendingInvitations(mindmapId)
+      ])
+
+      // Map pending invitations to collaborator format
+      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
+        email: invitation.invitedEmail,
+        role: invitation.role,
+        invitedAt: invitation.createdAt,
+        acceptedAt: null,
+        status: 'pending',
+        invitedBy: invitation.invitedByUserId
+      }))
+
+      // Combine and deduplicate
+      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const combinedList = [
+        ...acceptedCollab,
+        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
+      ]
+
+      setCollaborators(combinedList)
       
       toast({
         title: "Đã gửi lời mời!",
@@ -123,6 +167,7 @@ function EditorInner() {
     } catch (error: any) {
       console.error(error)
       const errorMsg = error.response?.data?.message || "Không thể gửi lời mời.";
+
       toast({
         variant: "destructive",
         title: "Gửi thất bại",
@@ -138,9 +183,30 @@ function EditorInner() {
     try {
       await updateCollaboratorRole(mindmapId, email, role)
       
-      // Reload collaborators
-      const data = await getCollaborators(mindmapId)
-      setCollaborators(data)
+      // Reload both accepted collaborators and pending invitations
+      const [acceptedCollab, pendingInvites] = await Promise.all([
+        getCollaborators(mindmapId),
+        getPendingInvitations(mindmapId)
+      ])
+
+      // Map pending invitations to collaborator format
+      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
+        email: invitation.invitedEmail,
+        role: invitation.role,
+        invitedAt: invitation.createdAt,
+        acceptedAt: null,
+        status: 'pending',
+        invitedBy: invitation.invitedByUserId
+      }))
+
+      // Combine and deduplicate
+      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const combinedList = [
+        ...acceptedCollab,
+        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
+      ]
+
+      setCollaborators(combinedList)
       
       toast({
         description: "Đã cập nhật quyền",
@@ -162,9 +228,30 @@ function EditorInner() {
     try {
       await removeCollaborator(mindmapId, email)
       
-      // Reload collaborators
-      const data = await getCollaborators(mindmapId)
-      setCollaborators(data)
+      // Reload both accepted collaborators and pending invitations
+      const [acceptedCollab, pendingInvites] = await Promise.all([
+        getCollaborators(mindmapId),
+        getPendingInvitations(mindmapId)
+      ])
+
+      // Map pending invitations to collaborator format
+      const pendingCollaborators = pendingInvites.map((invitation: any) => ({
+        email: invitation.invitedEmail,
+        role: invitation.role,
+        invitedAt: invitation.createdAt,
+        acceptedAt: null,
+        status: 'pending',
+        invitedBy: invitation.invitedByUserId
+      }))
+
+      // Combine and deduplicate
+      const collaboratorEmails = new Set(acceptedCollab.map((c: any) => c.email))
+      const combinedList = [
+        ...acceptedCollab,
+        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
+      ]
+
+      setCollaborators(combinedList)
       
       toast({
         description: `Đã xóa ${email}`,

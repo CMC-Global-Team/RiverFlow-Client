@@ -229,6 +229,15 @@ export const getCollaborators = async (mindmapId: string) => {
 };
 
 /**
+ * Lấy danh sách lời mời đang chờ xác nhận
+ * GET /api/mindmaps/{id}/pending-invitations
+ */
+export const getPendingInvitations = async (mindmapId: string) => {
+  const response = await apiClient.get(`/mindmaps/${mindmapId}/pending-invitations`);
+  return response.data;
+};
+
+/**
  * Cập nhật quyền truy cập công khai của mindmap
  * PUT /api/mindmaps/{id}/public-access
  */
