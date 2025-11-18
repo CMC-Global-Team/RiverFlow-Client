@@ -196,7 +196,9 @@ function DashboardContent() {
     } finally {
       setActionLoading(null)
     }
-  }  return (
+  }
+
+  return (
     <div className="flex h-screen bg-background">
       <Sidebar />
 
