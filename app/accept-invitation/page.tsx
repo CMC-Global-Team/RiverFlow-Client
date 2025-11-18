@@ -4,22 +4,29 @@ import { useEffect, useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/auth/useAuth';
 import apiClient from '@/lib/apiClient';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Check } from 'lucide-react';
 
 function AcceptInvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
   
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mindmapId, setMindmapId] = useState<string | null>(null);
   const [mindmapTitle, setMindmapTitle] = useState<string>('');
   const [accepting, setAccepting] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
 
   const token = searchParams.get('token');
 
   useEffect(() => {
+    // Wait for auth state to load
+    if (isAuthLoading) {
+      return;
+    }
+
     // Check if user is authenticated
     if (!isAuthenticated) {
       // Redirect to login with return URL
@@ -34,7 +41,7 @@ function AcceptInvitationContent() {
       setError('Invalid invitation link. Token is missing.');
       setLoading(false);
     }
-  }, [token, isAuthenticated, router]);
+  }, [token, isAuthenticated, isAuthLoading, router]);
 
   const verifyInvitation = async (invitationToken: string) => {
     try {
@@ -73,10 +80,16 @@ function AcceptInvitationContent() {
       const response = await apiClient.post(`/mindmaps/accept-invitation/${token}`);
       
       if (response.data.success || response.status === 200) {
-        // Use mindmapId from response, fallback to state if available
+        // Show success message
+        setSuccess(true);
+        setSuccessMessage(response.data.message || 'Lời mời được chấp nhận thành công!');
+        
+        // Redirect to editor after 2 seconds
         const redirectId = response.data.mindmapId || mindmapId;
         if (redirectId) {
-          router.push(`/editor/${redirectId}`);
+          setTimeout(() => {
+            router.push(`/editor?id=${redirectId}`);
+          }, 2000);
         } else {
           setError('Unable to determine mindmap ID. Please try again.');
         }
@@ -146,6 +159,29 @@ function AcceptInvitationContent() {
           >
             Back to Dashboard
           </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+        <div className="max-w-md w-full mx-auto p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg text-center">
+          <div className="mb-4 flex justify-center">
+            <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900">
+              <Check className="w-8 h-8 text-green-600 dark:text-green-400" />
+            </div>
+          </div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Thành công!
+          </h1>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            {successMessage}
+          </p>
+          <p className="text-sm text-gray-500 dark:text-gray-500">
+            Đang chuyển hướng đến mindmap...
+          </p>
         </div>
       </div>
     );
