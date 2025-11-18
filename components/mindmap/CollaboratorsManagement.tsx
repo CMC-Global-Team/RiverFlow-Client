@@ -167,7 +167,7 @@ export default function CollaboratorsManagement({
               )}
 
               {/* Delete Button with Confirmation */}
-              {confirmDeleteEmail === collaborator.email ? (
+              {confirmDeleteEmail === collaborator.email && collaborator.status === "pending" ? (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="destructive"
@@ -196,7 +196,11 @@ export default function CollaboratorsManagement({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-9 w-9 p-0"
+                  className={`h-9 w-9 p-0 ${
+                    collaborator.status === "accepted" 
+                      ? "cursor-not-allowed opacity-60" 
+                      : ""
+                  }`}
                   onClick={() => {
                     if (collaborator.status === "pending") {
                       setConfirmDeleteEmail(collaborator.email)
@@ -210,7 +214,7 @@ export default function CollaboratorsManagement({
                   ) : (
                     <Trash2 className={`h-4 w-4 ${
                       collaborator.status === "accepted" 
-                        ? "text-muted-foreground cursor-not-allowed" 
+                        ? "text-muted-foreground" 
                         : "text-destructive hover:text-destructive/80"
                     }`} />
                   )}
