@@ -2,10 +2,16 @@ import axios from 'axios';
 import { refreshAccessToken } from '@/services/auth/refresh-token.service';
 import { setCookie, deleteCookie } from './cookies';
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+if (!API_BASE_URL) {
+  throw new Error('NEXT_PUBLIC_API_URL is not defined. Please check your .env.production configuration.');
+}
+
 //Tạo một "instance" của axios
 const apiClient = axios.create({
-  //Lấy URL gốc từ file .env.local
-  baseURL: process.env.NEXT_PUBLIC_API_URL, 
+  //Lấy URL gốc từ biến môi trường production
+  baseURL: API_BASE_URL, 
 
   //Cài đặt header mặc định
   headers: {
@@ -57,8 +63,7 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
     
-    // Xử lý lỗi 403 - Token hết hạn hoặc không hợp lệ, tự động logout
-    // Không redirect nếu đang ở trang verify-email (vì đây là public endpoint)
+
     if (error.response?.status === 403) {
       // Clear tất cả dữ liệu authentication
       localStorage.clear();
