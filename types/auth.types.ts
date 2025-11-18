@@ -34,6 +34,15 @@ export interface SignInResponse {
   avatar?: string;
 }
 
+// Google Login API Types
+export interface GoogleLoginRequest {
+  credential: string; // Google ID token
+}
+
+export interface GoogleLoginResponse extends SignInResponse {
+  provider: "google";
+}
+
 // ForgotPassword API Types
 export interface ForgotPasswordRequest {
   email: string;
