@@ -4,6 +4,7 @@ import { useRef, useEffect } from "react"
 import gsap from "gsap"
 import MindmapCard from "@/components/dashboard/mindmap-card"
 import { MindmapSummary } from "@/types/mindmap.types"
+import { useAuth } from "@/hooks/auth/useAuth"
 
 interface MindmapGridProps {
   mindmaps: MindmapSummary[]
@@ -13,6 +14,7 @@ interface MindmapGridProps {
   onEdit: (id: string) => void
     onUnarchive?: (id: string) => void
     onDuplicate?: (id: string) => void
+    onLeave?: (id: string) => void
     onClick: (id: string) => void
   actionLoading: string | null
 }
@@ -22,11 +24,12 @@ export default function MindmapGrid({
   onDelete,
   onToggleFavorite,
   onArchive,
-  onEdit, onUnarchive, onDuplicate,
+  onEdit, onUnarchive, onDuplicate, onLeave,
   onClick,
   actionLoading,
 }: MindmapGridProps) {
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
+  const { user } = useAuth()
 
   useEffect(() => {
     // Ensure cards are visible initially
@@ -68,12 +71,14 @@ export default function MindmapGrid({
         >
           <MindmapCard
             mindmap={mindmap}
+            isOwner={mindmap.mysqlUserId === user?.userId}
             onDelete={onDelete}
             onToggleFavorite={onToggleFavorite}
             onArchive={onArchive}
             onEdit={onEdit}
             onUnarchive={onUnarchive}
             onDuplicate={onDuplicate}
+            onLeave={onLeave}
             onClick={onClick}
           />
         </div>

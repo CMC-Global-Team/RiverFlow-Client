@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
+import { useAuth } from "@/hooks/auth/useAuth"
 import Sidebar from "@/components/dashboard/sidebar"
 import DashboardHeader from "@/components/dashboard/dashboard-header"
 import FilterBar from "@/components/mindmap/FilterBar"
@@ -19,10 +20,11 @@ import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { Plus, Loader2, AlertCircle } from "lucide-react"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { useToast } from "@/hooks/use-toast"
-import { duplicateMindmap } from "@/services/mindmap/mindmap.service"
+import { duplicateMindmap, leaveCollaboration } from "@/services/mindmap/mindmap.service"
 
 function MyMindmapsContent() {
   const router = useRouter()
+  const { user } = useAuth()
   const [selectedStatus, setSelectedStatus] = useState<"active" | "archived">("active")
   
   // Fetch mindmaps based on status
@@ -184,7 +186,30 @@ function MyMindmapsContent() {
     } finally {
       setActionLoading(null) 
     }
+  }
+
+  const handleLeave = async (id: string) => {
+    if (!confirm('Are you sure you want to leave this project?')) return
+    
+    setActionLoading(id)
+    try {
+      await leaveCollaboration(id)
+      toast({ 
+        title: "Left project",
+        description: "You have successfully left the project."
+      })
+      await refetch()
+    } catch (error) {
+      console.error("Leave failed:", error)
+      toast({ 
+        variant: "destructive", 
+        title: "Error", 
+        description: "Failed to leave the project." 
+      })
+    } finally {
+      setActionLoading(null)
     }
+  }
   return (
     <div className="flex h-screen bg-background">
       <Sidebar />
@@ -308,6 +333,7 @@ function MyMindmapsContent() {
                     onEdit={handleEditInfo}
                     onUnarchive={handleUnarchive}
                     onDuplicate={handleDuplicate}
+                    onLeave={handleLeave}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}
                   />
@@ -320,6 +346,7 @@ function MyMindmapsContent() {
                     onUnarchive={handleUnarchive}
                     onEdit={handleEditInfo}
                     onDuplicate={handleDuplicate}
+                    onLeave={handleLeave}
                     onClick={handleClickCard}
                     actionLoading={actionLoading}
                   />
