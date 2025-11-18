@@ -28,9 +28,14 @@ export interface MindmapSettings {
 
 // Collaborator info
 export interface Collaborator {
-  mysqlUserId: number;
-  role: string;
-  addedAt: string;
+  mysqlUserId?: number;
+  email?: string;
+  role: "EDITOR" | "VIEWER" | "owner";
+  addedAt?: string;
+  invitedAt?: string;
+  acceptedAt?: string;
+  status?: "pending" | "accepted" | "rejected" | "removed";
+  invitedBy?: string;
 }
 
 // Mindmap metadata
@@ -53,6 +58,7 @@ export interface MindmapResponse {
   viewport?: Viewport;
   settings?: MindmapSettings;
   isPublic: boolean;
+  publicAccessLevel?: "view" | "edit" | "private";
   shareToken?: string;
   collaborators: Collaborator[];
   tags?: string[];
@@ -103,6 +109,7 @@ export interface CreateMindmapRequest {
   tags?: string[];
   category?: string;
   isPublic?: boolean;
+  publicAccessLevel?: "view" | "edit" | "private";
   isFavorite?: boolean;
   isTemplate?: boolean;
   aiGenerated?: boolean;
@@ -122,6 +129,7 @@ export interface UpdateMindmapRequest {
   tags?: string[];
   category?: string;
   isPublic?: boolean;
+  publicAccessLevel?: "view" | "edit" | "private";
   isFavorite?: boolean;
   isTemplate?: boolean;
   status?: string;
