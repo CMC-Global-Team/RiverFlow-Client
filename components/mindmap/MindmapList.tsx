@@ -118,7 +118,9 @@ export default function MindmapList({
             >
               <Edit className="h-4 w-4" />
             </button>
-            <button
+            {isOwner && (
+              <>
+                <button
               onClick={(e) => {
                 e.stopPropagation()
                 onDuplicate(mindmap.id)
@@ -138,7 +140,7 @@ export default function MindmapList({
             >
               <Star className={`h-4 w-4 ${mindmap.isFavorite ? "fill-yellow-500 text-yellow-500" : ""}`} />
             </button>
-              {((mindmap as any).isArchived === true || (mindmap as any).status === "archived") ? (
+                  {((mindmap as any).isArchived === true || (mindmap as any).status === "archived") ? (
                   <button
                       onClick={(e) => {
                           e.stopPropagation()
@@ -161,7 +163,9 @@ export default function MindmapList({
                       <Archive className="h-4 w-4" />
                   </button>
               )}
-              {isOwner ? (
+              </>
+            )}
+            {isOwner ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
