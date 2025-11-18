@@ -191,10 +191,10 @@ export default function Toolbar({
       {/* Title & Editing */}
       {mindmap && (
         <div 
-          onClick={() => setIsEditing?.(true)} 
-          className="cursor-pointer flex-shrink-0"
+          onClick={() => userRole !== 'viewer' && setIsEditing?.(true)} 
+          className={`flex-shrink-0 ${userRole !== 'viewer' ? 'cursor-pointer' : 'cursor-default'}`}
         >
-          {isEditing ? (
+          {isEditing && userRole !== 'viewer' ? (
             <input
               type="text"
               value={mindmap?.title || "Untitled Mindmap"}
@@ -206,9 +206,13 @@ export default function Toolbar({
           ) : (
             <h1 
               ref={titleRef}
-              className="text-sm font-bold text-foreground hover:text-primary transition-colors px-2 py-1 border-2 border-dashed border-muted-foreground/30 hover:border-primary rounded min-w-48 truncate"
-              onMouseEnter={handleTitleHover}
-              onMouseLeave={handleTitleLeave}
+              className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${
+                userRole !== 'viewer' 
+                  ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors' 
+                  : 'border-transparent'
+              }`}
+              onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
+              onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
             >
               {mindmap?.title || "Untitled Mindmap"}
             </h1>
@@ -286,15 +290,15 @@ export default function Toolbar({
         </Button>
       </div>
 
-      {/* Undo/Redo */}
+      {/* Undo/Redo - Disabled for viewers */}
       <div className="flex items-center gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={undo}
-          disabled={!canUndo}
+          disabled={!canUndo || userRole === 'viewer'}
           title="Undo (Ctrl+Z)"
-          className="h-8 w-8"
+          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Undo2 className="h-4 w-4" />
         </Button>
@@ -302,9 +306,9 @@ export default function Toolbar({
           variant="ghost"
           size="icon"
           onClick={redo}
-          disabled={!canRedo}
+          disabled={!canRedo || userRole === 'viewer'}
           title="Redo (Ctrl+Y)"
-          className="h-8 w-8"
+          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <Redo2 className="h-4 w-4" />
         </Button>

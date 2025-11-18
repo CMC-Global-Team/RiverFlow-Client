@@ -64,7 +64,7 @@ function AddChildButton({ screenPosition, onAddChild, onClose, onStayVisible, on
   )
 }
 
-export default function Canvas() {
+export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   const {
     nodes,
     edges,
@@ -165,8 +165,20 @@ export default function Canvas() {
     }, BUTTON_HIDE_DELAY)
   }, [clearHideButtonTimer, hideButton, longPressedNode])
 
-  // Create node types with long press handlers
+  // Create node types with long press handlers - Disabled in read-only mode
   const nodeTypes = useMemo(() => {
+    if (readOnly) {
+      // In read-only mode, return nodes without long press handlers
+      return {
+        rectangle: RectangleNode,
+        circle: CircleNode,
+        diamond: DiamondNode,
+        hexagon: HexagonNode,
+        ellipse: EllipseNode,
+        roundedRectangle: RoundedRectangleNode,
+      }
+    }
+
     const createNodeWithLongPress = (NodeComponent: any) => {
       const WrappedNode = (props: any) => {
         const triggerLongPress = () => {
@@ -253,7 +265,7 @@ export default function Canvas() {
       ellipse: createNodeWithLongPress(EllipseNode),
       roundedRectangle: createNodeWithLongPress(RoundedRectangleNode),
     }
-  }, [calculateScreenPosition, clearLongPressTimer, clearHideButtonTimer, scheduleHideButton, longPressedNode])
+  }, [readOnly, calculateScreenPosition, clearLongPressTimer, clearHideButtonTimer, scheduleHideButton, longPressedNode])
 
   const defaultEdgeOptions = {
     animated: true,
@@ -352,9 +364,11 @@ export default function Canvas() {
 
   const onNodeDoubleClick = useCallback(
     (_event: React.MouseEvent, node: any) => {
-      updateNodeData(node.id, { isEditing: true })
+      if (!readOnly) {
+        updateNodeData(node.id, { isEditing: true })
+      }
     },
-    [updateNodeData]
+    [updateNodeData, readOnly]
   )
 
   const onEdgeClick = useCallback(
@@ -403,8 +417,10 @@ export default function Canvas() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [nodes.length]) // Only depend on nodes.length to prevent infinite loops
 
-  // Keyboard shortcuts
+  // Keyboard shortcuts - Disabled in read-only mode
   useEffect(() => {
+    if (readOnly) return // Don't register keyboard shortcuts in read-only mode
+
     const handleKeyDown = (event: KeyboardEvent) => {
       // Don't trigger shortcuts when typing in input fields
       const target = event.target as HTMLElement
@@ -464,7 +480,7 @@ export default function Canvas() {
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [selectedNode, selectedEdge, deleteNode, deleteEdge,addNode, onConnect, undo, redo, canUndo, canRedo, createChildNode, createSiblingNode])
+  }, [readOnly, selectedNode, selectedEdge, deleteNode, deleteEdge, addNode, onConnect, undo, redo, canUndo, canRedo, createChildNode, createSiblingNode])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -511,9 +527,9 @@ export default function Canvas() {
       <ReactFlow
         nodes={nodes}
         edges={edges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onConnect={onConnect}
+        onNodesChange={readOnly ? undefined : onNodesChange}
+        onEdgesChange={readOnly ? undefined : onEdgesChange}
+        onConnect={readOnly ? undefined : onConnect}
         onMoveEnd={handleMoveEnd}
         onInit={(instance) => {
           reactFlowInstance.current = instance
@@ -524,6 +540,9 @@ export default function Canvas() {
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
+        nodesDraggable={!readOnly}
+        nodesConnectable={!readOnly}
+        elementsSelectable={!readOnly}
         fitView
         className="bg-muted/20"
       >
