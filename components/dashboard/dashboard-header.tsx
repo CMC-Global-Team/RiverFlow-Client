@@ -7,8 +7,15 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import ProfileModal from "@/components/profile/ProfileModal"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 
-export default function DashboardHeader() {
-  const [searchQuery, setSearchQuery] = useState("")
+interface DashboardHeaderProps {
+  searchValue?: string;
+  onSearchChange?: (value: string) => void;
+}
+
+export default function DashboardHeader({
+  searchValue = "",
+  onSearchChange,
+}: DashboardHeaderProps) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const { user } = useAuth()
 
@@ -21,8 +28,8 @@ export default function DashboardHeader() {
             <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
             <input
               type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={searchValue || ""}
+              onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
               placeholder="Search mindmaps..."
               className="w-full rounded-lg border border-border bg-input pl-10 py-2 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />

@@ -215,7 +215,10 @@ function MyMindmapsContent() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col ml-64">
-        <DashboardHeader />
+        <DashboardHeader 
+           searchValue={searchQuery}
+           onSearchChange={setSearchQuery}
+        />
 
         <main className="flex-1 overflow-auto">
           <div className="p-6 md:p-8">
@@ -244,9 +247,9 @@ function MyMindmapsContent() {
               </div>
 
               {/* Search Bar */}
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <SearchBar value={searchQuery} onChange={setSearchQuery} />
-              </div>
+              </div> */}
 
               {/* Filter Bar */}
               <FilterBar
