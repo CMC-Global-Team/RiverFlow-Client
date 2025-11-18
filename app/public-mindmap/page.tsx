@@ -24,6 +24,8 @@ function PublicMindmapInner() {
     setTitle,
     saveStatus,
     setFullMindmapState,
+    autoSaveEnabled,
+    setAutoSaveEnabled,
   } = useMindmapContext()
   
   const { toast } = useToast()
@@ -120,6 +122,17 @@ function PublicMindmapInner() {
 
   const userRole = mindmap?.publicAccessLevel === 'edit' ? 'editor' : 'viewer'
 
+  // Disable auto-save for VIEWER users (same as editor page)
+  useEffect(() => {
+    if (userRole === 'viewer') {
+      setAutoSaveEnabled(false)
+    }
+  }, [userRole, setAutoSaveEnabled])
+
+  const handleSave = async () => {
+    // Empty handler for public view - save is not allowed
+  }
+
   return (
     <div className="flex h-screen flex-col bg-background">
       {/* Main Content - Full Screen */}
@@ -142,11 +155,11 @@ function PublicMindmapInner() {
               handleTitleChange={handleTitleChange}
               handleTitleHover={handleTitleHover}
               handleTitleLeave={handleTitleLeave}
-              autoSaveEnabled={false}
-              setAutoSaveEnabled={() => {}}
+              autoSaveEnabled={autoSaveEnabled}
+              setAutoSaveEnabled={setAutoSaveEnabled}
               isSaving={isSaving}
               saveStatus={saveStatus}
-              handleSave={() => {}}
+              handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
             />
@@ -154,8 +167,8 @@ function PublicMindmapInner() {
         </div>
       </div>
 
-      {/* Floating Properties Panel - Outside relative container */}
-      {userRole !== 'viewer' && <PropertiesPanel />}
+      {/* Floating Properties Panel - Outside relative container (same as editor page) */}
+      <PropertiesPanel />
 
       <PublicShareModal
         isOpen={isShareOpen}
