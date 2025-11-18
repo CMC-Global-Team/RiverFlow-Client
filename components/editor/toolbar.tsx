@@ -53,6 +53,7 @@ interface ToolbarProps {
   saveStatus?: string
   handleSave?: () => void
   onShareClick?: () => void
+  userRole?: 'owner' | 'editor' | 'viewer' | null
 }
 
 export default function Toolbar({
@@ -69,6 +70,7 @@ export default function Toolbar({
   saveStatus,
   handleSave,
   onShareClick,
+  userRole,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -217,7 +219,7 @@ export default function Toolbar({
       {/* Divider */}
       <div className="w-px h-6 bg-border"></div>
 
-      {/* Add Node Tools */}
+      {/* Add Node Tools - Disabled for viewers */}
       <div className="flex items-center gap-1 flex-shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -225,33 +227,34 @@ export default function Toolbar({
               variant="ghost"
               size="icon"
               title="Add Node"
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+              disabled={userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
             >
               <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => handleAddNode("rectangle")}>
+            <DropdownMenuItem onClick={() => handleAddNode("rectangle")} disabled={userRole === 'viewer'}>
               <Square className="h-4 w-4 mr-2" />
               Rectangle
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddNode("circle")}>
+            <DropdownMenuItem onClick={() => handleAddNode("circle")} disabled={userRole === 'viewer'}>
               <Circle className="h-4 w-4 mr-2" />
               Circle
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddNode("ellipse")}>
+            <DropdownMenuItem onClick={() => handleAddNode("ellipse")} disabled={userRole === 'viewer'}>
               <Circle className="h-4 w-4 mr-2" />
               Ellipse
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddNode("diamond")}>
+            <DropdownMenuItem onClick={() => handleAddNode("diamond")} disabled={userRole === 'viewer'}>
               <Diamond className="h-4 w-4 mr-2" />
               Diamond
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddNode("hexagon")}>
+            <DropdownMenuItem onClick={() => handleAddNode("hexagon")} disabled={userRole === 'viewer'}>
               <Hexagon className="h-4 w-4 mr-2" />
               Hexagon
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")}>
+            <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")} disabled={userRole === 'viewer'}>
               <Square className="h-4 w-4 mr-2" />
               Rounded Rectangle
             </DropdownMenuItem>
@@ -259,15 +262,15 @@ export default function Toolbar({
         </DropdownMenu>
       </div>
 
-      {/* Edit Tools */}
+      {/* Edit Tools - Disabled for viewers */}
       <div className="flex items-center gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleAddSiblingNode}
           title="Thêm node anh em (Enter)"
-          disabled={!selectedNode}
-          className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 h-8 w-8"
+          disabled={!selectedNode || userRole === 'viewer'}
+          className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
         >
           <GitBranch className="h-4 w-4" />
         </Button>
@@ -276,7 +279,8 @@ export default function Toolbar({
           size="icon"
           onClick={handleDeleteSelected}
           title="Delete Selected"
-          className="hover:bg-destructive/10 hover:text-destructive h-8 w-8"
+          disabled={userRole === 'viewer'}
+          className="hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
         >
           <Trash2 className="h-4 w-4" />
         </Button>
@@ -357,20 +361,22 @@ export default function Toolbar({
       <div className="flex items-center gap-2 flex-shrink-0">
         <ThemeSwitcher />
 
-        {/* Auto-save Toggle */}
-        <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
-          <Switch
-            id="auto-save"
-            checked={autoSaveEnabled || false}
-            onCheckedChange={setAutoSaveEnabled}
-            className="h-4 w-8"
-          />
-          <Label htmlFor="auto-save" className="text-xs font-medium cursor-pointer hidden sm:inline">
-            Auto
-          </Label>
-        </div>
+        {/* Auto-save Toggle - Hidden for viewers */}
+        {userRole !== 'viewer' && (
+          <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
+            <Switch
+              id="auto-save"
+              checked={autoSaveEnabled || false}
+              onCheckedChange={setAutoSaveEnabled}
+              className="h-4 w-8"
+            />
+            <Label htmlFor="auto-save" className="text-xs font-medium cursor-pointer hidden sm:inline">
+              Auto
+            </Label>
+          </div>
+        )}
 
-        {/* Share Button */}
+        {/* Share Button - Always enabled */}
         <Button
           onClick={onShareClick}
           variant="ghost"
@@ -381,8 +387,8 @@ export default function Toolbar({
           <Users className="h-4 w-4" />
         </Button>
 
-        {/* Save Button */}
-        {!autoSaveEnabled && (
+        {/* Save Button - Hidden for viewers */}
+        {userRole !== 'viewer' && !autoSaveEnabled && (
           <Button 
             onClick={handleSave}
             disabled={isSaving || saveStatus === 'saved'}
@@ -403,8 +409,8 @@ export default function Toolbar({
           </Button>
         )}
 
-        {/* Auto-save Status */}
-        {autoSaveEnabled && (
+        {/* Auto-save Status - Hidden for viewers */}
+        {userRole !== 'viewer' && autoSaveEnabled && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
             {saveStatus === 'saving' && (
               <>
