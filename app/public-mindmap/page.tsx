@@ -99,32 +99,48 @@ function PublicMindmapInner() {
   // MUST be called before any early returns to follow Rules of Hooks
   useEffect(() => {
     if (mindmap) {
+      let role: 'owner' | 'editor' | 'viewer' | null = null
+      
       if (user && mindmap.mysqlUserId === user.userId) {
         // User is the owner
-        setUserRole('owner')
+        role = 'owner'
       } else {
         // Check collaborators if user is logged in
         if (user) {
           const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
           if (collabEntry && collabEntry.status === 'accepted') {
             // User is a collaborator
-            setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
+            role = collabEntry.role === 'EDITOR' ? 'editor' : 'viewer'
           } else if (mindmap.isPublic) {
             // User is logged in but not owner/collaborator, check public access level
-            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+            role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
           } else {
             // Not public and not collaborator
-            setUserRole(null)
+            role = null
           }
         } else {
           // User not logged in, check public access level
           if (mindmap.isPublic) {
-            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+            role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
           } else {
-            setUserRole(null)
+            role = null
           }
         }
       }
+      
+      console.log('PublicMindmap - Setting userRole:', {
+        role,
+        isPublic: mindmap.isPublic,
+        publicAccessLevel: mindmap.publicAccessLevel,
+        userId: user?.userId,
+        mindmapOwnerId: mindmap.mysqlUserId,
+        isOwner: user && mindmap.mysqlUserId === user.userId
+      })
+      
+      setUserRole(role)
+    } else {
+      // Reset role when mindmap is not available
+      setUserRole(null)
     }
   }, [mindmap, user])
 
