@@ -41,6 +41,7 @@ interface ShareModalProps {
   collaborators?: Collaborator[]
   isPublic?: boolean
   publicAccessLevel?: "view" | "edit" | "private"
+  isOwner?: boolean
 }
 
 export default function ShareModal({ 
@@ -53,7 +54,8 @@ export default function ShareModal({
   mindmapTitle,
   collaborators = [],
   isPublic = false,
-  publicAccessLevel = "private"
+  publicAccessLevel = "private",
+  isOwner = false
 }: ShareModalProps) {
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<"EDITOR" | "VIEWER">("VIEWER")
@@ -299,6 +301,7 @@ export default function ShareModal({
                   mindmapId=""
                   collaborators={collaborators}
                   onUpdateRole={onUpdateRole}
+                  isOwner={isOwner}
                   onRemove={onRemoveCollaborator}
                   isLoading={isLoading}
                 />

@@ -33,6 +33,7 @@ interface CollaboratorsManagementProps {
   onUpdateRole: (email: string, role: "EDITOR" | "VIEWER") => Promise<void>
   onRemove: (email: string) => Promise<void>
   isLoading?: boolean
+  isOwner?: boolean
 }
 
 export default function CollaboratorsManagement({
@@ -40,7 +41,8 @@ export default function CollaboratorsManagement({
   collaborators,
   onUpdateRole,
   onRemove,
-  isLoading = false
+  isLoading = false,
+  isOwner = false
 }: CollaboratorsManagementProps) {
   const [loadingEmails, setLoadingEmails] = useState<Set<string>>(new Set())
   const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null)
@@ -166,8 +168,8 @@ export default function CollaboratorsManagement({
                 </Select>
               )}
 
-              {/* Delete Button with Confirmation */}
-              {confirmDeleteEmail === collaborator.email ? (
+              {/* Delete Button with Confirmation - Only for owner */}
+              {isOwner && confirmDeleteEmail === collaborator.email ? (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="destructive"
@@ -192,7 +194,7 @@ export default function CollaboratorsManagement({
                     Hủy
                   </Button>
                 </div>
-              ) : (
+              ) : isOwner ? (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -207,7 +209,7 @@ export default function CollaboratorsManagement({
                     <Trash2 className="h-4 w-4 text-destructive hover:text-destructive/80" />
                   )}
                 </Button>
-              )}
+              ) : null}
             </div>
           </div>
         ))}
