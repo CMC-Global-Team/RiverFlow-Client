@@ -30,7 +30,7 @@ import { useAuth } from "@/hooks/auth/useAuth"
 function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
-  const titleRef = useRef<HTMLHeadingElement>(null)
+  const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
   
   const {
@@ -44,10 +44,10 @@ function EditorInner() {
     saveStatus,
   } = useMindmapContext()
   
-    const { toast } = useToast()
+  const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
-  const [collaborators, setCollaborators] = useState([])
+  const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
 
@@ -84,11 +84,20 @@ function EditorInner() {
       if (mindmapId) {
         setIsLoadingCollaborators(true)
         try {
-          // Get accepted collaborators and pending invitations
-          const [acceptedCollab, pendingInvites] = await Promise.all([
-            getCollaborators(mindmapId),
-            getPendingInvitations(mindmapId)
-          ])
+          // Only owners can load pending invitations
+          const isOwner = mindmap?.mysqlUserId === user?.userId
+          
+          let pendingInvites: any[] = []
+          const acceptedCollab = await getCollaborators(mindmapId)
+          
+          if (isOwner) {
+            try {
+              pendingInvites = await getPendingInvitations(mindmapId)
+            } catch (error) {
+              console.warn('Cannot load pending invitations (non-owner)', error)
+              pendingInvites = []
+            }
+          }
 
           // Map pending invitations to collaborator format
           const pendingCollaborators = (pendingInvites || [])
@@ -305,11 +314,19 @@ function EditorInner() {
     try {
       await removeCollaborator(mindmapId, email)
       
-      // Reload both accepted collaborators and pending invitations
-      const [acceptedCollab, pendingInvites] = await Promise.all([
-        getCollaborators(mindmapId),
-        getPendingInvitations(mindmapId)
-      ])
+      // Only owners can load pending invitations
+      const isOwner = mindmap?.mysqlUserId === user?.userId
+      let pendingInvites: any[] = []
+      const acceptedCollab = await getCollaborators(mindmapId)
+      
+      if (isOwner) {
+        try {
+          pendingInvites = await getPendingInvitations(mindmapId)
+        } catch (error) {
+          console.warn('Cannot load pending invitations (non-owner)', error)
+          pendingInvites = []
+        }
+      }
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -401,7 +418,7 @@ function EditorInner() {
               mindmap={mindmap}
               isEditing={isEditing}
               setIsEditing={setIsEditing}
-              titleRef={titleRef}
+              titleRef={titleRef as React.RefObject<HTMLHeadingElement>}
               handleTitleChange={handleTitleChange}
               handleTitleHover={handleTitleHover}
               handleTitleLeave={handleTitleLeave}
@@ -411,6 +428,7 @@ function EditorInner() {
               saveStatus={saveStatus}
               handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
+              userRole={userRole}
             />
           </div>
         </div>
