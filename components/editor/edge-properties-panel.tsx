@@ -1,27 +1,38 @@
 "use client"
 
-import { X, Trash2, Bold, Italic, Underline, Highlighter, Palette } from "lucide-react"
+import { X, Trash2, Bold, Italic, Underline, Palette } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 
 export default function EdgePropertiesPanel() {
   const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
 
   if (!selectedEdge) return null
 
-  const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
+  const textColorRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    const close = () => { setShowHighlight(false); setShowTextColor(false) }
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [])
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      
+      if (textColorRef.current && !textColorRef.current.contains(target)) {
+        if (!target.closest('.text-color-btn')) {
+          setShowTextColor(false)
+        }
+      }
+    }
+
+    if (showTextColor) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [showTextColor])
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },
@@ -108,22 +119,22 @@ export default function EdgePropertiesPanel() {
     const current = selectedEdge.labelStyle?.fontWeight
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontWeight: current === 700 || current === '700' || current === 'bold' ? 400 : 700 } })
   }
+
   const toggleItalic = () => {
     const current = selectedEdge.labelStyle?.fontStyle
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, fontStyle: current === 'italic' ? 'normal' : 'italic' } })
   }
+
   const toggleUnderline = () => {
     const current = selectedEdge.labelStyle?.textDecoration
     const next = current === 'underline' ? 'none' : 'underline'
     updateEdgeData(selectedEdge.id, { labelStyle: { ...selectedEdge.labelStyle, textDecoration: next } })
   }
-  const applyTextColor = (color: string) => handleLabelTextColorChange(color)
-  const applyHighlight = (color: string) => updateEdgeData(selectedEdge.id, {
-    labelShowBg: true,
-    labelBgStyle: { fill: color, fillOpacity: 0.9 },
-    labelBgPadding: [8,4] as [number, number],
-    labelBgBorderRadius: 4,
-  })
+
+  const applyTextColor = (color: string) => {
+    handleLabelTextColorChange(color)
+    setShowTextColor(false)
+  }
 
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
@@ -131,51 +142,57 @@ export default function EdgePropertiesPanel() {
   }
 
   return (
-    <div className="h-full bg-card overflow-y-auto">
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
-        <h3 className="font-semibold">Connection Properties</h3>
-        <Button variant="ghost" size="icon" onClick={() => setSelectedEdge(null)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
+    <div className="h-full bg-transparent">
+      <div className="space-y-4">
         {/* TEXT TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleBold()}}><Bold /></Button>
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleItalic()}}><Italic /></Button>
-          <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation();toggleUnderline()}}><Underline /></Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }}>
+            <Bold />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleItalic() }}>
+            <Italic />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleUnderline() }}>
+            <Underline />
+          </Button>
 
-          <div className="relative" onClick={(e)=>e.stopPropagation()}>
-            <Button variant="ghost" size="icon" onClick={()=>setShowHighlight(!showHighlight)}>
-              <Highlighter />
-            </Button>
-            {showHighlight && (
-              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
-                {swatches.map(c => (
-                  <button
-                    key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={()=>applyHighlight(c)}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-
-          <div className="relative" onClick={(e)=>e.stopPropagation()}>
-            <Button variant="ghost" size="icon" onClick={()=>setShowTextColor(!showTextColor)}>
+          {/* Text Color */}
+          <div className="text-color-container relative" onClick={(e) => e.stopPropagation()}>
+            <Button 
+              className="text-color-btn"
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                setShowTextColor(!showTextColor)
+                setShowHighlight(false)
+              }}
+            >
               <Palette />
             </Button>
             {showTextColor && (
-              <div className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={textColorRef}
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
+              >
                 {swatches.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={()=>applyTextColor(c)}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyTextColor(c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
@@ -196,24 +213,7 @@ export default function EdgePropertiesPanel() {
         {selectedEdge.label && (
           <>
             <div className="space-y-2">
-              <Label>Label Text Color</Label>
-              <div className="flex gap-2 flex-wrap">
-                {["#000000", "#ffffff", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#ef4444"].map((color) => (
-                  <button
-                    key={color}
-                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-transform"
-                    style={{
-                      backgroundColor: color,
-                      borderColor: selectedEdge.labelStyle?.fill === color ? "#000" : "transparent",
-                    }}
-                    onClick={() => handleLabelTextColorChange(color)}
-                  />
-                ))}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Label Background Color</Label>
+              <Label>Label Background</Label>
               <div className="flex gap-2 flex-wrap">
                 {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
                   <button

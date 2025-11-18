@@ -11,109 +11,241 @@ interface NodeData {
   bgColor?: string
   shape?: string
   isEditing?: boolean
+  scale?: number
 }
+
+// Resize Handle Component
+const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentScale: number }) => {
+  const { updateNodeData } = useMindmapContext()
+  const [isResizing, setIsResizing] = useState(false)
+  const [hovering, setHovering] = useState(false)
+  const startScaleRef = useRef(currentScale)
+  const startPosRef = useRef({ x: 0, y: 0 })
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsResizing(true)
+    startPosRef.current = { x: e.clientX, y: e.clientY }
+    startScaleRef.current = currentScale
+  }
+
+  useEffect(() => {
+    if (!isResizing) return
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const deltaX = e.clientX - startPosRef.current.x
+      const deltaY = e.clientY - startPosRef.current.y
+      const delta = (deltaX + deltaY) / 200 // Sensitivity: larger number = slower resize
+      
+      let newScale = startScaleRef.current + delta
+      newScale = Math.max(0.6, Math.min(2.0, newScale)) // Clamp between 0.6 and 2.0
+      
+      updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
+    }
+
+    const handleMouseUp = () => {
+      setIsResizing(false)
+    }
+
+    document.addEventListener('mousemove', handleMouseMove)
+    document.addEventListener('mouseup', handleMouseUp)
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [isResizing, nodeId, currentScale, updateNodeData])
+
+  const handleStyle = {
+    width: '12px',
+    height: '12px',
+    background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
+    borderRadius: '2px',
+    opacity: hovering || isResizing ? 1 : 0,
+    transition: 'opacity 0.2s',
+    pointerEvents: 'auto' as const,
+  }
+
+  return (
+    <>
+      {/* Top-Left */}
+      <div
+        className="absolute top-0 left-0"
+        style={{...handleStyle, cursor: 'nwse-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Top-Right */}
+      <div
+        className="absolute top-0 right-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Left */}
+      <div
+        className="absolute bottom-0 left-0"
+        style={{...handleStyle, cursor: 'nesw-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+      {/* Bottom-Right */}
+      <div
+        className="absolute bottom-0 right-0"
+        style={{...handleStyle, cursor: 'se-resize'}}
+        onMouseDown={handleMouseDown}
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => !isResizing && setHovering(false)}
+        title="Drag to resize"
+      />
+    </>
+  )
+})
+
+ResizeHandle.displayName = "ResizeHandle"
+
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
-  const [label, setLabel] = useState(data.label || "New Node")
-  const [description, setDescription] = useState(data.description || "")
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
   const descRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    setLabel(data.label || "New Node")
-    setDescription(data.description || "")
-  }, [data.label, data.description])
+  const containerRef = useRef<HTMLDivElement>(null)
+  const initialLabelHtml = useRef<string>('')
+  const initialDescHtml = useRef<string>('')
 
   // Auto-enable editing when isEditing prop is set
   useEffect(() => {
     if (data.isEditing && !editingLabel) {
       setEditingLabel(true)
-      // Clear the flag after enabling
       updateNodeData(id, { isEditing: false })
     }
   }, [data.isEditing, editingLabel, id, updateNodeData])
 
+  // Set up label edit mode - preserve HTML content
   useEffect(() => {
     if (editingLabel && labelRef.current) {
+      initialLabelHtml.current = data.label || ""
+      labelRef.current.innerHTML = initialLabelHtml.current
       labelRef.current.focus()
+      // Select all text on focus
+      const range = document.createRange()
+      const sel = window.getSelection()
+      range.selectNodeContents(labelRef.current)
+      sel?.removeAllRanges()
+      sel?.addRange(range)
     }
   }, [editingLabel])
 
+  // Set up description edit mode - preserve HTML content
   useEffect(() => {
     if (editingDesc && descRef.current) {
+      initialDescHtml.current = data.description || ""
+      descRef.current.innerHTML = initialDescHtml.current
       descRef.current.focus()
     }
   }, [editingDesc])
 
-  const save = () => {
-    updateNodeData(id, {
-      label: label.trim() || "Untitled",
-      description: description.trim(),
-    })
+  const finishLabel = () => {
+    if (labelRef.current) {
+      const html = labelRef.current.innerHTML
+      // Only update if changed to avoid unnecessary saves
+      if (html !== initialLabelHtml.current) {
+        updateNodeData(id, { label: html })
+      }
+    }
     setEditingLabel(false)
+  }
+
+  const finishDesc = () => {
+    if (descRef.current) {
+      const html = descRef.current.innerHTML
+      // Only update if changed
+      if (html !== initialDescHtml.current) {
+        updateNodeData(id, { description: html })
+      }
+    }
     setEditingDesc(false)
   }
 
+  const handleLabelKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingLabel(false)
+    } else if (e.key === 'Enter' && e.ctrlKey) {
+      e.preventDefault()
+      finishLabel()
+    }
+  }
+
+  const handleDescKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setEditingDesc(false)
+    }
+  }
+
+  // Handle click on container to enable editing when text has styles
+  const handleLabelClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingLabel(true)
+  }
+
+  const handleDescClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setEditingDesc(true)
+  }
+
   return (
-    <div className="space-y-1">
+    <div ref={containerRef} className="space-y-1 w-full pointer-events-auto">
       {/* Label */}
       {editingLabel ? (
         <div
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
-          className="w-full outline-none font-semibold text-sm bg-transparent border-b border-primary px-1 -mx-1 rounded"
-          onInput={() => setLabel(labelRef.current?.innerHTML || '')}
-          onBlur={() => { save() }}
-          onKeyDown={(e) => {
-            if (e.key === 'Escape') {
-              e.preventDefault();
-              setLabel(data.label || 'Untitled');
-              setEditingLabel(false);
-            }
-          }}
-          dangerouslySetInnerHTML={{ __html: label }}
+          className="w-full outline-none font-semibold text-sm bg-transparent border-b-2 border-primary px-1 -mx-1 py-0.5 rounded transition-all pointer-events-auto"
+          style={{ color: data.color || "#3b82f6" }}
+          onBlur={finishLabel}
+          onKeyDown={handleLabelKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
         />
       ) : (
         <div
-          className="font-semibold text-sm cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded"
-          style={{ color: data.color || "#3b82f6" }}
-          onClick={(e) => {
-            e.stopPropagation()
-            setEditingLabel(true)
-          }}
-          dangerouslySetInnerHTML={{ __html: label || '<span class="text-muted-foreground">Click to add title</span>' }}
+          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto"
+          style={{ color: data.color || "#3b82f6", minHeight: '24px' }}
+          onMouseDown={handleLabelClick}
+          dangerouslySetInnerHTML={{ __html: data.label || '<span class="opacity-50">Click to edit</span>' }}
         />
       )}
 
       {/* Description */}
       {editingDesc ? (
-        <textarea
+        <div
           ref={descRef}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          onBlur={() => {
-            save()
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Escape") {
-              setDescription(data.description || "")
-              setEditingDesc(false)
-            }
-          }}
-          className="w-full resize-none outline-none text-xs text-muted-foreground bg-transparent border border-primary/30 rounded p-1"
-          rows={2}
+          contentEditable
+          suppressContentEditableWarning
+          className="w-full outline-none text-xs bg-transparent border border-primary/30 rounded p-1 min-h-6 transition-all pointer-events-auto"
+          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
+          onBlur={finishDesc}
+          onKeyDown={handleDescKeyDown}
+          onMouseDown={(e) => e.stopPropagation()}
         />
       ) : (
         <div
-          className="text-xs text-muted-foreground cursor-text select-none hover:bg-muted/50 px-1 -mx-1 rounded min-h-6"
-          onClick={(e) => {
-            e.stopPropagation()
-            setEditingDesc(true)
-          }}
-          dangerouslySetInnerHTML={{ __html: description || '<span class="text-muted-foreground/50">Description</span>' }}
+          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center pointer-events-auto"
+          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
+          onMouseDown={handleDescClick}
+          dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
         />
       )}
     </div>
@@ -122,17 +254,25 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 // Rectangle Node (default)
 export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -160,7 +300,7 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
+        />      <div className="space-y-1 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -190,7 +330,10 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -199,17 +342,25 @@ RectangleNode.displayName = "RectangleNode"
 // Circle Node
 export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
       style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
       }}
     >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
+        style={{
+          borderColor: color,
+          backgroundColor: data.bgColor || "transparent"
+        }}
+      >
         <Handle
             type="target"
             id="target-top"
@@ -237,7 +388,7 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-3">
+        />      <div className="text-center px-3 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -267,7 +418,10 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -276,9 +430,17 @@ CircleNode.displayName = "CircleNode"
 // Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-32 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-32 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -307,7 +469,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%"}}
         />      <div
-        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all ${
+        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all cursor-pointer relative ${
           selected ? "ring-2 ring-primary ring-offset-2" : ""
         }`}
         style={{
@@ -315,7 +477,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           backgroundColor: data.bgColor || "transparent"
          }}
       />
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
         <div className="text-center px-3 max-w-[80px]">
           <EditableContent data={data} id={id} />
         </div>
@@ -347,7 +509,10 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "-21%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -356,9 +521,17 @@ DiamondNode.displayName = "DiamondNode"
 // Hexagon Node
 export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
-    <div className="relative w-36 h-32">
+    <div
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div className="relative w-36 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -388,7 +561,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             style={{ background: color, top: "50%", left: "3%" }}
         />      <svg
         viewBox="0 0 100 87"
-        className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}
+        className={`w-full h-full transition-all cursor-pointer relative ${selected ? "drop-shadow-lg" : ""}`}
       >
         <polygon
           points="50,5 95,25 95,65 50,85 5,65 5,25"
@@ -398,7 +571,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           className={selected ? "stroke-[3]" : ""}
         />
       </svg>
-      <div className="absolute inset-0 flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
         <div className="text-center px-4">
           <EditableContent data={data} id={id} />
         </div>
@@ -430,7 +603,10 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%", left: "3%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -439,12 +615,20 @@ HexagonNode.displayName = "HexagonNode"
 // Ellipse Node
 export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
+        }`}
       style={{
         borderColor: color,
         backgroundColor: data.bgColor || "transparent"
@@ -477,7 +661,7 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-4">
+        />      <div className="text-center px-4 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -507,7 +691,10 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 
@@ -516,11 +703,19 @@ EllipseNode.displayName = "EllipseNode"
 // Rounded Rectangle Node
 export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
+  const scale = data.scale || 1
 
   return (
     <div
-      className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] ${
-        selected ? "ring-2 ring-primary ring-offset-2" : ""
+      style={{
+        transform: `scale(${scale})`,
+        transformOrigin: 'center',
+        transition: 'transform 0.2s ease'
+      }}
+    >
+      <div
+        className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+          selected ? "ring-2 ring-primary ring-offset-2" : ""
       }`}
       style={{
         borderColor: color,
@@ -554,7 +749,7 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1">
+        />      <div className="space-y-1 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
         <Handle
@@ -584,7 +779,10 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             position={Position.Left}
             className="w-3 h-3"
             style={{ background: color, top: "50%" }}
-        />    </div>
+        />
+        <ResizeHandle nodeId={id} currentScale={scale} />
+      </div>
+    </div>
   )
 })
 

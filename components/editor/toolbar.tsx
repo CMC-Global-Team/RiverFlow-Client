@@ -15,6 +15,12 @@ import {
   Redo2,
   Undo2,
   GitBranch,
+  ChevronDown,
+  Users,
+  Loader2,
+  Check,
+  AlertCircle,
+  ArrowLeft,
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -26,8 +32,44 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
+import { Switch } from "@/components/ui/switch"
+import { Label } from "@/components/ui/label"
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import BackButton from "./back-button"
+import gsap from "gsap"
+import { useRouter } from "next/navigation"
 
-export default function Toolbar() {
+interface ToolbarProps {
+  mindmap?: any
+  isEditing?: boolean
+  setIsEditing?: (value: boolean) => void
+  titleRef?: React.RefObject<HTMLHeadingElement>
+  handleTitleChange?: (title: string) => void
+  handleTitleHover?: () => void
+  handleTitleLeave?: () => void
+  autoSaveEnabled?: boolean
+  setAutoSaveEnabled?: (value: boolean) => void
+  isSaving?: boolean
+  saveStatus?: string
+  handleSave?: () => void
+  onShareClick?: () => void
+}
+
+export default function Toolbar({
+  mindmap,
+  isEditing,
+  setIsEditing,
+  titleRef,
+  handleTitleChange,
+  handleTitleHover,
+  handleTitleLeave,
+  autoSaveEnabled,
+  setAutoSaveEnabled,
+  isSaving,
+  saveStatus,
+  handleSave,
+  onShareClick,
+}: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
 
@@ -137,18 +179,55 @@ export default function Toolbar() {
   }
 
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg">
+    <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto">
+      {/* Back Button */}
+      <BackButton />
+      
+      {/* Divider */}
+      <div className="w-px h-6 bg-border"></div>
+
+      {/* Title & Editing */}
+      {mindmap && (
+        <div 
+          onClick={() => setIsEditing?.(true)} 
+          className="cursor-pointer flex-shrink-0"
+        >
+          {isEditing ? (
+            <input
+              type="text"
+              value={mindmap?.title || "Untitled Mindmap"}
+              onChange={(e) => handleTitleChange?.(e.target.value)}
+              onBlur={() => setIsEditing?.(false)}
+              autoFocus
+              className="text-sm font-bold text-foreground bg-input border-2 border-primary rounded px-2 py-1 w-48"
+            />
+          ) : (
+            <h1 
+              ref={titleRef}
+              className="text-sm font-bold text-foreground hover:text-primary transition-colors px-2 py-1 border-2 border-dashed border-muted-foreground/30 hover:border-primary rounded min-w-48 truncate"
+              onMouseEnter={handleTitleHover}
+              onMouseLeave={handleTitleLeave}
+            >
+              {mindmap?.title || "Untitled Mindmap"}
+            </h1>
+          )}
+        </div>
+      )}
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-border"></div>
+
       {/* Add Node Tools */}
-      <div className="flex items-center gap-1 border-r border-border pr-3">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
               size="icon"
               title="Add Node"
-              className="hover:bg-primary/10 hover:text-primary"
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
-              <Plus className="h-5 w-5" />
+              <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent>
@@ -181,88 +260,165 @@ export default function Toolbar() {
       </div>
 
       {/* Edit Tools */}
-      <div className="flex items-center gap-1 border-r border-border pr-3">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleAddSiblingNode}
           title="Thêm node anh em (Enter)"
           disabled={!selectedNode}
-          className="hover:bg-primary/10 hover:text-primary disabled:opacity-50"
+          className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 h-8 w-8"
         >
-          <GitBranch className="h-5 w-5" />
+          <GitBranch className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleDeleteSelected}
           title="Delete Selected"
-          className="hover:bg-destructive/10 hover:text-destructive"
+          className="hover:bg-destructive/10 hover:text-destructive h-8 w-8"
         >
-          <Trash2 className="h-5 w-5" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
 
-      <div className="flex items-center gap-1 border-r border-border pr-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={undo}
-          disabled={!canUndo}
-          title="Undo (Ctrl+Z)"
-        >
-          <Undo2 className="h-5 w-5" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={redo}
-          disabled={!canRedo}
-          title="Redo (Ctrl+Y)"
-        >
-          <Redo2 className="h-5 w-5" />
-        </Button>
-      </div>
+      {/* Undo/Redo */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={undo}
+          disabled={!canUndo}
+          title="Undo (Ctrl+Z)"
+          className="h-8 w-8"
+        >
+          <Undo2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={redo}
+          disabled={!canRedo}
+          title="Redo (Ctrl+Y)"
+          className="h-8 w-8"
+        >
+          <Redo2 className="h-4 w-4" />
+        </Button>
+      </div>
 
       {/* Zoom Tools */}
-      <div className="flex items-center gap-1 border-r border-border pr-3">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleZoomIn}
           title="Zoom In"
+          className="h-8 w-8"
         >
-          <ZoomIn className="h-5 w-5" />
+          <ZoomIn className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleZoomOut}
           title="Zoom Out"
+          className="h-8 w-8"
         >
-          <ZoomOut className="h-5 w-5" />
+          <ZoomOut className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
           onClick={handleFitView}
           title="Fit View"
+          className="h-8 w-8"
         >
-          <Maximize2 className="h-5 w-5" />
+          <Maximize2 className="h-4 w-4" />
         </Button>
       </div>
 
       {/* Export */}
-      <div className="flex items-center gap-1 ml-auto">
+      <div className="flex items-center gap-1 flex-shrink-0">
         <Button
           variant="ghost"
           size="icon"
           onClick={handleDownload}
           title="Download Mindmap"
-          className="hover:bg-primary/10 hover:text-primary"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
         >
-          <Download className="h-5 w-5" />
+          <Download className="h-4 w-4" />
         </Button>
+      </div>
+
+      {/* Divider */}
+      <div className="w-px h-6 bg-border ml-auto flex-shrink-0"></div>
+
+      {/* Right Side Actions */}
+      <div className="flex items-center gap-2 flex-shrink-0">
+        <ThemeSwitcher />
+
+        {/* Auto-save Toggle */}
+        <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
+          <Switch
+            id="auto-save"
+            checked={autoSaveEnabled || false}
+            onCheckedChange={setAutoSaveEnabled}
+            className="h-4 w-8"
+          />
+          <Label htmlFor="auto-save" className="text-xs font-medium cursor-pointer hidden sm:inline">
+            Auto
+          </Label>
+        </div>
+
+        {/* Share Button */}
+        <Button
+          onClick={onShareClick}
+          variant="ghost"
+          size="icon"
+          title="Share"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+        >
+          <Users className="h-4 w-4" />
+        </Button>
+
+        {/* Save Button */}
+        {!autoSaveEnabled && (
+          <Button 
+            onClick={handleSave}
+            disabled={isSaving || saveStatus === 'saved'}
+            className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1 text-xs text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed h-8 whitespace-nowrap"
+          >
+            {saveStatus === 'saving' && <Loader2 className="h-3 w-3 animate-spin" />}
+            {saveStatus === 'saved' && <Check className="h-3 w-3" />}
+            {saveStatus === 'error' && <AlertCircle className="h-3 w-3 text-destructive" />}
+            <span>
+              {saveStatus === 'saving'
+                ? 'Saving...'
+                : saveStatus === 'saved'
+                  ? 'Saved'
+                  : saveStatus === 'error'
+                    ? 'Retry'
+                    : 'Save'}
+            </span>
+          </Button>
+        )}
+
+        {/* Auto-save Status */}
+        {autoSaveEnabled && (
+          <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
+            {saveStatus === 'saving' && (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+              </>
+            )}
+            {saveStatus === 'saved' && (
+              <Check className="h-3 w-3 text-green-500" />
+            )}
+            {saveStatus === 'error' && (
+              <AlertCircle className="h-3 w-3 text-destructive" />
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

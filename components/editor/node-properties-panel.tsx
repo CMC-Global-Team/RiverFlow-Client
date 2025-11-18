@@ -2,7 +2,7 @@
 
 import {
   X, Trash2, Bold, Italic, Underline,
-  Highlighter, Palette
+  Highlighter, Palette, Plus, Minus
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
@@ -25,12 +25,14 @@ export default function NodePropertiesPanel() {
   const textColorRef = useRef<HTMLDivElement>(null)
 
   const selectionRef = useRef<Range | null>(null)
+
   const saveSelection = () => {
     const sel = window.getSelection()
     if (sel && sel.rangeCount > 0) {
       selectionRef.current = sel.getRangeAt(0)
     }
   }
+
   const restoreSelection = () => {
     const sel = window.getSelection()
     if (selectionRef.current && sel) {
@@ -46,20 +48,22 @@ export default function NodePropertiesPanel() {
 
   if (!selectedNode) return null
 
-  
   useEffect(() => {
-    if (labelRef.current) labelRef.current.innerHTML = selectedNode.data.label || ""
-    if (descRef.current) descRef.current.innerHTML = selectedNode.data.description || ""
-  }, [selectedNode.id])
+    // Only update innerHTML when node ID changes (switching nodes), not while editing
+    if (labelRef.current && labelRef.current !== document.activeElement) {
+      labelRef.current.innerHTML = selectedNode.data.label || ""
+    }
+    if (descRef.current && descRef.current !== document.activeElement) {
+      descRef.current.innerHTML = selectedNode.data.description || ""
+    }
+  }, [selectedNode?.id])
 
-  
   const saveField = (field: "label" | "description") => {
     const ref = field === "label" ? labelRef.current : descRef.current
     if (!ref) return
     updateNodeData(selectedNode.id, { [field]: ref.innerHTML })
   }
 
- 
   const format = (cmd: string, value?: string) => {
     try {
       document.execCommand('styleWithCSS', false, 'true')
@@ -68,35 +72,107 @@ export default function NodePropertiesPanel() {
     if (focusedField) saveField(focusedField)
   }
 
-  const toggleBold = () => format("bold")
-  const toggleItalic = () => format("italic")
-  const toggleUnderline = () => format("underline")
-
-  const applyStyle = (type: "highlight" | "color", color: string) => {
-    // restore selection and refocus the correct field
-    if (focusedField === 'label') labelRef.current?.focus();
-    if (focusedField === 'description') descRef.current?.focus();
-    restoreSelection()
-    const cmd = type === "highlight" ? "hiliteColor" : "foreColor"
-    // Try preferred command first
-    format(cmd, color)
-    // Fallbacks for broader browser support
-    if (type === "highlight") {
-      try { document.execCommand('backColor', false, color) } catch {}
+  // Select all text in focused field if no selection exists
+  const ensureSelection = (field?: "label" | "description") => {
+    const sel = window.getSelection()
+    const targetField = field || focusedField
+    
+    // Check if there's already a selection with content
+    const hasSelection = sel && sel.toString().length > 0
+    
+    if (!hasSelection) {
+      // No selection, select all text in focused field
+      if (targetField === 'label' && labelRef.current) {
+        const range = document.createRange()
+        range.selectNodeContents(labelRef.current)
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+        return true // Indicate we selected all
+      } else if (targetField === 'description' && descRef.current) {
+        const range = document.createRange()
+        range.selectNodeContents(descRef.current)
+        sel?.removeAllRanges()
+        sel?.addRange(range)
+        return true // Indicate we selected all
+      }
     }
+    saveSelection()
+    return false // Had existing selection
   }
 
-  
-  useEffect(() => {
-    const close = () => {
-      setShowHighlight(false)
-      setShowTextColor(false)
-    }
-    document.addEventListener("click", close)
-    return () => document.removeEventListener("click", close)
-  }, [])
+  const toggleBold = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("bold") 
+  }
+  const toggleItalic = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("italic") 
+  }
+  const toggleUnderline = (field?: "label" | "description") => { 
+    const target = field || focusedField
+    if (target === 'label') labelRef.current?.focus()
+    if (target === 'description') descRef.current?.focus()
+    ensureSelection(target)
+    format("underline") 
+  }
 
-  
+  const applyStyle = (type: "highlight" | "color", color: string, field?: "label" | "description") => {
+    const targetField = field || focusedField
+    
+    // Focus the target field
+    if (targetField === 'label') labelRef.current?.focus();
+    if (targetField === 'description') descRef.current?.focus();
+    
+    // Ensure selection exists (select all if no selection)
+    ensureSelection(targetField)
+    
+    if (type === "highlight") {
+      // For highlight, try multiple methods
+      try { document.execCommand('hiliteColor', false, color) } catch {}
+      try { document.execCommand('backColor', false, color) } catch {}
+    } else {
+      // For text color
+      format("foreColor", color)
+    }
+    
+    // Close popups after applying
+    setShowHighlight(false)
+    setShowTextColor(false)
+  }
+
+  // Close popups when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      
+      // Check if click is outside the popups
+      if (highlightRef.current && !highlightRef.current.contains(target)) {
+        // Check if it's not the highlight button itself
+        if (!target.closest('.highlight-btn')) {
+          setShowHighlight(false)
+        }
+      }
+      
+      // Check if click is outside the popups for text color
+      if (textColorRef.current && !textColorRef.current.contains(target)) {
+        if (!target.closest('.text-color-btn')) {
+          setShowTextColor(false)
+        }
+      }
+    }
+
+    if (showHighlight || showTextColor) {
+      document.addEventListener("mousedown", handleClickOutside)
+      return () => document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [showHighlight, showTextColor])
+
   const handleShape = (shape: string) =>
     updateNodeData(selectedNode.id, { shape })
 
@@ -105,6 +181,20 @@ export default function NodePropertiesPanel() {
 
   const handleBg = (bgColor?: string) =>
     updateNodeData(selectedNode.id, { bgColor })
+
+  const handleScaleIncrease = () => {
+    const currentScale = selectedNode.data.scale || 1
+    const newScale = Math.min(currentScale + 0.2, 2) // Max 2x
+    updateNodeData(selectedNode.id, { scale: newScale })
+  }
+
+  const handleScaleDecrease = () => {
+    const currentScale = selectedNode.data.scale || 1
+    const newScale = Math.max(currentScale - 0.2, 0.6) // Min 0.6x
+    updateNodeData(selectedNode.id, { scale: newScale })
+  }
+
+  const currentScale = (selectedNode.data.scale || 1).toFixed(1)
 
   const shapes = [
     { value: "rectangle", label: "Rectangle", icon: "▭" },
@@ -121,49 +211,96 @@ export default function NodePropertiesPanel() {
     "#f3e8ff", "#fee2e2", "#fef9c3", "#d4f4dd"
   ]
 
-  
   const remove = () => {
     deleteNode(selectedNode.id)
     toast.success("Node deleted")
   }
 
   return (
-    <div className="h-full bg-card overflow-y-auto">
+    <div className="h-full bg-transparent">
 
-      {/* HEADER */}
-      <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-card">
-        <h3 className="font-semibold">Node Properties</h3>
-        <Button variant="ghost" size="icon" onClick={() => setSelectedNode(null)}>
-          <X className="h-4 w-4" />
-        </Button>
-      </div>
-
-      <div className="p-4 space-y-4">
+      <div className="space-y-4">
 
         {/* TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={toggleBold}><Bold /></Button>
-          <Button variant="ghost" size="icon" onClick={toggleItalic}><Italic /></Button>
-          <Button variant="ghost" size="icon" onClick={toggleUnderline}><Underline /></Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleBold()
+            }}
+            title="Bold (Ctrl+B)"
+          >
+            <Bold />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleItalic()
+            }}
+            title="Italic (Ctrl+I)"
+          >
+            <Italic />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => {
+              if (!focusedField) labelRef.current?.focus()
+              toggleUnderline()
+            }}
+            title="Underline (Ctrl+U)"
+          >
+            <Underline />
+          </Button>
 
           {/* Highlight */}
           <div
-            className="relative"
+            className="highlight-container relative"
             onClick={(e) => e.stopPropagation()}
-            onMouseDown={(e) => { e.stopPropagation(); e.preventDefault(); saveSelection(); }}
           >
-            <Button variant="ghost" size="icon" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); saveSelection(); setShowHighlight((v)=>!v); setShowTextColor(false); }}>
+            <Button 
+              className="highlight-btn"
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => { 
+                e.preventDefault()
+                e.stopPropagation()
+                if (!focusedField) labelRef.current?.focus()
+                saveSelection()
+                setShowHighlight(!showHighlight)
+                setShowTextColor(false)
+              }}
+              title="Highlight text"
+            >
               <Highlighter />
             </Button>
 
             {showHighlight && (
-              <div ref={highlightRef} className="absolute z-20 left-0 top-full mt-2 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={highlightRef} 
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
+              >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={() => applyStyle("highlight", c)}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyStyle("highlight", c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
@@ -172,21 +309,48 @@ export default function NodePropertiesPanel() {
 
           {/* Text Color */}
           <div
-            className="relative"
+            className="text-color-container relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button variant="ghost" size="icon" onMouseDown={saveSelection} onClick={() => setShowTextColor(!showTextColor)}>
+            <Button 
+              className="text-color-btn"
+              variant="ghost" 
+              size="icon" 
+              onMouseDown={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                if (!focusedField) labelRef.current?.focus()
+                saveSelection()
+                setShowTextColor(!showTextColor)
+                setShowHighlight(false)
+              }}
+              title="Text color"
+            >
               <Palette />
             </Button>
 
             {showTextColor && (
-              <div ref={textColorRef} className="absolute z-10 bg-white border p-2 rounded shadow grid grid-cols-5 gap-1">
+              <div 
+                ref={textColorRef} 
+                className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
+                onMouseDown={(e) => e.stopPropagation()}
+                style={{ pointerEvents: 'auto' }}
+              >
                 {COLORS.map(c => (
                   <button
                     key={c}
-                    className="w-6 h-6 rounded-full border"
-                    style={{ backgroundColor: c }}
-                    onClick={() => applyStyle("color", c)}
+                    className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
+                    style={{ 
+                      backgroundColor: c,
+                      borderColor: 'rgba(0,0,0,0.3)',
+                      cursor: 'pointer'
+                    }}
+                    onMouseDown={(e) => {
+                      e.preventDefault()
+                      e.stopPropagation()
+                      applyStyle("color", c)
+                    }}
+                    title={c}
                   />
                 ))}
               </div>
@@ -200,10 +364,10 @@ export default function NodePropertiesPanel() {
           ref={labelRef}
           contentEditable
           suppressContentEditableWarning
-          className="border rounded p-2 min-h-[30px] bg-white"
-          onFocus={() => setFocusedField("label")}
+          className="border rounded p-2 min-h-[30px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          onFocus={() => { setFocusedField("label") }}
           onInput={() => saveField("label")}
-          onBlur={() => saveField("label")}
+          onBlur={() => { saveField("label"); setFocusedField(null) }}
         />
 
         {/* DESCRIPTION */}
@@ -212,10 +376,10 @@ export default function NodePropertiesPanel() {
           ref={descRef}
           contentEditable
           suppressContentEditableWarning
-          className="border rounded p-2 min-h-[60px] bg-white"
-          onFocus={() => setFocusedField("description")}
+          className="border rounded p-2 min-h-[60px] bg-background hover:bg-muted/30 focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          onFocus={() => { setFocusedField("description") }}
           onInput={() => saveField("description")}
-          onBlur={() => saveField("description")}
+          onBlur={() => { saveField("description"); setFocusedField(null) }}
         />
 
         {/* SHAPE */}
@@ -283,6 +447,34 @@ export default function NodePropertiesPanel() {
             >
               <X className="w-4 h-4 text-gray-500" />
             </button>
+          </div>
+        </div>
+
+        {/* SIZE / SCALE */}
+        <div className="space-y-2">
+          <Label>Node Size</Label>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleScaleDecrease}
+              disabled={currentScale === '0.6'}
+              title="Decrease node size (Min: 0.6x)"
+            >
+              <Minus className="w-4 h-4" />
+            </Button>
+            <div className="flex-1 text-center">
+              <span className="text-sm font-medium">{currentScale}x</span>
+            </div>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleScaleIncrease}
+              disabled={currentScale === '2.0'}
+              title="Increase node size (Max: 2.0x)"
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
           </div>
         </div>
 

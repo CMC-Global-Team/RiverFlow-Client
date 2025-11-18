@@ -176,3 +176,71 @@ export const duplicateMindmap = async (mindmapId: string): Promise<MindmapRespon
   }
 };
 
+/**
+ * Mời cộng tác viên
+ * POST /api/mindmaps/{id}/collaborators/invite
+ */
+export const inviteCollaborator = async (
+  mindmapId: string, 
+  email: string, 
+  role: "EDITOR" | "VIEWER"
+) => {
+  const response = await apiClient.post(`/mindmaps/${mindmapId}/collaborators/invite`, {
+    email,
+    role
+  });
+  return response.data;
+};
+
+/**
+ * Cập nhật quyền của cộng tác viên
+ * PUT /api/mindmaps/{id}/collaborators/{email}/role
+ */
+export const updateCollaboratorRole = async (
+  mindmapId: string,
+  email: string,
+  role: "EDITOR" | "VIEWER"
+) => {
+  const response = await apiClient.put(`/mindmaps/${mindmapId}/collaborators/${email}/role`, {
+    role
+  });
+  return response.data;
+};
+
+/**
+ * Xóa cộng tác viên khỏi mindmap
+ * DELETE /api/mindmaps/{id}/collaborators/{email}
+ */
+export const removeCollaborator = async (
+  mindmapId: string,
+  email: string
+) => {
+  const response = await apiClient.delete(`/mindmaps/${mindmapId}/collaborators/${email}`);
+  return response.data;
+};
+
+/**
+ * Lấy danh sách cộng tác viên của mindmap
+ * GET /api/mindmaps/{id}/collaborators
+ */
+export const getCollaborators = async (mindmapId: string) => {
+  const response = await apiClient.get(`/mindmaps/${mindmapId}/collaborators`);
+  return response.data;
+};
+
+/**
+ * Cập nhật quyền truy cập công khai của mindmap
+ * PUT /api/mindmaps/{id}/public-access
+ */
+export const updatePublicAccess = async (
+  mindmapId: string,
+  isPublic: boolean,
+  accessLevel?: "view" | "edit" | "private"
+) => {
+  const response = await apiClient.put(`/mindmaps/${mindmapId}/public-access`, {
+    isPublic,
+    accessLevel: accessLevel || "private"
+  });
+  return response.data;
+};
+

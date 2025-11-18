@@ -14,6 +14,15 @@ import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
+import ShareModal from "@/components/mindmap/ShareModal"
+import { 
+  inviteCollaborator,
+  updateCollaboratorRole,
+  removeCollaborator,
+  updatePublicAccess,
+  getCollaborators
+} from "@/services/mindmap/mindmap.service"
+import { useToast } from "@/hooks/use-toast" 
 function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
@@ -30,7 +39,32 @@ function EditorInner() {
     saveStatus,
   } = useMindmapContext()
   
+    const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
+  const [isShareOpen, setIsShareOpen] = useState(false)
+  const [collaborators, setCollaborators] = useState([])
+  const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
+
+  // Load collaborators when mindmap is loaded
+  useEffect(() => {
+    const loadCollaborators = async () => {
+      if (mindmapId) {
+        setIsLoadingCollaborators(true)
+        try {
+          const data = await getCollaborators(mindmapId)
+          setCollaborators(data)
+        } catch (error) {
+          console.error('Failed to load collaborators:', error)
+        } finally {
+          setIsLoadingCollaborators(false)
+        }
+      }
+    }
+
+    if (isShareOpen) {
+      loadCollaborators()
+    }
+  }, [isShareOpen, mindmapId])
 
   // Load mindmap on mount
   useEffect(() => {
@@ -72,6 +106,100 @@ function EditorInner() {
     }
   }
 
+  const handleInvite = async (email: string, role: "EDITOR" | "VIEWER") => {
+    if (!mindmapId) return;
+    
+    try {
+      await inviteCollaborator(mindmapId, email, role)
+      
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
+      toast({
+        title: "Đã gửi lời mời!",
+        description: `Đã gửi email mời tới ${email}`,
+      })
+    } catch (error: any) {
+      console.error(error)
+      const errorMsg = error.response?.data?.message || "Không thể gửi lời mời.";
+      toast({
+        variant: "destructive",
+        title: "Gửi thất bại",
+        description: errorMsg,
+      })
+      throw error;
+    }
+  }
+
+  const handleUpdateRole = async (email: string, role: "EDITOR" | "VIEWER") => {
+    if (!mindmapId) return;
+    
+    try {
+      await updateCollaboratorRole(mindmapId, email, role)
+      
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
+      toast({
+        description: "Đã cập nhật quyền",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật quyền",
+      })
+      throw error;
+    }
+  }
+
+  const handleRemoveCollaborator = async (email: string) => {
+    if (!mindmapId) return;
+    
+    try {
+      await removeCollaborator(mindmapId, email)
+      
+      // Reload collaborators
+      const data = await getCollaborators(mindmapId)
+      setCollaborators(data)
+      
+      toast({
+        description: `Đã xóa ${email}`,
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể xóa collaborator",
+      })
+      throw error;
+    }
+  }
+
+  const handleTogglePublic = async (isPublic: boolean, accessLevel?: "view" | "edit" | "private") => {
+    if (!mindmapId) return;
+    
+    try {
+      await updatePublicAccess(mindmapId, isPublic, accessLevel)
+      
+      toast({
+        description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật trạng thái công khai",
+      })
+      throw error;
+    }
+  }
+
   if (!mindmap && mindmapId) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -82,125 +210,52 @@ function EditorInner() {
 
   return (
     <div className="flex h-screen flex-col bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-card px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <BackButton />
-            <div 
-              onClick={() => setIsEditing(true)} 
-              className="cursor-pointer" 
-              onBlur={() => setIsEditing(false)}
-              onMouseEnter={handleTitleHover}
-              onMouseLeave={handleTitleLeave}
-            >
-              {isEditing ? (
-                <input
-                  type="text"
-                  value={mindmap?.title || "Untitled Mindmap"}
-                  onChange={(e) => handleTitleChange(e.target.value)}
-                  onBlur={() => setIsEditing(false)}
-                  autoFocus
-                  className="text-xl font-bold text-foreground bg-input border-2 border-primary rounded px-3 py-1"
-                />
-              ) : (
-                <h1 
-                  ref={titleRef}
-                  className="text-xl font-bold text-foreground hover:text-primary transition-colors px-3 py-1 border-2 border-dashed border-muted-foreground/30 hover:border-primary rounded"
-                >
-                  {mindmap?.title || "Untitled Mindmap"}
-                </h1>
-              )}
-            </div>
-          </div>
-
-          {/* Right Actions */}
-          <div className="flex items-center gap-4">
-             <ThemeSwitcher/>
-            {/* Auto-save Toggle */}
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background">
-              <Switch
-                id="auto-save"
-                checked={autoSaveEnabled}
-                onCheckedChange={setAutoSaveEnabled}
-              />
-              <Label htmlFor="auto-save" className="text-sm font-medium cursor-pointer">
-                Auto-save
-              </Label>
-            </div>
-
-            <button className="flex items-center gap-2 rounded-lg border border-border px-4 py-2 hover:bg-muted transition-colors">
-              <Users className="h-5 w-5" />
-              <span className="text-sm font-medium">Share</span>
-              <ChevronDown className="h-4 w-4" />
-            </button>
-            
-            {!autoSaveEnabled && (
-              <button 
-                onClick={handleSave}
-                disabled={isSaving || saveStatus === 'saved'}
-                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {saveStatus === 'saving' && <Loader2 className="h-4 w-4 animate-spin" />}
-                {saveStatus === 'saved' && <Check className="h-4 w-4" />}
-                {saveStatus === 'error' && <AlertCircle className="h-4 w-4 text-destructive" />}
-                <span>
-                  {saveStatus === 'saving'
-                    ? 'Saving...'
-                    : saveStatus === 'saved'
-                      ? 'Saved'
-                      : saveStatus === 'error'
-                        ? 'Retry Save'
-                        : 'Save'}
-                </span>
-              </button>
-            )}
-
-            {/* Auto-save Status Indicator */}
-            {autoSaveEnabled && (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                {saveStatus === 'saving' && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Saving...</span>
-                  </>
-                )}
-                {saveStatus === 'saved' && (
-                  <>
-                    <Check className="h-4 w-4 text-green-500" />
-                    <span className="text-green-500">Saved</span>
-                  </>
-                )}
-                {saveStatus === 'error' && (
-                  <>
-                    <AlertCircle className="h-4 w-4 text-destructive" />
-                    <span className="text-destructive">Auto-save failed</span>
-                  </>
-                )}
-                {saveStatus === 'idle' && (
-                  <span>Auto-save enabled</span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="flex flex-1 overflow-hidden">
+      {/* Main Content - Full Screen */}
+      <div className="flex-1 overflow-hidden relative">
         {/* Canvas Area */}
-        <div className="flex-1 flex flex-col p-4">
-          <div className="mb-4">
-            <Toolbar />
-          </div>
-          <div className="flex-1 rounded-lg border border-border overflow-hidden">
+        <div className="w-full h-full flex flex-col">
+          <div className="flex-1 rounded-lg overflow-hidden">
             <Canvas />
           </div>
         </div>
 
-        {/* Properties Panel */}
-        <PropertiesPanel />
+        {/* Floating Toolbar with Header Items */}
+        <div className="absolute top-4 left-4 right-4 z-50 pointer-events-none">
+          <div className="pointer-events-auto">
+            <Toolbar 
+              mindmap={mindmap}
+              isEditing={isEditing}
+              setIsEditing={setIsEditing}
+              titleRef={titleRef}
+              handleTitleChange={handleTitleChange}
+              handleTitleHover={handleTitleHover}
+              handleTitleLeave={handleTitleLeave}
+              autoSaveEnabled={autoSaveEnabled}
+              setAutoSaveEnabled={setAutoSaveEnabled}
+              isSaving={isSaving}
+              saveStatus={saveStatus}
+              handleSave={handleSave}
+              onShareClick={() => setIsShareOpen(true)}
+            />
+          </div>
+        </div>
       </div>
+
+      {/* Floating Properties Panel - Outside relative container */}
+      <PropertiesPanel />
+
+      <ShareModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        onInvite={handleInvite}
+        onUpdateRole={handleUpdateRole}
+        onRemoveCollaborator={handleRemoveCollaborator}
+        onTogglePublic={handleTogglePublic}
+        mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+        collaborators={collaborators}
+        isPublic={mindmap?.isPublic || false}
+        publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+      />
     </div>
   )
 }
