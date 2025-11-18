@@ -74,6 +74,8 @@ export interface MindmapResponse {
   updatedAt: string;
   canUndo: boolean;
   canRedo: boolean;
+  ownerName?: string;
+  ownerAvatar?: string;
 }
 
 // Mindmap summary (for list views)
