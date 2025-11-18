@@ -111,21 +111,30 @@ export default function Canvas() {
   const hideButtonTimer = useRef<NodeJS.Timeout | null>(null)
 
   // Calculate screen position from flow position
-  const calculateScreenPosition = useCallback((flowPosition: { x: number; y: number }, dimensions: { width?: number; height?: number } = {}) => {
-    if (!reactFlowInstance.current) return null
+  const calculateScreenPosition = useCallback(
+    (flowPosition?: { x?: number; y?: number }, dimensions: { width?: number; height?: number } = {}) => {
+      if (!reactFlowInstance.current || !flowPosition) return null
 
-    const viewport = reactFlowInstance.current.getViewport()
-    const width = dimensions.width ?? 120
-    const height = dimensions.height ?? 80
+      const { x, y } = flowPosition
+      if (typeof x !== "number" || typeof y !== "number") {
+        return null
+      }
 
-    const nodeRightEdge = flowPosition.x + width
-    const nodeMiddleY = flowPosition.y + height / 2
+      const viewport = reactFlowInstance.current.getViewport()
+      // Sử dụng kích thước mặc định an toàn cho các loại node
+      const width = dimensions.width ?? 150
+      const height = dimensions.height ?? 80
 
-    const screenX = (nodeRightEdge * viewport.zoom) + viewport.x + 24
-    const screenY = (nodeMiddleY * viewport.zoom) + viewport.y
+      const nodeRightEdge = x + width
+      const nodeMiddleY = y + height / 2
 
-    return { x: screenX, y: screenY }
-  }, [])
+      const screenX = nodeRightEdge * viewport.zoom + viewport.x + 24
+      const screenY = nodeMiddleY * viewport.zoom + viewport.y
+
+      return { x: screenX, y: screenY }
+    },
+    []
+  )
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimer.current) {
@@ -161,13 +170,24 @@ export default function Canvas() {
     const createNodeWithLongPress = (NodeComponent: any) => {
       const WrappedNode = (props: any) => {
         const triggerLongPress = () => {
-          if (!reactFlowInstance.current) return
+          if (!reactFlowInstance.current || !props.position) return
+
+          const { x, y } = props.position as { x?: number; y?: number }
+          if (typeof x !== "number" || typeof y !== "number") {
+            return
+          }
+          // ReactFlow có thể không cung cấp width/height trong props
+          // Sử dụng giá trị mặc định an toàn
+          const nodeDimensions = { 
+            width: (props as any).width || (props as any).measured?.width || 150,
+            height: (props as any).height || (props as any).measured?.height || 80
+          }
           setLongPressedNode({
             id: props.id,
-            position: props.position,
-            dimensions: { width: props.width, height: props.height },
+            position: { x, y },
+            dimensions: nodeDimensions,
           })
-          const screenPos = calculateScreenPosition(props.position, { width: props.width, height: props.height })
+          const screenPos = calculateScreenPosition({ x, y }, nodeDimensions)
           if (screenPos) {
             setButtonScreenPosition(screenPos)
           }
@@ -464,7 +484,7 @@ export default function Canvas() {
   // Update button position when long-pressed node changes
   useEffect(() => {
     if (longPressedNode && reactFlowInstance.current) {
-      const screenPos = calculateScreenPosition(longPressedNode.position)
+      const screenPos = calculateScreenPosition(longPressedNode.position, longPressedNode.dimensions)
       if (screenPos) {
         setButtonScreenPosition(screenPos)
       }
