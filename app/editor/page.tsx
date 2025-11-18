@@ -510,6 +510,8 @@ function EditorInner() {
           isPublic={mindmap?.isPublic || false}
           publicAccessLevel={mindmap?.publicAccessLevel || "private"}
           isOwner={true}
+          shareToken={mindmap?.shareToken}
+          mindmapId={mindmapId || undefined}
         />
       ) : (
         <PublicShareModal
