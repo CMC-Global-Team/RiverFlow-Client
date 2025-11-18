@@ -170,10 +170,21 @@ export default function Canvas() {
     const createNodeWithLongPress = (NodeComponent: any) => {
       const WrappedNode = (props: any) => {
         const triggerLongPress = () => {
-          if (!reactFlowInstance.current || !props.position) return
+          console.log('[AddChildButton] pointer enter on node', props.id)
+          if (!reactFlowInstance.current) return
 
-          const { x, y } = props.position as { x?: number; y?: number }
+          const nodePosition =
+            (props as { positionAbsolute?: { x?: number; y?: number } }).positionAbsolute ||
+            (props as { position?: { x?: number; y?: number } }).position
+
+          if (!nodePosition) {
+            console.warn('[AddChildButton] missing node position for', props.id)
+            return
+          }
+
+          const { x, y } = nodePosition
           if (typeof x !== "number" || typeof y !== "number") {
+            console.warn('[AddChildButton] invalid node position values', { x, y, nodeId: props.id })
             return
           }
           // ReactFlow có thể không cung cấp width/height trong props
@@ -182,6 +193,7 @@ export default function Canvas() {
             width: (props as any).width || (props as any).measured?.width || 150,
             height: (props as any).height || (props as any).measured?.height || 80
           }
+          console.log('[AddChildButton] long-press dimensions', { nodeId: props.id, nodeDimensions, position: { x, y } })
           setLongPressedNode({
             id: props.id,
             position: { x, y },
@@ -189,7 +201,10 @@ export default function Canvas() {
           })
           const screenPos = calculateScreenPosition({ x, y }, nodeDimensions)
           if (screenPos) {
+            console.log('[AddChildButton] computed screen position', screenPos)
             setButtonScreenPosition(screenPos)
+          } else {
+            console.warn('[AddChildButton] could not compute screen position', { nodeId: props.id })
           }
         }
 
