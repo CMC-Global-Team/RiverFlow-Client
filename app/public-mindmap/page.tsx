@@ -36,6 +36,8 @@ function PublicMindmapInner() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
+  // Initialize userRole based on mindmap if available, otherwise null
+  // For public mindmaps accessed via /public-mindmap route, default to viewer if publicAccessLevel is 'view'
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
 
   // Load public mindmap by share token
@@ -53,6 +55,14 @@ function PublicMindmapInner() {
           setFullMindmapState(data)
           setLoadedToken(shareToken)
           setError(null)
+          
+          // Immediately set userRole based on publicAccessLevel after loading
+          // This ensures toolbar gets the correct role right away
+          if (data.isPublic) {
+            const initialRole = data.publicAccessLevel === 'view' ? 'viewer' : 'editor'
+            console.log('Setting initial userRole after load:', initialRole)
+            setUserRole(initialRole)
+          }
         } catch (err) {
           console.error('Failed to load public mindmap:', err)
           const errorMsg = err instanceof Error ? err.message : 'Failed to load mindmap. The link may be invalid or expired.'
