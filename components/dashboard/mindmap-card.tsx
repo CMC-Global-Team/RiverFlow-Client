@@ -67,7 +67,7 @@ export default function MindmapCard({
           </p>
           
           {/* Owner Info */}
-          {!isOwner && mindmap.ownerName && (
+          {mindmap.ownerName && (
             <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
               {mindmap.ownerAvatar && (
                 <img 
