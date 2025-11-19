@@ -123,6 +123,7 @@ function PublicMindmapInner() {
             role = collabEntry.role === 'EDITOR' ? 'editor' : 'viewer'
           } else if (mindmap.isPublic) {
             // User is logged in but not owner/collaborator, check public access level
+            // Only allow edit for logged-in users when publicAccessLevel is 'edit'
             role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
           } else {
             // Not public and not collaborator
@@ -131,7 +132,8 @@ function PublicMindmapInner() {
         } else {
           // User not logged in, check public access level
           if (mindmap.isPublic) {
-            role = mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor'
+            // Enforce view-only for anonymous users even if publicAccessLevel = 'edit'
+            role = 'viewer'
           } else {
             role = null
           }

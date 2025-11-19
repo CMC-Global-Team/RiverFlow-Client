@@ -56,14 +56,13 @@ export function middleware(request: NextRequest) {
     pathname.startsWith(route)
   );
 
-  // Allow /editor access if there's a token or id parameter (public mindmap)
+  // Allow /editor access without auth only if there's a public share token
   const hasToken = request.nextUrl.searchParams.has('token');
-  const hasId = request.nextUrl.searchParams.has('id');
   
   // Nếu là protected route và chưa đăng nhập -> redirect về home
-  // Exception: /editor với token hoặc id parameter (public mindmap) được phép
+  // Exception: /editor chỉ được phép khi có token (public mindmap)
   // Editor page will handle loading public mindmap if needed
-  if (isProtectedRoute && !isAuthenticated && !(pathname.startsWith('/editor') && (hasToken || hasId))) {
+  if (isProtectedRoute && !isAuthenticated && !(pathname.startsWith('/editor') && hasToken)) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);
