@@ -235,7 +235,7 @@ function PublicMindmapInner() {
       </div>
 
       {/* Floating Properties Panel - Outside relative container (same as editor page) */}
-      <PropertiesPanel />
+      <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
 
       <PublicShareModal
         isOpen={isShareOpen}
