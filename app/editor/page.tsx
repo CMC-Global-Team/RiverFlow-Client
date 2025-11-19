@@ -9,7 +9,7 @@ import Toolbar from "@/components/editor/toolbar"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import gsap from "gsap"
@@ -30,6 +30,7 @@ import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 
 function EditorInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
@@ -429,6 +430,11 @@ function EditorInner() {
       // Fetch lại mindmap để lấy trạng thái mới và shareToken (nếu vừa công khai)
       const updated = await getMindmapById(mindmapId)
       setFullMindmapState(updated)
+
+      // Nếu vừa công khai và có shareToken, chuẩn hóa URL thành link công khai ngay
+      if (isPublic && updated?.shareToken) {
+        router.replace(`/public-mindmap?token=${updated.shareToken}`)
+      }
       
       toast({
         description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
