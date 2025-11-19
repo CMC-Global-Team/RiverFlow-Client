@@ -28,6 +28,7 @@ function PublicMindmapInner() {
     setFullMindmapState,
     autoSaveEnabled,
     setAutoSaveEnabled,
+    saveMindmap,
   } = useMindmapContext()
   
   const { toast } = useToast()
@@ -48,20 +49,20 @@ function PublicMindmapInner() {
           setIsLoading(true)
           console.log('Loading public mindmap with token:', shareToken)
           const data = await getPublicMindmap(shareToken)
-          
           console.log('Successfully loaded public mindmap:', data)
-          
-          // Set the mindmap in context
-          setFullMindmapState(data)
-          setLoadedToken(shareToken)
-          setError(null)
-          
-          // Immediately set userRole based on publicAccessLevel after loading
-          // This ensures toolbar gets the correct role right away
-          if (data.isPublic) {
+          // Enforce public access: block if private
+          if (data?.isPublic && data?.publicAccessLevel !== 'private') {
+            const overlay = { ...data, shareToken: data.shareToken || shareToken }
+            setFullMindmapState(overlay)
+            setLoadedToken(shareToken)
+            setError(null)
             const initialRole = data.publicAccessLevel === 'view' ? 'viewer' : 'editor'
             console.log('Setting initial userRole after load:', initialRole)
             setUserRole(initialRole)
+          } else {
+            const errorMsg = 'Mindmap này đang ở chế độ riêng tư.'
+            setError(errorMsg)
+            toast({ title: 'Access Denied', description: errorMsg, variant: 'destructive' })
           }
         } catch (err) {
           console.error('Failed to load public mindmap:', err)
@@ -164,7 +165,7 @@ function PublicMindmapInner() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div suppressHydrationWarning className="flex h-screen items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     )
@@ -172,7 +173,7 @@ function PublicMindmapInner() {
 
   if (error) {
     return (
-      <div className="flex h-screen items-center justify-center">
+      <div suppressHydrationWarning className="flex h-screen items-center justify-center">
         <div className="max-w-md text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
           <h2 className="text-xl font-semibold mb-2">Error Loading Mindmap</h2>
@@ -191,7 +192,12 @@ function PublicMindmapInner() {
   }
 
   const handleSave = async () => {
-    // Empty handler for public view - save is not allowed
+    try {
+      await saveMindmap()
+    } catch (error) {
+      console.error('Save failed:', error)
+      toast({ title: 'Save failed', description: 'Không thể lưu thay đổi.', variant: 'destructive' })
+    }
   }
 
   return (

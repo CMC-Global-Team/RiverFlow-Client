@@ -71,21 +71,23 @@ function EditorInner() {
       if (user && mindmap.mysqlUserId === user.userId) {
         setUserRole('owner')
       } else {
-        // Check collaborators if user is logged in
         if (user) {
           const collabEntry = mindmap.collaborators?.find(c => c.email === user.email)
           if (collabEntry && collabEntry.status === 'accepted') {
             setUserRole(collabEntry.role === 'EDITOR' ? 'editor' : 'viewer')
           } else if (mindmap.isPublic) {
-            // Public mindmap - check access level
-            setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+            const access = mindmap.publicAccessLevel
+            if (access === 'edit') setUserRole('editor')
+            else if (access === 'view') setUserRole('viewer')
+            else setUserRole(null)
           } else {
             setUserRole(null)
           }
         } else if (mindmap.isPublic) {
-          // User not logged in but mindmap is public
-          // Enforce view-only for anonymous users even if publicAccessLevel = 'edit'
-          setUserRole('viewer')
+          const access = mindmap.publicAccessLevel
+          if (access === 'edit') setUserRole('editor')
+          else if (access === 'view') setUserRole('viewer')
+          else setUserRole(null)
         } else {
           setUserRole(null)
         }
@@ -188,7 +190,17 @@ function EditorInner() {
                 console.log('Loading public mindmap with token:', shareToken)
                 const publicMindmap = await getPublicMindmap(shareToken)
                 console.log('Successfully loaded public mindmap:', publicMindmap)
-                setFullMindmapState(publicMindmap)
+                // Enforce public access: block if private
+                if (publicMindmap?.isPublic && publicMindmap?.publicAccessLevel !== 'private') {
+                  const overlay = { ...publicMindmap, shareToken: publicMindmap.shareToken || shareToken }
+                  setFullMindmapState(overlay)
+                } else {
+                  toast({
+                    title: 'Access Denied',
+                    description: 'Mindmap này đang ở chế độ riêng tư.',
+                    variant: 'destructive',
+                  })
+                }
               } else {
                 // Không có token công khai trong URL -> giữ nguyên trang editor và báo lỗi quyền truy cập
                 console.warn('No shareToken in URL; skipping public fallback')
@@ -490,7 +502,7 @@ function EditorInner() {
         {/* Canvas Area */}
         <div className="w-full h-full flex flex-col">
           <div className="flex-1 rounded-lg overflow-hidden">
-            <Canvas readOnly={userRole === 'viewer'} />
+            <Canvas readOnly={!(userRole === 'editor' || userRole === 'owner')} />
           </div>
         </div>
 

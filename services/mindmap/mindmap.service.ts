@@ -54,6 +54,73 @@ export const getPublicMindmap = async (shareToken: string): Promise<MindmapRespo
   }
 };
 
+export const updatePublicMindmap = async (
+  shareToken: string,
+  data: UpdateMindmapRequest
+): Promise<MindmapResponse> => {
+  try {
+    const response = await apiClient.put<MindmapResponse>(
+      `${MINDMAP_API_BASE}/public/${shareToken}`,
+      data,
+      {
+        headers: { 'X-Share-Token': shareToken },
+        params: { token: shareToken, id: (data as any).id },
+      }
+    );
+    return response.data;
+  } catch (e) {
+    try {
+      const response2 = await apiClient.put<MindmapResponse>(
+        `${MINDMAP_API_BASE}/public`,
+        data,
+        {
+          headers: { 'X-Share-Token': shareToken },
+          params: { token: shareToken, id: (data as any).id },
+        }
+      );
+      return response2.data;
+    } catch (e2) {
+      try {
+        const response3 = await apiClient.patch<MindmapResponse>(
+          `${MINDMAP_API_BASE}/public/${shareToken}`,
+          data,
+          {
+            headers: { 'X-Share-Token': shareToken },
+            params: { token: shareToken, id: (data as any).id },
+          }
+        );
+        return response3.data;
+      } catch (e3) {
+        const response4 = await apiClient.put<MindmapResponse>(
+          `${MINDMAP_API_BASE}/public/${shareToken}`,
+          data,
+          {
+            headers: { 'X-Allow-Public-Auth': '1', Authorization: `Bearer ${shareToken}` },
+            params: { token: shareToken, id: (data as any).id },
+          }
+        );
+        return response4.data;
+      }
+    }
+  }
+};
+
+export const updateMindmapByTokenFallback = async (
+  id: string,
+  shareToken: string,
+  data: UpdateMindmapRequest
+): Promise<MindmapResponse> => {
+  const response = await apiClient.put<MindmapResponse>(
+    `${MINDMAP_API_BASE}/${id}`,
+    data,
+    {
+      headers: { 'X-Share-Token': shareToken },
+      params: { token: shareToken },
+    }
+  );
+  return response.data;
+};
+
 /**
  * Update mindmap
  */
