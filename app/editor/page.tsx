@@ -74,7 +74,8 @@ function EditorInner() {
           }
         } else if (mindmap.isPublic) {
           // User not logged in but mindmap is public
-          setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+          // Enforce view-only for anonymous users even if publicAccessLevel = 'edit'
+          setUserRole('viewer')
         } else {
           setUserRole(null)
         }
@@ -259,25 +260,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
       
@@ -322,25 +320,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
       
@@ -390,25 +385,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
     } catch (error: any) {
