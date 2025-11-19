@@ -22,14 +22,21 @@ const apiClient = axios.create({
 // Request interceptor - Tự động thêm access token vào mọi request
 apiClient.interceptors.request.use(
   (config) => {
-    // Lấy access token từ localStorage
-    const accessToken = localStorage.getItem('accessToken');
-    
-    if (accessToken) {
-      // Thêm token vào header Authorization
-      config.headers.Authorization = `Bearer ${accessToken}`;
+    const url = (config.url || '').toString();
+    const isPublicMindmap = url.startsWith('/mindmaps/public/') || config.headers['X-Share-Token'];
+    const allowPublicAuth = !!config.headers['X-Allow-Public-Auth'];
+
+    if (typeof window !== 'undefined') {
+      const accessToken = window.localStorage.getItem('accessToken');
+      if (accessToken && (!isPublicMindmap || allowPublicAuth)) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
+      }
     }
-    
+
+    if (isPublicMindmap && config.headers.Authorization && !allowPublicAuth) {
+      delete config.headers.Authorization;
+    }
+
     return config;
   },
   (error) => {
@@ -64,7 +71,10 @@ apiClient.interceptors.response.use(
     const originalRequest = error.config;
     
 
-    if (error.response?.status === 403) {
+    const url = (originalRequest?.url || '').toString();
+    const isPublicMindmap = url.startsWith('/mindmaps/public/') || originalRequest?.headers?.['X-Share-Token'];
+
+    if (error.response?.status === 403 && !isPublicMindmap) {
       // Clear tất cả dữ liệu authentication
       localStorage.clear();
       deleteCookie('accessToken');
@@ -80,7 +90,7 @@ apiClient.interceptors.response.use(
     }
     
     // Nếu lỗi 401 và chưa retry
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (error.response?.status === 401 && !originalRequest._retry && !isPublicMindmap) {
       if (isRefreshing) {
         // Nếu đang refresh, đợi trong queue
         return new Promise((resolve, reject) => {
