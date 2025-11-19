@@ -15,16 +15,17 @@ import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
-import PublicShareModal from "@/components/mindmap/PublicShareModal"
-import { 
-  inviteCollaborator,
-  updateCollaboratorRole,
-  removeCollaborator,
-  updatePublicAccess,
-  getCollaborators,
-  getPendingInvitations,
-  getPublicMindmap
-} from "@/services/mindmap/mindmap.service"
+  import PublicShareModal from "@/components/mindmap/PublicShareModal"
+  import { 
+    inviteCollaborator,
+    updateCollaboratorRole,
+    removeCollaborator,
+    updatePublicAccess,
+    getCollaborators,
+    getPendingInvitations,
+    getPublicMindmap,
+    getMindmapById
+  } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 
@@ -425,6 +426,9 @@ function EditorInner() {
     
     try {
       await updatePublicAccess(mindmapId, isPublic, accessLevel)
+      // Fetch lại mindmap để lấy trạng thái mới và shareToken (nếu vừa công khai)
+      const updated = await getMindmapById(mindmapId)
+      setFullMindmapState(updated)
       
       toast({
         description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
