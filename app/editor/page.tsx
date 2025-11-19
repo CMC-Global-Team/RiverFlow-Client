@@ -54,6 +54,16 @@ function EditorInner() {
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
+  const toArray = (input: any): any[] => {
+    if (Array.isArray(input)) return input
+    if (input && typeof input === 'object') {
+      if (Array.isArray((input as any).collaborators)) return (input as any).collaborators
+      const data = (input as any).data
+      if (Array.isArray(data?.collaborators)) return data.collaborators
+      if (Array.isArray(data)) return data
+    }
+    return []
+  }
 
   // Determine user's role on this mindmap
   useEffect(() => {
@@ -98,18 +108,18 @@ function EditorInner() {
         try {
           // Only owners can load pending invitations
           const isOwner = mindmap?.mysqlUserId === user?.userId
-          
-          let pendingInvites: any[] = []
           const acceptedCollab = await getCollaborators(mindmapId)
-          
+          const acceptedList = toArray(acceptedCollab)
+          let pendingInvitesRaw: any[] = []
           if (isOwner) {
             try {
-              pendingInvites = await getPendingInvitations(mindmapId)
+              pendingInvitesRaw = await getPendingInvitations(mindmapId)
             } catch (error) {
               console.warn('Cannot load pending invitations (non-owner)', error)
-              pendingInvites = []
+              pendingInvitesRaw = []
             }
           }
+          const pendingInvites = toArray(pendingInvitesRaw)
 
           // Map pending invitations to collaborator format
           const pendingCollaborators = (pendingInvites || [])
@@ -127,14 +137,13 @@ function EditorInner() {
           const byEmail: Record<string, any> = {}
 
           // Preserve actual collaborator status from server (accepted/pending/removed/rejected)
-          ;(acceptedCollab || [])
-            .filter((c: any) => c?.email)
-            .forEach((c: any) => {
-              byEmail[c.email] = {
-                ...c,
-                status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
-              }
-            })
+          for (const c of acceptedList) {
+            if (!c?.email) continue
+            byEmail[c.email] = {
+              ...c,
+              status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+            }
+          }
 
           // Overlay pending invitations so UI shows pending even if collaborator record exists
           ;(pendingCollaborators || []).forEach((p: any) => {
@@ -167,8 +176,10 @@ function EditorInner() {
         try {
           await loadMindmap(mindmapId)
         } catch (error: any) {
-          // If load fails with 401/403, try loading as public mindmap
-          if (error?.response?.status === 401 || error?.response?.status === 403) {
+          // If load fails with 401/403, or browser extension blocks (code=403), try loading as public mindmap
+          const isAuthDenied = error?.response?.status === 401 || error?.response?.status === 403
+          const isExtensionBlocked = error?.code === 403 || error?.message === 'permission error'
+          if (isAuthDenied || isExtensionBlocked) {
             try {
               // Chỉ thử tải mindmap công khai nếu URL có token
               const shareToken = searchParams.get('token')
@@ -198,7 +209,11 @@ function EditorInner() {
           } else {
             // Other errors (network, server error, etc.)
             console.error('Error loading mindmap:', error)
-            throw error
+            toast({
+              title: "Error",
+              description: error?.response?.data?.message || error?.message || "Không thể tải mindmap.",
+              variant: "destructive",
+            })
           }
         }
       }
@@ -247,18 +262,20 @@ function EditorInner() {
 
       // Sau khi gửi lời mời thành công, làm mới danh sách một cách an toàn theo quyền owner
       const acceptedCollab = await getCollaborators(mindmapId)
+      const acceptedList = toArray(acceptedCollab)
 
       // Chỉ owner mới được lấy pending invitations; bắt lỗi riêng để tránh hiển thị lỗi giả
       const isOwner = mindmap?.mysqlUserId === user?.userId
-      let pendingInvites: any[] = []
+      let pendingInvitesRaw: any[] = []
       if (isOwner) {
         try {
-          pendingInvites = await getPendingInvitations(mindmapId)
+          pendingInvitesRaw = await getPendingInvitations(mindmapId)
         } catch (e) {
           console.warn('Cannot load pending invitations (owner check)', e)
-          pendingInvites = []
+          pendingInvitesRaw = []
         }
       }
+      const pendingInvites = toArray(pendingInvitesRaw)
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -274,14 +291,13 @@ function EditorInner() {
 
       // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
       const byEmail: Record<string, any> = {};
-      (acceptedCollab || [])
-        .filter((c: any) => c?.email)
-        .forEach((c: any) => {
-          byEmail[c.email] = {
-            ...c,
-            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
-          }
-        })
+      for (const c of acceptedList) {
+        if (!c?.email) continue
+        byEmail[c.email] = {
+          ...c,
+          status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+        }
+      }
 
       (pendingCollaborators || []).forEach((p: any) => {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
@@ -315,16 +331,18 @@ function EditorInner() {
 
       // Làm mới danh sách một cách an toàn theo quyền owner
       const acceptedCollab = await getCollaborators(mindmapId)
+      const acceptedList = toArray(acceptedCollab)
       const isOwner = mindmap?.mysqlUserId === user?.userId
-      let pendingInvites: any[] = []
+      let pendingInvitesRaw: any[] = []
       if (isOwner) {
         try {
-          pendingInvites = await getPendingInvitations(mindmapId)
+          pendingInvitesRaw = await getPendingInvitations(mindmapId)
         } catch (e) {
           console.warn('Cannot load pending invitations (owner check)', e)
-          pendingInvites = []
+          pendingInvitesRaw = []
         }
       }
+      const pendingInvites = toArray(pendingInvitesRaw)
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -340,14 +358,13 @@ function EditorInner() {
 
       // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
       const byEmail: Record<string, any> = {};
-      (acceptedCollab || [])
-        .filter((c: any) => c?.email)
-        .forEach((c: any) => {
-          byEmail[c.email] = {
-            ...c,
-            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
-          }
-        })
+      for (const c of acceptedList) {
+        if (!c?.email) continue
+        byEmail[c.email] = {
+          ...c,
+          status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+        }
+      }
 
       (pendingCollaborators || []).forEach((p: any) => {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
@@ -379,17 +396,19 @@ function EditorInner() {
       
       // Only owners can load pending invitations
       const isOwner = mindmap?.mysqlUserId === user?.userId
-      let pendingInvites: any[] = []
+      let pendingInvitesRaw: any[] = []
       const acceptedCollab = await getCollaborators(mindmapId)
+      const acceptedList = toArray(acceptedCollab)
       
       if (isOwner) {
         try {
-          pendingInvites = await getPendingInvitations(mindmapId)
+          pendingInvitesRaw = await getPendingInvitations(mindmapId)
         } catch (error) {
           console.warn('Cannot load pending invitations (non-owner)', error)
-          pendingInvites = []
+          pendingInvitesRaw = []
         }
       }
+      const pendingInvites = toArray(pendingInvitesRaw)
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -405,14 +424,13 @@ function EditorInner() {
 
       // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
       const byEmail: Record<string, any> = {};
-      (acceptedCollab || [])
-        .filter((c: any) => c?.email)
-        .forEach((c: any) => {
-          byEmail[c.email] = {
-            ...c,
-            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
-          }
-        })
+      for (const c of acceptedList) {
+        if (!c?.email) continue
+        byEmail[c.email] = {
+          ...c,
+          status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+        }
+      }
 
       (pendingCollaborators || []).forEach((p: any) => {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
