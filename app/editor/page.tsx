@@ -244,12 +244,21 @@ function EditorInner() {
     
     try {
       await inviteCollaborator(mindmapId, email, role)
-      
-      // Reload both accepted collaborators and pending invitations
-      const [acceptedCollab, pendingInvites] = await Promise.all([
-        getCollaborators(mindmapId),
-        getPendingInvitations(mindmapId)
-      ])
+
+      // Sau khi gửi lời mời thành công, làm mới danh sách một cách an toàn theo quyền owner
+      const acceptedCollab = await getCollaborators(mindmapId)
+
+      // Chỉ owner mới được lấy pending invitations; bắt lỗi riêng để tránh hiển thị lỗi giả
+      const isOwner = mindmap?.mysqlUserId === user?.userId
+      let pendingInvites: any[] = []
+      if (isOwner) {
+        try {
+          pendingInvites = await getPendingInvitations(mindmapId)
+        } catch (e) {
+          console.warn('Cannot load pending invitations (owner check)', e)
+          pendingInvites = []
+        }
+      }
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -284,10 +293,7 @@ function EditorInner() {
 
       setCollaborators(combinedList)
       
-      toast({
-        title: "Đã gửi lời mời!",
-        description: `Đã gửi email mời tới ${email}`,
-      })
+      // Toast thành công sẽ hiển thị ở ShareModal; không cần hiển thị thêm ở đây
     } catch (error: any) {
       console.error(error)
       const errorMsg = error.response?.data?.message || "Không thể gửi lời mời.";
@@ -306,12 +312,19 @@ function EditorInner() {
     
     try {
       await updateCollaboratorRole(mindmapId, email, role)
-      
-      // Reload both accepted collaborators and pending invitations
-      const [acceptedCollab, pendingInvites] = await Promise.all([
-        getCollaborators(mindmapId),
-        getPendingInvitations(mindmapId)
-      ])
+
+      // Làm mới danh sách một cách an toàn theo quyền owner
+      const acceptedCollab = await getCollaborators(mindmapId)
+      const isOwner = mindmap?.mysqlUserId === user?.userId
+      let pendingInvites: any[] = []
+      if (isOwner) {
+        try {
+          pendingInvites = await getPendingInvitations(mindmapId)
+        } catch (e) {
+          console.warn('Cannot load pending invitations (owner check)', e)
+          pendingInvites = []
+        }
+      }
 
       // Map pending invitations to collaborator format
       const pendingCollaborators = (pendingInvites || [])
@@ -346,9 +359,7 @@ function EditorInner() {
 
       setCollaborators(combinedList)
       
-      toast({
-        description: "Đã cập nhật quyền",
-      })
+      // Không hiển thị toast ở đây để tránh trùng lặp; UI sẽ phản ánh thay đổi
     } catch (error: any) {
       console.error(error)
       toast({
