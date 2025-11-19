@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport } from 'reactflow'
-import { getMindmapById, updateMindmap, undoMindmap, redoMindmap } from '@/services/mindmap/mindmap.service' 
+import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
 
@@ -269,22 +269,32 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, []); // useCallback rỗng vì nó là hàm setter
 
   // --- Cập nhật 'loadMindmap' ---
-  const performSave = useCallback(async () => {
-    const currentMindmap = latestMindmapRef.current
-    if (!currentMindmap) {
-      throw new Error('No mindmap loaded, cannot save.')
-    }
+  const performSave = useCallback(async () => {
+    const currentMindmap = latestMindmapRef.current
+    if (!currentMindmap) {
+      throw new Error('No mindmap loaded, cannot save.')
+    }
 
-    const payload: UpdateMindmapRequest = {
-      title: currentMindmap.title,
-      nodes: latestNodesRef.current,
-      edges: latestEdgesRef.current,
-      viewport: latestViewportRef.current || undefined,
-    }
+    const payload: UpdateMindmapRequest = {
+      title: currentMindmap.title,
+      nodes: latestNodesRef.current,
+      edges: latestEdgesRef.current,
+      viewport: latestViewportRef.current || undefined,
+    }
 
-    const responseData = await updateMindmap(currentMindmap.id, payload)
-    setFullMindmapState(responseData)
-  }, [setFullMindmapState])
+    let responseData: MindmapResponse
+    if (currentMindmap.isPublic === true && currentMindmap.publicAccessLevel === 'edit' && currentMindmap.shareToken) {
+      try {
+        const payloadWithId = { ...(payload as any), id: currentMindmap.id }
+        responseData = await updatePublicMindmap(currentMindmap.shareToken, payloadWithId)
+      } catch (e) {
+        responseData = await updateMindmapByTokenFallback(currentMindmap.id, currentMindmap.shareToken, payload)
+      }
+    } else {
+      responseData = await updateMindmap(currentMindmap.id, payload)
+    }
+    setFullMindmapState(responseData)
+  }, [setFullMindmapState])
 
   const {
     autoSaveEnabled,
