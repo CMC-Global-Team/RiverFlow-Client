@@ -5,6 +5,7 @@ import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, No
 import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
+import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport } from '@/lib/realtime'
 
 interface MindmapContextType {
   mindmap: MindmapResponse | null
@@ -197,10 +198,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  const latestMindmapRef = useRef(mindmap);
-  const latestNodesRef = useRef(nodes);
-  const latestEdgesRef = useRef(edges);
-  const latestViewportRef = useRef(viewport);
+  const latestMindmapRef = useRef(mindmap);
+  const latestNodesRef = useRef(nodes);
+  const latestEdgesRef = useRef(edges);
+  const latestViewportRef = useRef(viewport);
+  const socketRef = useRef<any>(null)
+  const roomRef = useRef<string | null>(null)
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
   useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
@@ -267,6 +270,31 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setCanRedo(data.canRedo);
 
   }, []); // useCallback rỗng vì nó là hàm setter
+
+  useEffect(() => {
+    if (!mindmap) return
+    const s = getSocket()
+    socketRef.current = s
+    const payload: any = mindmap.shareToken ? { shareToken: mindmap.shareToken } : { mindmapId: mindmap.id }
+    joinMindmap(s, payload)
+    const onJoined = (res: any) => { roomRef.current = res?.room || null }
+    const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
+    const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
+    const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep' }, eds)) }
+    const onViewportEv = (v: any) => { setViewport(v) }
+    s.on('mindmap:joined', onJoined)
+    s.on('mindmap:nodes:change', onNodes)
+    s.on('mindmap:edges:change', onEdges)
+    s.on('mindmap:connect', onConnectEdge)
+    s.on('mindmap:viewport', onViewportEv)
+    return () => {
+      s.off('mindmap:joined', onJoined)
+      s.off('mindmap:nodes:change', onNodes)
+      s.off('mindmap:edges:change', onEdges)
+      s.off('mindmap:connect', onConnectEdge)
+      s.off('mindmap:viewport', onViewportEv)
+    }
+  }, [mindmap])
 
   // --- Cập nhật 'loadMindmap' ---
   const performSave = useCallback(async () => {
@@ -341,36 +369,45 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
 // Node changes handler
 
-  const onNodesChange = useCallback(
-    (changes: NodeChange[]) => {
-      setNodes((nds) => applyNodeChanges(changes, nds))
-      scheduleAutoSave()
-    },
-    [scheduleAutoSave]
-  )
+  const onNodesChange = useCallback(
+    (changes: NodeChange[]) => {
+      setNodes((nds) => applyNodeChanges(changes, nds))
+      scheduleAutoSave()
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitNodesChange(s, room, changes as any)
+    },
+    [scheduleAutoSave]
+  )
 
   // Edge changes handler
-  const onEdgesChange = useCallback(
-    (changes: EdgeChange[]) => {
-      setEdges((eds) => applyEdgeChanges(changes, eds))
-      scheduleAutoSave()
-    },
-    [scheduleAutoSave]
-  )
+  const onEdgesChange = useCallback(
+    (changes: EdgeChange[]) => {
+      setEdges((eds) => applyEdgeChanges(changes, eds))
+      scheduleAutoSave()
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitEdgesChange(s, room, changes as any)
+    },
+    [scheduleAutoSave]
+  )
 
   // Connection handler
-  const onConnect = useCallback(
-    (connection: Connection) => {
-      const newEdge = {
-        ...connection,
-        animated: true,
-        type: "smoothstep",
-      }
-      setEdges((eds) => addEdge(newEdge, eds))
-      scheduleAutoSave()
-    },
-    [scheduleAutoSave]
-  )
+  const onConnect = useCallback(
+    (connection: Connection) => {
+      const newEdge = {
+        ...connection,
+        animated: true,
+        type: "smoothstep",
+      }
+      setEdges((eds) => addEdge(newEdge, eds))
+      scheduleAutoSave()
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitConnect(s, room, connection as any)
+    },
+    [scheduleAutoSave]
+  )
 
   // Add new node
   const addNode = useCallback((position: { x: number; y: number }, shape: string = 'rectangle') => {
@@ -387,6 +424,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
     setNodes((nds) => [...nds, newNode])
     scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitNodesChange(s, room, [{ type: 'add', item: newNode }])
     return newNode.id
   }, [scheduleAutoSave])
 
@@ -418,6 +458,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
 
     scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitNodesChange(s, room, Array.from(toDelete).map((id) => ({ type: 'remove', id })))
   }, [scheduleAutoSave])
 
   // Delete edge
@@ -427,10 +470,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (selectedEdge?.id === edgeId) {
       setSelectedEdge(null)
     }
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitEdgesChange(s, room, [{ type: 'remove', id: edgeId }])
   }, [scheduleAutoSave])
 
   // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
+    let changePayload: any[] = []
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
@@ -457,6 +504,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
               y: node.position.y + 0.001,
             }
           }
+          changePayload.push({ type: 'update', id: nodeId, item: updatedNode })
           return updatedNode
         }
         return node
@@ -491,14 +539,19 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       return prev
     })
     scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room && changePayload.length) emitNodesChange(s, room, changePayload)
   }, [scheduleAutoSave])
 
   // Update edge data
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
+    let updated: any = null
     setEdges((eds) =>
       eds.map((edge) => {
         if (edge.id === edgeId) {
-          return { ...edge, ...updates }
+          updated = { ...edge, ...updates }
+          return updated
         }
         return edge
       })
@@ -510,6 +563,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       return prev
     })
     scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room && updated) emitEdgesChange(s, room, [{ type: 'update', id: edgeId, item: updated }])
   }, [scheduleAutoSave])
 
   // Set title
@@ -522,7 +578,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const onViewportChange = useCallback((viewport: Viewport) => {
     setViewport(viewport);
-    scheduleAutoSave() // Kích hoạt lưu khi di chuyển
+    scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitViewport(s, room, viewport as any)
   }, [scheduleAutoSave]);
 
   const undo = useCallback(async () => {
