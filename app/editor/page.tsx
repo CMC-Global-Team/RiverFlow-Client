@@ -164,31 +164,20 @@ function EditorInner() {
           // If load fails with 401/403, try loading as public mindmap
           if (error?.response?.status === 401 || error?.response?.status === 403) {
             try {
-              // Try to get shareToken from URL first
-              let shareToken = searchParams.get('token')
-              
-              // If no token in URL, try to get from error response (backend returns shareToken for public mindmaps)
-              if (!shareToken) {
-                const errorData = error?.response?.data
-                console.log('Error response data:', errorData)
-                if (errorData?.shareToken) {
-                  shareToken = errorData.shareToken
-                  console.log('Found shareToken in error response:', shareToken)
-                }
-              }
-              
+              // Chỉ thử tải mindmap công khai nếu URL có token
+              const shareToken = searchParams.get('token')
+
               if (shareToken) {
-                // Load public mindmap using shareToken
                 console.log('Loading public mindmap with token:', shareToken)
                 const publicMindmap = await getPublicMindmap(shareToken)
                 console.log('Successfully loaded public mindmap:', publicMindmap)
                 setFullMindmapState(publicMindmap)
               } else {
-                // If no shareToken available, show error
-                console.warn('No shareToken found for public mindmap access')
+                // Không có token công khai trong URL -> giữ nguyên trang editor và báo lỗi quyền truy cập
+                console.warn('No shareToken in URL; skipping public fallback')
                 toast({
                   title: "Access Denied",
-                  description: "You don't have permission to view this mindmap. If it's public, please use the public share link.",
+                  description: "Bạn không có quyền truy cập mindmap này. Nếu công khai, hãy dùng liên kết chia sẻ công khai.",
                   variant: "destructive",
                 })
               }
@@ -196,7 +185,7 @@ function EditorInner() {
               console.error('Failed to load public mindmap:', publicError)
               toast({
                 title: "Error",
-                description: publicError?.response?.data?.message || publicError?.message || "Failed to load mindmap. Please check your access or use the public share link.",
+                description: publicError?.response?.data?.message || publicError?.message || "Không thể tải mindmap công khai.",
                 variant: "destructive",
               })
             }
