@@ -168,8 +168,8 @@ export default function CollaboratorsManagement({
                 </Select>
               )}
 
-              {/* Delete Button with Confirmation - Only for owner */}
-              {isOwner && confirmDeleteEmail === collaborator.email ? (
+              {/* Delete Button with Confirmation - Only for owner and for pending/accepted entries */}
+              {isOwner && (collaborator.status === "accepted" || collaborator.status === "pending") && confirmDeleteEmail === collaborator.email ? (
                 <div className="flex items-center gap-1">
                   <Button
                     variant="destructive"
@@ -194,7 +194,7 @@ export default function CollaboratorsManagement({
                     Hủy
                   </Button>
                 </div>
-              ) : isOwner ? (
+              ) : isOwner && (collaborator.status === "accepted" || collaborator.status === "pending") ? (
                 <Button
                   variant="ghost"
                   size="sm"
