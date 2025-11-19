@@ -167,8 +167,10 @@ function EditorInner() {
         try {
           await loadMindmap(mindmapId)
         } catch (error: any) {
-          // If load fails with 401/403, try loading as public mindmap
-          if (error?.response?.status === 401 || error?.response?.status === 403) {
+          // If load fails with 401/403, or browser extension blocks (code=403), try loading as public mindmap
+          const isAuthDenied = error?.response?.status === 401 || error?.response?.status === 403
+          const isExtensionBlocked = error?.code === 403 || error?.message === 'permission error'
+          if (isAuthDenied || isExtensionBlocked) {
             try {
               // Chỉ thử tải mindmap công khai nếu URL có token
               const shareToken = searchParams.get('token')
@@ -198,7 +200,11 @@ function EditorInner() {
           } else {
             // Other errors (network, server error, etc.)
             console.error('Error loading mindmap:', error)
-            throw error
+            toast({
+              title: "Error",
+              description: error?.response?.data?.message || error?.message || "Không thể tải mindmap.",
+              variant: "destructive",
+            })
           }
         }
       }
