@@ -287,8 +287,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       try {
         const payloadWithId = { ...(payload as any), id: currentMindmap.id }
         responseData = await updatePublicMindmap(currentMindmap.shareToken, payloadWithId)
-      } catch (e) {
-        responseData = await updateMindmapByTokenFallback(currentMindmap.id, currentMindmap.shareToken, payload)
+      } catch (e: any) {
+        const status = e?.response?.status
+        if (status && status < 500) {
+          responseData = await updateMindmapByTokenFallback(currentMindmap.id, currentMindmap.shareToken, payload)
+        } else {
+          throw e
+        }
       }
     } else {
       responseData = await updateMindmap(currentMindmap.id, payload)
