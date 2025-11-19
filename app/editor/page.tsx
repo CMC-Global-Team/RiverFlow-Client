@@ -9,26 +9,28 @@ import Toolbar from "@/components/editor/toolbar"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
-import PublicShareModal from "@/components/mindmap/PublicShareModal"
-import { 
-  inviteCollaborator,
-  updateCollaboratorRole,
-  removeCollaborator,
-  updatePublicAccess,
-  getCollaborators,
-  getPendingInvitations,
-  getPublicMindmap
-} from "@/services/mindmap/mindmap.service"
+  import PublicShareModal from "@/components/mindmap/PublicShareModal"
+  import { 
+    inviteCollaborator,
+    updateCollaboratorRole,
+    removeCollaborator,
+    updatePublicAccess,
+    getCollaborators,
+    getPendingInvitations,
+    getPublicMindmap,
+    getMindmapById
+  } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 
 function EditorInner() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
@@ -72,7 +74,8 @@ function EditorInner() {
           }
         } else if (mindmap.isPublic) {
           // User not logged in but mindmap is public
-          setUserRole(mindmap.publicAccessLevel === 'view' ? 'viewer' : 'editor')
+          // Enforce view-only for anonymous users even if publicAccessLevel = 'edit'
+          setUserRole('viewer')
         } else {
           setUserRole(null)
         }
@@ -164,31 +167,20 @@ function EditorInner() {
           // If load fails with 401/403, try loading as public mindmap
           if (error?.response?.status === 401 || error?.response?.status === 403) {
             try {
-              // Try to get shareToken from URL first
-              let shareToken = searchParams.get('token')
-              
-              // If no token in URL, try to get from error response (backend returns shareToken for public mindmaps)
-              if (!shareToken) {
-                const errorData = error?.response?.data
-                console.log('Error response data:', errorData)
-                if (errorData?.shareToken) {
-                  shareToken = errorData.shareToken
-                  console.log('Found shareToken in error response:', shareToken)
-                }
-              }
-              
+              // Chỉ thử tải mindmap công khai nếu URL có token
+              const shareToken = searchParams.get('token')
+
               if (shareToken) {
-                // Load public mindmap using shareToken
                 console.log('Loading public mindmap with token:', shareToken)
                 const publicMindmap = await getPublicMindmap(shareToken)
                 console.log('Successfully loaded public mindmap:', publicMindmap)
                 setFullMindmapState(publicMindmap)
               } else {
-                // If no shareToken available, show error
-                console.warn('No shareToken found for public mindmap access')
+                // Không có token công khai trong URL -> giữ nguyên trang editor và báo lỗi quyền truy cập
+                console.warn('No shareToken in URL; skipping public fallback')
                 toast({
                   title: "Access Denied",
-                  description: "You don't have permission to view this mindmap. If it's public, please use the public share link.",
+                  description: "Bạn không có quyền truy cập mindmap này. Nếu công khai, hãy dùng liên kết chia sẻ công khai.",
                   variant: "destructive",
                 })
               }
@@ -196,7 +188,7 @@ function EditorInner() {
               console.error('Failed to load public mindmap:', publicError)
               toast({
                 title: "Error",
-                description: publicError?.response?.data?.message || publicError?.message || "Failed to load mindmap. Please check your access or use the public share link.",
+                description: publicError?.response?.data?.message || publicError?.message || "Không thể tải mindmap công khai.",
                 variant: "destructive",
               })
             }
@@ -268,25 +260,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
       
@@ -331,25 +320,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
       
@@ -399,25 +385,22 @@ function EditorInner() {
           invitedBy: invitation.invitedByUserId
         }))
 
-      // Combine and deduplicate
-      const collaboratorEmails = new Set(
-        (acceptedCollab || [])
-          .filter((c: any) => c?.email)
-          .map((c: any) => c.email)
-      )
-      
-      // Add status field to accepted collaborators
-      const acceptedWithStatus = (acceptedCollab || [])
+      // Build map keyed by email; start with accepted, then overlay pending to ensure pending state wins
+      const byEmail: Record<string, any> = {};
+      (acceptedCollab || [])
         .filter((c: any) => c?.email)
-        .map((c: any) => ({
-          ...c,
-          status: 'accepted'
-        }))
-      
-      const combinedList = [
-        ...acceptedWithStatus,
-        ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-      ]
+        .forEach((c: any) => {
+          byEmail[c.email] = {
+            ...c,
+            status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+          }
+        })
+
+      (pendingCollaborators || []).forEach((p: any) => {
+        byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+      })
+
+      const combinedList = Object.values(byEmail)
 
       setCollaborators(combinedList)
     } catch (error: any) {
@@ -436,6 +419,11 @@ function EditorInner() {
     
     try {
       await updatePublicAccess(mindmapId, isPublic, accessLevel)
+      // Fetch lại mindmap để lấy trạng thái mới và shareToken (nếu vừa công khai)
+      const updated = await getMindmapById(mindmapId)
+      setFullMindmapState(updated)
+
+      // Giữ nguyên trang Editor và modal; chỉ cập nhật state để ShareModal hiển thị link công khai đúng
       
       toast({
         description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
