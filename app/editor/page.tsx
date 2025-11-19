@@ -431,10 +431,7 @@ function EditorInner() {
       const updated = await getMindmapById(mindmapId)
       setFullMindmapState(updated)
 
-      // Nếu vừa công khai và có shareToken, chuẩn hóa URL thành link công khai ngay
-      if (isPublic && updated?.shareToken) {
-        router.replace(`/public-mindmap?token=${updated.shareToken}`)
-      }
+      // Giữ nguyên trang Editor và modal; chỉ cập nhật state để ShareModal hiển thị link công khai đúng
       
       toast({
         description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
