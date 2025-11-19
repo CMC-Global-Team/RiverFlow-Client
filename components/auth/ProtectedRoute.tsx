@@ -41,8 +41,8 @@ export const ProtectedRoute = ({
   // Hiển thị loading khi đang check auth
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
+      <div suppressHydrationWarning className="flex h-screen w-full items-center justify-center">
+        <div suppressHydrationWarning className="flex flex-col items-center gap-4">
           <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-blue-600"></div>
           <p className="text-sm text-gray-600">Đang tải...</p>
         </div>
