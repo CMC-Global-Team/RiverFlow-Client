@@ -7,7 +7,7 @@ import EdgePropertiesPanel from "./edge-properties-panel"
 import { X, GripVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
-export default function PropertiesPanel() {
+export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean }) {
   const { selectedNode, selectedEdge } = useMindmapContext()
   const [isOpen, setIsOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
@@ -66,12 +66,14 @@ export default function PropertiesPanel() {
     }
   }, [isResizing, resizeStart])
 
-  // If panel is closed, don't render (regardless of selection)
+  if (!canEdit) {
+    return null
+  }
+
   if (!isOpen) {
     return null
   }
 
-  // If nothing selected, don't render
   if (!hasSelection) {
     return null
   }

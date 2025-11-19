@@ -530,7 +530,7 @@ function EditorInner() {
       </div>
 
       {/* Floating Properties Panel - Outside relative container */}
-      <PropertiesPanel />
+      <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
 
       {/* Show PublicShareModal for non-owners, ShareModal for owners */}
       {user?.userId === mindmap?.mysqlUserId ? (
