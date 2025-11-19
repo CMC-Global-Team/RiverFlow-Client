@@ -8,7 +8,7 @@ export function getSocket() {
   if (!socket) {
     socket = io(`${REALTIME_URL}/realtime`, {
       path: '/socket.io',
-      transports: ['websocket', 'polling'],
+      transports: ['polling'],
       withCredentials: true,
       reconnection: true,
       reconnectionAttempts: 5,
