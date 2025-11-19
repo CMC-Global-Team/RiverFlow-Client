@@ -123,25 +123,28 @@ function EditorInner() {
               invitedBy: invitation.invitedByUserId
             }))
 
-          // Combine and deduplicate (accepted takes precedence over pending)
-          const collaboratorEmails = new Set(
-            (acceptedCollab || [])
-              .filter((c: any) => c?.email)
-              .map((c: any) => c.email)
-          )
-          
-          // Add status field to accepted collaborators
-          const acceptedWithStatus = (acceptedCollab || [])
+          // Build map keyed by email; start with collaborators, then overlay pending invitations
+          const byEmail: Record<string, any> = {}
+
+          // Preserve actual collaborator status from server (accepted/pending/removed/rejected)
+          ;(acceptedCollab || [])
             .filter((c: any) => c?.email)
-            .map((c: any) => ({
-              ...c,
-              status: 'accepted'
-            }))
-          
-          const combinedList = [
-            ...acceptedWithStatus,
-            ...pendingCollaborators.filter((p: any) => !collaboratorEmails.has(p.email))
-          ]
+            .forEach((c: any) => {
+              byEmail[c.email] = {
+                ...c,
+                status: c.status ?? (c.acceptedAt ? 'accepted' : 'pending')
+              }
+            })
+
+          // Overlay pending invitations so UI shows pending even if collaborator record exists
+          ;(pendingCollaborators || []).forEach((p: any) => {
+            byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
+          })
+
+          // Only show accepted or pending entries in the UI
+          const combinedList = Object.values(byEmail).filter((c: any) => 
+            c.status === 'accepted' || c.status === 'pending'
+          )
 
           setCollaborators(combinedList)
         } catch (error) {
@@ -275,7 +278,9 @@ function EditorInner() {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
       })
 
-      const combinedList = Object.values(byEmail)
+      const combinedList = Object.values(byEmail).filter((c: any) => 
+        c.status === 'accepted' || c.status === 'pending'
+      )
 
       setCollaborators(combinedList)
       
@@ -335,7 +340,9 @@ function EditorInner() {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
       })
 
-      const combinedList = Object.values(byEmail)
+      const combinedList = Object.values(byEmail).filter((c: any) => 
+        c.status === 'accepted' || c.status === 'pending'
+      )
 
       setCollaborators(combinedList)
       
