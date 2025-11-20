@@ -298,6 +298,15 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         map[p.clientId] = { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: p.cursor || null, active: p.active || null }
       }
       setParticipants(map)
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room && lastPresenceInfoRef.current) {
+        const now = Date.now()
+        if (now - lastReannounceAtRef.current > 1500) {
+          lastReannounceAtRef.current = now
+          emitPresenceAnnounce(s, room, lastPresenceInfoRef.current)
+        }
+      }
     }
     const onPresenceAnnounce = (p: any) => {
       setParticipants((prev) => ({ ...prev, [p.clientId]: { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: prev[p.clientId]?.cursor || null, active: prev[p.clientId]?.active || null } }))

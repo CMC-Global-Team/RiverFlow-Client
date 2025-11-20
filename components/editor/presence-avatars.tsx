@@ -256,7 +256,7 @@ export default function PresenceAvatars() {
             </div>
           </div>
           <div className="p-2 max-h-[60vh] overflow-y-auto">
-            <div ref={gridContainerRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+            <div ref={gridContainerRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
             {items
               .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
               .map((p) => {
@@ -264,7 +264,7 @@ export default function PresenceAvatars() {
               const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
               const role = resolveRole(p)
               return (
-                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none min-w-[260px] sm:min-w-[300px] md:min-w-[340px]">
+                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none w-full">
                   <Avatar className="size-9">
                     {url ? (
                       <AvatarImage src={url} alt={p.name} />
