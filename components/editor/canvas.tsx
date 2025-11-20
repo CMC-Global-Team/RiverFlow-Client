@@ -7,6 +7,10 @@ import ReactFlow, {
   MiniMap,
   MarkerType,
   ReactFlowInstance,
+  getBezierPath,
+  getSmoothStepPath,
+  getStraightPath,
+  Position,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
@@ -673,15 +677,23 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
                   const sy = sn.positionAbsolute?.y || sn.position.y
                   const tx = tn.positionAbsolute?.x || tn.position.x
                   const ty = tn.positionAbsolute?.y || tn.position.y
-                  const mx = (sx + tx) / 2
-                  const my = (sy + ty) / 2
                   const v = inst.getViewport()
-                  const x = mx * v.zoom + v.x
-                  const y = my * v.zoom + v.y
+                  const sp = sx < tx ? Position.Right : Position.Left
+                  const tp = sx < tx ? Position.Left : Position.Right
+                  let d: string
+                  if (e.type === 'bezier') {
+                    d = getBezierPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
+                  } else if (e.type === 'smoothstep') {
+                    d = getSmoothStepPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
+                  } else if (e.type === 'step') {
+                    d = getSmoothStepPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
+                  } else {
+                    d = getStraightPath({ sourceX: sx, sourceY: sy, targetX: tx, targetY: ty })[0]
+                  }
                   highlightEl = (
-                    <div key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: x - 12, top: y - 12 }}>
-                      <div className="w-6 h-6 rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
-                    </div>
+                    <svg key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', transform: `translate(${v.x}px, ${v.y}px) scale(${v.zoom})` }}>
+                      <path d={d} fill="none" stroke={p.color} strokeWidth={3} />
+                    </svg>
                   )
                 }
               }
