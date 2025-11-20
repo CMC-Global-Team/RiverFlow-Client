@@ -527,6 +527,14 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     presenceAnnouncedRef.current = true
   }, [announcePresence, isAuthenticated, user, anonymousName, pickColor])
 
+  useEffect(() => {
+    if (presenceAnnouncedRef.current) return
+    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
+    const color = pickColor(isAuthenticated ? user?.userId : null)
+    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
+    presenceAnnouncedRef.current = true
+  }, [participants, announcePresence, isAuthenticated, user, anonymousName, pickColor])
+
   const lastEmitRef = useRef<number>(0)
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (!reactFlowInstance.current) return
