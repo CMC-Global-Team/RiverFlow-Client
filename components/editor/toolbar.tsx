@@ -22,6 +22,7 @@ import {
   Check,
   AlertCircle,
   ArrowLeft,
+  HandHelping
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -363,6 +364,19 @@ export default function Toolbar({
           <Download className="h-4 w-4" />
         </Button>
       </div>
+
+      {/*Tutorial guide*/}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+        variant="ghost"
+        size="icon"
+        title="Tutorial"
+        className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+        >
+        <HandHelping className="h-4 w-4"/>
+        </Button>
+      </div>
+
 
       {/* Divider */}
       <div className="w-px h-6 bg-border ml-auto flex-shrink-0"></div>
