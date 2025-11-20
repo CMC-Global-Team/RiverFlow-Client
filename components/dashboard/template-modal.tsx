@@ -320,7 +320,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                   icon: meta.icon,
                   initialNodes: data.nodes,
                   initialEdges: data.edges,
-                  filePath: meta.filePath,
+                  filePath: meta.filePath || undefined,
                 })
               }
             }
