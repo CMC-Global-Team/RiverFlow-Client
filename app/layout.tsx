@@ -34,7 +34,7 @@ export default function RootLayout({
         <Providers>
           {children}
           <Toaster />
-          <Analytics />
+          {typeof Analytics !== 'undefined' && <Analytics />}
         </Providers>
       </body>
     </html>
