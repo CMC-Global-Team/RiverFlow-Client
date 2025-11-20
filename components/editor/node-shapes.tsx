@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import { linkify } from '@/components/ui/linkify'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
-import { Handle, Position, NodeProps, useReactFlow } from "reactflow"
+import { Handle, Position, NodeProps } from "reactflow"
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface NodeData {
@@ -19,7 +19,7 @@ interface NodeData {
 // Resize Handle Component
 const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: string; currentScale: number; canEdit?: boolean }) => {
   const { updateNodeData } = useMindmapContext()
-  const { updateNodeInternals } = useReactFlow()
+  
   const [isResizing, setIsResizing] = useState(false)
   const [hovering, setHovering] = useState(false)
   const startScaleRef = useRef(currentScale)
@@ -69,7 +69,6 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       newScale = Math.max(0.6, Math.min(2.0, newScale))
       
       updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
-      updateNodeInternals(nodeId)
     }
 
     const handleMouseUp = () => {
@@ -264,11 +263,6 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
@@ -329,11 +323,6 @@ RectangleNode.displayName = "RectangleNode"
 export const CircleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
@@ -433,11 +422,6 @@ CircleNode.displayName = "CircleNode"
 export const DiamondNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
@@ -504,11 +488,6 @@ DiamondNode.displayName = "DiamondNode"
 export const HexagonNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
@@ -574,11 +553,6 @@ HexagonNode.displayName = "HexagonNode"
 export const EllipseNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
@@ -638,11 +612,6 @@ EllipseNode.displayName = "EllipseNode"
 export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
-  const { updateNodeInternals } = useReactFlow()
-
-  useEffect(() => {
-    updateNodeInternals(id)
-  }, [scale, id, updateNodeInternals])
 
   return (
     <div
