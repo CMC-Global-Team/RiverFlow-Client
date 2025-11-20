@@ -114,12 +114,9 @@ ResizeHandle.displayName = "ResizeHandle"
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
   const [editingLabel, setEditingLabel] = useState(false)
-  const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
-  const descRef = useRef<HTMLDivElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const initialLabelHtml = useRef<string>('')
-  const initialDescHtml = useRef<string>('')
 
   // Auto-enable editing when isEditing prop is set
   useEffect(() => {
@@ -144,15 +141,6 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     }
   }, [editingLabel])
 
-  // Set up description edit mode - preserve HTML content
-  useEffect(() => {
-    if (editingDesc && descRef.current) {
-      initialDescHtml.current = data.description || ""
-      descRef.current.innerHTML = initialDescHtml.current
-      descRef.current.focus()
-    }
-  }, [editingDesc])
-
   const finishLabel = () => {
     if (labelRef.current) {
       const html = labelRef.current.innerHTML
@@ -162,17 +150,6 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
       }
     }
     setEditingLabel(false)
-  }
-
-  const finishDesc = () => {
-    if (descRef.current) {
-      const html = descRef.current.innerHTML
-      // Only update if changed
-      if (html !== initialDescHtml.current) {
-        updateNodeData(id, { description: html })
-      }
-    }
-    setEditingDesc(false)
   }
 
   const handleLabelKeyDown = (e: React.KeyboardEvent) => {
@@ -185,24 +162,11 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     }
   }
 
-  const handleDescKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      setEditingDesc(false)
-    }
-  }
-
   // Handle click on container to enable editing when text has styles
   const handleLabelClick = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setEditingLabel(true)
-  }
-
-  const handleDescClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setEditingDesc(true)
   }
 
   return (
@@ -228,26 +192,6 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       )}
 
-      {/* Description */}
-      {editingDesc ? (
-        <div
-          ref={descRef}
-          contentEditable
-          suppressContentEditableWarning
-          className="w-full outline-none text-xs bg-transparent border border-primary/30 rounded p-1 min-h-6 transition-all pointer-events-auto"
-          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
-          onBlur={finishDesc}
-          onKeyDown={handleDescKeyDown}
-          onMouseDown={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <div
-          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center pointer-events-auto"
-          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
-          onMouseDown={handleDescClick}
-          dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
-        />
-      )}
     </div>
   )
 })
