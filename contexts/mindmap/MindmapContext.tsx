@@ -555,7 +555,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
               y: node.position.y + 0.001,
             }
           }
-          changePayload.push({ type: 'update', id: nodeId, item: updatedNode })
+          changePayload.push({ type: 'replace', id: nodeId, item: updatedNode })
           return updatedNode
         }
         return node
@@ -616,7 +616,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room && updated) emitEdgesChange(s, room, [{ type: 'update', id: edgeId, item: updated }])
+    if (s && room && updated) emitEdgesChange(s, room, [{ type: 'replace', id: edgeId, item: updated }])
   }, [scheduleAutoSave])
 
   // Set title

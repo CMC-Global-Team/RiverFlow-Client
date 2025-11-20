@@ -166,7 +166,6 @@ export default function EdgePropertiesPanel() {
                 e.preventDefault()
                 e.stopPropagation()
                 setShowTextColor(!showTextColor)
-                setShowHighlight(false)
               }}
             >
               <Palette />

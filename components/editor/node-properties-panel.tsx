@@ -72,8 +72,7 @@ export default function NodePropertiesPanel() {
     if (focusedField) saveField(focusedField)
   }
 
-  // Select all text in focused field if no selection exists
-  const ensureSelection = (field?: "label" | "description") => {
+  const ensureSelection = (field?: "label" | "description" | null) => {
     const sel = window.getSelection()
     const targetField = field || focusedField
     

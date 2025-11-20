@@ -605,40 +605,46 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           let highlightEl = null
           const a = p.active
           if (a && a.type === 'node' && a.id) {
-            const n = reactFlowInstance.current.getNode(a.id)
-            if (n) {
-              const pos = n.positionAbsolute || n.position
-              const v = reactFlowInstance.current.getViewport()
-              const x = (pos.x) * v.zoom + v.x
-              const y = (pos.y) * v.zoom + v.y
-              const w = (n.measured?.width || 150) * v.zoom
-              const h = (n.measured?.height || 80) * v.zoom
-              highlightEl = (
-                <div key={`hl-${p.clientId}`} className="absolute z-30" style={{ left: x, top: y, width: w, height: h }}>
-                  <div className="w-full h-full rounded-md" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
-                </div>
-              )
+            const inst = reactFlowInstance.current
+            if (inst) {
+              const n = inst.getNode(a.id)
+              if (n) {
+                const pos = n.positionAbsolute || n.position
+                const v = inst.getViewport()
+                const x = pos.x * v.zoom + v.x
+                const y = pos.y * v.zoom + v.y
+                const w = (n.width ?? 150) * v.zoom
+                const h = (n.height ?? 80) * v.zoom
+                highlightEl = (
+                  <div key={`hl-${p.clientId}`} className="absolute z-30" style={{ left: x, top: y, width: w, height: h }}>
+                    <div className="w-full h-full rounded-md" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  </div>
+                )
+              }
             }
           } else if (a && a.type === 'edge' && a.id) {
             const e = edges.find((ee) => ee.id === a.id)
             if (e) {
-              const sn = reactFlowInstance.current.getNode(e.source)
-              const tn = reactFlowInstance.current.getNode(e.target)
-              if (sn && tn) {
-                const sx = (sn.positionAbsolute?.x || sn.position.x)
-                const sy = (sn.positionAbsolute?.y || sn.position.y)
-                const tx = (tn.positionAbsolute?.x || tn.position.x)
-                const ty = (tn.positionAbsolute?.y || tn.position.y)
-                const mx = (sx + tx) / 2
-                const my = (sy + ty) / 2
-                const v = reactFlowInstance.current.getViewport()
-                const x = mx * v.zoom + v.x
-                const y = my * v.zoom + v.y
-                highlightEl = (
-                  <div key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: x - 12, top: y - 12 }}>
-                    <div className="w-6 h-6 rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
-                  </div>
-                )
+              const inst = reactFlowInstance.current
+              if (inst) {
+                const sn = inst.getNode(e.source)
+                const tn = inst.getNode(e.target)
+                if (sn && tn) {
+                  const sx = sn.positionAbsolute?.x || sn.position.x
+                  const sy = sn.positionAbsolute?.y || sn.position.y
+                  const tx = tn.positionAbsolute?.x || tn.position.x
+                  const ty = tn.positionAbsolute?.y || tn.position.y
+                  const mx = (sx + tx) / 2
+                  const my = (sy + ty) / 2
+                  const v = inst.getViewport()
+                  const x = mx * v.zoom + v.x
+                  const y = my * v.zoom + v.y
+                  highlightEl = (
+                    <div key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: x - 12, top: y - 12 }}>
+                      <div className="w-6 h-6 rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                    </div>
+                  )
+                }
               }
             }
           }
