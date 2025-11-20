@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 
 interface Template {
@@ -375,8 +376,8 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -467,5 +468,10 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       </div>
     </div>
   )
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  return modalContent
 }
 
