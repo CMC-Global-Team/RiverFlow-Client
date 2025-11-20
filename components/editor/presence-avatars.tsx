@@ -9,6 +9,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import gsap from "gsap"
+import { Crown, Users as UsersIcon, Globe, User as UserIcon, Pencil, Eye, Search } from "lucide-react"
 
 function RoleBadge({ label, variant }: { label: string; variant: "owner" | "collab" | "guest" | "public" }) {
   const map: Record<string, string> = {
@@ -20,11 +21,59 @@ function RoleBadge({ label, variant }: { label: string; variant: "owner" | "coll
   return <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${map[variant]}`}>{label}</span>
 }
 
-function RoleBadgeGroup({ role, extra }: { role: { label: string; variant: "owner" | "collab" | "guest" | "public" }; extra?: string }) {
+function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "public"; access?: "edit" | "view" | null }) {
+  const iconSize = "h-4 w-4"
+  const base = "shrink-0"
   return (
-    <div className="flex items-center gap-1 min-w-0">
-      <RoleBadge label={role.label} variant={role.variant} />
-      {extra && <RoleBadge label={extra} variant={role.variant} />}
+    <div className="flex items-center gap-2 select-none">
+      {kind === "owner" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Crown className={`${iconSize} ${base} text-blue-600`} />
+          </TooltipTrigger>
+          <TooltipContent>Chủ sở hữu</TooltipContent>
+        </Tooltip>
+      )}
+      {kind === "collab" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <UsersIcon className={`${iconSize} ${base} text-emerald-600`} />
+          </TooltipTrigger>
+          <TooltipContent>Cộng tác viên</TooltipContent>
+        </Tooltip>
+      )}
+      {kind === "public" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Globe className={`${iconSize} ${base} text-purple-600`} />
+          </TooltipTrigger>
+          <TooltipContent>Công khai</TooltipContent>
+        </Tooltip>
+      )}
+      {kind === "guest" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <UserIcon className={`${iconSize} ${base} text-gray-600`} />
+          </TooltipTrigger>
+          <TooltipContent>Khách</TooltipContent>
+        </Tooltip>
+      )}
+      {access === "edit" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Pencil className={`${iconSize} ${base} text-muted-foreground`} />
+          </TooltipTrigger>
+          <TooltipContent>Chỉnh sửa</TooltipContent>
+        </Tooltip>
+      )}
+      {access === "view" && (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Eye className={`${iconSize} ${base} text-muted-foreground`} />
+          </TooltipTrigger>
+          <TooltipContent>Xem</TooltipContent>
+        </Tooltip>
+      )}
     </div>
   )
 }
@@ -68,22 +117,22 @@ export default function PresenceAvatars() {
   }
 
   const resolveRole = (p: typeof items[number]) => {
-    if (!mindmap) return { label: "Khách", variant: "guest" as const }
-    if (p.userId === mindmap.mysqlUserId) return { label: "Chủ sở hữu", variant: "owner" as const }
+    if (!mindmap) return { kind: "guest" as const, access: null }
+    if (p.userId === mindmap.mysqlUserId) return { kind: "owner" as const, access: null }
     if (p.userId) {
       const c = (mindmap.collaborators || []).find((cc: any) => cc.mysqlUserId === p.userId && cc.status === "accepted")
-      if (c) return { label: "Cộng tác viên", variant: "collab" as const, extra: c.role === "EDITOR" ? "Chỉnh sửa" : "Xem" }
+      if (c) return { kind: "collab" as const, access: c.role === "EDITOR" ? "edit" : "view" }
       if (mindmap.isPublic) {
-        const lv = mindmap.publicAccessLevel === "edit" ? "Chỉnh sửa" : "Xem"
-        return { label: "Công khai", variant: "public" as const, extra: lv }
+        const lv = mindmap.publicAccessLevel === "edit" ? "edit" : "view"
+        return { kind: "public" as const, access: lv }
       }
-      return { label: "Khách", variant: "guest" as const }
+      return { kind: "guest" as const, access: null }
     }
     if (mindmap.isPublic) {
-      const lv = mindmap.publicAccessLevel === "edit" ? "Chỉnh sửa" : "Xem"
-      return { label: "Công khai", variant: "public" as const, extra: lv }
+      const lv = mindmap.publicAccessLevel === "edit" ? "edit" : "view"
+      return { kind: "public" as const, access: lv }
     }
-    return { label: "Khách", variant: "guest" as const }
+    return { kind: "guest" as const, access: null }
   }
 
   useEffect(() => {
@@ -119,6 +168,39 @@ export default function PresenceAvatars() {
     }
     prevIdsRef.current = currentIds
   }, [items, hiddenCount])
+
+  const gridContainerRef = useRef<HTMLDivElement>(null)
+  const gridRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const dialogPrevIdsRef = useRef<Set<string> | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const filtered = items.filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
+    const ids = new Set(filtered.map((p) => p.clientId))
+    const prev = dialogPrevIdsRef.current
+    if (!prev) {
+      dialogPrevIdsRef.current = ids
+      return
+    }
+    const joined: string[] = []
+    const left: string[] = []
+    ids.forEach((id) => { if (!prev.has(id)) joined.push(id) })
+    prev.forEach((id) => { if (!ids.has(id)) left.push(id) })
+    if (joined.length > 0) {
+      for (const id of joined) {
+        const el = gridRefs.current[id]
+        if (el) {
+          gsap.fromTo(el, { scale: 0.95, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.18, ease: "power2.out" })
+        } else if (gridContainerRef.current) {
+          gsap.fromTo(gridContainerRef.current, { scale: 0.98 }, { scale: 1.02, duration: 0.16, yoyo: true, repeat: 1 })
+        }
+      }
+    }
+    if (left.length > 0 && gridContainerRef.current) {
+      gsap.fromTo(gridContainerRef.current, { scale: 1.02 }, { scale: 1.0, duration: 0.16 })
+    }
+    dialogPrevIdsRef.current = ids
+  }, [items, open, query])
 
   return (
     <div className="flex items-center">
@@ -160,14 +242,18 @@ export default function PresenceAvatars() {
             <DialogTitle>Người đang ở mindmap này</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 p-2">
-            <Input
-              placeholder="Tìm theo tên..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-            />
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Tìm theo tên..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="pl-9"
+              />
+            </div>
           </div>
           <div className="p-2 max-h-[60vh] overflow-y-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div ref={gridContainerRef} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             {items
               .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
               .map((p) => {
@@ -175,7 +261,7 @@ export default function PresenceAvatars() {
               const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
               const role = resolveRole(p)
               return (
-                <div key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card">
+                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none">
                   <Avatar className="size-9">
                     {url ? (
                       <AvatarImage src={url} alt={p.name} />
@@ -187,7 +273,7 @@ export default function PresenceAvatars() {
                   </Avatar>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-foreground truncate">{p.name}</div>
-                    <div className="mt-1"><RoleBadgeGroup role={{ label: role.label, variant: role.variant }} extra={(role as any).extra} /></div>
+                    <div className="mt-1"><RoleIconsRow kind={role.kind} access={role.access} /></div>
                   </div>
                 </div>
               )
