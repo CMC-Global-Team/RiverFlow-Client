@@ -6,7 +6,6 @@ import ReactFlow, {
   Controls,
   MiniMap,
   MarkerType,
-  useReactFlow,
   ReactFlowInstance,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
@@ -93,13 +92,11 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     clearActive,
   } = useMindmapContext()
 
-  const { getViewport } = useReactFlow();
-
   const handleMoveEnd = useCallback(() => {
-    if (onViewportChange) {
-        onViewportChange(getViewport());
+    if (onViewportChange && reactFlowInstance.current) {
+      onViewportChange(reactFlowInstance.current.getViewport());
     }
-  }, [getViewport, onViewportChange]);
+  }, [onViewportChange]);
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
@@ -128,9 +125,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   // State for long press detection
   const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number }; dimensions: { width?: number; height?: number } } | null>(null)
   const [buttonScreenPosition, setButtonScreenPosition] = useState<{ x: number; y: number } | null>(null)
-  const longPressTimer = useRef<NodeJS.Timeout | null>(null)
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressNodeRef = useRef<string | null>(null)
-  const hideButtonTimer = useRef<NodeJS.Timeout | null>(null)
+  const hideButtonTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -389,9 +386,10 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     (_event: React.MouseEvent, node: any) => {
       if (!readOnly) {
         updateNodeData(node.id, { isEditing: true })
+        emitActive({ type: 'label', id: node?.id })
       }
     },
-    [updateNodeData, readOnly]
+    [updateNodeData, readOnly, emitActive]
   )
 
   const onEdgeClick = useCallback(
