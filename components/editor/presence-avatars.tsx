@@ -7,6 +7,7 @@ import { getAvatarUrl } from "@/lib/avatar-utils"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import gsap from "gsap"
 
 function RoleBadge({ label, variant }: { label: string; variant: "owner" | "collab" | "guest" | "public" }) {
@@ -23,6 +24,7 @@ export default function PresenceAvatars() {
   const { participants, mindmap } = useMindmapContext()
   const { user, isAuthenticated } = useAuth()
   const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState("")
   const stackRef = useRef<HTMLDivElement>(null)
   const avatarRefs = useRef<Record<string, HTMLDivElement | null>>({})
   const plusRef = useRef<HTMLDivElement | null>(null)
@@ -144,36 +146,47 @@ export default function PresenceAvatars() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>Người đang ở mindmap này</DialogTitle>
           </DialogHeader>
-          <div className="space-y-3 p-2 max-h-[60vh] overflow-y-auto">
-            {items.map((p) => {
+          <div className="space-y-3 p-2">
+            <Input
+              placeholder="Tìm theo tên..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+            />
+          </div>
+          <div className="p-2 max-h-[60vh] overflow-y-auto">
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {items
+              .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
+              .map((p) => {
               const url = resolveAvatarUrl(p)
               const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
               const role = resolveRole(p)
               return (
-                <div key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border">
-                  <Avatar className="size-8">
+                <div key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card">
+                  <Avatar className="size-9">
                     {url ? (
                       <AvatarImage src={url} alt={p.name} />
                     ) : (
-                      <AvatarFallback style={{ backgroundColor: p.color }} className="text-white text-xs font-bold">
+                      <AvatarFallback style={{ backgroundColor: p.color }} className="text-white text-sm font-bold">
                         {initials}
                       </AvatarFallback>
                     )}
                   </Avatar>
                   <div className="flex-1">
-                    <div className="text-sm font-medium text-foreground">{p.name}</div>
+                    <div className="text-sm font-semibold text-foreground truncate">{p.name}</div>
                     <div className="mt-1"><RoleBadge label={role.label} variant={role.variant} /></div>
                   </div>
                 </div>
               )
             })}
-            {items.length === 0 && (
+            {items.filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase())).length === 0 && (
               <div className="text-sm text-muted-foreground">Chưa có ai tham gia</div>
             )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>
