@@ -533,10 +533,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     const now = Date.now()
     if (now - (lastEmitRef.current || 0) < 30) return
     lastEmitRef.current = now
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-    const flowPos = reactFlowInstance.current.project({ x, y })
+    const flowPos = reactFlowInstance.current.screenToFlowPosition({ x: e.clientX, y: e.clientY })
     emitCursor({ x: flowPos.x, y: flowPos.y })
   }, [emitCursor])
 
