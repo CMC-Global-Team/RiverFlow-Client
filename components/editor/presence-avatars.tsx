@@ -1,12 +1,13 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect, useRef } from "react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import gsap from "gsap"
 
 function RoleBadge({ label, variant }: { label: string; variant: "owner" | "collab" | "guest" | "public" }) {
   const map: Record<string, string> = {
@@ -22,6 +23,10 @@ export default function PresenceAvatars() {
   const { participants, mindmap } = useMindmapContext()
   const { user, isAuthenticated } = useAuth()
   const [open, setOpen] = useState(false)
+  const stackRef = useRef<HTMLDivElement>(null)
+  const avatarRefs = useRef<Record<string, HTMLDivElement | null>>({})
+  const plusRef = useRef<HTMLDivElement | null>(null)
+  const prevIdsRef = useRef<Set<string> | null>(null)
 
   const items = useMemo(() => {
     const list = Object.values(participants || {})
@@ -70,16 +75,50 @@ export default function PresenceAvatars() {
     return { label: "Khách", variant: "guest" as const }
   }
 
+  useEffect(() => {
+    const currentIds = new Set(items.map((p) => p.clientId))
+    const prev = prevIdsRef.current
+    if (!prev) {
+      prevIdsRef.current = currentIds
+      return
+    }
+    const joined: string[] = []
+    const left: string[] = []
+    currentIds.forEach((id) => { if (!prev.has(id)) joined.push(id) })
+    prev.forEach((id) => { if (!currentIds.has(id)) left.push(id) })
+    if (joined.length > 0) {
+      for (const id of joined) {
+        const el = avatarRefs.current[id]
+        if (el) {
+          gsap.fromTo(el, { scale: 0.8, opacity: 0 }, { scale: 1, opacity: 1, duration: 0.2, ease: "power2.out" })
+        } else if (hiddenCount > 0 && plusRef.current) {
+          gsap.fromTo(plusRef.current, { scale: 0.9 }, { scale: 1.05, duration: 0.16, yoyo: true, repeat: 1 })
+        } else if (stackRef.current) {
+          gsap.fromTo(stackRef.current, { scale: 0.98 }, { scale: 1.02, duration: 0.16, yoyo: true, repeat: 1 })
+        }
+      }
+    }
+    if (left.length > 0) {
+      if (stackRef.current) {
+        gsap.fromTo(stackRef.current, { scale: 1.02 }, { scale: 1.0, duration: 0.16 })
+      }
+      if (plusRef.current) {
+        gsap.fromTo(plusRef.current, { scale: 1.05 }, { scale: 1.0, duration: 0.16 })
+      }
+    }
+    prevIdsRef.current = currentIds
+  }, [items, hiddenCount])
+
   return (
     <div className="flex items-center">
-      <div className="flex -space-x-2 cursor-pointer" onClick={() => setOpen(true)}>
+      <div ref={stackRef} className="flex -space-x-2 cursor-pointer" onClick={() => setOpen(true)}>
         {visible.map((p) => {
           const url = resolveAvatarUrl(p)
           const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
           return (
             <Tooltip key={p.clientId}>
               <TooltipTrigger asChild>
-                <div className="relative">
+                <div ref={(el) => { avatarRefs.current[p.clientId] = el }} className="relative">
                   <Avatar className="size-8 ring-2 ring-background">
                     {url ? (
                       <AvatarImage src={url} alt={p.name} />
@@ -96,7 +135,7 @@ export default function PresenceAvatars() {
           )
         })}
         {hiddenCount > 0 && (
-          <div className="relative">
+          <div ref={plusRef} className="relative">
             <div className="size-8 rounded-full bg-muted ring-2 ring-background flex items-center justify-center text-xs font-semibold text-foreground">
               +{hiddenCount}
             </div>
@@ -104,12 +143,12 @@ export default function PresenceAvatars() {
         )}
       </div>
 
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent side="right" className="sm:max-w-sm">
-          <SheetHeader>
-            <SheetTitle>Người đang ở mindmap này</SheetTitle>
-          </SheetHeader>
-          <div className="space-y-3 p-2 max-h-[70vh] overflow-y-auto">
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Người đang ở mindmap này</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 p-2 max-h-[60vh] overflow-y-auto">
             {items.map((p) => {
               const url = resolveAvatarUrl(p)
               const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
@@ -136,9 +175,8 @@ export default function PresenceAvatars() {
               <div className="text-sm text-muted-foreground">Chưa có ai tham gia</div>
             )}
           </div>
-        </SheetContent>
-      </Sheet>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-
