@@ -732,7 +732,19 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
                     d = getStraightPath({ sourceX: sxh, sourceY: syh, targetX: txh, targetY: tyh })[0]
                   }
                   highlightEl = (
-                    <svg key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', transform: `translate(${v.x}px, ${v.y}px) scale(${v.zoom})` }}>
+                    <svg
+                      key={`hle-${p.clientId}`}
+                      className="absolute z-30"
+                      style={{
+                        left: 0,
+                        top: 0,
+                        width: '100%',
+                        height: '100%',
+                        pointerEvents: 'none',
+                        transformOrigin: '0 0',
+                        transform: `translate(${v.x}px, ${v.y}px) scale(${v.zoom})`,
+                      }}
+                    >
                       <path d={d} fill="none" stroke={p.color} strokeWidth={3} />
                     </svg>
                   )
