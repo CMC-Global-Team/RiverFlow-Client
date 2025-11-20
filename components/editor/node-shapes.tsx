@@ -4,6 +4,7 @@ import { linkify } from '@/components/ui/linkify'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
 import { Handle, Position, NodeProps } from "reactflow"
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 
 interface NodeData {
   label: string
@@ -229,8 +230,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       )}
 
-      {/* Description */}
-      {editingDesc ? (
+      {editingDesc && (
         <div
           ref={descRef}
           contentEditable
@@ -240,13 +240,6 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           onBlur={finishDesc}
           onKeyDown={handleDescKeyDown}
           onMouseDown={(e) => e.stopPropagation()}
-        />
-      ) : (
-        <div
-          className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center pointer-events-auto"
-          style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
-          onMouseDown={handleDescClick}
-          dangerouslySetInnerHTML={{ __html: linkify(data.description || '<span class="opacity-50">Click to add description</span>') }}
         />
       )}
     </div>
@@ -265,22 +258,24 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
         transition: 'transform 0.2s ease'
       }}
     >
-      <div
-        className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-        }`}
-        style={{
-          borderColor: color,
-          backgroundColor: data.bgColor || "transparent"
-        }}
-      >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+              selected ? "ring-2 ring-primary ring-offset-2" : ""
+            }`}
+            style={{
+              borderColor: color,
+              backgroundColor: data.bgColor || "transparent"
+            }}
+          >
+          <Handle
+              type="target"
+              id="target-top"
+              position={Position.Top}
+              className="w-3 h-3"
+              style={{ background: color, left: "50%" }}
+          />
         <Handle
             type="target"
             id="target-right"
@@ -333,7 +328,16 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
             style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
@@ -353,15 +357,17 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
         transition: 'transform 0.2s ease'
       }}
     >
-      <div
-        className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-        }`}
-        style={{
-          borderColor: color,
-          backgroundColor: data.bgColor || "transparent"
-        }}
-      >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${
+              selected ? "ring-2 ring-primary ring-offset-2" : ""
+            }`}
+            style={{
+              borderColor: color,
+              backgroundColor: data.bgColor || "transparent"
+            }}
+          >
         <Handle
             type="target"
             id="target-top"
@@ -421,7 +427,16 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
             style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
@@ -441,7 +456,9 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
         transition: 'transform 0.2s ease'
       }}
     >
-      <div className="relative w-32 h-32">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="relative w-32 h-32">
         <Handle
           type="target"
           id="target-top"
@@ -516,7 +533,16 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
@@ -536,7 +562,9 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
         transition: 'transform 0.2s ease'
       }}
     >
-      <div className="relative w-36 h-32">
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="relative w-36 h-32">
         <Handle
             type="target"
             id="target-top"
@@ -610,7 +638,16 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             style={{ background: color, top: "50%", left: "3%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
@@ -630,15 +667,17 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
         transition: 'transform 0.2s ease'
       }}
     >
-      <div
-        className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-        }`}
-      style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
-      }}
-    >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${
+              selected ? "ring-2 ring-primary ring-offset-2" : ""
+            }`}
+          style={{
+            borderColor: color,
+            backgroundColor: data.bgColor || "transparent"
+          }}
+        >
         <Handle
             type="target"
             id="target-top"
@@ -698,7 +737,16 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
@@ -718,15 +766,17 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
         transition: 'transform 0.2s ease'
       }}
     >
-      <div
-        className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-      }`}
-      style={{
-        borderColor: color,
-        backgroundColor: data.bgColor || "transparent"
-      }}
-    >
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
+              selected ? "ring-2 ring-primary ring-offset-2" : ""
+          }`}
+          style={{
+            borderColor: color,
+            backgroundColor: data.bgColor || "transparent"
+          }}
+        >
         <Handle
             type="target"
             id="target-top"
@@ -786,7 +836,16 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
-      </div>
+          </div>
+        </TooltipTrigger>
+        {data.description && (
+          <TooltipContent side="top" align="center" className="max-w-xs break-words">
+            <div
+              dangerouslySetInnerHTML={{ __html: linkify(data.description) }}
+            />
+          </TooltipContent>
+        )}
+      </Tooltip>
     </div>
   )
 })
