@@ -11,6 +11,8 @@ import ReactFlow, {
 } from 'reactflow'
 import 'reactflow/dist/style.css'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
+import { getSocket } from '@/lib/realtime'
+import { useAuth } from '@/hooks/auth/useAuth'
 import {
   RectangleNode,
   CircleNode,
@@ -84,6 +86,11 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     canUndo,
     canRedo,
     updateNodeData,
+    participants,
+    announcePresence,
+    emitCursor,
+    emitActive,
+    clearActive,
   } = useMindmapContext()
 
   const { getViewport } = useReactFlow();
@@ -102,6 +109,21 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   
   // Ref to store ReactFlow instance
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
+  const myClientIdRef = useRef<string | null>(null)
+  const presenceAnnouncedRef = useRef(false)
+  const { user, isAuthenticated } = useAuth()
+  const [anonymousName] = useState(() => {
+    const names = ['Chuột túi', 'Gà trống', 'Chó pug', 'Cá voi', 'Mèo mun', 'Cáo lửa', 'Hươu sao', 'Rùa biển', 'Cú mèo', 'Bò tót']
+    const i = Math.floor(Math.random() * names.length)
+    return names[i]
+  })
+  const pickColor = useCallback((seed: string | number | null | undefined) => {
+    const palette = ['#ef4444', '#f59e0b', '#10b981', '#3b82f6', '#8b5cf6', '#ec4899', '#22c55e', '#06b6d4', '#f97316', '#a3e635']
+    const s = String(seed || anonymousName)
+    let h = 0
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
+    return palette[h % palette.length]
+  }, [anonymousName])
   
   // State for long press detection
   const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number }; dimensions: { width?: number; height?: number } } | null>(null)
@@ -358,8 +380,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     (_event: any, node: any) => {
       setSelectedNode(node)
       setSelectedEdge(null)
+      emitActive({ type: 'node', id: node?.id })
     },
-    [setSelectedNode, setSelectedEdge]
+    [setSelectedNode, setSelectedEdge, emitActive]
   )
 
   const onNodeDoubleClick = useCallback(
@@ -375,13 +398,15 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     (_event: any, edge: any) => {
       setSelectedEdge(edge)
       setSelectedNode(null)
+      emitActive({ type: 'edge', id: edge?.id })
     },
-    [setSelectedEdge, setSelectedNode]
+    [setSelectedEdge, setSelectedNode, emitActive]
   )
 
   const onPaneClick = useCallback(() => {
     setSelectedNode(null)
     setSelectedEdge(null)
+    clearActive()
   }, [setSelectedNode, setSelectedEdge])
 
   // Effect to select newly created child or sibling node and enable editing
@@ -491,6 +516,102 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     }
   }, [])
 
+  useEffect(() => {
+    const s = getSocket()
+    myClientIdRef.current = s.id || null
+  }, [])
+
+  useEffect(() => {
+    if (!reactFlowInstance.current || presenceAnnouncedRef.current) return
+    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
+    const color = pickColor(isAuthenticated ? user?.userId : null)
+    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
+    presenceAnnouncedRef.current = true
+  }, [announcePresence, isAuthenticated, user, anonymousName, pickColor])
+
+  const lastEmitRef = useRef<number>(0)
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!reactFlowInstance.current) return
+    const now = Date.now()
+    if (now - (lastEmitRef.current || 0) < 30) return
+    lastEmitRef.current = now
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const y = e.clientY - rect.top
+    const flowPos = reactFlowInstance.current.project({ x, y })
+    emitCursor({ x: flowPos.x, y: flowPos.y })
+  }, [emitCursor])
+
+  const toScreen = useCallback((p: { x: number; y: number }) => {
+    if (!reactFlowInstance.current) return null
+    const v = reactFlowInstance.current.getViewport()
+    return { x: p.x * v.zoom + v.x, y: p.y * v.zoom + v.y }
+  }, [])
+
+  const renderPresence = useMemo(() => {
+    if (!reactFlowInstance.current) return null
+    const myId = myClientIdRef.current
+    const items = Object.values(participants || {}).filter((p) => p.clientId !== myId)
+    return (
+      <>
+        {items.map((p) => {
+          const cs = p.cursor && toScreen(p.cursor)
+          const cursorEl = cs ? (
+            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y }}>
+              <div className="relative -translate-x-1 -translate-y-1">
+                <div className="w-3 h-3 rotate-45" style={{ backgroundColor: p.color }}></div>
+                <div className="mt-1 px-2 py-0.5 rounded text-xs font-medium border" style={{ borderColor: p.color, color: p.color, backgroundColor: 'rgba(255,255,255,0.9)' }}>{p.name}</div>
+              </div>
+            </div>
+          ) : null
+          let highlightEl = null
+          const a = p.active
+          if (a && a.type === 'node' && a.id) {
+            const n = reactFlowInstance.current.getNode(a.id)
+            if (n) {
+              const pos = n.positionAbsolute || n.position
+              const v = reactFlowInstance.current.getViewport()
+              const x = (pos.x) * v.zoom + v.x
+              const y = (pos.y) * v.zoom + v.y
+              const w = (n.measured?.width || 150) * v.zoom
+              const h = (n.measured?.height || 80) * v.zoom
+              highlightEl = (
+                <div key={`hl-${p.clientId}`} className="absolute z-30" style={{ left: x, top: y, width: w, height: h }}>
+                  <div className="w-full h-full rounded-md" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                </div>
+              )
+            }
+          } else if (a && a.type === 'edge' && a.id) {
+            const e = edges.find((ee) => ee.id === a.id)
+            if (e) {
+              const sn = reactFlowInstance.current.getNode(e.source)
+              const tn = reactFlowInstance.current.getNode(e.target)
+              if (sn && tn) {
+                const sx = (sn.positionAbsolute?.x || sn.position.x)
+                const sy = (sn.positionAbsolute?.y || sn.position.y)
+                const tx = (tn.positionAbsolute?.x || tn.position.x)
+                const ty = (tn.positionAbsolute?.y || tn.position.y)
+                const mx = (sx + tx) / 2
+                const my = (sy + ty) / 2
+                const v = reactFlowInstance.current.getViewport()
+                const x = mx * v.zoom + v.x
+                const y = my * v.zoom + v.y
+                highlightEl = (
+                  <div key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: x - 12, top: y - 12 }}>
+                    <div className="w-6 h-6 rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  </div>
+                )
+              }
+            }
+          }
+          return (
+            <div key={`presence-${p.clientId}`}>{cursorEl}{highlightEl}</div>
+          )
+        })}
+      </>
+    )
+  }, [participants, edges, toScreen])
+
   const handleAddChildFromButton = useCallback(() => {
     if (longPressedNode) {
       const parentNode = nodes.find(n => n.id === longPressedNode.id)
@@ -523,7 +644,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   }, [longPressedNode, calculateScreenPosition])
 
   return (
-    <div className="w-full h-full relative">
+    <div className="w-full h-full relative" onMouseMove={handleMouseMove}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
@@ -566,6 +687,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           onScheduleHide={handleScheduleHide}
         />
       )}
+      {renderPresence}
     </div>
   )
 }
