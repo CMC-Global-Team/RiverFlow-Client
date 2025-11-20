@@ -7,8 +7,8 @@ let socket: Socket | null = null
 export function getSocket() {
   if (!socket) {
     socket = io(`${REALTIME_URL}/realtime`, {
-      path: '/socket.io/',
-      transports: ['polling'],
+      path: '/socket.io',
+      transports: ['websocket'],
       withCredentials: false,
       reconnection: true,
       reconnectionAttempts: 5,
