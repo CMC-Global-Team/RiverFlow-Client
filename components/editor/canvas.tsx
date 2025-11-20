@@ -678,17 +678,58 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
                   const tx = tn.positionAbsolute?.x || tn.position.x
                   const ty = tn.positionAbsolute?.y || tn.position.y
                   const v = inst.getViewport()
-                  const sp = sx < tx ? Position.Right : Position.Left
-                  const tp = sx < tx ? Position.Left : Position.Right
+                  const sw = sn.width ?? 150
+                  const sh = sn.height ?? 80
+                  const tw = tn.width ?? 150
+                  const th = tn.height ?? 80
+                  const dx = tx - sx
+                  const dy = ty - sy
+                  let sp: Position
+                  let tp: Position
+                  if (Math.abs(dx) >= Math.abs(dy)) {
+                    sp = dx >= 0 ? Position.Right : Position.Left
+                    tp = dx >= 0 ? Position.Left : Position.Right
+                  } else {
+                    sp = dy >= 0 ? Position.Bottom : Position.Top
+                    tp = dy >= 0 ? Position.Top : Position.Bottom
+                  }
+                  let sxh = sx
+                  let syh = sy
+                  let txh = tx
+                  let tyh = ty
+                  if (sp === Position.Right) {
+                    sxh = sx + sw
+                    syh = sy + sh / 2
+                  } else if (sp === Position.Left) {
+                    sxh = sx
+                    syh = sy + sh / 2
+                  } else if (sp === Position.Top) {
+                    sxh = sx + sw / 2
+                    syh = sy
+                  } else if (sp === Position.Bottom) {
+                    sxh = sx + sw / 2
+                    syh = sy + sh
+                  }
+                  if (tp === Position.Left) {
+                    txh = tx
+                    tyh = ty + th / 2
+                  } else if (tp === Position.Right) {
+                    txh = tx + tw
+                    tyh = ty + th / 2
+                  } else if (tp === Position.Top) {
+                    txh = tx + tw / 2
+                    tyh = ty
+                  } else if (tp === Position.Bottom) {
+                    txh = tx + tw / 2
+                    tyh = ty + th
+                  }
                   let d: string
                   if (e.type === 'bezier') {
-                    d = getBezierPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
-                  } else if (e.type === 'smoothstep') {
-                    d = getSmoothStepPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
-                  } else if (e.type === 'step') {
-                    d = getSmoothStepPath({ sourceX: sx, sourceY: sy, sourcePosition: sp, targetX: tx, targetY: ty, targetPosition: tp })[0]
+                    d = getBezierPath({ sourceX: sxh, sourceY: syh, sourcePosition: sp, targetX: txh, targetY: tyh, targetPosition: tp })[0]
+                  } else if (e.type === 'smoothstep' || e.type === 'step') {
+                    d = getSmoothStepPath({ sourceX: sxh, sourceY: syh, sourcePosition: sp, targetX: txh, targetY: tyh, targetPosition: tp })[0]
                   } else {
-                    d = getStraightPath({ sourceX: sx, sourceY: sy, targetX: tx, targetY: ty })[0]
+                    d = getStraightPath({ sourceX: sxh, sourceY: syh, targetX: txh, targetY: tyh })[0]
                   }
                   highlightEl = (
                     <svg key={`hle-${p.clientId}`} className="absolute z-30" style={{ left: 0, top: 0, width: '100%', height: '100%', pointerEvents: 'none', transform: `translate(${v.x}px, ${v.y}px) scale(${v.zoom})` }}>
