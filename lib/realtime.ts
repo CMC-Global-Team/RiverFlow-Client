@@ -41,3 +41,27 @@ export function emitViewport(socket: Socket, room: string, viewport: any) {
   socket.emit('mindmap:viewport', room, viewport)
 }
 
+export function emitCursorMove(socket: Socket, room: string, cursor: { x: number; y: number }) {
+  socket.emit('cursor:move', room, { clientId: socket.id, cursor })
+}
+
+export function emitPresenceAnnounce(
+  socket: Socket,
+  room: string,
+  info: { name: string; color: string; userId?: number | string | null }
+) {
+  socket.emit('presence:announce', room, info)
+}
+
+export function emitPresenceActive(
+  socket: Socket,
+  room: string,
+  active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }
+) {
+  socket.emit('presence:active', room, active)
+}
+
+export function emitPresenceClear(socket: Socket, room: string) {
+  socket.emit('presence:clear', room)
+}
+
