@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import {
   Plus,
   Trash2,
@@ -75,8 +75,10 @@ export default function Toolbar({
   onShareClick,
   userRole,
 }: ToolbarProps = {}) {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo, participants } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
+  const toolbarRef = useRef<HTMLDivElement>(null)
+  const prevCountRef = useRef<number | null>(null)
 
   // Debug logging for userRole
   useEffect(() => {
@@ -188,8 +190,31 @@ export default function Toolbar({
     toast.success("Mindmap downloaded")
   }
 
+  useEffect(() => {
+    const count = Object.keys(participants || {}).length
+    const prev = prevCountRef.current
+    if (prev === null) {
+      prevCountRef.current = count
+      return
+    }
+    if (!toolbarRef.current) {
+      prevCountRef.current = count
+      return
+    }
+    if (count > prev) {
+      const tl = gsap.timeline({ defaults: { duration: 0.16, ease: "power2.out" } })
+      tl.to(toolbarRef.current, { scale: 1.03 })
+        .to(toolbarRef.current, { scale: 1.0 })
+    } else if (count < prev) {
+      const tl = gsap.timeline({ defaults: { duration: 0.16, ease: "power2.out" } })
+      tl.to(toolbarRef.current, { scale: 0.98 })
+        .to(toolbarRef.current, { scale: 1.0 })
+    }
+    prevCountRef.current = count
+  }, [participants])
+
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto">
+    <div ref={toolbarRef} className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto">
       {/* Back Button */}
       <BackButton />
       
