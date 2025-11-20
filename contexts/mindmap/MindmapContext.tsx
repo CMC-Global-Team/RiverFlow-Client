@@ -5,7 +5,7 @@ import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, No
 import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
-import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear } from '@/lib/realtime'
+import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear, emitNodeUpdate, emitEdgeUpdate } from '@/lib/realtime'
 
 interface MindmapContextType {
   mindmap: MindmapResponse | null
@@ -200,8 +200,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const { toast } = useToast()
-  const [canUndo, setCanUndo] = useState(false)
-  const [canRedo, setCanRedo] = useState(false)
+  const [canUndo, setCanUndo] = useState(false)
+  const [canRedo, setCanRedo] = useState(false)
 
   const latestMindmapRef = useRef(mindmap);
   const latestNodesRef = useRef(nodes);
@@ -212,6 +212,25 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
   const lastPresenceInfoRef = useRef<{ name: string; color: string; userId?: number | string | null; avatar?: string | null } | null>(null)
   const lastReannounceAtRef = useRef<number>(0)
+  const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
+  const isApplyingHistoryRef = useRef(false)
+
+  const getSnapshot = useCallback(() => {
+    return {
+      nodes: latestNodesRef.current.map((n) => ({ ...n, data: { ...(n.data || {}) } })),
+      edges: latestEdgesRef.current.map((e) => ({ ...e })),
+      viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+    }
+  }, [])
+
+  const recordSnapshot = useCallback(() => {
+    if (isApplyingHistoryRef.current) return
+    const snap = getSnapshot()
+    historyRef.current.past.push(snap)
+    historyRef.current.future = []
+    setCanUndo(historyRef.current.past.length > 0)
+    setCanRedo(historyRef.current.future.length > 0)
+  }, [getSnapshot])
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
   useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
@@ -273,9 +292,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setNodes(normalizedNodes);
     setEdges(normalizedEdges);
     setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
+    historyRef.current = { past: [], future: [] }
     
-    setCanUndo(data.canUndo);
-    setCanRedo(data.canRedo);
+    setCanUndo(historyRef.current.past.length > 0)
+    setCanRedo(historyRef.current.future.length > 0)
 
   }, []); // useCallback rỗng vì nó là hàm setter
 
@@ -292,6 +312,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
     const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep' }, eds)) }
     const onViewportEv = (v: any) => { setViewport(v) }
+    const onNodeUpdate = (updated: any) => {
+      setNodes((nds) => nds.map((n) => (n.id === updated.id ? { ...updated } : n)))
+      setSelectedNode((prev) => (prev && prev.id === updated.id ? { ...updated } : prev))
+    }
+    const onEdgeUpdate = (updated: any) => {
+      setEdges((eds) => eds.map((e) => (e.id === updated.id ? { ...updated } : e)))
+      setSelectedEdge((prev) => (prev && prev.id === updated.id ? { ...updated } : prev))
+    }
     const onPresenceState = (list: any[]) => {
       const map: any = {}
       for (const p of list || []) {
@@ -352,6 +380,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     s.on('cursor:move', onCursorMove)
     s.on('presence:active', onPresenceActive)
     s.on('presence:clear', onPresenceClear)
+    s.on('mindmap:nodes:update', onNodeUpdate)
+    s.on('mindmap:edges:update', onEdgeUpdate)
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('mindmap:nodes:change', onNodes)
@@ -364,6 +394,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('cursor:move', onCursorMove)
       s.off('presence:active', onPresenceActive)
       s.off('presence:clear', onPresenceClear)
+      s.off('mindmap:nodes:update', onNodeUpdate)
+      s.off('mindmap:edges:update', onEdgeUpdate)
     }
   }, [mindmap])
 
@@ -442,30 +474,33 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
+      recordSnapshot()
       setNodes((nds) => applyNodeChanges(changes, nds))
       scheduleAutoSave()
       const s = socketRef.current
       const room = roomRef.current
       if (s && room) emitNodesChange(s, room, changes as any)
     },
-    [scheduleAutoSave]
+    [scheduleAutoSave, recordSnapshot]
   )
 
   // Edge changes handler
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
+      recordSnapshot()
       setEdges((eds) => applyEdgeChanges(changes, eds))
       scheduleAutoSave()
       const s = socketRef.current
       const room = roomRef.current
       if (s && room) emitEdgesChange(s, room, changes as any)
     },
-    [scheduleAutoSave]
+    [scheduleAutoSave, recordSnapshot]
   )
 
   // Connection handler
   const onConnect = useCallback(
     (connection: Connection) => {
+      recordSnapshot()
       const newEdge = {
         ...connection,
         animated: true,
@@ -477,11 +512,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const room = roomRef.current
       if (s && room) emitConnect(s, room, connection as any)
     },
-    [scheduleAutoSave]
+    [scheduleAutoSave, recordSnapshot]
   )
 
   // Add new node
   const addNode = useCallback((position: { x: number; y: number }, shape: string = 'rectangle') => {
+    recordSnapshot()
     const newNode: Node = {
       id: `node-${Date.now()}`,
       type: shape,
@@ -499,9 +535,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const room = roomRef.current
     if (s && room) emitNodesChange(s, room, [{ type: 'add', item: newNode }])
     return newNode.id
-  }, [scheduleAutoSave])
+  }, [scheduleAutoSave, recordSnapshot])
 
   const deleteNode = useCallback((nodeId: string) => {
+    recordSnapshot()
      const edgesSnapshot = latestEdgesRef.current;
     const toDelete = new Set<string>();
     const queue: string[] = [nodeId];
@@ -532,10 +569,11 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitNodesChange(s, room, Array.from(toDelete).map((id) => ({ type: 'remove', id })))
-  }, [scheduleAutoSave])
+  }, [scheduleAutoSave, recordSnapshot])
 
   // Delete edge
   const deleteEdge = useCallback((edgeId: string) => {
+    recordSnapshot()
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
     scheduleAutoSave()
     if (selectedEdge?.id === edgeId) {
@@ -544,11 +582,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitEdgesChange(s, room, [{ type: 'remove', id: edgeId }])
-  }, [scheduleAutoSave])
+  }, [scheduleAutoSave, recordSnapshot])
 
   // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
-    let changePayload: any[] = []
+    recordSnapshot()
+    let updatedNodeRef: any = null
     setNodes((nds) =>
       nds.map((node) => {
         if (node.id === nodeId) {
@@ -567,15 +606,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           if (newData.shape) {
             updatedNode.type = newData.shape
           }
-          // If scale changed, trigger ReactFlow to recalculate handle positions
-          // by incrementing a tiny position change (0.01px is imperceptible)
           if (newData.scale !== undefined) {
             updatedNode.position = {
               x: node.position.x + 0.001,
               y: node.position.y + 0.001,
             }
           }
-          changePayload.push({ type: 'replace', id: nodeId, item: updatedNode })
+          updatedNodeRef = updatedNode
           return updatedNode
         }
         return node
@@ -598,13 +635,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         if (newData.shape) {
           updatedNode.type = newData.shape
         }
-        // If scale changed, trigger ReactFlow to recalculate handle positions
         if (newData.scale !== undefined) {
           updatedNode.position = {
             x: prev.position.x + 0.001,
             y: prev.position.y + 0.001,
           }
         }
+        updatedNodeRef = updatedNode
         return updatedNode
       }
       return prev
@@ -612,11 +649,18 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room && changePayload.length) emitNodesChange(s, room, changePayload)
-  }, [scheduleAutoSave])
+    if (s && room && updatedNodeRef) {
+      emitNodeUpdate(s, room, updatedNodeRef)
+      emitNodesChange(s, room, [
+        { type: 'remove', id: nodeId } as any,
+        { type: 'add', item: updatedNodeRef } as any,
+      ])
+    }
+  }, [scheduleAutoSave, recordSnapshot])
 
   // Update edge data
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
+    recordSnapshot()
     let updated: any = null
     setEdges((eds) =>
       eds.map((edge) => {
@@ -629,15 +673,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     )
     setSelectedEdge((prev) => {
       if (prev && prev.id === edgeId) {
-        return { ...prev, ...updates }
+        const next = { ...prev, ...updates }
+        updated = next
+        return next
       }
       return prev
     })
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room && updated) emitEdgesChange(s, room, [{ type: 'replace', id: edgeId, item: updated }])
-  }, [scheduleAutoSave])
+    if (s && room && updated) {
+      emitEdgeUpdate(s, room, updated)
+      emitEdgesChange(s, room, [
+        { type: 'remove', id: edgeId } as any,
+        { type: 'add', item: updated } as any,
+      ])
+    }
+  }, [scheduleAutoSave, recordSnapshot])
 
   // Set title
   const setTitle = useCallback((title: string) => {
@@ -648,50 +700,51 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [mindmap, scheduleAutoSave])
 
   const onViewportChange = useCallback((viewport: Viewport) => {
+    recordSnapshot()
     setViewport(viewport);
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitViewport(s, room, viewport as any)
-  }, [scheduleAutoSave]);
+  }, [scheduleAutoSave, recordSnapshot]);
 
   const undo = useCallback(async () => {
-      if (!mindmap?.id || !canUndo) return; // Kiểm tra nếu có thể undo
-
-      cancelScheduledSave();
-      
-      setIsSaving(true); // Hiển thị loading (tùy chọn)
-      try {
-          const restoredMindmap = await undoMindmap(mindmap.id);
-          setFullMindmapState(restoredMindmap); // Cập nhật state với dữ liệu mới
-          markSynced('saved');
-          toast({ title: "Đã hoàn tác!" });
-      } catch (error) {
-          console.error("Undo failed:", error);
-          toast({ variant: "destructive", title: "Lỗi", description: "Không thể hoàn tác." });
-      } finally {
-          setIsSaving(false);
-      }
-  }, [mindmap?.id, canUndo, cancelScheduledSave, markSynced, toast, setFullMindmapState]); // Thêm dependencies
+    if (!canUndo) return
+    cancelScheduledSave()
+    const past = historyRef.current.past
+    const future = historyRef.current.future
+    if (past.length === 0) return
+    const current = getSnapshot()
+    future.push(current)
+    const snap = past.pop()!
+    isApplyingHistoryRef.current = true
+    setNodes(snap.nodes)
+    setEdges(snap.edges)
+    setViewport(snap.viewport || null)
+    isApplyingHistoryRef.current = false
+    setCanUndo(past.length > 0)
+    setCanRedo(future.length > 0)
+    markSynced('idle')
+  }, [cancelScheduledSave, getSnapshot, markSynced])
 
   const redo = useCallback(async () => {
-      if (!mindmap?.id || !canRedo) return; // Kiểm tra nếu có thể redo
-      
-      cancelScheduledSave();
-      
-      setIsSaving(true);
-      try {
-          const restoredMindmap = await redoMindmap(mindmap.id);
-          setFullMindmapState(restoredMindmap); // Cập nhật state
-          markSynced('saved');
-          toast({ title: "Đã làm lại!" });
-      } catch (error) {
-          console.error("Redo failed:", error);
-          toast({ variant: "destructive", title: "Lỗi", description: "Không thể làm lại." });
-      } finally {
-          setIsSaving(false);
-      }
-  }, [mindmap?.id, canRedo, cancelScheduledSave, markSynced, toast, setFullMindmapState]);
+    if (!canRedo) return
+    cancelScheduledSave()
+    const past = historyRef.current.past
+    const future = historyRef.current.future
+    if (future.length === 0) return
+    const current = getSnapshot()
+    past.push(current)
+    const snap = future.pop()!
+    isApplyingHistoryRef.current = true
+    setNodes(snap.nodes)
+    setEdges(snap.edges)
+    setViewport(snap.viewport || null)
+    isApplyingHistoryRef.current = false
+    setCanUndo(past.length > 0)
+    setCanRedo(future.length > 0)
+    markSynced('idle')
+  }, [cancelScheduledSave, getSnapshot, markSynced])
 
   const value: MindmapContextType = {
     mindmap,
