@@ -8,10 +8,10 @@ export function getSocket() {
   if (!socket) {
     socket = io(`${REALTIME_URL}/realtime`, {
       path: '/socket.io',
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
       withCredentials: false,
       reconnection: true,
-      reconnectionAttempts: 5,
+      reconnectionAttempts: 10,
       reconnectionDelay: 1000,
       auth: {
         token: typeof window !== 'undefined' ? (localStorage.getItem('accessToken') || '') : ''
