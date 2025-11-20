@@ -110,7 +110,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   const presenceAnnouncedRef = useRef(false)
   const { user, isAuthenticated } = useAuth()
   const [anonymousName] = useState(() => {
-    const names = ['Chuột túi', 'Gà trống', 'Chó pug', 'Cá voi', 'Mèo mun', 'Cáo lửa', 'Hươu sao', 'Rùa biển', 'Cú mèo', 'Bò tót']
+    const names = ['Chuột túi', 'Cá mập', 'Chim kền kền', 'Gà trống', 'Chó pug', 'Cá voi', 'Mèo mun', 'Cáo lửa', 'Hươu sao', 'Rùa biển', 'Cú mèo', 'Bò tót']
     const i = Math.floor(Math.random() * names.length)
     return names[i]
   })
@@ -535,15 +535,30 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     presenceAnnouncedRef.current = true
   }, [participants, announcePresence, isAuthenticated, user, anonymousName, pickColor])
 
-  const lastEmitRef = useRef<number>(0)
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!reactFlowInstance.current) return
-    const now = Date.now()
-    if (now - (lastEmitRef.current || 0) < 30) return
-    lastEmitRef.current = now
-    const flowPos = reactFlowInstance.current.screenToFlowPosition({ x: e.clientX, y: e.clientY })
-    emitCursor({ x: flowPos.x, y: flowPos.y })
+  const lastMouseScreenRef = useRef<{ x: number; y: number } | null>(null)
+  const rafIdRef = useRef<number | null>(null)
+  const runCursorRaf = useCallback(() => {
+    const pos = lastMouseScreenRef.current
+    if (pos && reactFlowInstance.current) {
+      const flowPos = reactFlowInstance.current.screenToFlowPosition({ x: pos.x, y: pos.y })
+      emitCursor({ x: flowPos.x, y: flowPos.y })
+    }
+    rafIdRef.current = requestAnimationFrame(runCursorRaf)
   }, [emitCursor])
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    lastMouseScreenRef.current = { x: e.clientX, y: e.clientY }
+    if (rafIdRef.current === null) {
+      rafIdRef.current = requestAnimationFrame(runCursorRaf)
+    }
+  }, [runCursorRaf])
+  useEffect(() => {
+    return () => {
+      if (rafIdRef.current !== null) {
+        cancelAnimationFrame(rafIdRef.current)
+        rafIdRef.current = null
+      }
+    }
+  }, [])
 
   const toScreen = useCallback((p: { x: number; y: number }) => {
     if (!reactFlowInstance.current) return null
@@ -553,17 +568,16 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const renderPresence = useMemo(() => {
     if (!reactFlowInstance.current) return null
-    const myId = myClientIdRef.current
-    const items = Object.values(participants || {}).filter((p) => p.clientId !== myId)
+    const items = Object.values(participants || {})
     return (
       <>
         {items.map((p) => {
           const cs = p.cursor && toScreen(p.cursor)
           const cursorEl = cs ? (
-            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y }}>
+            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 40ms linear, top 40ms linear' }}>
               <div className="relative -translate-x-1 -translate-y-1">
-                <div className="w-3 h-3 rotate-45" style={{ backgroundColor: p.color }}></div>
-                <div className="mt-1 px-2 py-0.5 rounded text-xs font-medium border" style={{ borderColor: p.color, color: p.color, backgroundColor: 'rgba(255,255,255,0.9)' }}>{p.name}</div>
+                <div className="w-4 h-4 rotate-45" style={{ backgroundColor: p.color }}></div>
+                <div className="mt-1 px-3 py-1 rounded-md text-sm sm:text-base font-semibold border shadow-sm bg-white/90" style={{ borderColor: p.color, color: p.color }}>{p.name}</div>
               </div>
             </div>
           ) : null
