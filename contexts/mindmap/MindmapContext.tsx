@@ -281,7 +281,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (!mindmap) return
     const s = getSocket()
     socketRef.current = s
-    const payload: any = mindmap.shareToken ? { shareToken: mindmap.shareToken } : { mindmapId: mindmap.id }
+    const payload: any = mindmap.isPublic === true && mindmap.shareToken
+      ? { shareToken: mindmap.shareToken }
+      : { mindmapId: mindmap.id }
     joinMindmap(s, payload)
     const onJoined = (res: any) => { roomRef.current = res?.room || null }
     const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
