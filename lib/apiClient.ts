@@ -24,16 +24,17 @@ apiClient.interceptors.request.use(
   (config) => {
     const url = (config.url || '').toString();
     const isPublicMindmap = url.startsWith('/mindmaps/public/') || config.headers['X-Share-Token'];
+    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/');
     const allowPublicAuth = !!config.headers['X-Allow-Public-Auth'];
 
     if (typeof window !== 'undefined') {
       const accessToken = window.localStorage.getItem('accessToken');
-      if (accessToken && (!isPublicMindmap || allowPublicAuth)) {
+      if (accessToken && (!(isPublicMindmap || isInvitationEndpoint) || allowPublicAuth)) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
     }
 
-    if (isPublicMindmap && config.headers.Authorization && !allowPublicAuth) {
+    if ((isPublicMindmap || isInvitationEndpoint) && config.headers.Authorization && !allowPublicAuth) {
       delete config.headers.Authorization;
     }
 
@@ -73,8 +74,9 @@ apiClient.interceptors.response.use(
 
     const url = (originalRequest?.url || '').toString();
     const isPublicMindmap = url.startsWith('/mindmaps/public/') || originalRequest?.headers?.['X-Share-Token'];
+    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/');
 
-    if (error.response?.status === 403 && !isPublicMindmap) {
+    if (error.response?.status === 403 && !(isPublicMindmap || isInvitationEndpoint)) {
       // Clear tất cả dữ liệu authentication
       localStorage.clear();
       deleteCookie('accessToken');
@@ -90,7 +92,7 @@ apiClient.interceptors.response.use(
     }
     
     // Nếu lỗi 401 và chưa retry
-    if (error.response?.status === 401 && !originalRequest._retry && !isPublicMindmap) {
+    if (error.response?.status === 401 && !originalRequest._retry && !(isPublicMindmap || isInvitationEndpoint)) {
       if (isRefreshing) {
         // Nếu đang refresh, đợi trong queue
         return new Promise((resolve, reject) => {

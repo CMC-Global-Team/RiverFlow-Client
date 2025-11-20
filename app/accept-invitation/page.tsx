@@ -22,27 +22,17 @@ function AcceptInvitationContent() {
   const token = searchParams.get('token');
 
   useEffect(() => {
-    // Wait for auth state to load
     if (isAuthLoading) {
       return;
     }
 
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      // Redirect to login with return URL
-      const returnUrl = `/accept-invitation?token=${token}`
-      router.push(`/auth?returnUrl=${encodeURIComponent(returnUrl)}`)
-      return
-    }
-
-    // Verify the invitation token
     if (token) {
       verifyInvitation(token);
     } else {
       setError('Invalid invitation link. Token is missing.');
       setLoading(false);
     }
-  }, [token, isAuthenticated, isAuthLoading, router]);
+  }, [token, isAuthLoading, router]);
 
   const verifyInvitation = async (invitationToken: string) => {
     try {
