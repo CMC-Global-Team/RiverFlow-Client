@@ -40,6 +40,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher"
 import BackButton from "./back-button"
 import gsap from "gsap"
 import { useRouter } from "next/navigation"
+import PresenceAvatars from "@/components/editor/presence-avatars"
 
 interface ToolbarProps {
   mindmap?: any
@@ -186,6 +187,8 @@ export default function Toolbar({
     URL.revokeObjectURL(url)
     toast.success("Mindmap downloaded")
   }
+
+  
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto">
@@ -383,6 +386,7 @@ export default function Toolbar({
 
       {/* Right Side Actions */}
       <div className="flex items-center gap-2 flex-shrink-0">
+        <PresenceAvatars />
         <ThemeSwitcher />
 
         {/* Auto-save Toggle - Hidden for viewers */}
