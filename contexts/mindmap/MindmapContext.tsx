@@ -706,7 +706,20 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     announcePresence: (info) => {
       const s = socketRef.current
       const room = roomRef.current
-      if (s && room) emitPresenceAnnounce(s, room, info)
+      if (s && room) {
+        emitPresenceAnnounce(s, room, info)
+        setParticipants((prev) => ({
+          ...prev,
+          [s.id]: {
+            clientId: s.id,
+            userId: info?.userId || null,
+            name: info?.name || '',
+            color: info?.color || '#3b82f6',
+            cursor: prev[s.id]?.cursor || null,
+            active: prev[s.id]?.active || null,
+          },
+        }))
+      }
     },
     emitCursor: (cursor) => {
       const s = socketRef.current
