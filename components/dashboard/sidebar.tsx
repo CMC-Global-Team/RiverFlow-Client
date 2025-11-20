@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useLogout } from "@/hooks/auth/useLogout"
 import TemplateModal from "./template-modal"
+import { useRouter } from "next/navigation"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import Link from "next/link"
 import {
@@ -27,12 +28,11 @@ export default function Sidebar() {
   const { logout, isLoading } = useLogout()
   const {create} = useMindmapActions();
   const [settingsOpen, setSettingsOpen] = useState(false)
-
+  const router = useRouter()
 
   //handle create new mindmap
 const handleCreateNew = () => {
   setShowTemplateModal(true)
-  console.log("the action handle create new mindmap is call");
 
 }
 
@@ -45,6 +45,9 @@ const handleSelectTemplate = async (template: any) => {
       edges: template.initialEdges,
     }
   )
+  if(newMindmap){
+    router.push(`/editor?id=${newMindmap.id}`)
+  }
 }
 
 
