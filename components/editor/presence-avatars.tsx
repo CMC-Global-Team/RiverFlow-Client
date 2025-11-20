@@ -91,11 +91,12 @@ export default function PresenceAvatars() {
   const items = useMemo(() => {
     const list = Object.values(participants || {})
     const sorted = list.sort((a, b) => {
-      const aOwner = mindmap && a.userId === mindmap.mysqlUserId ? 1 : 0
-      const bOwner = mindmap && b.userId === mindmap.mysqlUserId ? 1 : 0
+      const eq = (x: any, y: any) => String(x ?? '') === String(y ?? '')
+      const aOwner = mindmap && eq(a.userId, mindmap.mysqlUserId) ? 1 : 0
+      const bOwner = mindmap && eq(b.userId, mindmap.mysqlUserId) ? 1 : 0
       if (aOwner !== bOwner) return bOwner - aOwner
-      const aSelf = isAuthenticated && user && a.userId === user.userId ? 1 : 0
-      const bSelf = isAuthenticated && user && b.userId === user.userId ? 1 : 0
+      const aSelf = isAuthenticated && user && eq(a.userId, user.userId) ? 1 : 0
+      const bSelf = isAuthenticated && user && eq(b.userId, user.userId) ? 1 : 0
       if (aSelf !== bSelf) return bSelf - aSelf
       return a.name.localeCompare(b.name)
     })
@@ -106,11 +107,13 @@ export default function PresenceAvatars() {
   const hiddenCount = items.length > 4 ? items.length - 4 : 0
 
   const resolveAvatarUrl = (p: typeof items[number]) => {
-    if (!mindmap) return undefined
+    if (p.avatar) {
+      return getAvatarUrl(p.avatar)
+    }
     if (isAuthenticated && user && p.userId === user.userId) {
       return getAvatarUrl(user.avatar || "")
     }
-    if (p.userId === mindmap.mysqlUserId && mindmap.ownerAvatar) {
+    if (mindmap && String(p.userId ?? '') === String(mindmap.mysqlUserId ?? '') && mindmap.ownerAvatar) {
       return getAvatarUrl(mindmap.ownerAvatar)
     }
     return undefined
@@ -118,18 +121,18 @@ export default function PresenceAvatars() {
 
   const resolveRole = (p: typeof items[number]) => {
     if (!mindmap) return { kind: "guest" as const, access: null }
-    if (p.userId === mindmap.mysqlUserId) return { kind: "owner" as const, access: null }
+    if (String(p.userId ?? '') === String(mindmap.mysqlUserId ?? '')) return { kind: "owner" as const, access: null }
     if (p.userId) {
-      const c = (mindmap.collaborators || []).find((cc: any) => cc.mysqlUserId === p.userId && cc.status === "accepted")
-      if (c) return { kind: "collab" as const, access: c.role === "EDITOR" ? "edit" : "view" }
+      const c = (mindmap.collaborators || []).find((cc: any) => String(cc.mysqlUserId ?? '') === String(p.userId ?? '') && cc.status === "accepted")
+      if (c) return { kind: "collab" as const, access: c.role === "EDITOR" ? ("edit" as const) : ("view" as const) }
       if (mindmap.isPublic) {
-        const lv = mindmap.publicAccessLevel === "edit" ? "edit" : "view"
+        const lv = mindmap.publicAccessLevel === "edit" ? ("edit" as const) : ("view" as const)
         return { kind: "public" as const, access: lv }
       }
       return { kind: "guest" as const, access: null }
     }
     if (mindmap.isPublic) {
-      const lv = mindmap.publicAccessLevel === "edit" ? "edit" : "view"
+      const lv = mindmap.publicAccessLevel === "edit" ? ("edit" as const) : ("view" as const)
       return { kind: "public" as const, access: lv }
     }
     return { kind: "guest" as const, access: null }
@@ -237,7 +240,7 @@ export default function PresenceAvatars() {
       </div>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="sm:max-w-lg">
+        <DialogContent className="sm:max-w-xl md:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Người đang ở mindmap này</DialogTitle>
           </DialogHeader>
@@ -253,7 +256,7 @@ export default function PresenceAvatars() {
             </div>
           </div>
           <div className="p-2 max-h-[60vh] overflow-y-auto">
-            <div ref={gridContainerRef} className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            <div ref={gridContainerRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
             {items
               .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
               .map((p) => {
@@ -261,7 +264,7 @@ export default function PresenceAvatars() {
               const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
               const role = resolveRole(p)
               return (
-                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none">
+                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none min-w-[260px] sm:min-w-[300px] md:min-w-[340px]">
                   <Avatar className="size-9">
                     {url ? (
                       <AvatarImage src={url} alt={p.name} />
@@ -272,7 +275,7 @@ export default function PresenceAvatars() {
                     )}
                   </Avatar>
                   <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-foreground truncate">{p.name}</div>
+                    <div className="text-sm font-semibold text-foreground break-words">{p.name}</div>
                     <div className="mt-1"><RoleIconsRow kind={role.kind} access={role.access} /></div>
                   </div>
                 </div>

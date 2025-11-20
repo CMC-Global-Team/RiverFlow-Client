@@ -48,7 +48,7 @@ export function emitCursorMove(socket: Socket, room: string, cursor: { x: number
 export function emitPresenceAnnounce(
   socket: Socket,
   room: string,
-  info: { name: string; color: string; userId?: number | string | null }
+  info: { name: string; color: string; userId?: number | string | null; avatar?: string | null }
 ) {
   socket.emit('presence:announce', room, info)
 }

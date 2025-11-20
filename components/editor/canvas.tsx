@@ -525,7 +525,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
       if (presenceAnnouncedRef.current) return
       const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
       const color = pickColor(isAuthenticated ? user?.userId : null)
-      announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
+      announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null, avatar: isAuthenticated ? user?.avatar || null : null })
       presenceAnnouncedRef.current = true
     }
     s.on('mindmap:joined', handler)
