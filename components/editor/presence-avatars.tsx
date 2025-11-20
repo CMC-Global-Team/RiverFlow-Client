@@ -12,12 +12,21 @@ import gsap from "gsap"
 
 function RoleBadge({ label, variant }: { label: string; variant: "owner" | "collab" | "guest" | "public" }) {
   const map: Record<string, string> = {
-    owner: "bg-blue-600 text-white",
-    collab: "bg-emerald-600 text-white",
-    guest: "bg-gray-500 text-white",
-    public: "bg-purple-600 text-white",
+    owner: "bg-blue-100 text-blue-700 border border-blue-200",
+    collab: "bg-emerald-100 text-emerald-700 border border-emerald-200",
+    guest: "bg-gray-100 text-gray-700 border border-gray-200",
+    public: "bg-purple-100 text-purple-700 border border-purple-200",
   }
-  return <span className={`px-2 py-0.5 rounded text-xs ${map[variant]}`}>{label}</span>
+  return <span className={`px-2 py-0.5 rounded text-xs whitespace-nowrap ${map[variant]}`}>{label}</span>
+}
+
+function RoleBadgeGroup({ role, extra }: { role: { label: string; variant: "owner" | "collab" | "guest" | "public" }; extra?: string }) {
+  return (
+    <div className="flex items-center gap-1 min-w-0">
+      <RoleBadge label={role.label} variant={role.variant} />
+      {extra && <RoleBadge label={extra} variant={role.variant} />}
+    </div>
+  )
 }
 
 export default function PresenceAvatars() {
@@ -63,16 +72,16 @@ export default function PresenceAvatars() {
     if (p.userId === mindmap.mysqlUserId) return { label: "Chủ sở hữu", variant: "owner" as const }
     if (p.userId) {
       const c = (mindmap.collaborators || []).find((cc: any) => cc.mysqlUserId === p.userId && cc.status === "accepted")
-      if (c) return { label: c.role === "EDITOR" ? "Cộng tác viên (Edit)" : "Cộng tác viên (View)", variant: "collab" as const }
+      if (c) return { label: "Cộng tác viên", variant: "collab" as const, extra: c.role === "EDITOR" ? "Chỉnh sửa" : "Xem" }
       if (mindmap.isPublic) {
         const lv = mindmap.publicAccessLevel === "edit" ? "Chỉnh sửa" : "Xem"
-        return { label: `Công khai (${lv})`, variant: "public" as const }
+        return { label: "Công khai", variant: "public" as const, extra: lv }
       }
       return { label: "Khách", variant: "guest" as const }
     }
     if (mindmap.isPublic) {
       const lv = mindmap.publicAccessLevel === "edit" ? "Chỉnh sửa" : "Xem"
-      return { label: `Công khai (${lv})`, variant: "public" as const }
+      return { label: "Công khai", variant: "public" as const, extra: lv }
     }
     return { label: "Khách", variant: "guest" as const }
   }
@@ -176,9 +185,9 @@ export default function PresenceAvatars() {
                       </AvatarFallback>
                     )}
                   </Avatar>
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-foreground truncate">{p.name}</div>
-                    <div className="mt-1"><RoleBadge label={role.label} variant={role.variant} /></div>
+                    <div className="mt-1"><RoleBadgeGroup role={{ label: role.label, variant: role.variant }} extra={(role as any).extra} /></div>
                   </div>
                 </div>
               )
