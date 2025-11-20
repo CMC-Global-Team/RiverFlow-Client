@@ -108,7 +108,6 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   const myClientIdRef = useRef<string | null>(null)
   const presenceAnnouncedRef = useRef(false)
-  const containerRef = useRef<HTMLDivElement | null>(null)
   const { user, isAuthenticated } = useAuth()
   const [anonymousName] = useState(() => {
     const names = ['Chuột túi', 'Cá mập', 'Chim kền kền', 'Gà trống', 'Chó pug', 'Cá voi', 'Mèo mun', 'Cáo lửa', 'Hươu sao', 'Rùa biển', 'Cú mèo', 'Bò tót']
@@ -521,33 +520,25 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   }, [])
 
   useEffect(() => {
-    if (!reactFlowInstance.current || presenceAnnouncedRef.current) return
-    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
-    const color = pickColor(isAuthenticated ? user?.userId : null)
-    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
-    presenceAnnouncedRef.current = true
+    const s = getSocket()
+    const handler = () => {
+      if (presenceAnnouncedRef.current) return
+      const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
+      const color = pickColor(isAuthenticated ? user?.userId : null)
+      announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
+      presenceAnnouncedRef.current = true
+    }
+    s.on('mindmap:joined', handler)
+    return () => { s.off('mindmap:joined', handler) }
   }, [announcePresence, isAuthenticated, user, anonymousName, pickColor])
 
-  useEffect(() => {
-    if (presenceAnnouncedRef.current) return
-    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
-    const color = pickColor(isAuthenticated ? user?.userId : null)
-    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
-    presenceAnnouncedRef.current = true
-  }, [participants, announcePresence, isAuthenticated, user, anonymousName, pickColor])
-
   const lastMouseScreenRef = useRef<{ x: number; y: number } | null>(null)
-  const [selfCursorScreen, setSelfCursorScreen] = useState<{ x: number; y: number } | null>(null)
   const rafIdRef = useRef<number | null>(null)
   const runCursorRaf = useCallback(() => {
     const pos = lastMouseScreenRef.current
     if (pos && reactFlowInstance.current) {
       const flowPos = reactFlowInstance.current.screenToFlowPosition({ x: pos.x, y: pos.y })
       emitCursor({ x: flowPos.x, y: flowPos.y })
-      if (containerRef.current) {
-        const rect = containerRef.current.getBoundingClientRect()
-        setSelfCursorScreen({ x: pos.x - rect.left, y: pos.y - rect.top })
-      }
     }
     rafIdRef.current = requestAnimationFrame(runCursorRaf)
   }, [emitCursor])
@@ -574,6 +565,19 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     }
   }, [runCursorRaf])
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      lastMouseScreenRef.current = { x: e.clientX, y: e.clientY }
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(runCursorRaf)
+      }
+    }
+    window.addEventListener('pointermove', handler, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', handler)
+    }
+  }, [runCursorRaf])
+
   const toScreen = useCallback((p: { x: number; y: number }) => {
     if (!reactFlowInstance.current) return null
     const v = reactFlowInstance.current.getViewport()
@@ -582,21 +586,8 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const renderPresence = useMemo(() => {
     if (!reactFlowInstance.current) return null
-    const items = Object.values(participants || {})
-    const meName = isAuthenticated && user?.fullName ? user.fullName : anonymousName
-    const meColor = pickColor(isAuthenticated ? user?.userId : null)
-    const selfCursorEl = selfCursorScreen ? (
-      <div className="absolute z-40" style={{ left: selfCursorScreen.x, top: selfCursorScreen.y, transition: 'left 30ms linear, top 30ms linear', pointerEvents: 'none' }}>
-        <div className="relative -translate-x-1 -translate-y-1">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill={meColor} xmlns="http://www.w3.org/2000/svg">
-            <circle cx="12" cy="14" r="8" />
-            <circle cx="8" cy="8" r="3" />
-            <circle cx="16" cy="8" r="3" />
-          </svg>
-          <div className="mt-1 px-4 py-1.5 rounded-md text-lg md:text-xl font-extrabold border-2 shadow-md bg-white" style={{ borderColor: meColor, color: '#111' }}>{meName}</div>
-        </div>
-      </div>
-    ) : null
+    const myId = myClientIdRef.current
+    const items = Object.values(participants || {}).filter((p) => p.clientId !== myId)
     return (
       <>
         {items.map((p) => {
@@ -604,12 +595,10 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           const cursorEl = cs ? (
             <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 30ms linear, top 30ms linear', pointerEvents: 'none' }}>
               <div className="relative -translate-x-1 -translate-y-1">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill={p.color} xmlns="http://www.w3.org/2000/svg">
-                  <circle cx="12" cy="14" r="8" />
-                  <circle cx="8" cy="8" r="3" />
-                  <circle cx="16" cy="8" r="3" />
+                <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 3 L4 23 L11 16 L14 23 L16 22 L13 15 L24 15 Z" fill={p.color} stroke="#ffffff" strokeWidth="1.2" />
                 </svg>
-                <div className="mt-1 px-4 py-1.5 rounded-md text-lg md:text-xl font-extrabold border-2 shadow-md bg-white" style={{ borderColor: p.color, color: '#111' }}>{p.name}</div>
+                <div className="mt-0.5 text-[10px]" style={{ color: '#ffffff', textShadow: `0 0 2px ${p.color}, 0 0 4px ${p.color}` }}>{p.name}</div>
               </div>
             </div>
           ) : null
@@ -657,10 +646,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
             <div key={`presence-${p.clientId}`}>{cursorEl}{highlightEl}</div>
           )
         })}
-        {selfCursorEl}
       </>
     )
-  }, [participants, edges, toScreen, selfCursorScreen, isAuthenticated, user, anonymousName, pickColor])
+  }, [participants, edges, toScreen])
 
   const handleAddChildFromButton = useCallback(() => {
     if (longPressedNode) {
@@ -694,7 +682,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   }, [longPressedNode, calculateScreenPosition])
 
   return (
-    <div ref={containerRef} className="w-full h-full relative" onMouseMove={handleMouseMove}>
+    <div className="w-full h-full relative" onMouseMove={handleMouseMove}>
       <ReactFlow
         nodes={nodes}
         edges={edges}
