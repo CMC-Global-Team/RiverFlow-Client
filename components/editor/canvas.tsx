@@ -552,13 +552,21 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     }
   }, [runCursorRaf])
   useEffect(() => {
+    const handler = (e: any) => {
+      lastMouseScreenRef.current = { x: e.clientX, y: e.clientY }
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(runCursorRaf)
+      }
+    }
+    window.addEventListener('mousemove', handler, { passive: true })
     return () => {
+      window.removeEventListener('mousemove', handler)
       if (rafIdRef.current !== null) {
         cancelAnimationFrame(rafIdRef.current)
         rafIdRef.current = null
       }
     }
-  }, [])
+  }, [runCursorRaf])
 
   const toScreen = useCallback((p: { x: number; y: number }) => {
     if (!reactFlowInstance.current) return null
@@ -574,10 +582,10 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
         {items.map((p) => {
           const cs = p.cursor && toScreen(p.cursor)
           const cursorEl = cs ? (
-            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 40ms linear, top 40ms linear' }}>
+            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 40ms linear, top 40ms linear', pointerEvents: 'none' }}>
               <div className="relative -translate-x-1 -translate-y-1">
                 <div className="w-4 h-4 rotate-45" style={{ backgroundColor: p.color }}></div>
-                <div className="mt-1 px-3 py-1 rounded-md text-sm sm:text-base font-semibold border shadow-sm bg-white/90" style={{ borderColor: p.color, color: p.color }}>{p.name}</div>
+                <div className="mt-1 px-3 py-1 rounded-md text-base md:text-lg font-bold border shadow-sm bg-white/90" style={{ borderColor: p.color, color: '#111' }}>{p.name}</div>
               </div>
             </div>
           ) : null
