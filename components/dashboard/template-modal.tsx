@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 
 interface Template {
@@ -289,8 +290,12 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
 
   // Load templates from public/templates folder
   useEffect(() => {
+    let prevOverflow: string | undefined
+    if (isOpen && typeof document !== 'undefined') {
+      prevOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+    }
     if (!isOpen) {
-      // Reset templates when modal closes
       setTemplates(builtInTemplates)
       setIsLoadingTemplates(false)
       return
@@ -298,19 +303,15 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
 
     const loadTemplates = async () => {
       setIsLoadingTemplates(true)
-      
-      // Add 1-2 second delay before showing templates
-      const delay = Math.random() * 1000 + 1000 // Random delay between 1-2 seconds
-      await new Promise(resolve => setTimeout(resolve, delay))
-
       const loadedTemplates: Template[] = [...builtInTemplates]
 
-      for (const meta of templateMetadata) {
-        if (meta.filePath) {
+      const tasks = templateMetadata
+        .filter((meta) => !!meta.filePath)
+        .map(async (meta) => {
           try {
-            const response = await fetch(meta.filePath)
-            if (response.ok) {
-              const data = await response.json()
+            const res = await fetch(meta.filePath as string, { cache: 'no-store' })
+            if (res.ok) {
+              const data = await res.json()
               if (data.nodes && data.edges) {
                 loadedTemplates.push({
                   id: meta.id,
@@ -323,17 +324,22 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                 })
               }
             }
-          } catch (error) {
-            console.error(`Failed to load template ${meta.filePath}:`, error)
+          } catch (err) {
+            console.error(`Failed to load template ${meta.filePath}:`, err)
           }
-        }
-      }
+        })
 
+      await Promise.all(tasks)
       setTemplates(loadedTemplates)
       setIsLoadingTemplates(false)
     }
 
     loadTemplates()
+    return () => {
+      if (typeof document !== 'undefined' && prevOverflow !== undefined) {
+        document.body.style.overflow = prevOverflow
+      }
+    }
   }, [isOpen])
 
   if (!isOpen) return null
@@ -370,8 +376,8 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
     }
   }
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
@@ -462,5 +468,10 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       </div>
     </div>
   )
+
+  if (typeof document !== 'undefined') {
+    return createPortal(modalContent, document.body)
+  }
+  return modalContent
 }
 
