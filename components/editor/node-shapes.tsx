@@ -38,7 +38,7 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
     const handleMouseMove = (e: MouseEvent) => {
       const deltaX = e.clientX - startPosRef.current.x
       const deltaY = e.clientY - startPosRef.current.y
-      const delta = (deltaX + deltaY) / 200 // Sensitivity: larger number = slower resize
+      const delta = (deltaX + deltaY) / 150
       
       let newScale = startScaleRef.current + delta
       newScale = Math.max(0.6, Math.min(2.0, newScale)) // Clamp between 0.6 and 2.0
@@ -60,12 +60,13 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
   }, [isResizing, nodeId, currentScale, updateNodeData])
 
   const handleStyle = {
-    width: '12px',
-    height: '12px',
+    width: '16px',
+    height: '16px',
     background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
     borderRadius: '2px',
-    opacity: hovering || isResizing ? 1 : 0,
-    transition: 'opacity 0.2s',
+    boxShadow: '0 0 0 1px rgba(59,130,246,0.6)',
+    opacity: hovering || isResizing ? 1 : 0.5,
+    transition: 'opacity 0.15s',
     pointerEvents: 'auto' as const,
   }
 
@@ -194,18 +195,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
     }
   }
 
-  // Handle click on container to enable editing when text has styles
-  const handleLabelClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setEditingLabel(true)
-  }
-
-  const handleDescClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setEditingDesc(true)
-  }
+  // Editing is toggled via Canvas (double-click) to respect readOnly; remove inline click-to-edit
 
   return (
     <div ref={containerRef} className="space-y-1 w-full pointer-events-auto">
@@ -223,9 +213,8 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         />
       ) : (
         <div
-          className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto"
+          className="font-semibold text-sm select-none px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto"
           style={{ color: data.color || "#3b82f6", minHeight: '24px' }}
-          onMouseDown={handleLabelClick}
           dangerouslySetInnerHTML={{ __html: linkify(data.label || '<span class="opacity-50">Click to edit</span>') }}
         />
       )}
