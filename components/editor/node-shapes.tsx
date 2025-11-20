@@ -429,7 +429,7 @@ CircleNode.displayName = "CircleNode"
 
 // Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#394c69ff"
+  const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
   return (
@@ -442,73 +442,77 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
     >
       <div className="relative w-32 h-32">
         <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "-21%"}}
+          type="target"
+          id="target-top"
+          position={Position.Top}
+          className="w-3 h-3"
+          style={{ background: color, left: "50%" }}
         />
         <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "-21%"}}
+          type="target"
+          id="target-right"
+          position={Position.Right}
+          className="w-3 h-3"
+          style={{ background: color, top: "50%" }}
         />
         <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "-21%"}}
+          type="target"
+          id="target-bottom"
+          position={Position.Bottom}
+          className="w-3 h-3"
+          style={{ background: color, left: "50%" }}
         />
         <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "-21%"}}
-        />      <div
-        className={`absolute inset-0 rotate-45 border-2 bg-background shadow-md transition-all cursor-pointer relative ${
-          selected ? "ring-2 ring-primary ring-offset-2" : ""
-        }`}
-        style={{
-          borderColor: color,
-          backgroundColor: data.bgColor || "transparent"
-         }}
-      />
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-        <div className="text-center px-3 max-w-[80px]">
-          <EditableContent data={data} id={id} />
+          type="target"
+          id="target-left"
+          position={Position.Left}
+          className="w-3 h-3"
+          style={{ background: color, top: "50%" }}
+        />
+
+        <svg viewBox="0 0 100 100" className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}>
+          <polygon
+            points="50,5 95,50 50,95 5,50"
+            fill={data.bgColor || "#ffffff"}
+            stroke={color}
+            strokeWidth="2"
+            className={selected ? "stroke-[3]" : ""}
+          />
+        </svg>
+
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+          <div className="text-center px-3 max-w-[80px]">
+            <EditableContent data={data} id={id} />
+          </div>
         </div>
-      </div>
+
         <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "-21%" }}
+          type="source"
+          id="source-top"
+          position={Position.Top}
+          className="w-3 h-3"
+          style={{ background: color, left: "50%" }}
         />
         <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "-21%" }}
+          type="source"
+          id="source-right"
+          position={Position.Right}
+          className="w-3 h-3"
+          style={{ background: color, top: "50%" }}
         />
         <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "-21%" }}
+          type="source"
+          id="source-bottom"
+          position={Position.Bottom}
+          className="w-3 h-3"
+          style={{ background: color, left: "50%" }}
         />
         <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "-21%" }}
+          type="source"
+          id="source-left"
+          position={Position.Left}
+          className="w-3 h-3"
+          style={{ background: color, top: "50%" }}
         />
         <ResizeHandle nodeId={id} currentScale={scale} />
       </div>

@@ -289,6 +289,11 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
 
   // Load templates from public/templates folder
   useEffect(() => {
+    if (isOpen && typeof document !== 'undefined') {
+      const prev = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = prev }
+    }
     if (!isOpen) {
       // Reset templates when modal closes
       setTemplates(builtInTemplates)
@@ -371,7 +376,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-background/95 animate-in fade-in duration-200">
       <div className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
