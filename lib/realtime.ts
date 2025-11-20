@@ -65,3 +65,11 @@ export function emitPresenceClear(socket: Socket, room: string) {
   socket.emit('presence:clear', room)
 }
 
+export function emitNodeUpdate(socket: Socket, room: string, node: any) {
+  socket.emit('mindmap:nodes:update', room, node)
+}
+
+export function emitEdgeUpdate(socket: Socket, room: string, edge: any) {
+  socket.emit('mindmap:edges:update', room, edge)
+}
+
