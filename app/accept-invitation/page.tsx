@@ -38,12 +38,21 @@ function AcceptInvitationContent() {
     try {
       setLoading(true);
       let response = await apiClient.get(
-        `/mindmaps/verify-invitation/${invitationToken}`
+        `/mindmaps/verify-invitation/${invitationToken}`,
+        { withCredentials: true, headers: { 'X-Allow-Public-Auth': '1' } }
       );
       if (!(response.data && (response.data.success || response.status === 200))) {
         response = await apiClient.get(`/mindmaps/verify-invitation`, {
           params: { token: invitationToken },
-          headers: { 'X-Invitation-Token': invitationToken },
+          withCredentials: true,
+          headers: { 'X-Invitation-Token': invitationToken, 'X-Share-Token': invitationToken, 'X-Allow-Public-Auth': '1' },
+        });
+      }
+      if (!(response.data && (response.data.success || response.status === 200))) {
+        response = await apiClient.get(`/mindmaps/invitations/verify`, {
+          params: { token: invitationToken },
+          withCredentials: true,
+          headers: { 'X-Invitation-Token': invitationToken, 'X-Share-Token': invitationToken, 'X-Allow-Public-Auth': '1' },
         });
       }
       
@@ -73,11 +82,22 @@ function AcceptInvitationContent() {
 
     try {
       setAccepting(true);
-      let response = await apiClient.post(`/mindmaps/accept-invitation/${token}`);
+      let response = await apiClient.post(`/mindmaps/accept-invitation/${token}`, null, {
+        withCredentials: true,
+        headers: { 'X-Allow-Public-Auth': '1' },
+      });
       if (!(response.data && (response.data.success || response.status === 200))) {
         response = await apiClient.post(`/mindmaps/accept-invitation`, null, {
           params: { token },
-          headers: { 'X-Invitation-Token': token },
+          withCredentials: true,
+          headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
+        });
+      }
+      if (!(response.data && (response.data.success || response.status === 200))) {
+        response = await apiClient.post(`/mindmaps/invitations/accept`, null, {
+          params: { token },
+          withCredentials: true,
+          headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
         });
       }
       
@@ -118,12 +138,24 @@ function AcceptInvitationContent() {
     try {
       setAccepting(true);
       try {
-        await apiClient.post(`/mindmaps/reject-invitation/${token}`);
-      } catch (e) {
-        await apiClient.post(`/mindmaps/reject-invitation`, null, {
-          params: { token },
-          headers: { 'X-Invitation-Token': token },
+        await apiClient.post(`/mindmaps/reject-invitation/${token}`, null, {
+          withCredentials: true,
+          headers: { 'X-Allow-Public-Auth': '1' },
         });
+      } catch (e) {
+        try {
+          await apiClient.post(`/mindmaps/reject-invitation`, null, {
+            params: { token },
+            withCredentials: true,
+            headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
+          });
+        } catch (e2) {
+          await apiClient.post(`/mindmaps/invitations/reject`, null, {
+            params: { token },
+            withCredentials: true,
+            headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
+          });
+        }
       }
       
       // Redirect to dashboard
