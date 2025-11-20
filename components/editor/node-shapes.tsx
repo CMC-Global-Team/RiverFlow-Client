@@ -1,5 +1,6 @@
 "use client"
 import { useState, useEffect, useRef } from "react"
+import { linkify } from '@/components/ui/linkify'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
 import { Handle, Position, NodeProps } from "reactflow"
@@ -224,7 +225,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           className="font-semibold text-sm cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto"
           style={{ color: data.color || "#3b82f6", minHeight: '24px' }}
           onMouseDown={handleLabelClick}
-          dangerouslySetInnerHTML={{ __html: data.label || '<span class="opacity-50">Click to edit</span>' }}
+          dangerouslySetInnerHTML={{ __html: linkify(data.label || '<span class="opacity-50">Click to edit</span>') }}
         />
       )}
 
@@ -245,7 +246,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           className="text-xs cursor-text select-none hover:bg-primary/10 px-2 -mx-2 py-1 rounded transition-colors min-h-8 w-full flex items-center pointer-events-auto"
           style={{ color: data.color ? `${data.color}99` : "#6b7280" }}
           onMouseDown={handleDescClick}
-          dangerouslySetInnerHTML={{ __html: data.description || '<span class="opacity-50">Click to add description</span>' }}
+          dangerouslySetInnerHTML={{ __html: linkify(data.description || '<span class="opacity-50">Click to add description</span>') }}
         />
       )}
     </div>
