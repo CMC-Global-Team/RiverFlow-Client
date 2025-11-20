@@ -307,6 +307,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       ? { shareToken: mindmap.shareToken }
       : { mindmapId: mindmap.id }
     joinMindmap(s, payload)
+    const onConnect = () => { joinMindmap(s, payload) }
+    const onReconnect = () => { joinMindmap(s, payload) }
     const onJoined = (res: any) => { roomRef.current = res?.room || null }
     const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
     const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
@@ -370,6 +372,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), active: null } }))
     }
     s.on('mindmap:joined', onJoined)
+    s.on('connect', onConnect)
+    s.on('reconnect', onReconnect)
     s.on('mindmap:nodes:change', onNodes)
     s.on('mindmap:edges:change', onEdges)
     s.on('mindmap:connect', onConnectEdge)
@@ -384,6 +388,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     s.on('mindmap:edges:update', onEdgeUpdate)
     return () => {
       s.off('mindmap:joined', onJoined)
+      s.off('connect', onConnect)
+      s.off('reconnect', onReconnect)
       s.off('mindmap:nodes:change', onNodes)
       s.off('mindmap:edges:change', onEdges)
       s.off('mindmap:connect', onConnectEdge)
@@ -651,10 +657,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const room = roomRef.current
     if (s && room && updatedNodeRef) {
       emitNodeUpdate(s, room, updatedNodeRef)
-      emitNodesChange(s, room, [
-        { type: 'remove', id: nodeId } as any,
-        { type: 'add', item: updatedNodeRef } as any,
-      ])
     }
   }, [scheduleAutoSave, recordSnapshot])
 
