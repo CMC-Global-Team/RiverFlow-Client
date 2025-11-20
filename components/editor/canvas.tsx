@@ -611,13 +611,52 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
               if (n) {
                 const pos = n.positionAbsolute || n.position
                 const v = inst.getViewport()
-                const x = pos.x * v.zoom + v.x
-                const y = pos.y * v.zoom + v.y
-                const w = (n.width ?? 150) * v.zoom
-                const h = (n.height ?? 80) * v.zoom
+                const scale = (n.data as any)?.scale || 1
+                const baseW = n.width ?? 150
+                const baseH = n.height ?? 80
+                const w = baseW * scale * v.zoom
+                const h = baseH * scale * v.zoom
+                const x = (pos.x - (baseW * (scale - 1)) / 2) * v.zoom + v.x
+                const y = (pos.y - (baseH * (scale - 1)) / 2) * v.zoom + v.y
+                const shape = (n.type as string) || (n.data as any)?.shape || 'rectangle'
+                const box = (
+                  <div className="w-full h-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                )
+                let overlay: any
+                if (shape === 'rectangle') {
+                  overlay = (
+                    <div className="w-full h-full rounded-lg" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  )
+                } else if (shape === 'roundedRectangle') {
+                  overlay = (
+                    <div className="w-full h-full rounded-3xl" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  )
+                } else if (shape === 'circle') {
+                  overlay = (
+                    <div className="w-full h-full rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  )
+                } else if (shape === 'ellipse') {
+                  overlay = (
+                    <div className="w-full h-full rounded-full" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                  )
+                } else if (shape === 'diamond') {
+                  overlay = (
+                    <svg viewBox="0 0 100 100" className="w-full h-full">
+                      <polygon points="50,5 95,50 50,95 5,50" fill="transparent" stroke={p.color} strokeWidth={3} />
+                    </svg>
+                  )
+                } else if (shape === 'hexagon') {
+                  overlay = (
+                    <svg viewBox="0 0 100 87" className="w-full h-full">
+                      <polygon points="50,5 95,25 95,65 50,85 5,65 5,25" fill="transparent" stroke={p.color} strokeWidth={3} />
+                    </svg>
+                  )
+                } else {
+                  overlay = box
+                }
                 highlightEl = (
                   <div key={`hl-${p.clientId}`} className="absolute z-30" style={{ left: x, top: y, width: w, height: h }}>
-                    <div className="w-full h-full rounded-md" style={{ boxShadow: `0 0 0 3px ${p.color} inset` }}></div>
+                    {overlay}
                   </div>
                 )
               }
