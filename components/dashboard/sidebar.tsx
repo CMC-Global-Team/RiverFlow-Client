@@ -1,6 +1,9 @@
 "use client"
 
 import { useState } from "react"
+import { useLogout } from "@/hooks/auth/useLogout"
+import TemplateModal from "./template-modal"
+import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import Link from "next/link"
 import {
     LayoutGrid,
@@ -13,12 +16,36 @@ import {
     Shield,
     Lock
 } from "lucide-react"
-import { useLogout } from "@/hooks/auth/useLogout"
+
+
+
 
 export default function Sidebar() {
+
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout, isLoading } = useLogout()
-    const [settingsOpen, setSettingsOpen] = useState(false)
+  const {create} = useMindmapActions();
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+
+  //handle create new mindmap
+const handleCreateNew = () => {
+  setShowTemplateModal(true)
+  console.log("the action handle create new mindmap is call");
+
+}
+
+//handle select template
+const handleSelectTemplate = async (template: any) => {
+  const newMindmap = await create(
+    {
+      title: "Untitled Mindmap",
+      nodes: template.initialNodes,
+      edges: template.initialEdges,
+    }
+  )
+}
 
 
     const toggleSettings = () => {
@@ -39,13 +66,14 @@ export default function Sidebar() {
         >
           <ChevronDown className={`h-5 w-5 transition-transform ${isCollapsed ? "rotate-90" : ""}`} />
         </button>
-      </div>
+      </div> 
 
       <nav className="space-y-2 p-4">
         {/* New Mindmap */}
-        <button className="w-full flex items-center gap-3 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all">
+        <button className="w-full flex items-center gap-3 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all" onClick={handleCreateNew}>
           <Plus className="h-5 w-5" />
           {!isCollapsed && <span>New Mindmap</span>}
+          
         </button>
 
         {/* Navigation Items */}
@@ -99,6 +127,15 @@ export default function Sidebar() {
             </div>
         </div>
       </nav>
+
+
+      {/* Template Selection Modal*/}
+      <TemplateModal
+      isOpen={showTemplateModal}
+      onClose={() => setShowTemplateModal(false)}
+      onSelectTemplate={handleSelectTemplate}
+      />
+      
 
       {/* Logout */}
       <div className="absolute bottom-4 left-4 right-4">
