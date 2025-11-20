@@ -62,7 +62,7 @@ const handleSelectTemplate = async (template: any) => {
       }`}
     >
       <div className="flex h-16 items-center justify-between px-4 border-b border-border">
-        {!isCollapsed && <span className="text-lg font-bold text-foreground">RiverFlow</span>}
+        {!isCollapsed && <span className="text-lg font-bold text-foreground" ><Link href="/">RiverFlow</Link></span>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="rounded-lg p-2 hover:bg-muted transition-colors"
@@ -80,6 +80,8 @@ const handleSelectTemplate = async (template: any) => {
         </button>
 
         {/* Navigation Items */}
+
+        
         <div className="space-y-1 pt-4">
           <Link
             href="/dashboard"

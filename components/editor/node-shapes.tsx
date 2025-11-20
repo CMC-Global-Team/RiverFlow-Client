@@ -429,7 +429,7 @@ CircleNode.displayName = "CircleNode"
 
 // Diamond Node
 export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
-  const color = data.color || "#3b82f6"
+  const color = data.color || "#394c69ff"
   const scale = data.scale || 1
 
   return (
