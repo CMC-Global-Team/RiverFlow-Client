@@ -73,10 +73,13 @@ const handleSelectTemplate = async (template: any) => {
 
       <nav className="space-y-2 p-4">
         {/* New Mindmap */}
-        <button className="w-full flex items-center gap-3 rounded-lg bg-primary px-4 py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all" onClick={handleCreateNew}>
+        <button
+          className={`w-full flex rounded-lg bg-primary py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all ${isCollapsed ? 'justify-center gap-0 px-3' : 'items-center gap-3 px-4'}`}
+          onClick={handleCreateNew}
+          aria-label="New Mindmap"
+        >
           <Plus className="h-5 w-5" />
           {!isCollapsed && <span>New Mindmap</span>}
-          
         </button>
 
         {/* Navigation Items */}

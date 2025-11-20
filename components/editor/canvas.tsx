@@ -520,20 +520,17 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   }, [])
 
   useEffect(() => {
-    if (!reactFlowInstance.current || presenceAnnouncedRef.current) return
-    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
-    const color = pickColor(isAuthenticated ? user?.userId : null)
-    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
-    presenceAnnouncedRef.current = true
+    const s = getSocket()
+    const handler = () => {
+      if (presenceAnnouncedRef.current) return
+      const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
+      const color = pickColor(isAuthenticated ? user?.userId : null)
+      announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
+      presenceAnnouncedRef.current = true
+    }
+    s.on('mindmap:joined', handler)
+    return () => { s.off('mindmap:joined', handler) }
   }, [announcePresence, isAuthenticated, user, anonymousName, pickColor])
-
-  useEffect(() => {
-    if (presenceAnnouncedRef.current) return
-    const name = isAuthenticated && user?.fullName ? user.fullName : anonymousName
-    const color = pickColor(isAuthenticated ? user?.userId : null)
-    announcePresence({ name, color, userId: isAuthenticated ? user?.userId : null })
-    presenceAnnouncedRef.current = true
-  }, [participants, announcePresence, isAuthenticated, user, anonymousName, pickColor])
 
   const lastMouseScreenRef = useRef<{ x: number; y: number } | null>(null)
   const rafIdRef = useRef<number | null>(null)
@@ -568,6 +565,19 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     }
   }, [runCursorRaf])
 
+  useEffect(() => {
+    const handler = (e: any) => {
+      lastMouseScreenRef.current = { x: e.clientX, y: e.clientY }
+      if (rafIdRef.current === null) {
+        rafIdRef.current = requestAnimationFrame(runCursorRaf)
+      }
+    }
+    window.addEventListener('pointermove', handler, { passive: true })
+    return () => {
+      window.removeEventListener('pointermove', handler)
+    }
+  }, [runCursorRaf])
+
   const toScreen = useCallback((p: { x: number; y: number }) => {
     if (!reactFlowInstance.current) return null
     const v = reactFlowInstance.current.getViewport()
@@ -576,16 +586,19 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
   const renderPresence = useMemo(() => {
     if (!reactFlowInstance.current) return null
-    const items = Object.values(participants || {})
+    const myId = myClientIdRef.current
+    const items = Object.values(participants || {}).filter((p) => p.clientId !== myId)
     return (
       <>
         {items.map((p) => {
           const cs = p.cursor && toScreen(p.cursor)
           const cursorEl = cs ? (
-            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 40ms linear, top 40ms linear', pointerEvents: 'none' }}>
+            <div key={`cursor-${p.clientId}`} className="absolute z-40" style={{ left: cs.x, top: cs.y, transition: 'left 30ms linear, top 30ms linear', pointerEvents: 'none' }}>
               <div className="relative -translate-x-1 -translate-y-1">
-                <div className="w-4 h-4 rotate-45" style={{ backgroundColor: p.color }}></div>
-                <div className="mt-1 px-3 py-1 rounded-md text-base md:text-lg font-bold border shadow-sm bg-white/90" style={{ borderColor: p.color, color: '#111' }}>{p.name}</div>
+                <svg width="28" height="28" viewBox="0 0 28 28" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M4 3 L4 23 L11 16 L14 23 L16 22 L13 15 L24 15 Z" fill={p.color} stroke="#ffffff" strokeWidth="1.2" />
+                </svg>
+                <div className="mt-0.5 text-[10px]" style={{ color: '#ffffff', textShadow: `0 0 2px ${p.color}, 0 0 4px ${p.color}` }}>{p.name}</div>
               </div>
             </div>
           ) : null
