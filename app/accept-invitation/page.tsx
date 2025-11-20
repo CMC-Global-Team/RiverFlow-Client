@@ -37,10 +37,15 @@ function AcceptInvitationContent() {
   const verifyInvitation = async (invitationToken: string) => {
     try {
       setLoading(true);
-      // Call API to verify the invitation and get mindmap details
-      const response = await apiClient.get(
+      let response = await apiClient.get(
         `/mindmaps/verify-invitation/${invitationToken}`
       );
+      if (!(response.data && (response.data.success || response.status === 200))) {
+        response = await apiClient.get(`/mindmaps/verify-invitation`, {
+          params: { token: invitationToken },
+          headers: { 'X-Invitation-Token': invitationToken },
+        });
+      }
       
       if (response.data.success) {
         setMindmapId(response.data.mindmapId);
@@ -68,7 +73,13 @@ function AcceptInvitationContent() {
 
     try {
       setAccepting(true);
-      const response = await apiClient.post(`/mindmaps/accept-invitation/${token}`);
+      let response = await apiClient.post(`/mindmaps/accept-invitation/${token}`);
+      if (!(response.data && (response.data.success || response.status === 200))) {
+        response = await apiClient.post(`/mindmaps/accept-invitation`, null, {
+          params: { token },
+          headers: { 'X-Invitation-Token': token },
+        });
+      }
       
       if (response.data.success || response.status === 200) {
         // Show success message
@@ -106,7 +117,14 @@ function AcceptInvitationContent() {
 
     try {
       setAccepting(true);
-      await apiClient.post(`/mindmaps/reject-invitation/${token}`);
+      try {
+        await apiClient.post(`/mindmaps/reject-invitation/${token}`);
+      } catch (e) {
+        await apiClient.post(`/mindmaps/reject-invitation`, null, {
+          params: { token },
+          headers: { 'X-Invitation-Token': token },
+        });
+      }
       
       // Redirect to dashboard
       router.push('/dashboard');
@@ -131,25 +149,6 @@ function AcceptInvitationContent() {
           <p className="text-gray-600 dark:text-gray-400">
             Verifying your invitation...
           </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="max-w-md w-full mx-auto p-6 text-center">
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-            Invitation Error
-          </h1>
-          <p className="text-red-600 dark:text-red-400 mb-6">{error}</p>
-          <button
-            onClick={() => router.push('/dashboard')}
-            className="px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition"
-          >
-            Back to Dashboard
-          </button>
         </div>
       </div>
     );
@@ -193,6 +192,14 @@ function AcceptInvitationContent() {
             {mindmapTitle}
           </p>
         </div>
+
+        {error && (
+          <div className="mb-4">
+            <p className="text-red-600 dark:text-red-400 text-sm">
+              {error}
+            </p>
+          </div>
+        )}
 
         <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
           Accept this invitation to access the mindmap and start collaborating with the team.
