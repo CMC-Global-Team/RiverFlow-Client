@@ -5,7 +5,7 @@ import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, No
 import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
-import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport } from '@/lib/realtime'
+import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear } from '@/lib/realtime'
 
 interface MindmapContextType {
   mindmap: MindmapResponse | null
@@ -36,6 +36,11 @@ interface MindmapContextType {
   undo: () => Promise<void> 
   redo: () => Promise<void> 
   setFullMindmapState: (data: MindmapResponse | null) => void
+  participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
+  announcePresence: (info: { name: string; color: string; userId?: number | string | null }) => void
+  emitCursor: (cursor: { x: number; y: number }) => void
+  emitActive: (active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => void
+  clearActive: () => void
 }const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
@@ -204,6 +209,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const latestViewportRef = useRef(viewport);
   const socketRef = useRef<any>(null)
   const roomRef = useRef<string | null>(null)
+  const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
   useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
@@ -282,17 +288,60 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
     const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep' }, eds)) }
     const onViewportEv = (v: any) => { setViewport(v) }
+    const onPresenceState = (list: any[]) => {
+      const map: any = {}
+      for (const p of list || []) {
+        map[p.clientId] = { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', cursor: p.cursor || null, active: p.active || null }
+      }
+      setParticipants(map)
+    }
+    const onPresenceAnnounce = (p: any) => {
+      setParticipants((prev) => ({ ...prev, [p.clientId]: { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', cursor: prev[p.clientId]?.cursor || null, active: prev[p.clientId]?.active || null } }))
+    }
+    const onPresenceLeft = (p: any) => {
+      setParticipants((prev) => {
+        const next = { ...prev }
+        delete next[p.clientId]
+        return next
+      })
+    }
+    const onCursorMove = (data: any) => {
+      const c = data?.clientId
+      const cursor = data?.cursor
+      if (!c || !cursor) return
+      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), cursor } }))
+    }
+    const onPresenceActive = (data: any) => {
+      const c = data?.clientId
+      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), active: data?.active || null } }))
+    }
+    const onPresenceClear = (data: any) => {
+      const c = data?.clientId
+      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), active: null } }))
+    }
     s.on('mindmap:joined', onJoined)
     s.on('mindmap:nodes:change', onNodes)
     s.on('mindmap:edges:change', onEdges)
     s.on('mindmap:connect', onConnectEdge)
     s.on('mindmap:viewport', onViewportEv)
+    s.on('presence:state', onPresenceState)
+    s.on('presence:announce', onPresenceAnnounce)
+    s.on('presence:left', onPresenceLeft)
+    s.on('cursor:move', onCursorMove)
+    s.on('presence:active', onPresenceActive)
+    s.on('presence:clear', onPresenceClear)
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('mindmap:nodes:change', onNodes)
       s.off('mindmap:edges:change', onEdges)
       s.off('mindmap:connect', onConnectEdge)
       s.off('mindmap:viewport', onViewportEv)
+      s.off('presence:state', onPresenceState)
+      s.off('presence:announce', onPresenceAnnounce)
+      s.off('presence:left', onPresenceLeft)
+      s.off('cursor:move', onCursorMove)
+      s.off('presence:active', onPresenceActive)
+      s.off('presence:clear', onPresenceClear)
     }
   }, [mindmap])
 
@@ -651,6 +700,27 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     undo,
     redo,
     setFullMindmapState,
+    participants,
+    announcePresence: (info) => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitPresenceAnnounce(s, room, info)
+    },
+    emitCursor: (cursor) => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitCursorMove(s, room, cursor)
+    },
+    emitActive: (active) => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitPresenceActive(s, room, active)
+    },
+    clearActive: () => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) emitPresenceClear(s, room)
+    },
   }
 
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
