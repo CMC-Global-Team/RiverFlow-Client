@@ -684,10 +684,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const room = roomRef.current
     if (s && room && updated) {
       emitEdgeUpdate(s, room, updated)
-      emitEdgesChange(s, room, [
-        { type: 'remove', id: edgeId } as any,
-        { type: 'add', item: updated } as any,
-      ])
     }
   }, [scheduleAutoSave, recordSnapshot])
 
