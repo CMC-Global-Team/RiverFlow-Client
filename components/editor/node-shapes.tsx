@@ -27,13 +27,12 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
   const centerRef = useRef<{ x: number; y: number } | null>(null)
   const startRadiusRef = useRef(0)
 
-  if (!canEdit) {
-    return null
-  }
+  const enabled = !!canEdit
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    if (!enabled) return
     setIsResizing(true)
     startPosRef.current = { x: e.clientX, y: e.clientY }
     startScaleRef.current = currentScale
@@ -92,9 +91,9 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
     background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
     borderRadius: '2px',
     boxShadow: '0 0 0 1px rgba(59,130,246,0.6)',
-    opacity: hovering || isResizing ? 1 : 0,
+    opacity: enabled && (hovering || isResizing) ? 1 : 0,
     transition: 'opacity 0.12s',
-    pointerEvents: 'auto' as const,
+    pointerEvents: enabled ? ('auto' as const) : ('none' as const),
     padding: `${(HIT_AREA - VISIBLE_SIZE)/2}px`,
     margin: `-${(HIT_AREA - VISIBLE_SIZE)/2}px`,
   }
@@ -105,33 +104,33 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         className="absolute top-0 left-0"
         style={{...handleStyle, cursor: 'nwse-resize'}}
         onMouseDown={handleMouseDown}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => !isResizing && setHovering(false)}
-        title="Drag to resize"
+        onMouseEnter={() => enabled && setHovering(true)}
+        onMouseLeave={() => enabled && !isResizing && setHovering(false)}
+        title={enabled ? "Drag to resize" : undefined}
       />
       <div
         className="absolute top-0 right-0"
         style={{...handleStyle, cursor: 'nesw-resize'}}
         onMouseDown={handleMouseDown}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => !isResizing && setHovering(false)}
-        title="Drag to resize"
+        onMouseEnter={() => enabled && setHovering(true)}
+        onMouseLeave={() => enabled && !isResizing && setHovering(false)}
+        title={enabled ? "Drag to resize" : undefined}
       />
       <div
         className="absolute bottom-0 left-0"
         style={{...handleStyle, cursor: 'nesw-resize'}}
         onMouseDown={handleMouseDown}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => !isResizing && setHovering(false)}
-        title="Drag to resize"
+        onMouseEnter={() => enabled && setHovering(true)}
+        onMouseLeave={() => enabled && !isResizing && setHovering(false)}
+        title={enabled ? "Drag to resize" : undefined}
       />
       <div
         className="absolute bottom-0 right-0"
         style={{...handleStyle, cursor: 'se-resize'}}
         onMouseDown={handleMouseDown}
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => !isResizing && setHovering(false)}
-        title="Drag to resize"
+        onMouseEnter={() => enabled && setHovering(true)}
+        onMouseLeave={() => enabled && !isResizing && setHovering(false)}
+        title={enabled ? "Drag to resize" : undefined}
       />
     </>
   )

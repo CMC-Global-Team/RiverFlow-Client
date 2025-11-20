@@ -36,8 +36,8 @@ interface MindmapContextType {
   undo: () => Promise<void> 
   redo: () => Promise<void> 
   setFullMindmapState: (data: MindmapResponse | null) => void
-  participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
-  announcePresence: (info: { name: string; color: string; userId?: number | string | null }) => void
+  participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
+  announcePresence: (info: { name: string; color: string; userId?: number | string | null; avatar?: string | null }) => void
   emitCursor: (cursor: { x: number; y: number }) => void
   emitActive: (active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => void
   clearActive: () => void
@@ -209,7 +209,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const latestViewportRef = useRef(viewport);
   const socketRef = useRef<any>(null)
   const roomRef = useRef<string | null>(null)
-  const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
+  const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
+  const lastPresenceInfoRef = useRef<{ name: string; color: string; userId?: number | string | null; avatar?: string | null } | null>(null)
+  const lastReannounceAtRef = useRef<number>(0)
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
   useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
@@ -293,12 +295,30 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const onPresenceState = (list: any[]) => {
       const map: any = {}
       for (const p of list || []) {
-        map[p.clientId] = { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', cursor: p.cursor || null, active: p.active || null }
+        map[p.clientId] = { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: p.cursor || null, active: p.active || null }
       }
       setParticipants(map)
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room && lastPresenceInfoRef.current) {
+        const now = Date.now()
+        if (now - lastReannounceAtRef.current > 1500) {
+          lastReannounceAtRef.current = now
+          emitPresenceAnnounce(s, room, lastPresenceInfoRef.current)
+        }
+      }
     }
     const onPresenceAnnounce = (p: any) => {
-      setParticipants((prev) => ({ ...prev, [p.clientId]: { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', cursor: prev[p.clientId]?.cursor || null, active: prev[p.clientId]?.active || null } }))
+      setParticipants((prev) => ({ ...prev, [p.clientId]: { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: prev[p.clientId]?.cursor || null, active: prev[p.clientId]?.active || null } }))
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room && p?.clientId && p.clientId !== s.id) {
+        const now = Date.now()
+        if (lastPresenceInfoRef.current && now - lastReannounceAtRef.current > 1500) {
+          lastReannounceAtRef.current = now
+          emitPresenceAnnounce(s, room, lastPresenceInfoRef.current)
+        }
+      }
     }
     const onPresenceLeft = (p: any) => {
       setParticipants((prev) => {
@@ -707,6 +727,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const s = socketRef.current
       const room = roomRef.current
       if (s && room) {
+        lastPresenceInfoRef.current = info
         emitPresenceAnnounce(s, room, info)
         setParticipants((prev) => ({
           ...prev,
@@ -715,6 +736,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
             userId: info?.userId || null,
             name: info?.name || '',
             color: info?.color || '#3b82f6',
+            avatar: info?.avatar || null,
             cursor: prev[s.id]?.cursor || null,
             active: prev[s.id]?.active || null,
           },
