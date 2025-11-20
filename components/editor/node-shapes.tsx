@@ -17,12 +17,18 @@ interface NodeData {
 }
 
 // Resize Handle Component
-const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentScale: number }) => {
+const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: string; currentScale: number; canEdit?: boolean }) => {
   const { updateNodeData } = useMindmapContext()
   const [isResizing, setIsResizing] = useState(false)
   const [hovering, setHovering] = useState(false)
   const startScaleRef = useRef(currentScale)
   const startPosRef = useRef({ x: 0, y: 0 })
+  const centerRef = useRef<{ x: number; y: number } | null>(null)
+  const startRadiusRef = useRef(0)
+
+  if (!canEdit) {
+    return null
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.preventDefault()
@@ -30,18 +36,36 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
     setIsResizing(true)
     startPosRef.current = { x: e.clientX, y: e.clientY }
     startScaleRef.current = currentScale
+    const parent = (e.currentTarget as HTMLElement).parentElement
+    if (parent) {
+      const rect = parent.getBoundingClientRect()
+      const cx = rect.left + rect.width / 2
+      const cy = rect.top + rect.height / 2
+      centerRef.current = { x: cx, y: cy }
+      startRadiusRef.current = Math.hypot(e.clientX - cx, e.clientY - cy)
+    } else {
+      centerRef.current = null
+      startRadiusRef.current = Math.hypot(0, 0)
+    }
   }
 
   useEffect(() => {
     if (!isResizing) return
 
     const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startPosRef.current.x
-      const deltaY = e.clientY - startPosRef.current.y
-      const delta = (deltaX + deltaY) / 150
+      let delta: number
+      if (centerRef.current) {
+        const r0 = startRadiusRef.current
+        const r1 = Math.hypot(e.clientX - centerRef.current.x, e.clientY - centerRef.current.y)
+        delta = (r1 - r0) / 200
+      } else {
+        const deltaX = e.clientX - startPosRef.current.x
+        const deltaY = e.clientY - startPosRef.current.y
+        delta = (Math.hypot(deltaX, deltaY)) / 200 * (deltaX + deltaY >= 0 ? 1 : -1)
+      }
       
       let newScale = startScaleRef.current + delta
-      newScale = Math.max(0.6, Math.min(2.0, newScale)) // Clamp between 0.6 and 2.0
+      newScale = Math.max(0.6, Math.min(2.0, newScale))
       
       updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
     }
@@ -59,20 +83,23 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
     }
   }, [isResizing, nodeId, currentScale, updateNodeData])
 
+  const VISIBLE_SIZE = 12
+  const HIT_AREA = 24
   const handleStyle = {
-    width: '16px',
-    height: '16px',
+    width: `${VISIBLE_SIZE}px`,
+    height: `${VISIBLE_SIZE}px`,
     background: 'radial-gradient(circle, #3b82f6 0%, transparent 70%)',
     borderRadius: '2px',
     boxShadow: '0 0 0 1px rgba(59,130,246,0.6)',
-    opacity: hovering || isResizing ? 1 : 0.5,
-    transition: 'opacity 0.15s',
+    opacity: hovering || isResizing ? 1 : 0,
+    transition: 'opacity 0.12s',
     pointerEvents: 'auto' as const,
+    padding: `${(HIT_AREA - VISIBLE_SIZE)/2}px`,
+    margin: `-${(HIT_AREA - VISIBLE_SIZE)/2}px`,
   }
 
   return (
     <>
-      {/* Top-Left */}
       <div
         className="absolute top-0 left-0"
         style={{...handleStyle, cursor: 'nwse-resize'}}
@@ -81,7 +108,6 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
         onMouseLeave={() => !isResizing && setHovering(false)}
         title="Drag to resize"
       />
-      {/* Top-Right */}
       <div
         className="absolute top-0 right-0"
         style={{...handleStyle, cursor: 'nesw-resize'}}
@@ -90,7 +116,6 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
         onMouseLeave={() => !isResizing && setHovering(false)}
         title="Drag to resize"
       />
-      {/* Bottom-Left */}
       <div
         className="absolute bottom-0 left-0"
         style={{...handleStyle, cursor: 'nesw-resize'}}
@@ -99,7 +124,6 @@ const ResizeHandle = memo(({ nodeId, currentScale }: { nodeId: string; currentSc
         onMouseLeave={() => !isResizing && setHovering(false)}
         title="Drag to resize"
       />
-      {/* Bottom-Right */}
       <div
         className="absolute bottom-0 right-0"
         style={{...handleStyle, cursor: 'se-resize'}}
@@ -235,7 +259,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   )
 })
 // Rectangle Node (default)
-export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -258,65 +282,26 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
               backgroundColor: data.bgColor || "transparent"
             }}
           >
-          <Handle
-              type="target"
-              id="target-top"
-              position={Position.Top}
-              className="w-3 h-3"
-              style={{ background: color, left: "50%" }}
-          />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1 pointer-events-auto">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+          {isConnectable && (
+            <>
+              <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+              <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+              <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+              <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            </>
+          )}
+          <div className="space-y-1 pointer-events-auto">
+          <EditableContent data={data} id={id} />
+          </div>
+          {isConnectable && (
+            <>
+              <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+              <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+              <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+              <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            </>
+          )}
+          <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -334,7 +319,7 @@ export const RectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) 
 RectangleNode.displayName = "RectangleNode"
 
 // Circle Node
-export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const CircleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -433,7 +418,7 @@ export const CircleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => 
 CircleNode.displayName = "CircleNode"
 
 // Diamond Node
-export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const DiamondNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -448,34 +433,14 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="relative w-32 h-32">
-        <Handle
-          type="target"
-          id="target-top"
-          position={Position.Top}
-          className="w-3 h-3"
-          style={{ background: color, left: "50%" }}
-        />
-        <Handle
-          type="target"
-          id="target-right"
-          position={Position.Right}
-          className="w-3 h-3"
-          style={{ background: color, top: "50%" }}
-        />
-        <Handle
-          type="target"
-          id="target-bottom"
-          position={Position.Bottom}
-          className="w-3 h-3"
-          style={{ background: color, left: "50%" }}
-        />
-        <Handle
-          type="target"
-          id="target-left"
-          position={Position.Left}
-          className="w-3 h-3"
-          style={{ background: color, top: "50%" }}
-        />
+        {isConnectable && (
+          <>
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}
 
         <svg viewBox="0 0 100 100" className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}>
           <polygon
@@ -493,35 +458,15 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           </div>
         </div>
 
-        <Handle
-          type="source"
-          id="source-top"
-          position={Position.Top}
-          className="w-3 h-3"
-          style={{ background: color, left: "50%" }}
-        />
-        <Handle
-          type="source"
-          id="source-right"
-          position={Position.Right}
-          className="w-3 h-3"
-          style={{ background: color, top: "50%" }}
-        />
-        <Handle
-          type="source"
-          id="source-bottom"
-          position={Position.Bottom}
-          className="w-3 h-3"
-          style={{ background: color, left: "50%" }}
-        />
-        <Handle
-          type="source"
-          id="source-left"
-          position={Position.Left}
-          className="w-3 h-3"
-          style={{ background: color, top: "50%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+        {isConnectable && (
+          <>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}
+        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -539,7 +484,7 @@ export const DiamondNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
 DiamondNode.displayName = "DiamondNode"
 
 // Hexagon Node
-export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const HexagonNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -554,34 +499,14 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="relative w-36 h-32">
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "3%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "3%" }}
-        />      <svg
+        {isConnectable && (
+          <>
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%", top: "3%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%", right: "3%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%", bottom: "3%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%", left: "3%" }} isConnectable={isConnectable} />
+          </>
+        )}      <svg
         viewBox="0 0 100 87"
         className={`w-full h-full transition-all cursor-pointer relative ${selected ? "drop-shadow-lg" : ""}`}
       >
@@ -598,35 +523,15 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
           <EditableContent data={data} id={id} />
         </div>
       </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", top: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", right: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%", bottom: "3%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%", left: "3%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+        {isConnectable && (
+          <>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%", top: "3%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%", right: "3%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%", bottom: "3%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%", left: "3%" }} isConnectable={isConnectable} />
+          </>
+        )}
+        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -644,7 +549,7 @@ export const HexagonNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
 HexagonNode.displayName = "HexagonNode"
 
 // Ellipse Node
-export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const EllipseNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -667,65 +572,25 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
             backgroundColor: data.bgColor || "transparent"
           }}
         >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-4 pointer-events-auto">
+        {isConnectable && (
+          <>
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}      <div className="text-center px-4 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+        {isConnectable && (
+          <>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}
+        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -743,7 +608,7 @@ export const EllipseNode = memo(({ data, selected, id }: NodeProps<NodeData>) =>
 EllipseNode.displayName = "EllipseNode"
 
 // Rounded Rectangle Node
-export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<NodeData>) => {
+export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
 
@@ -766,65 +631,25 @@ export const RoundedRectangleNode = memo(({ data, selected, id }: NodeProps<Node
             backgroundColor: data.bgColor || "transparent"
           }}
         >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="space-y-1 pointer-events-auto">
+        {isConnectable && (
+          <>
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}      <div className="space-y-1 pointer-events-auto">
         <EditableContent data={data} id={id} />
       </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+        {isConnectable && (
+          <>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
+          </>
+        )}
+        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
