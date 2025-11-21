@@ -15,6 +15,8 @@ export interface UserResponse {
   email: string;
   fullName: string;
   avatar?: string;
+  role?: string;
+  credit?: number;
   preferredLanguage?: string;
   timezone?: string;
   theme?: string;
