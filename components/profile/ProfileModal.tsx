@@ -23,6 +23,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [isLoadingProfile, setIsLoadingProfile] = useState(false)
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
+  const profileLoadedRef = useRef(false)
   
   const [formData, setFormData] = useState<UpdateUserRequest>({
     fullName: "",
@@ -34,43 +35,39 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   // Load user profile when modal opens
   useEffect(() => {
-    if (isOpen && user) {
-      setIsLoadingProfile(true)
-      getUserProfile()
-        .then((profile) => {
-          setFormData({
-            fullName: profile.fullName || "",
-            email: profile.email || "",
-            avatar: profile.avatar || "",
-            preferredLanguage: profile.preferredLanguage || "en",
-            timezone: profile.timezone || "UTC",
-          })
-          if (profile.avatar) {
-            // Convert relative path to absolute URL
-            const absoluteUrl = getAvatarUrl(profile.avatar)
-            if (absoluteUrl) {
-              setAvatarPreview(absoluteUrl)
-            }
+    if (!isOpen || !user) return
+    if (profileLoadedRef.current) return
+    setIsLoadingProfile(true)
+    getUserProfile()
+      .then((profile) => {
+        setFormData({
+          fullName: profile.fullName || "",
+          email: profile.email || "",
+          avatar: profile.avatar || "",
+          preferredLanguage: profile.preferredLanguage || "en",
+          timezone: profile.timezone || "UTC",
+        })
+        if (profile.avatar) {
+          const absoluteUrl = getAvatarUrl(profile.avatar)
+          if (absoluteUrl) {
+            setAvatarPreview(absoluteUrl)
           }
+        }
+      })
+      .catch((error) => {
+        console.error("Error loading profile:", error)
+        setFormData({
+          fullName: user.fullName || "",
+          email: user.email || "",
+          avatar: "",
+          preferredLanguage: "en",
+          timezone: "UTC",
         })
-        .catch((error) => {
-          console.error("Error loading profile:", error)
-          // Fallback to current user data
-          setFormData({
-            fullName: user.fullName || "",
-            email: user.email || "",
-            avatar: "",
-            preferredLanguage: "en",
-            timezone: "UTC",
-          })
-        })
-        .finally(() => {
-          setIsLoadingProfile(false)
-        })
-    } else if (!isOpen) {
-      // Reset when modal closes
-      setAvatarPreview(null)
-    }
+      })
+      .finally(() => {
+        setIsLoadingProfile(false)
+        profileLoadedRef.current = true
+      })
   }, [isOpen, user])
 
   const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
