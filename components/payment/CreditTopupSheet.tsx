@@ -116,7 +116,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-xl md:max-w-2xl">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2"><Coins className="h-5 w-5"/>Nạp credit</DialogTitle>
         </DialogHeader>
@@ -217,7 +217,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
               <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${step === 3 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>3</div>
             </div>
             <div className="grid grid-cols-3 text-center text-xs">
-              <div className={step === 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Chọn credit (progress)</div>
+              <div className={step === 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Chọn credit</div>
               <div className={step === 2 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Chọn phương thức thanh toán</div>
               <div className={step === 3 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Xác nhận thanh toán</div>
             </div>
