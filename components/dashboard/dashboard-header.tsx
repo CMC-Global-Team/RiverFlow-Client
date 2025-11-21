@@ -1,6 +1,7 @@
 "use client"
 
 import { Search, Bell, Coins } from "lucide-react"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { useState } from "react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { ThemeSwitcher } from "@/components/theme-switcher"
@@ -45,49 +46,64 @@ export default function DashboardHeader({
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
           </button>
           <ThemeSwitcher/>
-          <div 
-            onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors cursor-pointer"
-          >
-            {user?.avatar ? (
-              <img 
-                src={getAvatarUrl(user.avatar) || ''}
-                alt={user.fullName}
-                className="h-8 w-8 rounded-full object-cover border border-border"
-                onError={(e) => {
-                  const target = e.target as HTMLImageElement;
-                  target.style.display = 'none';
-                  const parent = target.parentElement;
-                  if (parent) {
-                    const fallback = parent.querySelector('.avatar-fallback') as HTMLElement;
-                    if (fallback) fallback.style.display = 'flex';
-                  }
-                }}
-              />
-            ) : null}
-            <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
-              <span className="text-xs font-bold text-white">
-                {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
-              </span>
-            </div>
-            <div className="hidden sm:flex flex-col">
-              <span className="text-sm font-medium text-foreground">{user?.fullName}</span>
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1 text-muted-foreground">
-                  <Coins className="h-4 w-4 text-primary" />
-                  <span className="text-xs font-medium">{user?.credit ?? 0}</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div 
+                onClick={() => setIsProfileModalOpen(true)}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors cursor-pointer"
+              >
+                {user?.avatar ? (
+                  <img 
+                    src={getAvatarUrl(user.avatar) || ''}
+                    alt={user.fullName}
+                    className="h-8 w-8 rounded-full object-cover border border-border"
+                    onError={(e) => {
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      const parent = target.parentElement;
+                      if (parent) {
+                        const fallback = parent.querySelector('.avatar-fallback') as HTMLElement;
+                        if (fallback) fallback.style.display = 'flex';
+                      }
+                    }}
+                  />
+                ) : null}
+                <div className={`h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center avatar-fallback ${user?.avatar ? 'hidden' : ''}`}>
+                  <span className="text-xs font-bold text-white">
+                    {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
+                  </span>
                 </div>
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); setIsTopupOpen(true) }}
-                  className="text-xs rounded-md px-2 py-1 bg-primary text-white hover:opacity-90"
-                  aria-label="Nạp credit"
-                >
-                  Nạp
-                </button>
+                <div className="hidden sm:flex flex-col">
+                  <span className="text-sm font-medium text-foreground">{user?.fullName}</span>
+                  <div className="flex items-center gap-2">
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center gap-1 text-muted-foreground">
+                          <Coins className="h-4 w-4 text-primary" />
+                          <span className="text-xs font-medium">{user?.credit ?? 0}</span>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>Số dư credit</TooltipContent>
+                    </Tooltip>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setIsTopupOpen(true) }}
+                      className="text-xs rounded-md px-2 py-1 bg-primary text-white hover:opacity-90"
+                      aria-label="Nạp credit"
+                    >
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span>Nạp</span>
+                        </TooltipTrigger>
+                        <TooltipContent>Nạp credit</TooltipContent>
+                      </Tooltip>
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            </TooltipTrigger>
+            <TooltipContent>Xem thông tin cá nhân</TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

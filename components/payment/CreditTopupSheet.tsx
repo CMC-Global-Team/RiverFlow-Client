@@ -21,6 +21,8 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
   const { updateUser, user } = useAuth()
   const presets = [10000, 50000, 100000, 200000, 500000, 1000000]
   const fmt = (v: number) => new Intl.NumberFormat('vi-VN').format(v)
+  const RATE = 1000
+  const credits = amount > 0 ? Math.floor(amount / RATE) : 0
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [method, setMethod] = useState<"qr" | "stripe" | null>(null)
   const [initialCredit, setInitialCredit] = useState<number>(user?.credit ?? 0)
@@ -138,7 +140,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
                   aria-label={`Nạp ${fmt(p)} đ`}
                 >
                   <div className="text-lg font-semibold">{fmt(p)} đ</div>
-                  <div className="text-xs text-muted-foreground">Nạp nhanh</div>
+                  <div className="text-xs text-muted-foreground">≈ {Math.floor(p / RATE)} credit</div>
                 </button>
               ))}
             </div>
@@ -195,6 +197,8 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
                     <div className="font-medium text-right">{fmt(amount)} đ</div>
                     <div className="text-muted-foreground">Phương thức</div>
                     <div className="font-medium text-right">{method === 'qr' ? 'Chuyển khoản QR' : 'Không xác định'}</div>
+                    <div className="text-muted-foreground">Credit nhận</div>
+                    <div className="font-medium text-right">{credits}</div>
                   </div>
                   {errorMessage && (
                     <div className="flex items-center gap-2 text-destructive text-sm"><AlertCircle className="h-4 w-4"/>{errorMessage}</div>
@@ -213,6 +217,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
                   </div>
                   <div className="rounded-lg border p-4 text-sm space-y-2">
                     <div className="font-medium">Lưu ý</div>
+                    <div>• Quy đổi: 1.000 đ = 1 credit.</div>
                     <div>• Chuyển đúng số tiền và nội dung mã hiển thị.</div>
                     <div>• Sau khi chuyển, hệ thống sẽ tự xác nhận trong vài phút.</div>
                   </div>
