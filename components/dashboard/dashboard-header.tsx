@@ -1,10 +1,11 @@
 "use client"
 
-import { Search, Bell } from "lucide-react"
+import { Search, Bell, Coins } from "lucide-react"
 import { useState } from "react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ProfileModal from "@/components/profile/ProfileModal"
+import CreditTopupSheet from "@/components/payment/CreditTopupSheet"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 
 interface DashboardHeaderProps {
@@ -17,6 +18,7 @@ export default function DashboardHeader({
   onSearchChange,
 }: DashboardHeaderProps) {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
+  const [isTopupOpen, setIsTopupOpen] = useState(false)
   const { user } = useAuth()
 
   return (
@@ -43,9 +45,9 @@ export default function DashboardHeader({
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
           </button>
           <ThemeSwitcher/>
-          <button 
+          <div 
             onClick={() => setIsProfileModalOpen(true)}
-            className="flex items-center gap-2 rounded-lg px-3 py-2 hover:bg-muted transition-colors"
+            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors cursor-pointer"
           >
             {user?.avatar ? (
               <img 
@@ -53,7 +55,6 @@ export default function DashboardHeader({
                 alt={user.fullName}
                 className="h-8 w-8 rounded-full object-cover border border-border"
                 onError={(e) => {
-                  // Fallback to initials if image fails to load
                   const target = e.target as HTMLImageElement;
                   target.style.display = 'none';
                   const parent = target.parentElement;
@@ -69,8 +70,24 @@ export default function DashboardHeader({
                 {user?.fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()}
               </span>
             </div>
-            <span className="text-sm font-medium text-foreground hidden sm:inline">{user?.fullName}</span>
-          </button>
+            <div className="hidden sm:flex flex-col">
+              <span className="text-sm font-medium text-foreground">{user?.fullName}</span>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1 text-muted-foreground">
+                  <Coins className="h-4 w-4 text-primary" />
+                  <span className="text-xs font-medium">{user?.credit ?? 0}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setIsTopupOpen(true) }}
+                  className="text-xs rounded-md px-2 py-1 bg-primary text-white hover:opacity-90"
+                  aria-label="Nạp credit"
+                >
+                  Nạp
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -79,6 +96,8 @@ export default function DashboardHeader({
         isOpen={isProfileModalOpen} 
         onClose={() => setIsProfileModalOpen(false)} 
       />
+
+      <CreditTopupSheet open={isTopupOpen} onOpenChange={setIsTopupOpen} />
     </header>
   )
 }
