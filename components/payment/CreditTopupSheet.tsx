@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
-import { Progress } from "@/components/ui/progress"
 import { Button } from "@/components/ui/button"
 import { createTopupIntent } from "@/services/payment/payment.service"
 import { getUserProfile } from "@/services/auth/get-user.service"
@@ -122,12 +121,9 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
           <DialogTitle className="flex items-center gap-2"><Coins className="h-5 w-5"/>Nạp credit</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 mt-2">
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <div className="text-sm text-muted-foreground">{step === 1 ? "Bước 1/3: Chọn credit" : step === 2 ? "Bước 2/3: Chọn phương thức thanh toán" : "Bước 3/3: Thanh toán"}</div>
-              <div className="text-xs text-muted-foreground">{amount > 0 ? `${fmt(amount)} đ` : ""}</div>
-            </div>
-            <Progress value={step === 1 ? 33 : step === 2 ? 66 : 100} />
+          <div className="flex items-center justify-between">
+            <div className="text-sm text-muted-foreground">{step === 1 ? "Bước 1/3: Chọn credit" : step === 2 ? "Bước 2/3: Chọn phương thức thanh toán" : "Bước 3/3: Thanh toán"}</div>
+            <div className="text-xs text-muted-foreground">{amount > 0 ? `${fmt(amount)} đ` : ""}</div>
           </div>
 
           {step === 1 && (
@@ -212,13 +208,27 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
           )}
         </div>
         <DialogFooter>
-          <div className="flex items-center justify-between w-full">
-            <Button variant="outline" onClick={() => onBack()} disabled={step === 1}>Quay lại</Button>
-            {step < 3 ? (
-              <Button onClick={() => onNext()} disabled={(step === 1 && amount <= 0) || (step === 2 && method !== 'qr')}>Tiếp theo</Button>
-            ) : (
-              <Button onClick={() => onOpenChange(false)}>Đóng</Button>
-            )}
+          <div className="w-full space-y-3">
+            <div className="flex items-center justify-between">
+              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${step > 1 ? 'bg-primary text-white' : step === 1 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>1</div>
+              <div className={`h-0.5 flex-1 mx-2 ${step > 1 ? 'bg-primary' : 'bg-border'}`}></div>
+              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${step > 2 ? 'bg-primary text-white' : step === 2 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>2</div>
+              <div className={`h-0.5 flex-1 mx-2 ${step > 2 ? 'bg-primary' : 'bg-border'}`}></div>
+              <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs ${step === 3 ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>3</div>
+            </div>
+            <div className="grid grid-cols-3 text-center text-xs">
+              <div className={step === 1 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Chọn credit (progress)</div>
+              <div className={step === 2 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Chọn phương thức thanh toán</div>
+              <div className={step === 3 ? 'text-foreground font-medium' : 'text-muted-foreground'}>Xác nhận thanh toán</div>
+            </div>
+            <div className="flex items-center justify-between w-full">
+              <Button variant="outline" onClick={() => onBack()} disabled={step === 1}>Quay lại</Button>
+              {step < 3 ? (
+                <Button onClick={() => onNext()} disabled={(step === 1 && amount <= 0) || (step === 2 && method !== 'qr')}>Tiếp theo</Button>
+              ) : (
+                <Button onClick={() => onOpenChange(false)}>Đóng</Button>
+              )}
+            </div>
           </div>
         </DialogFooter>
       </DialogContent>
