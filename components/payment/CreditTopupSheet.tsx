@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { createTopupIntent } from "@/services/payment/payment.service"
-import { getUserProfile } from "@/services/auth/get-user.service"
+import { getUserProfile } from "@/services/auth/update-user.service"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { Coins, CreditCard, Lock, AlertCircle, CheckCircle } from "lucide-react"
 
