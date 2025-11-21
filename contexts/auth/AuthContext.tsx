@@ -14,6 +14,7 @@ export interface User {
   email: string;
   fullName: string;
   role: string;
+  credit: number;
   avatar?: string;
 }
 
@@ -77,6 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       email: authData.email,
       fullName: authData.fullName,
       role: authData.role,
+      credit: authData.credit,
       avatar: authData.avatar,
     };
 
