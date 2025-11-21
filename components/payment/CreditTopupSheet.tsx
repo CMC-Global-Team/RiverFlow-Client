@@ -125,7 +125,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
             <div className="text-sm text-muted-foreground">{step === 1 ? "Bước 1/3: Chọn credit" : step === 2 ? "Bước 2/3: Chọn phương thức thanh toán" : "Bước 3/3: Thanh toán"}</div>
             <div className="text-xs text-muted-foreground">{amount > 0 ? `${fmt(amount)} đ` : ""}</div>
           </div>
-          <div className="min-h-[360px] md:min-h-[420px]">
+          <div>
 
           {step === 1 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -170,55 +170,55 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
             </div>
           )}
 
-          {step === 3 && (
-            <div className="grid md:grid-cols-2 gap-4 items-stretch h-full">
-              <div className="space-y-3 flex flex-col h-full">
-                <div className="rounded-lg border p-3 grid grid-cols-2 gap-2 text-sm">
-                  <div className="text-muted-foreground">Số tiền</div>
-                  <div className="font-medium text-right">{fmt(amount)} đ</div>
-                  <div className="text-muted-foreground">Phương thức</div>
-                  <div className="font-medium text-right">{method === 'qr' ? 'Chuyển khoản QR' : 'Không xác định'}</div>
+            {step === 3 && (
+              <div className="grid md:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  {loading && (
+                    <div className="text-sm text-muted-foreground">Đang tạo mã QR...</div>
+                  )}
+                  {qrUrl && (
+                    <>
+                      <div className="text-sm">Quét QR bằng app ngân hàng</div>
+                      <img src={qrUrl} alt="QR nạp" className="w-full max-w-xs rounded border mx-auto md:mx-0" />
+                      {code && (
+                        <div className="flex items-center justify-between rounded-md border p-2">
+                          <span className="text-xs">Nội dung chuyển khoản</span>
+                          <span className="text-sm font-medium">{code}</span>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
-                {loading && (
-                  <div className="text-sm text-muted-foreground">Đang tạo mã QR...</div>
-                )}
-                {qrUrl && (
-                  <>
-                    <div className="text-sm">Quét QR bằng app ngân hàng</div>
-                    <img src={qrUrl} alt="QR nạp" className="w-full max-w-xs rounded border mx-auto md:mx-0" />
-                    {code && (
-                      <div className="flex items-center justify-between rounded-md border p-2">
-                        <span className="text-xs">Nội dung chuyển khoản</span>
-                        <span className="text-sm font-medium">{code}</span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              <div className="space-y-3 flex flex-col h-full">
-                {errorMessage && (
-                  <div className="flex items-center gap-2 text-destructive text-sm"><AlertCircle className="h-4 w-4"/>{errorMessage}</div>
-                )}
-                <div className="rounded-lg border p-4">
-                  <div className="text-sm mb-2">Trạng thái giao dịch</div>
-                  <div className="text-sm">
-                    {isPaid ? (
-                      <span className="text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/>Giao dịch thành công. Credit đã cập nhật.</span>
-                    ) : isPolling ? (
-                      <span className="text-muted-foreground">Đang chờ xác nhận giao dịch...</span>
-                    ) : (
-                      <span className="text-muted-foreground">Chưa có giao dịch.</span>
-                    )}
+                <div className="space-y-3">
+                  <div className="rounded-lg border p-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-muted-foreground">Số tiền</div>
+                    <div className="font-medium text-right">{fmt(amount)} đ</div>
+                    <div className="text-muted-foreground">Phương thức</div>
+                    <div className="font-medium text-right">{method === 'qr' ? 'Chuyển khoản QR' : 'Không xác định'}</div>
+                  </div>
+                  {errorMessage && (
+                    <div className="flex items-center gap-2 text-destructive text-sm"><AlertCircle className="h-4 w-4"/>{errorMessage}</div>
+                  )}
+                  <div className="rounded-lg border p-4">
+                    <div className="text-sm mb-2">Trạng thái giao dịch</div>
+                    <div className="text-sm">
+                      {isPaid ? (
+                        <span className="text-green-600 flex items-center gap-1"><CheckCircle className="h-4 w-4"/>Giao dịch thành công. Credit đã cập nhật.</span>
+                      ) : isPolling ? (
+                        <span className="text-muted-foreground">Đang chờ xác nhận giao dịch...</span>
+                      ) : (
+                        <span className="text-muted-foreground">Chưa có giao dịch.</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="rounded-lg border p-4 text-sm space-y-2">
+                    <div className="font-medium">Lưu ý</div>
+                    <div>• Chuyển đúng số tiền và nội dung mã hiển thị.</div>
+                    <div>• Sau khi chuyển, hệ thống sẽ tự xác nhận trong vài phút.</div>
                   </div>
                 </div>
-                <div className="rounded-lg border p-4 text-sm space-y-2">
-                  <div className="font-medium">Lưu ý</div>
-                  <div>• Chuyển đúng số tiền và nội dung mã hiển thị.</div>
-                  <div>• Sau khi chuyển, hệ thống sẽ tự xác nhận trong vài phút.</div>
-                </div>
               </div>
-            </div>
-          )}
+            )}
           </div>
         </div>
         <DialogFooter>
