@@ -31,6 +31,7 @@ export interface SignInResponse {
   email: string;
   fullName: string;
   role: string;
+  credit: number;
   avatar?: string;
 }
 

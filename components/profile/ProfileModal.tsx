@@ -117,7 +117,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
-          avatar: response.url, // New avatar URL from server
+          credit: user.credit,
+          avatar: response.url,
         })
       }
       
@@ -160,6 +161,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         email: updatedProfile.email,
         fullName: updatedProfile.fullName,
         role: user?.role || "USER",
+        credit: user?.credit ?? 0,
         avatar: updatedProfile.avatar,
       })
 

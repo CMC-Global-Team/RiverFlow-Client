@@ -46,6 +46,8 @@ export const useGoogleSignIn = (): UseGoogleSignInResult => {
         email: response.email,
         fullName: response.fullName,
         role: response.role,
+        credit: response.credit,
+        avatar: response.avatar,
       };
       
       // Sử dụng AuthContext để lưu trạng thái đăng nhập
