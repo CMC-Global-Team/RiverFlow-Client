@@ -125,6 +125,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
             <div className="text-sm text-muted-foreground">{step === 1 ? "Bước 1/3: Chọn credit" : step === 2 ? "Bước 2/3: Chọn phương thức thanh toán" : "Bước 3/3: Thanh toán"}</div>
             <div className="text-xs text-muted-foreground">{amount > 0 ? `${fmt(amount)} đ` : ""}</div>
           </div>
+          <div className="min-h-[360px] md:min-h-[420px]">
 
           {step === 1 && (
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -170,8 +171,8 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
           )}
 
           {step === 3 && (
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-3">
+            <div className="grid md:grid-cols-2 gap-4 items-stretch h-full">
+              <div className="space-y-3 flex flex-col h-full">
                 <div className="rounded-lg border p-3 grid grid-cols-2 gap-2 text-sm">
                   <div className="text-muted-foreground">Số tiền</div>
                   <div className="font-medium text-right">{fmt(amount)} đ</div>
@@ -194,7 +195,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
                   </>
                 )}
               </div>
-              <div className="space-y-3">
+              <div className="space-y-3 flex flex-col h-full">
                 {errorMessage && (
                   <div className="flex items-center gap-2 text-destructive text-sm"><AlertCircle className="h-4 w-4"/>{errorMessage}</div>
                 )}
@@ -218,6 +219,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
               </div>
             </div>
           )}
+          </div>
         </div>
         <DialogFooter>
           <div className="w-full space-y-3">
