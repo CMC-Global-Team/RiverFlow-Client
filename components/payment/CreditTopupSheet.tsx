@@ -1,8 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetFooter } from "@/components/ui/sheet"
-import { Input } from "@/components/ui/input"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { createTopupIntent } from "@/services/payment/payment.service"
 import { getUserProfile } from "@/services/auth/get-user.service"
@@ -20,7 +19,7 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
   const [qrUrl, setQrUrl] = useState<string | null>(null)
   const [code, setCode] = useState<string | null>(null)
   const { updateUser, user } = useAuth()
-  const presets = [50000, 100000, 200000, 500000]
+  const presets = [10000, 50000, 100000, 200000, 500000, 1000000]
   const fmt = (v: number) => new Intl.NumberFormat('vi-VN').format(v)
 
   const onSubmit = async () => {
@@ -41,37 +40,43 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
     }
   }
 
+  const handleSelect = async (p: number) => {
+    if (loading) return
+    setAmount(p)
+    await onSubmit()
+  }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent>
-        <SheetHeader>
-          <SheetTitle className="flex items-center gap-2"><Coins className="h-5 w-5"/>Nạp credit</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-4 mt-4">
-          <div className="space-y-2">
-            <div className="text-sm">Số tiền</div>
-            <div className="flex flex-wrap gap-2">
-              {presets.map(p => (
-                <button
-                  key={p}
-                  type="button"
-                  onClick={() => setAmount(p)}
-                  className={`rounded-md px-3 py-1 border ${amount === p ? 'bg-primary text-white border-primary' : 'bg-muted text-foreground border-border'}`}
-                >
-                  {fmt(p)}
-                </button>
-              ))}
-            </div>
-            <Input type="number" value={amount} onChange={(e) => setAmount(parseInt(e.target.value || "0", 10))} />
-            <div className="text-xs text-muted-foreground">Số tiền: {fmt(amount)} đ</div>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2"><Coins className="h-5 w-5"/>Nạp credit</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {presets.map(p => (
+              <button
+                key={p}
+                type="button"
+                onClick={() => handleSelect(p)}
+                className={`rounded-lg border p-3 text-center transition ${amount === p ? 'border-primary ring-2 ring-primary/30 bg-primary/5' : 'border-border hover:bg-muted'}`}
+                disabled={loading}
+                aria-label={`Nạp ${fmt(p)} đ`}
+              >
+                <div className="text-lg font-semibold">{fmt(p)} đ</div>
+                <div className="text-xs text-muted-foreground">Nạp nhanh</div>
+              </button>
+            ))}
           </div>
-          <Button onClick={onSubmit} disabled={loading} className="w-full">
-            {loading ? "Đang tạo mã" : "Tạo mã nạp"}
-          </Button>
+
+          {loading && (
+            <div className="text-sm text-muted-foreground">Đang tạo mã QR...</div>
+          )}
+
           {qrUrl && (
             <div className="space-y-3">
               <div className="text-sm">Quét QR bằng app ngân hàng</div>
-              <img src={qrUrl} alt="QR nạp" className="w-full max-w-xs rounded border" />
+              <img src={qrUrl} alt="QR nạp" className="w-full max-w-xs rounded border mx-auto" />
               {code && (
                 <div className="flex items-center justify-between rounded-md border p-2">
                   <span className="text-xs">Nội dung chuyển khoản</span>
@@ -82,10 +87,10 @@ export default function CreditTopupSheet({ open, onOpenChange }: CreditTopupShee
             </div>
           )}
         </div>
-        <SheetFooter>
+        <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Đóng</Button>
-        </SheetFooter>
-      </SheetContent>
-    </Sheet>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
