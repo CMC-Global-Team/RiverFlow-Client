@@ -9,6 +9,7 @@ import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 import DateTimeWheel from "@/components/ui/datetime-wheel"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAvatarUrl } from "@/lib/avatar-utils"
@@ -33,13 +34,14 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [hasMore, setHasMore] = useState(true)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   const seenRef = useRef<Set<string>>(new Set())
+  const loadingMoreRef = useRef(false)
 
   const loadPage = async (reset = false) => {
     setLoading(true)
     setError(null)
     try {
       const params: any = {
-        limit: 30,
+        limit: 20,
         after: reset ? undefined : cursor || undefined,
       }
       if (selectedAction !== "all") params.action = selectedAction
@@ -64,6 +66,21 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   }
 
   useEffect(() => { loadPage(true) }, [mindmapId, q, selectedAction, from, to])
+
+  useEffect(() => {
+    const el = scrollerRef.current
+    if (!el) return
+    const onScroll = () => {
+      if (loading || !hasMore || loadingMoreRef.current) return
+      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 60
+      if (nearBottom) {
+        loadingMoreRef.current = true
+        loadPage(false).finally(() => { loadingMoreRef.current = false })
+      }
+    }
+    el.addEventListener('scroll', onScroll)
+    return () => el.removeEventListener('scroll', onScroll)
+  }, [loading, hasMore, items])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -238,9 +255,9 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <h3 className="text-sm font-semibold text-foreground">Lịch sử thay đổi</h3>
         <div className="flex items-center gap-2 flex-1" onMouseDown={(e) => e.stopPropagation()}>
-          <Input placeholder="Tìm kiếm..." value={q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} className="h-8 text-sm" />
+          <Input placeholder="Tìm kiếm..." value={q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} className="h-8 text-sm w-40" />
           <Select value={selectedAction} onValueChange={setSelectedAction}>
-            <SelectTrigger className="h-8 w-40 text-sm">
+            <SelectTrigger className="h-8 w-36 text-sm">
               <SelectValue placeholder="Loại" />
             </SelectTrigger>
             <SelectContent>
@@ -254,8 +271,26 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
               <SelectItem value="viewport_change">Thay đổi khung nhìn</SelectItem>
             </SelectContent>
           </Select>
-          <DateTimeWheel value={from || ""} onChange={setFrom} className="" label="Từ" />
-          <DateTimeWheel value={to || ""} onChange={setTo} className="" label="Đến" />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                {from ? new Date(from).toLocaleString() : 'Từ'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="p-2">
+              <DateTimeWheel value={from || ''} onChange={setFrom} />
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                {to ? new Date(to).toLocaleString() : 'Đến'}
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="p-2">
+              <DateTimeWheel value={to || ''} onChange={setTo} />
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-6 w-6 flex-shrink-0">
           <X className="h-4 w-4" />
