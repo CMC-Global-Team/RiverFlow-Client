@@ -28,6 +28,7 @@ import ShareModal from "@/components/mindmap/ShareModal"
   } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
+import HistorySheet from "@/components/editor/history-sheet"
 
 function EditorInner() {
   const router = useRouter()
@@ -51,6 +52,7 @@ function EditorInner() {
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
@@ -524,6 +526,7 @@ function EditorInner() {
               handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
+              onHistoryClick={() => setIsHistoryOpen(true)}
             />
           </div>
         </div>
@@ -531,6 +534,9 @@ function EditorInner() {
 
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      {isHistoryOpen && mindmap?.id && (
+        <HistorySheet mindmapId={mindmap.id} onClose={() => setIsHistoryOpen(false)} />
+      )}
 
       {/* Show PublicShareModal for non-owners, ShareModal for owners */}
       {user?.userId === mindmap?.mysqlUserId ? (

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect } from "react"
 import {
   Plus,
   Trash2,
@@ -42,7 +42,7 @@ import BackButton from "./back-button"
 import gsap from "gsap"
 import { useRouter } from "next/navigation"
 import PresenceAvatars from "@/components/editor/presence-avatars"
-import HistorySheet from "@/components/editor/history-sheet"
+ 
 
 interface ToolbarProps {
   mindmap?: any
@@ -59,6 +59,7 @@ interface ToolbarProps {
   handleSave?: () => void
   onShareClick?: () => void
   userRole?: 'owner' | 'editor' | 'viewer' | null
+  onHistoryClick?: () => void
 }
 
 export default function Toolbar({
@@ -76,10 +77,10 @@ export default function Toolbar({
   handleSave,
   onShareClick,
   userRole,
+  onHistoryClick,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
-  const [historyOpen, setHistoryOpen] = useState(false)
 
   // Debug logging for userRole
   useEffect(() => {
@@ -304,7 +305,7 @@ export default function Toolbar({
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => setHistoryOpen(true)}
+          onClick={onHistoryClick}
           title="Lịch sử thay đổi"
           className="hover:bg-primary/10 hover:text-primary h-8 w-8"
         >
@@ -466,9 +467,6 @@ export default function Toolbar({
           </div>
         )}
       </div>
-      {historyOpen && mindmap?.id && (
-        <HistorySheet mindmapId={mindmap.id} onClose={() => setHistoryOpen(false)} />
-      )}
     </div>
   )
 }
