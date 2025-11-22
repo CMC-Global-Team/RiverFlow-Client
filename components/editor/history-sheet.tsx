@@ -1,9 +1,9 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { GripVertical, X, RotateCcw } from "lucide-react"
+import { GripVertical, X, RotateCcw, Calendar, ArrowLeft, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { fetchHistory, HistoryItem } from "@/services/mindmap/history.service"
+import { fetchHistoryPage, HistoryItem } from "@/services/mindmap/history.service"
 import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
 import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -30,34 +30,30 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [selectedAction, setSelectedAction] = useState<string>("all")
   const [from, setFrom] = useState<string>("")
   const [to, setTo] = useState<string>("")
-  const [cursor, setCursor] = useState<string | null>(null)
-  const [hasMore, setHasMore] = useState(true)
+  const [currentPage, setCurrentPage] = useState(0)
+  const [totalPages, setTotalPages] = useState(0)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   const seenRef = useRef<Set<string>>(new Set())
-  const loadingMoreRef = useRef(false)
+  
 
-  const loadPage = async (reset = false) => {
+  const loadPage = async (reset = false, pageOverride?: number) => {
     setLoading(true)
     setError(null)
     try {
-      const params: any = {
-        limit: 20,
-        after: reset ? undefined : cursor || undefined,
-      }
+      const params: any = { page: pageOverride ?? currentPage, size: 20 }
       if (selectedAction !== "all") params.action = selectedAction
       if (from) params.from = from
       if (to) params.to = to
       if (q) params.q = q
-      const data = await fetchHistory(mindmapId, params)
-      const filtered = data.filter((it) => {
+      const { items: pageItems, meta } = await fetchHistoryPage(mindmapId, params)
+      const filtered = pageItems.filter((it) => {
         if (seenRef.current.has(it.id)) return false
         seenRef.current.add(it.id)
         return true
       })
-      const next = reset ? filtered : [...items, ...filtered]
+      const next = reset ? filtered : filtered
       setItems(next)
-      setCursor(next.length > 0 ? next[next.length - 1].createdAt : cursor)
-      setHasMore(filtered.length >= (params.limit || 30))
+      setTotalPages(meta.totalPages || 0)
     } catch (e) {
       setError("Không tải được lịch sử")
     } finally {
@@ -65,22 +61,9 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     }
   }
 
-  useEffect(() => { loadPage(true) }, [mindmapId, q, selectedAction, from, to])
+  useEffect(() => { seenRef.current.clear(); setCurrentPage(0); loadPage(true, 0) }, [mindmapId, q, selectedAction, from, to])
 
-  useEffect(() => {
-    const el = scrollerRef.current
-    if (!el) return
-    const onScroll = () => {
-      if (loading || !hasMore || loadingMoreRef.current) return
-      const nearBottom = el.scrollTop + el.clientHeight >= el.scrollHeight - 60
-      if (nearBottom) {
-        loadingMoreRef.current = true
-        loadPage(false).finally(() => { loadingMoreRef.current = false })
-      }
-    }
-    el.addEventListener('scroll', onScroll)
-    return () => el.removeEventListener('scroll', onScroll)
-  }, [loading, hasMore, items])
+  // Pagination dạng số trang, bỏ infinite scroll
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -274,20 +257,22 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                <Calendar className="h-3.5 w-3.5 mr-1" /><ArrowLeft className="h-3.5 w-3.5 mr-1" />
                 {from ? new Date(from).toLocaleString() : 'Từ'}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2">
+            <DropdownMenuContent className="p-2 bg-card/95 backdrop-blur-sm border border-border shadow-md">
               <DateTimeWheel value={from || ''} onChange={setFrom} />
             </DropdownMenuContent>
           </DropdownMenu>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
+                <Calendar className="h-3.5 w-3.5 mr-1" /><ArrowRight className="h-3.5 w-3.5 mr-1" />
                 {to ? new Date(to).toLocaleString() : 'Đến'}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className="p-2">
+            <DropdownMenuContent className="p-2 bg-card/95 backdrop-blur-sm border border-border shadow-md">
               <DateTimeWheel value={to || ''} onChange={setTo} />
             </DropdownMenuContent>
           </DropdownMenu>
@@ -338,8 +323,13 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
             })}
           </ul>
         )}
-        <div className="p-2 flex items-center justify-center">
-          <Button variant="ghost" size="sm" disabled={loading || !hasMore} onClick={() => loadPage(false)}>Tải thêm</Button>
+        <div className="p-2 flex items-center justify-center gap-2">
+          {Array.from({ length: Math.max(1, totalPages) }, (_, i) => i).slice(
+            Math.max(0, currentPage - 2),
+            Math.min(totalPages, currentPage + 3)
+          ).map((p) => (
+            <Button key={p} variant={p === currentPage ? "default" : "ghost"} size="sm" onClick={() => { setCurrentPage(p); loadPage(true, p) }}>{p + 1}</Button>
+          ))}
         </div>
       </div>
       
