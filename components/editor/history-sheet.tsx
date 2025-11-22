@@ -8,6 +8,7 @@ import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
 import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import DateTimeWheel from "@/components/ui/datetime-wheel"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAvatarUrl } from "@/lib/avatar-utils"
@@ -237,7 +238,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <h3 className="text-sm font-semibold text-foreground">Lịch sử thay đổi</h3>
         <div className="flex items-center gap-2 flex-1" onMouseDown={(e) => e.stopPropagation()}>
-          <Input placeholder="Tìm kiếm..." value={q} onChange={(e) => setQ(e.target.value)} className="h-8 text-sm" />
+          <Input placeholder="Tìm kiếm..." value={q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} className="h-8 text-sm" />
           <Select value={selectedAction} onValueChange={setSelectedAction}>
             <SelectTrigger className="h-8 w-40 text-sm">
               <SelectValue placeholder="Loại" />
@@ -253,8 +254,8 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
               <SelectItem value="viewport_change">Thay đổi khung nhìn</SelectItem>
             </SelectContent>
           </Select>
-          <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} className="h-8 text-sm" />
-          <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} className="h-8 text-sm" />
+          <DateTimeWheel value={from || ""} onChange={setFrom} className="" label="Từ" />
+          <DateTimeWheel value={to || ""} onChange={setTo} className="" label="Đến" />
         </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-6 w-6 flex-shrink-0">
           <X className="h-4 w-4" />
