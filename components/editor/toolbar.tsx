@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import {
   Plus,
   Trash2,
@@ -22,7 +22,8 @@ import {
   Check,
   AlertCircle,
   ArrowLeft,
-  HandHelping
+  HandHelping,
+  History
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
@@ -41,6 +42,7 @@ import BackButton from "./back-button"
 import gsap from "gsap"
 import { useRouter } from "next/navigation"
 import PresenceAvatars from "@/components/editor/presence-avatars"
+import HistorySheet from "@/components/editor/history-sheet"
 
 interface ToolbarProps {
   mindmap?: any
@@ -77,6 +79,7 @@ export default function Toolbar({
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   // Debug logging for userRole
   useEffect(() => {
@@ -298,6 +301,17 @@ export default function Toolbar({
         >
           <Trash2 className="h-4 w-4" />
         </Button>
+        {userRole !== 'viewer' && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setHistoryOpen(true)}
+            title="Lịch sử thay đổi"
+            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          >
+            <History className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
       {/* Undo/Redo - Disabled for viewers */}
@@ -454,6 +468,9 @@ export default function Toolbar({
           </div>
         )}
       </div>
+      {historyOpen && mindmap?.id && (
+        <HistorySheet mindmapId={mindmap.id} onClose={() => setHistoryOpen(false)} />
+      )}
     </div>
   )
 }
