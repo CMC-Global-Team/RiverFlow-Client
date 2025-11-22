@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport } from 'reactflow'
 import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
+import { fetchHistory } from '@/services/mindmap/history.service'
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
 import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear, emitNodeUpdate, emitEdgeUpdate } from '@/lib/realtime'
@@ -213,6 +214,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const lastPresenceInfoRef = useRef<{ name: string; color: string; userId?: number | string | null; avatar?: string | null } | null>(null)
   const lastReannounceAtRef = useRef<number>(0)
   const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
+  const serverHistoryCursorRef = useRef<number | null>(null)
   const isApplyingHistoryRef = useRef(false)
 
   const getSnapshot = useCallback(() => {
@@ -403,6 +405,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:nodes:update', onNodeUpdate)
       s.off('mindmap:edges:update', onEdgeUpdate)
     }
+  }, [mindmap])
+
+  useEffect(() => {
+    const run = async () => {
+      const m = latestMindmapRef.current
+      if (!m) return
+      try {
+        const list = await fetchHistory(m.id, { limit: 50 })
+        const hasSnap = Array.isArray(list) && list.some((it: any) => {
+          const s = it?.snapshot
+          return s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)
+        })
+        setCanUndo(!!hasSnap)
+        setCanRedo(false)
+      } catch {}
+    }
+    run()
   }, [mindmap])
 
   // --- Cập nhật 'loadMindmap' ---
@@ -707,42 +726,64 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [scheduleAutoSave, recordSnapshot]);
 
   const undo = useCallback(async () => {
-    if (!canUndo) return
-    cancelScheduledSave()
-    const past = historyRef.current.past
-    const future = historyRef.current.future
-    if (past.length === 0) return
-    const current = getSnapshot()
-    future.push(current)
-    const snap = past.pop()!
+    const m = latestMindmapRef.current
+    if (!m) return
+    const list = await fetchHistory(m.id, { limit: 200 })
+    if (!list || list.length === 0) return
+    const start = serverHistoryCursorRef.current == null ? 0 : serverHistoryCursorRef.current + 1
+    let idx = -1
+    for (let i = start; i < list.length; i++) {
+      const s: any = list[i]?.snapshot
+      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
+    }
+    if (idx < 0) return
+    const snap: any = list[idx].snapshot
+    const nextState: any = {
+      ...m,
+      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+      viewport: snap.viewport || latestViewportRef.current,
+    }
     isApplyingHistoryRef.current = true
-    setNodes(snap.nodes)
-    setEdges(snap.edges)
-    setViewport(snap.viewport || null)
+    setFullMindmapState(nextState)
+    await saveMindmap()
     isApplyingHistoryRef.current = false
-    setCanUndo(past.length > 0)
-    setCanRedo(future.length > 0)
+    serverHistoryCursorRef.current = idx
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
     markSynced('idle')
-  }, [cancelScheduledSave, getSnapshot, markSynced])
+  }, [setFullMindmapState, saveMindmap, markSynced])
 
   const redo = useCallback(async () => {
-    if (!canRedo) return
-    cancelScheduledSave()
-    const past = historyRef.current.past
-    const future = historyRef.current.future
-    if (future.length === 0) return
-    const current = getSnapshot()
-    past.push(current)
-    const snap = future.pop()!
+    const m = latestMindmapRef.current
+    if (!m) return
+    const list = await fetchHistory(m.id, { limit: 200 })
+    if (!list || list.length === 0) return
+    const start = serverHistoryCursorRef.current == null ? 0 : Math.max(0, serverHistoryCursorRef.current - 1)
+    let idx = -1
+    for (let i = start; i >= 0; i--) {
+      const s: any = list[i]?.snapshot
+      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
+    }
+    if (idx < 0) return
+    const snap: any = list[idx].snapshot
+    const nextState: any = {
+      ...m,
+      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+      viewport: snap.viewport || latestViewportRef.current,
+    }
     isApplyingHistoryRef.current = true
-    setNodes(snap.nodes)
-    setEdges(snap.edges)
-    setViewport(snap.viewport || null)
+    setFullMindmapState(nextState)
+    await saveMindmap()
     isApplyingHistoryRef.current = false
-    setCanUndo(past.length > 0)
-    setCanRedo(future.length > 0)
+    serverHistoryCursorRef.current = idx
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
     markSynced('idle')
-  }, [cancelScheduledSave, getSnapshot, markSynced])
+  }, [setFullMindmapState, saveMindmap, markSynced])
 
   const value: MindmapContextType = {
     mindmap,
