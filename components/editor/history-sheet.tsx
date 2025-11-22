@@ -5,6 +5,7 @@ import { GripVertical, X, User as UserIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchHistory, HistoryItem } from "@/services/mindmap/history.service"
 import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
+import { getSocket } from "@/lib/realtime"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
@@ -39,6 +40,28 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       setPosition({ x: window.innerWidth - 450, y: 100 })
     }
   }, [])
+
+  useEffect(() => {
+    const s = getSocket()
+    const onHistoryLog = (entry: any) => {
+      if (!entry || entry.mindmapId !== mindmapId) return
+      setItems((prev) => [{
+        id: entry.id || `${Date.now()}`,
+        mindmapId: entry.mindmapId,
+        mysqlUserId: entry.mysqlUserId,
+        action: entry.action,
+        changes: entry.changes,
+        snapshot: entry.snapshot,
+        metadata: entry.metadata,
+        createdAt: entry.createdAt,
+        status: entry.status,
+      }, ...prev].slice(0, 200))
+    }
+    s.on('history:log', onHistoryLog)
+    return () => {
+      s.off('history:log', onHistoryLog)
+    }
+  }, [mindmapId])
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
