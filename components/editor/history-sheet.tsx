@@ -1,12 +1,13 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { GripVertical, X, User as UserIcon, RotateCcw } from "lucide-react"
+import { GripVertical, X, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchHistory, HistoryItem } from "@/services/mindmap/history.service"
 import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
 import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
@@ -170,6 +171,12 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
           const s: any = items[i]?.snapshot
           if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { snap = s; break }
         }
+        if (!snap) {
+          for (let i = idx; i >= 0; i--) {
+            const s: any = items[i]?.snapshot
+            if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { snap = s; break }
+          }
+        }
       }
       if (!snap) return
       const nextState = {
@@ -216,11 +223,18 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
                 <li key={it.id} className="p-3 border-b border-border">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
-                      {u.avatar ? (
-                        <img src={u.avatar} alt={u.name || 'user'} width={24} height={24} className="rounded-full" />
-                      ) : (
-                        <UserIcon className="h-5 w-5 text-muted-foreground" />
-                      )}
+                      {(() => {
+                        const initials = (u.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
+                        return (
+                          <Avatar className="size-6 ring-2 ring-background">
+                            {u.avatar ? (
+                              <AvatarImage src={u.avatar} alt={u.name || 'user'} />
+                            ) : (
+                              <AvatarFallback className="text-[10px] font-bold">{initials}</AvatarFallback>
+                            )}
+                          </Avatar>
+                        )
+                      })()}
                       <div className="flex items-center gap-2">
                         <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{it.action}</span>
                         <span className="text-sm font-semibold">{describe(it.action, it.changes as any)}</span>
