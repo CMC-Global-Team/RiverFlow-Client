@@ -535,7 +535,7 @@ function EditorInner() {
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
       {isHistoryOpen && mindmap?.id && (
-        <HistorySheet mindmapId={mindmap.id} onClose={() => setIsHistoryOpen(false)} />
+        <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
 
       {/* Show PublicShareModal for non-owners, ShareModal for owners */}
