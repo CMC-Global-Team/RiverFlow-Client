@@ -37,6 +37,7 @@ interface MindmapContextType {
   undo: () => Promise<void> 
   redo: () => Promise<void> 
   setFullMindmapState: (data: MindmapResponse | null) => void
+  restoreFromHistory: (snapshot: { nodes?: any[]; edges?: any[]; viewport?: any }, historyId?: string | number | null) => Promise<void>
   participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
   announcePresence: (info: { name: string; color: string; userId?: number | string | null; avatar?: string | null }) => void
   emitCursor: (cursor: { x: number; y: number }) => void
@@ -388,6 +389,25 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     s.on('presence:clear', onPresenceClear)
     s.on('mindmap:nodes:update', onNodeUpdate)
     s.on('mindmap:edges:update', onEdgeUpdate)
+    const onHistoryRestore = (payload: any) => {
+      const snap: any = payload?.snapshot || null
+      const m = latestMindmapRef.current
+      if (!m || !snap) return
+      const nextState: any = {
+        ...m,
+        nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+        edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+        viewport: snap.viewport || latestViewportRef.current,
+      }
+      isApplyingHistoryRef.current = true
+      latestNodesRef.current = nextState.nodes
+      latestEdgesRef.current = nextState.edges
+      latestViewportRef.current = nextState.viewport || null
+      setFullMindmapState(nextState)
+      isApplyingHistoryRef.current = false
+      markSynced('idle')
+    }
+    s.on('history:restore', onHistoryRestore)
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -404,6 +424,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('presence:clear', onPresenceClear)
       s.off('mindmap:nodes:update', onNodeUpdate)
       s.off('mindmap:edges:update', onEdgeUpdate)
+      s.off('history:restore', onHistoryRestore)
     }
   }, [mindmap])
 
@@ -745,6 +766,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       viewport: snap.viewport || latestViewportRef.current,
     }
     isApplyingHistoryRef.current = true
+    latestNodesRef.current = nextState.nodes
+    latestEdgesRef.current = nextState.edges
+    latestViewportRef.current = nextState.viewport || null
     setFullMindmapState(nextState)
     await saveMindmap()
     isApplyingHistoryRef.current = false
@@ -775,6 +799,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       viewport: snap.viewport || latestViewportRef.current,
     }
     isApplyingHistoryRef.current = true
+    latestNodesRef.current = nextState.nodes
+    latestEdgesRef.current = nextState.edges
+    latestViewportRef.current = nextState.viewport || null
     setFullMindmapState(nextState)
     await saveMindmap()
     isApplyingHistoryRef.current = false
@@ -814,6 +841,27 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     undo,
     redo,
     setFullMindmapState,
+    restoreFromHistory: async (snapshot: any, historyId?: string | number | null) => {
+      const m = latestMindmapRef.current
+      if (!m || !snapshot) return
+      const nextState: any = {
+        ...m,
+        nodes: Array.isArray(snapshot.nodes) ? snapshot.nodes : latestNodesRef.current,
+        edges: Array.isArray(snapshot.edges) ? snapshot.edges : latestEdgesRef.current,
+        viewport: snapshot.viewport || latestViewportRef.current,
+      }
+      isApplyingHistoryRef.current = true
+      latestNodesRef.current = nextState.nodes
+      latestEdgesRef.current = nextState.edges
+      latestViewportRef.current = nextState.viewport || null
+      setFullMindmapState(nextState)
+      await saveMindmap()
+      isApplyingHistoryRef.current = false
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) s.emit('history:restore', room, { historyId, snapshot })
+      markSynced('idle')
+    },
     participants,
     announcePresence: (info) => {
       const s = socketRef.current
