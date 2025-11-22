@@ -22,7 +22,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
-  const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap, participants } = useMindmapContext()
+  const { mindmap: ctxMindmap, restoreFromHistory, participants } = useMindmapContext()
   const [q, setQ] = useState("")
   const [selectedAction, setSelectedAction] = useState<string>("all")
   const [selectedUserId, setSelectedUserId] = useState<string>("all")
@@ -219,17 +219,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         }
       }
       if (!snap) return
-      const nextState = {
-        ...m,
-        nodes: Array.isArray(snap.nodes) ? snap.nodes : m.nodes,
-        edges: Array.isArray(snap.edges) ? snap.edges : m.edges,
-        viewport: snap.viewport || m.viewport,
-      }
-      setFullMindmapState(nextState as any)
-      await saveMindmap()
-      const s = getSocket()
-      const room = `mindmap:${m.id}`
-      s.emit('history:restore', room, { historyId: item.id, snapshot: snap })
+      await restoreFromHistory(snap, item.id)
     } catch {}
   }
 
