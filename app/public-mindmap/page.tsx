@@ -13,6 +13,7 @@ import PublicShareModal from "@/components/mindmap/PublicShareModal"
 import { getPublicMindmap } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
+import HistorySheet from "@/components/editor/history-sheet"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
@@ -34,6 +35,7 @@ function PublicMindmapInner() {
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
@@ -229,6 +231,7 @@ function PublicMindmapInner() {
               handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
+              onHistoryClick={() => setIsHistoryOpen(true)}
             />
           </div>
         </div>
@@ -236,6 +239,9 @@ function PublicMindmapInner() {
 
       {/* Floating Properties Panel - Outside relative container (same as editor page) */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      {isHistoryOpen && mindmap?.id && (
+        <HistorySheet mindmapId={mindmap.id} onClose={() => setIsHistoryOpen(false)} />
+      )}
 
       <PublicShareModal
         isOpen={isShareOpen}
