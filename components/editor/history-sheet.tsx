@@ -16,6 +16,7 @@ export default function HistorySheet({ mindmapId, onClose }: { mindmapId: string
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     const run = async () => {
@@ -32,6 +33,12 @@ export default function HistorySheet({ mindmapId, onClose }: { mindmapId: string
     }
     run()
   }, [mindmapId])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPosition({ x: window.innerWidth - 450, y: 100 })
+    }
+  }, [])
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -71,6 +78,33 @@ export default function HistorySheet({ mindmapId, onClose }: { mindmapId: string
     e.stopPropagation()
   }
 
+  const describe = (action: string, changes: any) => {
+    try {
+      const items = Array.isArray(changes?.items) ? changes.items : Array.isArray(changes) ? changes : null
+      const count = changes?.count ?? (items ? items.length : undefined)
+      switch (action) {
+        case 'node_update':
+          return count ? `Cập nhật ${count} node` : 'Cập nhật node'
+        case 'edge_update':
+          return count ? `Cập nhật ${count} connection` : 'Cập nhật connection'
+        case 'edge_add':
+          return 'Tạo connection'
+        case 'node_add':
+          return 'Tạo node'
+        case 'node_delete':
+          return 'Xóa node'
+        case 'edge_delete':
+          return 'Xóa connection'
+        case 'viewport_change':
+          return 'Thay đổi khung nhìn'
+        default:
+          return action
+      }
+    } catch (_) {
+      return action
+    }
+  }
+
   return (
     <div
       ref={sheetRef}
@@ -97,13 +131,23 @@ export default function HistorySheet({ mindmapId, onClose }: { mindmapId: string
           <ul className="list-none m-0 p-0">
             {items.map((it) => (
               <li key={it.id} className="p-3 border-b border-border">
-                <div className="text-sm font-semibold">{it.action}</div>
-                <div className="text-xs text-muted-foreground">{new Date(it.createdAt).toLocaleString()}</div>
-                {it.changes != null && (
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{it.action}</span>
+                    <span className="text-sm font-semibold">{describe(it.action, it.changes as any)}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground">{new Date(it.createdAt).toLocaleString()}</div>
+                </div>
+                {expanded[it.id] && it.changes != null && (
                   <pre className="mt-2 text-xs bg-muted p-2 rounded-md overflow-x-auto">
                     {JSON.stringify(it.changes, null, 2)}
                   </pre>
                 )}
+                <div className="mt-2 flex justify-end">
+                  <Button variant="ghost" size="sm" onClick={() => setExpanded((prev) => ({ ...prev, [it.id]: !prev[it.id] }))}>
+                    {expanded[it.id] ? 'Ẩn chi tiết' : 'Chi tiết'}
+                  </Button>
+                </div>
               </li>
             ))}
           </ul>

@@ -301,17 +301,15 @@ export default function Toolbar({
         >
           <Trash2 className="h-4 w-4" />
         </Button>
-        {userRole !== 'viewer' && (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setHistoryOpen(true)}
-            title="Lịch sử thay đổi"
-            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
-          >
-            <History className="h-4 w-4" />
-          </Button>
-        )}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setHistoryOpen(true)}
+          title="Lịch sử thay đổi"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+        >
+          <History className="h-4 w-4" />
+        </Button>
       </div>
 
       {/* Undo/Redo - Disabled for viewers */}
