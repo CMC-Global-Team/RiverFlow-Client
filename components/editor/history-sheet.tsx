@@ -8,7 +8,8 @@ import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
 import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
-import HistoryFilters from "./history-filters"
+import { Input } from "@/components/ui/input"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
@@ -22,10 +23,9 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
-  const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap, participants } = useMindmapContext()
+  const { mindmap: ctxMindmap, restoreFromHistory, participants } = useMindmapContext()
   const [q, setQ] = useState("")
   const [selectedAction, setSelectedAction] = useState<string>("all")
-  const [selectedUserId, setSelectedUserId] = useState<string>("all")
   const [from, setFrom] = useState<string>("")
   const [to, setTo] = useState<string>("")
   const [cursor, setCursor] = useState<string | null>(null)
@@ -42,7 +42,6 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         after: reset ? undefined : cursor || undefined,
       }
       if (selectedAction !== "all") params.action = selectedAction
-      if (selectedUserId !== "all") params.userId = selectedUserId
       if (from) params.from = from
       if (to) params.to = to
       if (q) params.q = q
@@ -63,7 +62,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     }
   }
 
-  useEffect(() => { loadPage(true) }, [mindmapId, q, selectedAction, selectedUserId, from, to])
+  useEffect(() => { loadPage(true) }, [mindmapId, q, selectedAction, from, to])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -219,17 +218,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         }
       }
       if (!snap) return
-      const nextState = {
-        ...m,
-        nodes: Array.isArray(snap.nodes) ? snap.nodes : m.nodes,
-        edges: Array.isArray(snap.edges) ? snap.edges : m.edges,
-        viewport: snap.viewport || m.viewport,
-      }
-      setFullMindmapState(nextState as any)
-      await saveMindmap()
-      const s = getSocket()
-      const room = `mindmap:${m.id}`
-      s.emit('history:restore', room, { historyId: item.id, snapshot: snap })
+      await restoreFromHistory(snap, item.id)
     } catch {}
   }
 
@@ -246,7 +235,27 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     >
       <div className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0 gap-2" onMouseDown={handleMouseDown}>
         <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <h3 className="text-sm font-semibold text-foreground flex-1 min-w-0">Lịch sử thay đổi</h3>
+        <h3 className="text-sm font-semibold text-foreground">Lịch sử thay đổi</h3>
+        <div className="flex items-center gap-2 flex-1" onMouseDown={(e) => e.stopPropagation()}>
+          <Input placeholder="Tìm kiếm..." value={q} onChange={(e) => setQ(e.target.value)} className="h-8 text-sm" />
+          <Select value={selectedAction} onValueChange={setSelectedAction}>
+            <SelectTrigger className="h-8 w-40 text-sm">
+              <SelectValue placeholder="Loại" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả loại</SelectItem>
+              <SelectItem value="node_update">Cập nhật node</SelectItem>
+              <SelectItem value="edge_update">Cập nhật connection</SelectItem>
+              <SelectItem value="edge_add">Tạo connection</SelectItem>
+              <SelectItem value="node_add">Tạo node</SelectItem>
+              <SelectItem value="node_delete">Xóa node</SelectItem>
+              <SelectItem value="edge_delete">Xóa connection</SelectItem>
+              <SelectItem value="viewport_change">Thay đổi khung nhìn</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input type="datetime-local" value={from} onChange={(e) => setFrom(e.target.value)} className="h-8 text-sm" />
+          <Input type="datetime-local" value={to} onChange={(e) => setTo(e.target.value)} className="h-8 text-sm" />
+        </div>
         <Button variant="ghost" size="icon" onClick={onClose} className="h-6 w-6 flex-shrink-0">
           <X className="h-4 w-4" />
         </Button>
@@ -297,19 +306,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
           <Button variant="ghost" size="sm" disabled={loading || !hasMore} onClick={() => loadPage(false)}>Tải thêm</Button>
         </div>
       </div>
-      <HistoryFilters
-        q={q}
-        setQ={setQ}
-        selectedAction={selectedAction}
-        setSelectedAction={setSelectedAction}
-        selectedUserId={selectedUserId}
-        setSelectedUserId={setSelectedUserId}
-        from={from}
-        setFrom={setFrom}
-        to={to}
-        setTo={setTo}
-        mindmap={mindmap}
-      />
+      
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} />
     </div>
   )
