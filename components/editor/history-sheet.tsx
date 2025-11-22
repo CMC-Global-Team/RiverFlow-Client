@@ -164,7 +164,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     }
   }
 
-  const apiBase = (typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_BACKEND_URL as string) : '') || 'https://riverflow-server.onrender.com/api'
+  const apiBase = (typeof window !== 'undefined' ? (process.env.NEXT_PUBLIC_BACKEND_URL as string) : '') || 'https://river-flow.id.vn/api'
   const absolutize = (url?: string | null) => {
     if (!url) return null
     if (url.startsWith('http://') || url.startsWith('https://')) return url
