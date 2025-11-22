@@ -8,6 +8,8 @@ import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
 import { getSocket } from "@/lib/realtime"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar"
+import HistoryFilters from "./history-filters"
+import { getAvatarUrl } from "@/lib/avatar-utils"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
@@ -21,22 +23,47 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap, participants } = useMindmapContext()
+  const [q, setQ] = useState("")
+  const [selectedAction, setSelectedAction] = useState<string>("all")
+  const [selectedUserId, setSelectedUserId] = useState<string>("all")
+  const [from, setFrom] = useState<string>("")
+  const [to, setTo] = useState<string>("")
+  const [cursor, setCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(true)
+  const scrollerRef = useRef<HTMLDivElement | null>(null)
+  const seenRef = useRef<Set<string>>(new Set())
 
-  useEffect(() => {
-    const run = async () => {
-      setLoading(true)
-      setError(null)
-      try {
-        const data = await fetchHistory(mindmapId, { limit: 100 })
-        setItems(data)
-      } catch (e) {
-        setError("Không tải được lịch sử")
-      } finally {
-        setLoading(false)
+  const loadPage = async (reset = false) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const params: any = {
+        limit: 30,
+        after: reset ? undefined : cursor || undefined,
       }
+      if (selectedAction !== "all") params.action = selectedAction
+      if (selectedUserId !== "all") params.userId = selectedUserId
+      if (from) params.from = from
+      if (to) params.to = to
+      if (q) params.q = q
+      const data = await fetchHistory(mindmapId, params)
+      const filtered = data.filter((it) => {
+        if (seenRef.current.has(it.id)) return false
+        seenRef.current.add(it.id)
+        return true
+      })
+      const next = reset ? filtered : [...items, ...filtered]
+      setItems(next)
+      setCursor(next.length > 0 ? next[next.length - 1].createdAt : cursor)
+      setHasMore(filtered.length >= (params.limit || 30))
+    } catch (e) {
+      setError("Không tải được lịch sử")
+    } finally {
+      setLoading(false)
     }
-    run()
-  }, [mindmapId])
+  }
+
+  useEffect(() => { loadPage(true) }, [mindmapId, q, selectedAction, selectedUserId, from, to])
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -48,17 +75,23 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     const s = getSocket()
     const onHistoryLog = (entry: any) => {
       if (!entry || entry.mindmapId !== mindmapId) return
-      setItems((prev) => [{
-        id: entry.id || `${Date.now()}`,
-        mindmapId: entry.mindmapId,
-        mysqlUserId: entry.mysqlUserId,
-        action: entry.action,
-        changes: entry.changes,
-        snapshot: entry.snapshot,
-        metadata: entry.metadata,
-        createdAt: entry.createdAt,
-        status: entry.status,
-      }, ...prev].slice(0, 200))
+      setItems((prev) => {
+        const id = String(entry.id || entry.createdAt || Date.now())
+        if (seenRef.current.has(id)) return prev
+        seenRef.current.add(id)
+        const nextItem: HistoryItem = {
+          id,
+          mindmapId: entry.mindmapId,
+          mysqlUserId: entry.mysqlUserId,
+          action: entry.action,
+          changes: entry.changes,
+          snapshot: entry.snapshot,
+          metadata: entry.metadata,
+          createdAt: entry.createdAt,
+          status: entry.status,
+        }
+        return [nextItem, ...prev]
+      })
     }
     s.on('history:log', onHistoryLog)
     return () => {
@@ -147,13 +180,16 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     }
     const pres = Object.values(participants || {}).find((p: any) => String(p.userId ?? '') === String(userId)) as any
     if (pres) {
-      return { name: pres.name || `Người dùng ẩn danh`, avatar: absolutize(pres.avatar || undefined as any) }
+      const avatar = getAvatarUrl(pres.avatar || undefined)
+      return { name: pres.name || `Người dùng ẩn danh`, avatar }
     }
     const collab = mindmap?.collaborators?.find((c: Collaborator) => c.mysqlUserId === userId)
     if (collab) {
-      return { name: collab.email || `Người dùng ẩn danh`, avatar: absolutize(`/user/avatar/${userId}`) }
+      const avatar = getAvatarUrl(`/user/avatar/${userId}`)
+      return { name: collab.email || `Người dùng ẩn danh`, avatar }
     }
-    return { name: `Người dùng ẩn danh`, avatar: absolutize(`/user/avatar/${userId}`) }
+    const avatar = getAvatarUrl(`/user/avatar/${userId}`)
+    return { name: `Người dùng ẩn danh`, avatar }
   }
 
   const canRestore = () => {
@@ -215,7 +251,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
           <X className="h-4 w-4" />
         </Button>
       </div>
-      <div className="overflow-y-auto" style={{ height: `calc(100% - 45px)` }}>
+      <div ref={scrollerRef} className="overflow-y-auto" style={{ height: `calc(100% - 85px)` }}>
         {loading && <div className="p-4 text-sm">Đang tải...</div>}
         {error && <div className="p-4 text-sm text-destructive">{error}</div>}
         {!loading && !error && items.length === 0 && <div className="p-4 text-sm">Chưa có lịch sử</div>}
@@ -228,7 +264,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-3">
                       {(() => {
-                        const initials = (u.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
+                        const initials = (u.name || "?").split(" ").map((n: string) => n[0]).join("").substring(0, 2).toUpperCase()
                         return (
                           <Avatar className="size-6 ring-2 ring-background">
                             {u.avatar ? (
@@ -257,7 +293,23 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
             })}
           </ul>
         )}
+        <div className="p-2 flex items-center justify-center">
+          <Button variant="ghost" size="sm" disabled={loading || !hasMore} onClick={() => loadPage(false)}>Tải thêm</Button>
+        </div>
       </div>
+      <HistoryFilters
+        q={q}
+        setQ={setQ}
+        selectedAction={selectedAction}
+        setSelectedAction={setSelectedAction}
+        selectedUserId={selectedUserId}
+        setSelectedUserId={setSelectedUserId}
+        from={from}
+        setFrom={setFrom}
+        to={to}
+        setTo={setTo}
+        mindmap={mindmap}
+      />
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} />
     </div>
   )
