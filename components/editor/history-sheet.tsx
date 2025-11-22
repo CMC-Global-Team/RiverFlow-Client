@@ -5,6 +5,8 @@ import { GripVertical, X, User as UserIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchHistory, HistoryItem } from "@/services/mindmap/history.service"
 import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
+import { getSocket } from "@/lib/realtime"
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
   const [items, setItems] = useState<HistoryItem[]>([])
@@ -17,6 +19,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
+  const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap } = useMindmapContext()
 
   useEffect(() => {
     const run = async () => {
@@ -39,6 +42,28 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       setPosition({ x: window.innerWidth - 450, y: 100 })
     }
   }, [])
+
+  useEffect(() => {
+    const s = getSocket()
+    const onHistoryLog = (entry: any) => {
+      if (!entry || entry.mindmapId !== mindmapId) return
+      setItems((prev) => [{
+        id: entry.id || `${Date.now()}`,
+        mindmapId: entry.mindmapId,
+        mysqlUserId: entry.mysqlUserId,
+        action: entry.action,
+        changes: entry.changes,
+        snapshot: entry.snapshot,
+        metadata: entry.metadata,
+        createdAt: entry.createdAt,
+        status: entry.status,
+      }, ...prev].slice(0, 200))
+    }
+    s.on('history:log', onHistoryLog)
+    return () => {
+      s.off('history:log', onHistoryLog)
+    }
+  }, [mindmapId])
 
   useEffect(() => {
     const handleGlobalMouseMove = (e: MouseEvent) => {
@@ -126,6 +151,33 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     return { name: `User #${userId}`, avatar: absolutize(`/user/avatar/${userId}`) }
   }
 
+  const canRestore = () => {
+    const m = mindmap || ctxMindmap
+    if (!m) return false
+    if (m.isPublic) return m.publicAccessLevel === 'edit'
+    return true
+  }
+
+  const handleRestore = async (item: HistoryItem) => {
+    try {
+      if (!canRestore()) return
+      const m = mindmap || ctxMindmap
+      if (!m) return
+      const snap: any = item.snapshot || {}
+      const nextState = {
+        ...m,
+        nodes: Array.isArray(snap.nodes) ? snap.nodes : m.nodes,
+        edges: Array.isArray(snap.edges) ? snap.edges : m.edges,
+        viewport: snap.viewport || m.viewport,
+      }
+      setFullMindmapState(nextState as any)
+      await saveMindmap()
+      const s = getSocket()
+      const room = `mindmap:${m.id}`
+      s.emit('history:restore', room, { historyId: item.id, snapshot: snap })
+    } catch {}
+  }
+
   return (
     <div
       ref={sheetRef}
@@ -166,9 +218,10 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
                         <span className="text-sm font-semibold">{describe(it.action, it.changes as any)}</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-right flex items-center gap-2">
                       <div className="text-xs font-medium">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{new Date(it.createdAt).toLocaleString()}</div>
+                      <Button variant="ghost" size="sm" disabled={!it.snapshot || !canRestore()} onClick={() => handleRestore(it)}>Quay về</Button>
                     </div>
                   </div>
                 </li>
