@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { GripVertical, X, User as UserIcon } from "lucide-react"
+import { GripVertical, X, User as UserIcon, RotateCcw } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { fetchHistory, HistoryItem } from "@/services/mindmap/history.service"
 import type { MindmapResponse, Collaborator } from "@/types/mindmap.types"
@@ -13,7 +13,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [position, setPosition] = useState({ x: 80, y: 80 })
-  const [size, setSize] = useState({ width: 420, height: 380 })
+  const [size, setSize] = useState({ width: 720, height: 500 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
   const [isResizing, setIsResizing] = useState(false)
@@ -39,7 +39,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPosition({ x: window.innerWidth - 450, y: 100 })
+      setPosition({ x: Math.max(24, window.innerWidth - (size.width + 40)), y: 100 })
     }
   }, [])
 
@@ -139,16 +139,16 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   }
 
   const getUserDisplay = (userId?: number) => {
-    if (!userId) return { name: 'Không rõ người dùng', avatar: null }
+    if (!userId) return { name: 'Người dùng ẩn danh', avatar: null }
     const isOwner = mindmap && mindmap.mysqlUserId === userId
     if (isOwner) {
       return { name: mindmap?.ownerName || 'Chủ sở hữu', avatar: absolutize(mindmap?.ownerAvatar || (`/user/avatar/${userId}`)) }
     }
     const collab = mindmap?.collaborators?.find((c: Collaborator) => c.mysqlUserId === userId)
     if (collab) {
-      return { name: collab.email || `User #${userId}`, avatar: absolutize(`/user/avatar/${userId}`) }
+      return { name: collab.email || `Người dùng ẩn danh`, avatar: absolutize(`/user/avatar/${userId}`) }
     }
-    return { name: `User #${userId}`, avatar: absolutize(`/user/avatar/${userId}`) }
+    return { name: `Người dùng ẩn danh`, avatar: absolutize(`/user/avatar/${userId}`) }
   }
 
   const canRestore = () => {
@@ -163,7 +163,15 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       if (!canRestore()) return
       const m = mindmap || ctxMindmap
       if (!m) return
-      const snap: any = item.snapshot || {}
+      let snap: any = item.snapshot || null
+      if (!snap) {
+        const idx = items.findIndex((x) => x.id === item.id)
+        for (let i = idx; i < items.length; i++) {
+          const s: any = items[i]?.snapshot
+          if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { snap = s; break }
+        }
+      }
+      if (!snap) return
       const nextState = {
         ...m,
         nodes: Array.isArray(snap.nodes) ? snap.nodes : m.nodes,
@@ -218,10 +226,12 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
                         <span className="text-sm font-semibold">{describe(it.action, it.changes as any)}</span>
                       </div>
                     </div>
-                    <div className="text-right flex items-center gap-2">
+                    <div className="text-right flex items-center gap-3">
                       <div className="text-xs font-medium">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{new Date(it.createdAt).toLocaleString()}</div>
-                      <Button variant="ghost" size="sm" disabled={!it.snapshot || !canRestore()} onClick={() => handleRestore(it)}>Quay về</Button>
+                      <Button variant="ghost" size="icon" title="Quay về" aria-label="Quay về" disabled={!canRestore()} onClick={() => handleRestore(it)} className="h-7 w-7">
+                        <RotateCcw className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                 </li>
