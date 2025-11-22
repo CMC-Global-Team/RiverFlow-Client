@@ -14,13 +14,17 @@ export interface HistoryItem {
 
 export const fetchHistory = async (
   mindmapId: string,
-  params?: { action?: string; after?: string; limit?: number }
+  params?: { action?: string; after?: string; limit?: number; userId?: number | string; from?: string; to?: string; q?: string }
 ): Promise<HistoryItem[]> => {
   const response = await apiClient.get<HistoryItem[]>(`/mindmaps/${mindmapId}/history`, {
     params: {
       action: params?.action,
       after: params?.after,
       limit: params?.limit ?? 100,
+      userId: params?.userId,
+      from: params?.from,
+      to: params?.to,
+      q: params?.q,
     },
   })
   return response.data
@@ -33,4 +37,3 @@ export const logHistory = async (
   const response = await apiClient.post<{ message: string }>(`/mindmaps/${mindmapId}/history`, payload)
   return response.data
 }
-
