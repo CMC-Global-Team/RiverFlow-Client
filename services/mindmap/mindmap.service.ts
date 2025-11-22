@@ -46,7 +46,10 @@ export const getMindmapById = async (id: string): Promise<MindmapResponse> => {
 export const getPublicMindmap = async (shareToken: string): Promise<MindmapResponse> => {
   try {
     // Use configured API client to call backend directly (handles baseURL and CORS)
-    const response = await apiClient.get<MindmapResponse>(`${MINDMAP_API_BASE}/public/${shareToken}`);
+    const response = await apiClient.get<MindmapResponse>(`${MINDMAP_API_BASE}/public/${shareToken}`, {
+      headers: { 'X-Allow-Public-Auth': '1', 'X-Share-Token': shareToken },
+      params: { token: shareToken },
+    });
     return response.data;
   } catch (error) {
     console.error('Error fetching public mindmap:', error);
@@ -95,7 +98,7 @@ export const updatePublicMindmap = async (
           `${MINDMAP_API_BASE}/public/${shareToken}`,
           data,
           {
-            headers: { 'X-Allow-Public-Auth': '1', Authorization: `Bearer ${shareToken}` },
+            headers: { 'X-Allow-Public-Auth': '1', 'X-Share-Token': shareToken },
             params: { token: shareToken, id: (data as any).id },
           }
         );
