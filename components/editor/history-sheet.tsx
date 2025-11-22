@@ -20,7 +20,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [isResizing, setIsResizing] = useState(false)
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const sheetRef = useRef<HTMLDivElement | null>(null)
-  const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap } = useMindmapContext()
+  const { mindmap: ctxMindmap, setFullMindmapState, saveMindmap, participants } = useMindmapContext()
 
   useEffect(() => {
     const run = async () => {
@@ -144,6 +144,10 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     const isOwner = mindmap && mindmap.mysqlUserId === userId
     if (isOwner) {
       return { name: mindmap?.ownerName || 'Chủ sở hữu', avatar: absolutize(mindmap?.ownerAvatar || (`/user/avatar/${userId}`)) }
+    }
+    const pres = Object.values(participants || {}).find((p: any) => String(p.userId ?? '') === String(userId)) as any
+    if (pres) {
+      return { name: pres.name || `Người dùng ẩn danh`, avatar: absolutize(pres.avatar || undefined as any) }
     }
     const collab = mindmap?.collaborators?.find((c: Collaborator) => c.mysqlUserId === userId)
     if (collab) {
