@@ -4,45 +4,47 @@ import { useEffect, useRef } from "react"
 import { Zap, Users, Lock, Palette, Share2, Smartphone } from "lucide-react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
+import { useTranslation } from "react-i18next"
 
 gsap.registerPlugin(ScrollTrigger)
-
-const features = [
-  {
-    icon: Zap,
-    title: "Lightning Fast",
-    description: "Real-time collaboration with zero lag. See changes instantly as your team works.",
-  },
-  {
-    icon: Users,
-    title: "Team Collaboration",
-    description: "Invite team members and work together on mindmaps in real-time.",
-  },
-  {
-    icon: Lock,
-    title: "Secure & Private",
-    description: "Your data is encrypted and stored securely. Full control over sharing.",
-  },
-  {
-    icon: Palette,
-    title: "Customizable",
-    description: "Personalize your mindmaps with colors, themes, and custom styling.",
-  },
-  {
-    icon: Share2,
-    title: "Easy Sharing",
-    description: "Share your mindmaps with a link or export in multiple formats.",
-  },
-  {
-    icon: Smartphone,
-    title: "Mobile Ready",
-    description: "Access your mindmaps on any device. Fully responsive design.",
-  },
-]
 
 export default function FeaturesSection() {
   const containerRef = useRef<HTMLDivElement>(null)
   const cardsRef = useRef<(HTMLDivElement | null)[]>([])
+  const { t } = useTranslation()
+
+  const features = [
+    {
+      icon: Zap,
+      title: t("featuresSection.lightningFast.title"),
+      description: t("featuresSection.lightningFast.description"),
+    },
+    {
+      icon: Users,
+      title: t("featuresSection.teamCollaboration.title"),
+      description: t("featuresSection.teamCollaboration.description"),
+    },
+    {
+      icon: Lock,
+      title: t("featuresSection.securePrivate.title"),
+      description: t("featuresSection.securePrivate.description"),
+    },
+    {
+      icon: Palette,
+      title: t("featuresSection.customizable.title"),
+      description: t("featuresSection.customizable.description"),
+    },
+    {
+      icon: Share2,
+      title: t("featuresSection.easySharing.title"),
+      description: t("featuresSection.easySharing.description"),
+    },
+    {
+      icon: Smartphone,
+      title: t("featuresSection.mobileReady.title"),
+      description: t("featuresSection.mobileReady.description"),
+    },
+  ]
 
   useEffect(() => {
     if (!containerRef.current) return
@@ -76,10 +78,10 @@ export default function FeaturesSection() {
         {/* Section Header */}
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-5xl font-bold text-foreground text-balance">
-            Powerful Features for Creative Teams
+            {t("featuresSection.title")}
           </h2>
           <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-            Everything you need to create, collaborate, and share beautiful mindmaps.
+            {t("featuresSection.subtitle")}
           </p>
         </div>
 
