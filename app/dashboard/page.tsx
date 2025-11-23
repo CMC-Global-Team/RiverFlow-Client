@@ -12,7 +12,6 @@ import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
 import TemplateModal from "@/components/dashboard/template-modal"
-import AiMindmapModal from "@/components/ai/AiMindmapModal"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
@@ -97,7 +96,7 @@ function DashboardContent() {
     setShowTemplateModal(true)
   }
   const handleCreateWithAI = () => {
-    setShowAiModal(true)
+    router.push('/dashboard/ai-mindmap')
   }
     const handleEditInfo = (id: string) => {
         const mindmap = mindmaps.find((m) => m.id === id)
@@ -338,11 +337,7 @@ function DashboardContent() {
         onClose={() => setShowTemplateModal(false)}
         onSelectTemplate={handleSelectTemplate}
       />
-      <AiMindmapModal
-        isOpen={showAiModal}
-        onClose={() => setShowAiModal(false)}
-        onGenerated={handleAiGenerated}
-      />
+      
         {/* Delete Confirmation Dialog */}
         <DeleteConfirmDialog
             isOpen={showDeleteDialog}
