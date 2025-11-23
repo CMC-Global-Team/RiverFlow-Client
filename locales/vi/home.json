@@ -5,6 +5,8 @@
   "pricing": "Giá",
   "about": "Giới thiệu",
   "docs": "Tài liệu",
+  "dark": "Tối",
+  "light": "Sáng",
   "login": "Đăng nhập",
   "logout": "Đăng xuất",
   "logging out...": "Đang đăng xuất...",
