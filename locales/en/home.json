@@ -85,7 +85,27 @@
       "failedTitle": "Request failed",
       "validationError": "Error",
       "validationDesc": "Please enter your email!"
+    },
+    "customizable": {
+      "title": "Fully Customizable",
+      "description": "Adjust colors, layouts, and styles to make your mindmaps truly your own."
+    },
+
+    "easySharing": {
+      "title": "Easy Sharing",
+      "description": "Share your mindmaps instantly with teammates or clients using a single secure link."
+    },
+
+    "mobileReady": {
+      "title": "Mobile Ready",
+      "description": "Create, edit, and collaborate on your mindmaps seamlessly across all mobile devices."
+    },
+    "securePrivate": {
+      "title": "Secure & Private",
+      "description": "Your ideas are protected with enterprise-grade encryption and privacy controls."
     }
+
+
   },
   "product": "Product",
   "security": "Security",
@@ -97,5 +117,18 @@
   "terms": "Terms",
   "cookies": "Cookies",
   "copyright": "© 2025 RiverFlow. All rights reserved.",
-  "slogan": "Create beautiful mindmaps together."
+  "slogan": "Create beautiful mindmaps together.",
+  "ctaSection": {
+    "authenticated": {
+      "title": "Ready to Start Creating?",
+      "description": "Go to your dashboard and start organizing your ideas with RiverFlow.",
+      "button": "Go to Dashboard"
+    },
+    "guest": {
+      "title": "Ready to Create Your First Mindmap?",
+      "description": "Join thousands of teams using RiverFlow to organize their ideas and collaborate effectively.",
+      "button": "Start Free Trial"
+    }
+  }
+
 }
