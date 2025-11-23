@@ -5,6 +5,8 @@
   "pricing": "Pricing",
   "about": "About",
   "docs": "Docs",
+  "dark": "Dark",
+  "light": "Light",
   "login": "Login",
   "logout": "Logout",
   "logging out...": "Logging out...",
