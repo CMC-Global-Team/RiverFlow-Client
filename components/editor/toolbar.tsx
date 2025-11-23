@@ -23,8 +23,22 @@ import {
   AlertCircle,
   ArrowLeft,
   HandHelping,
-  History
+  History,
+  FileText,
+  Image as ImageIcon,
+  FileJson,
+  File,
+  Menu
 } from "lucide-react"
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { useReactFlow } from "reactflow"
+import { toast } from "sonner"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
 import { toast } from "sonner"
@@ -42,6 +56,8 @@ import BackButton from "./back-button"
 import gsap from "gsap"
 import { useRouter } from "next/navigation"
 import PresenceAvatars from "@/components/editor/presence-avatars"
+import { toPng, toJpeg } from 'html-to-image'
+import jsPDF from 'jspdf'
  
 
 interface ToolbarProps {
@@ -176,7 +192,7 @@ export default function Toolbar({
     reactFlowInstance.fitView()
   }
 
-  const handleDownload = () => {
+  const handleDownloadJSON = () => {
     const mindmapData = {
       nodes,
       edges,
@@ -186,10 +202,72 @@ export default function Toolbar({
     const url = URL.createObjectURL(dataBlob)
     const link = document.createElement("a")
     link.href = url
-    link.download = "mindmap.json"
+    link.download = `${mindmap?.title || 'mindmap'}.json`
     link.click()
     URL.revokeObjectURL(url)
-    toast.success("Mindmap downloaded")
+    toast.success("Mindmap downloaded as JSON")
+  }
+
+  const handleDownloadImage = async (format: 'png' | 'jpeg') => {
+    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    if (!viewport) return
+
+    try {
+      const dataUrl = format === 'png' 
+        ? await toPng(viewport, { backgroundColor: '#ffffff' })
+        : await toJpeg(viewport, { backgroundColor: '#ffffff' })
+      
+      const link = document.createElement('a')
+      link.download = `${mindmap?.title || 'mindmap'}.${format}`
+      link.href = dataUrl
+      link.click()
+      toast.success(`Mindmap downloaded as ${format.toUpperCase()}`)
+    } catch (err) {
+      console.error('Error downloading image:', err)
+      toast.error("Failed to download image")
+    }
+  }
+
+  const handleDownloadPDF = async () => {
+    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
+    if (!viewport) return
+
+    try {
+      const dataUrl = await toPng(viewport, { backgroundColor: '#ffffff' })
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+      })
+      
+      const imgProps = pdf.getImageProperties(dataUrl)
+      const pdfWidth = pdf.internal.pageSize.getWidth()
+      const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
+      
+      pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
+      pdf.save(`${mindmap?.title || 'mindmap'}.pdf`)
+      toast.success("Mindmap downloaded as PDF")
+    } catch (err) {
+      console.error('Error downloading PDF:', err)
+      toast.error("Failed to download PDF")
+    }
+  }
+
+  const handleDownloadText = () => {
+    let textContent = `# ${mindmap?.title || 'Untitled Mindmap'}\n\n`
+    
+    // Simple text representation - can be improved based on node hierarchy
+    nodes.forEach(node => {
+      const label = node.data?.label || 'Untitled Node'
+      textContent += `- ${label}\n`
+    })
+
+    const blob = new Blob([textContent], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.download = `${mindmap?.title || 'mindmap'}.txt`
+    link.href = url
+    link.click()
+    URL.revokeObjectURL(url)
+    toast.success("Mindmap downloaded as Text")
   }
 
   
@@ -312,79 +390,6 @@ export default function Toolbar({
           <History className="h-4 w-4" />
         </Button>
       </div>
-
-      {/* Undo/Redo - Disabled for viewers */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={undo}
-          disabled={!canUndo || userRole === 'viewer'}
-          title="Undo (Ctrl+Z)"
-          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Undo2 className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={redo}
-          disabled={!canRedo || userRole === 'viewer'}
-          title="Redo (Ctrl+Y)"
-          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Redo2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Zoom Tools */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleZoomIn}
-          title="Zoom In"
-          className="h-8 w-8"
-        >
-          <ZoomIn className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleZoomOut}
-          title="Zoom Out"
-          className="h-8 w-8"
-        >
-          <ZoomOut className="h-4 w-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleFitView}
-          title="Fit View"
-          className="h-8 w-8"
-        >
-          <Maximize2 className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/* Export */}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={handleDownload}
-          title="Download Mindmap"
-          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
-        >
-          <Download className="h-4 w-4" />
-        </Button>
-      </div>
-
-      {/*Tutorial guide*/}
-      <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-        variant="ghost"
         size="icon"
         title="Tutorial"
         className="hover:bg-primary/10 hover:text-primary h-8 w-8"
