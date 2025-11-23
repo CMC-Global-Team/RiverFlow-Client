@@ -10,6 +10,7 @@ import FileUpload from "@/components/ai/FileUpload"
 import PromptChat, { ChatMessage } from "@/components/ai/PromptChat"
 import CreditCost from "@/components/ai/CreditCost"
 import { generateMindmapByAI } from "@/services/mindmap/mindmap.service"
+import { getUserProfile } from "@/services/auth/update-user.service"
 import type { MindmapResponse } from "@/types/mindmap.types"
 
 interface AiMindmapModalProps {
@@ -19,7 +20,7 @@ interface AiMindmapModalProps {
 }
 
 export default function AiMindmapModal({ isOpen, onClose, onGenerated }: AiMindmapModalProps) {
-  const { user } = useAuth()
+  const { user, updateUser } = useAuth()
   const [mode, setMode] = useState<'normal' | 'max'>('normal')
   const [model, setModel] = useState<string>('gpt-4o-mini')
   const [files, setFiles] = useState<File[]>([])
@@ -60,6 +61,12 @@ export default function AiMindmapModal({ isOpen, onClose, onGenerated }: AiMindm
     try {
       setLoading(true)
       const res = await generateMindmapByAI({ prompt, mode, model, files, messages })
+      try {
+        const profile = await getUserProfile()
+        if (user) {
+          updateUser({ ...user, credit: profile.credit ?? user.credit })
+        }
+      } catch {}
       onGenerated(res)
       onClose()
     } catch (e: any) {
