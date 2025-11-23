@@ -18,7 +18,7 @@ export const createTopupIntent = async (amount: number): Promise<TopupIntentResp
  */
 export const getMyTransactions = async (page: number = 0, size: number = 10): Promise<PageResponse<TransactionHistory>> => {
   try {
-    const response = await apiClient.get<PageResponse<TransactionHistory>>('/payments/history', {
+    const response = await apiClient.get<PageResponse<TransactionHistory>>('/api/payments/history', {
       params: {
         page, // Spring Boot mặc định trang đầu tiên là 0
         size
