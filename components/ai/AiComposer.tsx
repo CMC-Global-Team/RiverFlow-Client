@@ -1,131 +1,198 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { Card } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
+import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Gauge, Sparkles, Upload, Send } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
-type ChatMode = "normal" | "max"
-
-export default function AiComposer() {
-  const [mode, setMode] = useState<ChatMode>("normal")
-  const [value, setValue] = useState("")
-  const fileRef = useRef<HTMLInputElement | null>(null)
-  const [pos, setPos] = useState({ x: 0, y: 0 })
-  const [size, setSize] = useState({ w: 920, h: 300 })
-  const dragStart = useRef({ x: 0, y: 0 })
-  const posStart = useRef({ x: 0, y: 0 })
-  const sizeStart = useRef({ w: 920, h: 300 })
-  const dragging = useRef(false)
-  const resizing = useRef(false)
+function Draggable({ children, initialPos, handle }: { children: React.ReactNode; initialPos?: { x: number; y: number }; handle?: string }) {
+  const ref = useRef<HTMLDivElement | null>(null)
+  const [dragging, setDragging] = useState(false)
+  const [offset, setOffset] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const [pos, setPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
+  const widthRef = useRef<number>(720)
 
   useEffect(() => {
-    const vw = typeof window !== "undefined" ? window.innerWidth : 1280
-    const vh = typeof window !== "undefined" ? window.innerHeight : 800
-    const w = Math.min(vw - 160, size.w)
-    const h = size.h
-    const x = Math.max(24, Math.floor(vw / 2 - w / 2))
-    const y = Math.max(32, vh - h - 96)
-    setSize({ w, h })
-    setPos({ x, y })
-  }, [])
+    const place = () => {
+      const w = widthRef.current
+      if (initialPos) {
+        setPos(initialPos)
+      } else {
+        const x = Math.max(16, Math.round((window.innerWidth - w) / 2))
+        const y = Math.max(16, window.innerHeight - 120)
+        setPos({ x, y })
+      }
+    }
+    place()
+    const r = () => place()
+    window.addEventListener("resize", r)
+    return () => window.removeEventListener("resize", r)
+  }, [initialPos])
 
-  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    const el = e.target as HTMLElement
-    if (el && el.closest('[data-no-drag="true"]')) return
-    dragging.current = true
-    dragStart.current = { x: e.clientX, y: e.clientY }
-    posStart.current = { ...pos }
-    window.addEventListener("pointermove", onPointerMove)
-    window.addEventListener("pointerup", onPointerUp)
-  }
-  const onPointerMove = (e: PointerEvent) => {
-    if (!dragging.current) return
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const dx = e.clientX - dragStart.current.x
-    const dy = e.clientY - dragStart.current.y
-    const nx = Math.max(12, Math.min(vw - size.w - 12, posStart.current.x + dx))
-    const ny = Math.max(12, Math.min(vh - size.h - 12, posStart.current.y + dy))
-    setPos({ x: nx, y: ny })
-  }
-  const onPointerUp = () => {
-    dragging.current = false
-    window.removeEventListener("pointermove", onPointerMove)
-    window.removeEventListener("pointerup", onPointerUp)
-  }
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!ref.current) return
+      const target = e.target as HTMLElement
+      if (!ref.current.contains(target)) return
+      if (handle && !target.closest(handle)) return
+      const tag = target.tagName
+      const interactive = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || tag === "BUTTON" || target.isContentEditable || !!target.closest('[data-drag-ignore]')
+      if (interactive) return
+      const rect = ref.current.getBoundingClientRect()
+      setOffset({ x: e.clientX - rect.left, y: e.clientY - rect.top })
+      setDragging(true)
+    }
+    const onMove = (e: MouseEvent) => {
+      if (!dragging) return
+      setPos({ x: e.clientX - offset.x, y: e.clientY - offset.y })
+    }
+    const onUp = () => setDragging(false)
+    window.addEventListener("mousedown", onDown)
+    window.addEventListener("mousemove", onMove)
+    window.addEventListener("mouseup", onUp)
+    return () => {
+      window.removeEventListener("mousedown", onDown)
+      window.removeEventListener("mousemove", onMove)
+      window.removeEventListener("mouseup", onUp)
+    }
+  }, [dragging, offset.x, offset.y])
 
-  const startResize = (e: React.PointerEvent<HTMLDivElement>) => {
-    resizing.current = true
-    sizeStart.current = { ...size }
-    dragStart.current = { x: e.clientX, y: e.clientY }
-    window.addEventListener("pointermove", onResizeMove)
-    window.addEventListener("pointerup", stopResize)
-  }
-  const onResizeMove = (e: PointerEvent) => {
-    if (!resizing.current) return
-    const vw = window.innerWidth
-    const vh = window.innerHeight
-    const dx = e.clientX - dragStart.current.x
-    const dy = e.clientY - dragStart.current.y
-    const nw = Math.max(640, Math.min(vw - pos.x - 12, sizeStart.current.w + dx))
-    const nh = Math.max(240, Math.min(vh - pos.y - 12, sizeStart.current.h + dy))
-    setSize({ w: nw, h: nh })
-  }
-  const stopResize = () => {
-    resizing.current = false
-    window.removeEventListener("pointermove", onResizeMove)
-    window.removeEventListener("pointerup", stopResize)
-  }
-
-  const handleSend = () => {
-    if (!value.trim()) return
-    setValue("")
-  }
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    widthRef.current = el.getBoundingClientRect().width
+  })
 
   return (
-    <div className="pointer-events-auto" style={{ position: "absolute", left: pos.x, top: pos.y, width: size.w, height: size.h }}>
-      <Card className="h-full bg-background/85 backdrop-blur border shadow-sm rounded-2xl p-3 flex flex-col" onPointerDown={onPointerDown}>
-        <div className="flex-1" data-no-drag="true">
-          <ScrollArea className="h-full pr-2">
-            <div className="text-sm text-muted-foreground">Nhập yêu cầu để AI thiết kế mindmap theo ý tưởng của bạn.</div>
-          </ScrollArea>
-        </div>
-        <div className="mt-2" data-no-drag="true">
-          <div className="flex items-center justify-between mb-2">
-            <ToggleGroup type="single" value={mode} onValueChange={(v) => v && setMode(v as ChatMode)} variant="outline" size="sm" className="gap-1">
-              <ToggleGroupItem value="normal" className="h-7 px-3 text-xs rounded-full">
-                <Gauge className="h-3.5 w-3.5 mr-1" />
-                Normal
-              </ToggleGroupItem>
-              <ToggleGroupItem value="max" className="h-7 px-3 text-xs rounded-full data-[state=on]:bg-teal-600 data-[state=on]:text-white data-[state=on]:border-teal-600">
-                <Sparkles className="h-3.5 w-3.5 mr-1" />
-                Max
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <div>
-              <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => { if (fileRef.current) fileRef.current.value = "" }} />
-              <Button variant="ghost" size="icon" onClick={() => fileRef.current?.click()}>
-                <Upload className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-          <div className="flex items-end gap-3">
-            <div className="flex-1">
-              <Input value={value} onChange={(e) => setValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend() } }} placeholder="Nhập yêu cầu cho AI mindmap" className="h-10 rounded-lg" />
-            </div>
-            <Button size="sm" className="gap-2 rounded-lg" onClick={handleSend}>
-              <Send className="h-4 w-4" />
-              Gửi
-            </Button>
-          </div>
-        </div>
-        <div onPointerDown={startResize} className="absolute bottom-2 right-2 size-4 rounded-sm bg-muted border cursor-se-resize" />
-      </Card>
+    <div ref={ref} className="fixed z-50 pointer-events-auto" style={{ left: pos.x, top: pos.y }}>
+      {children}
     </div>
   )
 }
 
+export default function AiComposer() {
+  const [mode, setMode] = useState("normal")
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
+  const [chatOpen, setChatOpen] = useState(false)
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([])
+  const [inputValue, setInputValue] = useState("")
+
+  const handleUploadClick = () => fileInputRef.current?.click()
+
+  return (
+    <>
+      <Draggable>
+        <div className="rounded-2xl border bg-muted/20 backdrop-blur-sm shadow-md">
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
+                <Plus className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg">
+                <Sliders className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setChatOpen(true)}>
+                <MessageSquare className="size-4" />
+              </Button>
+              <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
+                <Upload className="size-4" />
+              </Button>
+              <input ref={fileInputRef} type="file" className="hidden" />
+            </div>
+            <Input
+              placeholder="Nhập nội dung của bạn"
+              className="flex-1 h-10 rounded-xl bg-background/40 border-muted/50"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  const t = inputValue.trim()
+                  if (!t) return
+                  setMessages((m) => [...m, { role: "user", text: t }])
+                  setChatOpen(true)
+                  setInputValue("")
+                }
+              }}
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-10 rounded-xl px-3 gap-1">
+                  {modeLabel}
+                  <ChevronDown className="size-4 opacity-70" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setMode("normal")}>
+                  <span className="flex-1">Normal Mode</span>
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    -1
+                    <Coins className="size-4" />
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMode("thinking")}>
+                  <span className="flex-1">Thinking Mode</span>
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    -3
+                    <Coins className="size-4" />
+                  </span>
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMode("max")}>
+                  <span className="flex-1">Max Mode</span>
+                  <span className="flex items-center gap-1 text-muted-foreground">
+                    -5
+                    <Coins className="size-4" />
+                  </span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <Button size="icon" className="size-10 rounded-xl" onClick={() => {
+              const t = inputValue.trim()
+              if (!t) return
+              setMessages((m) => [...m, { role: "user", text: t }])
+              setChatOpen(true)
+              setInputValue("")
+            }}>
+              <ArrowUp className="size-4" />
+            </Button>
+          </div>
+        </div>
+      </Draggable>
+
+      {chatOpen ? (
+        <Draggable
+          initialPos={{ x: Math.max(16, window.innerWidth - 420 - 16), y: Math.max(16, Math.round(window.innerHeight / 6)) }}
+          handle=".draggable-handle"
+        >
+          <div className="w-[420px] rounded-2xl border bg-popover text-popover-foreground shadow-xl ring-1 ring-border">
+            <div className="draggable-handle flex items-center justify-between gap-2 px-3 py-2 border-b cursor-move">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-24 rounded-full bg-muted" />
+                <span className="text-sm font-medium">Cuộc hội thoại</span>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setChatOpen(false)} title="Đóng">
+                <X className="size-4" />
+              </Button>
+            </div>
+            <ScrollArea className="h-[360px] p-3">
+              <div className="space-y-3">
+                {messages.map((m, i) => (
+                  <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                    <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
+                      {m.text}
+                    </div>
+                  </div>
+                ))}
+                {messages.length === 0 ? (
+                  <div className="text-muted-foreground text-sm">Chưa có tin nhắn</div>
+                ) : null}
+              </div>
+            </ScrollArea>
+          </div>
+        </Draggable>
+      ) : null}
+    </>
+  )
+}
