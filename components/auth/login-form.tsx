@@ -9,194 +9,189 @@ import { useGoogleSignIn } from "@/hooks/auth/useGoogleSignIn"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton"
+import { useTranslation } from "react-i18next"
 import type { CredentialResponse } from "@react-oauth/google"
 
 interface LoginFormProps {
-  onForgotClick: () => void
+    onForgotClick: () => void
 }
 
 export default function LoginForm({ onForgotClick }: LoginFormProps) {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  
-  const { signIn, isLoading, error, data } = useSignIn()
-  const { signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleSignIn()
-  const { toast } = useToast()
-  const router = useRouter()
+    const { t } = useTranslation("other")
 
-  // Xử lý lỗi Google login
-  useEffect(() => {
-    if (googleError) {
-      toast({
-        variant: "destructive",
-        title: "Đăng nhập thất bại",
-        description: googleError.message || "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
-      })
-    }
-  }, [googleError, toast])
+    const [email, setEmail] = useState("")
+    const [password, setPassword] = useState("")
 
-  // Handler khi Google login thành công
-  const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
-    try {
-      if (credentialResponse.credential) {
-        const response = await signInWithGoogle(credentialResponse.credential)
-        if (response) {
-          toast({
-            title: "Đăng nhập thành công!",
-            description: `Chào mừng trở lại, ${response.fullName}!`,
-          })
-          setTimeout(() => {
-            router.push("/dashboard")
-          }, 1000)
+    const { signIn, isLoading, error, data } = useSignIn()
+    const { signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleSignIn()
+    const { toast } = useToast()
+    const router = useRouter()
+
+    // GOOGLE ERROR
+    useEffect(() => {
+        if (googleError) {
+            toast({
+                variant: "destructive",
+                title: t("login.failedTitle"),
+                description: googleError.message || t("login.failedTitle"),
+            })
         }
-      } else {
+    }, [googleError, toast, t])
+
+    // GOOGLE SUCCESS
+    const handleGoogleSuccess = async (credentialResponse: CredentialResponse) => {
+        try {
+            if (credentialResponse.credential) {
+                const response = await signInWithGoogle(credentialResponse.credential)
+                if (response) {
+                    toast({
+                        title: t("login.successTitle"),
+                        description: t("login.successDesc", { name: response.fullName }),
+                    })
+                    setTimeout(() => router.push("/dashboard"), 1000)
+                }
+            } else {
+                toast({
+                    variant: "destructive",
+                    title: t("login.failedTitle"),
+                    description: t("login.failedTitle"),
+                })
+            }
+        } catch (err) {
+            console.error("Google login error:", err)
+        }
+    }
+
+    const handleGoogleError = () => {
         toast({
-          variant: "destructive",
-          title: "Đăng nhập thất bại",
-          description: "Không nhận được credential từ Google.",
+            variant: "destructive",
+            title: t("login.failedTitle"),
+            description: t("login.failedTitle"),
         })
-      }
-    } catch (err) {
-      console.error("Google login error:", err)
-    }
-  }
-
-  // Handler khi Google login thất bại
-  const handleGoogleError = () => {
-    toast({
-      variant: "destructive",
-      title: "Đăng nhập thất bại",
-      description: "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
-    })
-  }
-
-  // Hiển thị thông báo khi có lỗi
-  useEffect(() => {
-    if (error) {
-      // Kiểm tra nếu là lỗi email chưa xác thực (status 403)
-      const isUnverifiedEmail = error.status === 403
-      
-      toast({
-        variant: "destructive",
-        title: isUnverifiedEmail ? "Email chưa được xác thực" : "Đăng nhập thất bại",
-        description: error.message,
-      })
-    }
-  }, [error, toast])
-
-  // Hiển thị thông báo và chuyển trang khi đăng nhập thành công
-  useEffect(() => {
-    if (data) {
-      toast({
-        title: "Đăng nhập thành công!",
-        description: `Chào mừng trở lại, ${data.fullName}!`,
-      })
-      
-      // Chuyển hướng đến dashboard sau 1 giây
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 1000)
-    }
-  }, [data, toast, router])
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    // Validation cơ bản
-    if (!email || !password) {
-      toast({
-        variant: "destructive",
-        title: "Lỗi",
-        description: "Vui lòng nhập đầy đủ email và mật khẩu!",
-      })
-      return
     }
 
-    // Gọi API đăng nhập
-    await signIn({
-      email,
-      password,
-    })
-  }
+    // SIGN-IN ERROR
+    useEffect(() => {
+        if (error) {
+            const isUnverified = error.status === 403
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-4">
-      {/* Email Input */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Email</label>
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@example.com"
-            className="w-full rounded-lg border border-border bg-input pl-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            required
-          />
-        </div>
-      </div>
+            toast({
+                variant: "destructive",
+                title: isUnverified ? t("login.unverifiedEmail") : t("login.failedTitle"),
+                description: error.message,
+            })
+        }
+    }, [error, t, toast])
 
-      {/* Password Input */}
-      <div className="space-y-2">
-        <label className="text-sm font-medium text-foreground">Password</label>
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="••••••••"
-            className="w-full rounded-lg border border-border bg-input pl-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-            required
-          />
-        </div>
-      </div>
+    // SIGN-IN SUCCESS
+    useEffect(() => {
+        if (data) {
+            toast({
+                title: t("login.successTitle"),
+                description: t("login.successDesc", { name: data.fullName }),
+            })
 
-      {/* Forgot Password Link */}
-      <button
-        type="button"
-        onClick={onForgotClick}
-        className="text-sm text-primary hover:text-primary/80 transition-colors"
-      >
-        Forgot password?
-      </button>
+            setTimeout(() => router.push("/dashboard"), 1000)
+        }
+    }, [data, toast, router, t])
 
-      {/* Submit Button */}
-      <button
-        type="submit"
-        disabled={isLoading}
-        className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
-      >
-        {isLoading ? "Signing in..." : "Sign In"}
-      </button>
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
 
-      {/* Divider */}
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
-        </div>
-      </div>
+        if (!email || !password) {
+            toast({
+                variant: "destructive",
+                title: t("login.failedTitle"),
+                description: t("login.missingFields"),
+            })
+            return
+        }
 
-      {/* Social Buttons */}
-      <div className="space-y-3">
-        <button
-          type="button"
-          className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
-          disabled
-        >
-          <Github className="h-5 w-5" />
-          <span className="text-sm font-medium">GitHub</span>
-        </button>
-        <GoogleLoginButton
-          onSuccess={handleGoogleSuccess}
-          onError={handleGoogleError}
-          text="signin_with"
-        />
-      </div>
-    </form>
-  )
+        await signIn({ email, password })
+    }
+
+    return (
+        <form onSubmit={handleSubmit} className="space-y-4">
+
+            {/* Email Input */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">{t("login.email")}</label>
+                <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                    <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="w-full rounded-lg border border-border bg-input pl-10 py-2.5"
+                        required
+                    />
+                </div>
+            </div>
+
+            {/* Password Input */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground">{t("login.password")}</label>
+                <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
+                    <input
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="w-full rounded-lg border border-border bg-input pl-10 py-2.5"
+                        required
+                    />
+                </div>
+            </div>
+
+            {/* Forgot Password */}
+            <button
+                type="button"
+                onClick={onForgotClick}
+                className="text-sm text-primary hover:text-primary/80 transition-colors"
+            >
+                {t("login.forgot")}
+            </button>
+
+            {/* Submit Button */}
+            <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
+            >
+                {isLoading ? t("login.submitting") : t("login.submit")}
+            </button>
+
+            {/* Divider */}
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t"></div>
+                </div>
+                <div className="relative flex justify-center text-sm">
+          <span className="bg-card px-2 text-muted-foreground">
+            {t("login.divider")}
+          </span>
+                </div>
+            </div>
+
+            {/* Social login */}
+            <div className="space-y-3">
+                <button
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
+                    disabled
+                >
+                    <Github className="h-5 w-5" />
+                    <span className="text-sm font-medium">{t("login.github")}</span>
+                </button>
+
+                <GoogleLoginButton
+                    onSuccess={handleGoogleSuccess}
+                    onError={handleGoogleError}
+                    text="signin_with"
+                />
+            </div>
+        </form>
+    )
 }
