@@ -84,7 +84,27 @@
       "failedTitle": "Gửi yêu cầu thất bại",
       "validationError": "Lỗi",
       "validationDesc": "Vui lòng nhập email!"
+    },
+    "customizable": {
+      "title": "Tùy chỉnh linh hoạt",
+      "description": "Điều chỉnh màu sắc, bố cục và phong cách để tạo nên bản đồ tư duy mang dấu ấn của riêng bạn."
+    },
+
+    "easySharing": {
+      "title": "Chia sẻ dễ dàng",
+      "description": "Chia sẻ bản đồ tư duy của bạn ngay lập tức với đồng đội hoặc khách hàng chỉ bằng một liên kết an toàn."
+    },
+
+    "mobileReady": {
+      "title": "Tương thích di động",
+      "description": "Tạo, chỉnh sửa và cộng tác trên bản đồ tư duy một cách mượt mà trên mọi thiết bị di động."
+    },
+    "securePrivate": {
+      "title": "Bảo mật & Riêng tư",
+      "description": "Ý tưởng của bạn luôn được bảo vệ với mã hóa cấp doanh nghiệp và các lớp kiểm soát quyền riêng tư."
     }
+
+
   },
   "product": "Sản phẩm",
   "security": "Bảo mật",
@@ -96,5 +116,18 @@
   "terms": "Điều khoản",
   "cookies": "Cookies",
   "copyright": "© 2025 RiverFlow. Bảo lưu mọi quyền.",
-  "slogan": "Cùng nhau tạo nên những bản đồ tư duy tuyệt đẹp."
+  "slogan": "Cùng nhau tạo nên những bản đồ tư duy tuyệt đẹp.",
+  "ctaSection": {
+    "authenticated": {
+      "title": "Sẵn sàng bắt đầu tạo nội dung?",
+      "description": "Hãy vào bảng điều khiển và bắt đầu sắp xếp ý tưởng của bạn với RiverFlow.",
+      "button": "Đến bảng điều khiển"
+    },
+    "guest": {
+      "title": "Sẵn sàng tạo bản đồ tư duy đầu tiên?",
+      "description": "Tham gia cùng hàng nghìn đội nhóm đang dùng RiverFlow để sắp xếp ý tưởng và cộng tác hiệu quả.",
+      "button": "Bắt đầu dùng thử miễn phí"
+    }
+  }
+
 }
