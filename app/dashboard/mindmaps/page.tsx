@@ -87,9 +87,6 @@ function MyMindmapsContent() {
   const handleCreateNew = () => {
     setShowTemplateModal(true)
   }
-  const handleCreateWithAI = () => {
-    router.push('/dashboard/ai-mindmap')
-  }
 
   const handleSelectTemplate = async (template: any) => {
     const newMindmap = await create({
@@ -253,13 +250,6 @@ function MyMindmapsContent() {
                     >
                       <Plus className="h-5 w-5" />
                       Create New
-                    </button>
-                    <button
-                      onClick={handleCreateWithAI}
-                      className="flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
-                    >
-                      <Plus className="h-5 w-5" />
-                      Tạo bằng AI
                     </button>
                   </div>
                 )}
