@@ -12,6 +12,7 @@ import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
 import TemplateModal from "@/components/dashboard/template-modal"
+import AiMindmapModal from "@/components/ai/AiMindmapModal"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
@@ -27,6 +28,7 @@ function DashboardContent() {
   const { create,update, remove, toggleFavorite, archive } = useMindmapActions()
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
+  const [showAiModal, setShowAiModal] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
 
@@ -94,6 +96,9 @@ function DashboardContent() {
   const handleCreateNew = () => {
     setShowTemplateModal(true)
   }
+  const handleCreateWithAI = () => {
+    setShowAiModal(true)
+  }
     const handleEditInfo = (id: string) => {
         const mindmap = mindmaps.find((m) => m.id === id)
         if (mindmap) {
@@ -149,6 +154,12 @@ function DashboardContent() {
         router.push(`/editor?id=${newMindmap.id}`)
       }
     }
+
+  const handleAiGenerated = (m: any) => {
+    if (m?.id) {
+      router.push(`/editor?id=${m.id}`)
+    }
+  }
 
   const handleDuplicate = async (id: string) => {
     setActionLoading(id);
@@ -217,14 +228,21 @@ function DashboardContent() {
 
             {/* Quick Action - Only show if user has mindmaps */}
             {!loading && !error && mindmaps.length > 0 && (
-              <div className="mb-8">
+              <div className="mb-8 flex items-center gap-3">
                 <button 
                   onClick={handleCreateNew}
                   className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                 >
                   <Plus className="h-5 w-5" />
                   Create New Mindmap
-                </button> 
+                </button>
+                <button 
+                  onClick={handleCreateWithAI}
+                  className="flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
+                >
+                  <Plus className="h-5 w-5" />
+                  Tạo bằng AI
+                </button>
               </div>
             )}
 
@@ -260,15 +278,24 @@ function DashboardContent() {
 
             {/* Empty State */}
             {!loading && !error && mindmaps.length === 0 && (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground mb-4">No mindmaps yet. Create your first one!</p>
-                <button 
-                  onClick={handleCreateNew}
-                  className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
-                >
-                  <Plus className="h-5 w-5" />
-                  Create Your First Mindmap
-                </button>
+              <div className="text-center py-12 space-y-3">
+                <p className="text-muted-foreground">No mindmaps yet. Create your first one!</p>
+                <div className="flex items-center justify-center gap-3">
+                  <button 
+                    onClick={handleCreateNew}
+                    className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Create with Template
+                  </button>
+                  <button 
+                    onClick={handleCreateWithAI}
+                    className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
+                  >
+                    <Plus className="h-5 w-5" />
+                    Tạo bằng AI
+                  </button>
+                </div>
               </div>
             )}
 
@@ -310,6 +337,11 @@ function DashboardContent() {
         isOpen={showTemplateModal}
         onClose={() => setShowTemplateModal(false)}
         onSelectTemplate={handleSelectTemplate}
+      />
+      <AiMindmapModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onGenerated={handleAiGenerated}
       />
         {/* Delete Confirmation Dialog */}
         <DeleteConfirmDialog
