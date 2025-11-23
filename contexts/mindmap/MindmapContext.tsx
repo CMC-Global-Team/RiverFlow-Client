@@ -210,6 +210,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const latestMindmapRef = useRef(mindmap);
   const latestNodesRef = useRef(nodes);
   const latestEdgesRef = useRef(edges);
+  const lastConnectedAtRef = useRef<number>(0)
   const latestViewportRef = useRef(viewport);
   const socketRef = useRef<any>(null)
   const roomRef = useRef<string | null>(null)
@@ -318,7 +319,29 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const onJoined = (res: any) => { roomRef.current = res?.room || null }
     const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
     const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
-    const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)) }
+    const onConnectEdge = (connection: any) => {
+      const src = connection?.source
+      const tgt = connection?.target
+      setEdges((eds) => {
+        if (!src || !tgt) return eds
+        const exists = eds.some(
+          (e) =>
+            e.source === src &&
+            e.target === tgt &&
+            ((e.sourceHandle || null) === (connection?.sourceHandle || null)) &&
+            ((e.targetHandle || null) === (connection?.targetHandle || null))
+        )
+        if (exists) return eds
+        const newEdge = {
+          id: `edge-${src}-${tgt}-${Date.now()}`,
+          ...connection,
+          animated: true,
+          type: 'smoothstep',
+          markerEnd: { type: MarkerType.ArrowClosed },
+        }
+        return addEdge(newEdge as any, eds)
+      })
+    }
     const onViewportEv = (v: any) => { setViewport(v) }
     const onNodeUpdate = (updated: any) => {
       setNodes((nds) => nds.map((n) => (n.id === updated.id ? { ...updated } : n)))
@@ -532,28 +555,44 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
+      const now = Date.now()
+      const suppressRemove = now - lastConnectedAtRef.current < 400
+      const filtered = suppressRemove ? changes.filter((ch: any) => ch?.type !== 'remove') : changes
       recordSnapshot()
-      setEdges((eds) => applyEdgeChanges(changes, eds))
+      setEdges((eds) => applyEdgeChanges(filtered, eds))
       scheduleAutoSave()
       const s = socketRef.current
       const room = roomRef.current
-      if (s && room) emitEdgesChange(s, room, changes as any)
+      if (s && room) emitEdgesChange(s, room, filtered as any)
     },
     [scheduleAutoSave, recordSnapshot]
   )
 
   const onConnect = useCallback(
     (connection: Connection) => {
+      const src = (connection as any)?.source
+      const tgt = (connection as any)?.target
+      if (!src || !tgt) return
+      lastConnectedAtRef.current = Date.now()
       recordSnapshot()
-      const newEdge = {
-        ...connection,
-        animated: true,
-        type: "smoothstep",
-        markerEnd: {
-          type: MarkerType.ArrowClosed,
-        },
-      }
-      setEdges((eds) => addEdge(newEdge, eds))
+      setEdges((eds) => {
+        const exists = eds.some(
+          (e) =>
+            e.source === src &&
+            e.target === tgt &&
+            ((e.sourceHandle || null) === ((connection as any).sourceHandle || null)) &&
+            ((e.targetHandle || null) === ((connection as any).targetHandle || null))
+        )
+        if (exists) return eds
+        const newEdge = {
+          id: `edge-${src}-${tgt}-${Date.now()}`,
+          ...connection,
+          animated: true,
+          type: "smoothstep",
+          markerEnd: { type: MarkerType.ArrowClosed },
+        } as any
+        return addEdge(newEdge, eds)
+      })
       scheduleAutoSave()
       const s = socketRef.current
       const room = roomRef.current
