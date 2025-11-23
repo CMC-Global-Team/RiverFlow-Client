@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
-import AiMindmapModal from "@/components/ai/AiMindmapModal"
 import { useRouter } from "next/navigation"
 
 interface Template {
@@ -289,7 +288,6 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [templates, setTemplates] = useState<Template[]>(builtInTemplates)
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
-  const [showAiModal, setShowAiModal] = useState(false)
   const router = useRouter()
 
   // Load templates from public/templates folder
@@ -409,16 +407,19 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
-                onClick={() => setShowAiModal(true)}
-                className="relative p-6 rounded-lg border-2 cursor-pointer transition-all border-border hover:border-primary/50 hover:shadow-md"
+                onClick={() => router.push('/dashboard/ai-mindmap')}
+                className="relative p-6 rounded-lg border-2 cursor-pointer transition-all md:col-span-2 lg:col-span-3 border-primary bg-primary/10 hover:bg-primary/15 hover:shadow-lg"
               >
                 <div className="flex items-start gap-4">
-                  <div className="p-3 rounded-lg bg-muted">
+                  <div className="p-3 rounded-lg bg-primary text-primary-foreground">
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">Tạo bằng AI</h3>
+                    <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
                     <p className="text-xs text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</p>
+                  </div>
+                  <div className="absolute right-6 top-6">
+                    <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">Mới</span>
                   </div>
                 </div>
               </div>
@@ -488,21 +489,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   )
 
   if (typeof document !== 'undefined') {
-    return createPortal(
-      <>
-        {modalContent}
-        <AiMindmapModal
-          isOpen={showAiModal}
-          onClose={() => setShowAiModal(false)}
-          onGenerated={(m) => {
-            if (m?.id) {
-              router.push(`/editor?id=${m.id}`)
-            }
-          }}
-        />
-      </>,
-      document.body
-    )
+    return createPortal(modalContent, document.body)
   }
   return modalContent
 }
