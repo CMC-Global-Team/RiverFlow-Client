@@ -39,15 +39,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
-import { useReactFlow } from "reactflow"
-import { toast } from "sonner"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+
 import { Button } from "@/components/ui/button"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -58,7 +50,7 @@ import { useRouter } from "next/navigation"
 import PresenceAvatars from "@/components/editor/presence-avatars"
 import { toPng, toJpeg } from 'html-to-image'
 import jsPDF from 'jspdf'
- 
+
 
 interface ToolbarProps {
   mindmap?: any
@@ -95,7 +87,7 @@ export default function Toolbar({
   userRole,
   onHistoryClick,
 }: ToolbarProps = {}) {
-  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo,onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
+  const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
 
   // Debug logging for userRole
@@ -127,9 +119,9 @@ export default function Toolbar({
     // Calculate position for sibling node
     const siblingOffset = 200 // Horizontal distance between siblings
     const verticalOffset = 150 // Vertical distance for root nodes
-    
+
     let siblingPosition: { x: number; y: number }
-    
+
     if (parentNode) {
       // Has parent: position to the right
       siblingPosition = {
@@ -149,7 +141,7 @@ export default function Toolbar({
 
     // Create sibling node
     const siblingNodeId = addNode(siblingPosition, siblingShape)
-    
+
     // If there's a parent, connect the new sibling to the same parent
     if (parentNode) {
       setTimeout(() => {
@@ -213,10 +205,10 @@ export default function Toolbar({
     if (!viewport) return
 
     try {
-      const dataUrl = format === 'png' 
+      const dataUrl = format === 'png'
         ? await toPng(viewport, { backgroundColor: '#ffffff' })
         : await toJpeg(viewport, { backgroundColor: '#ffffff' })
-      
+
       const link = document.createElement('a')
       link.download = `${mindmap?.title || 'mindmap'}.${format}`
       link.href = dataUrl
@@ -237,11 +229,11 @@ export default function Toolbar({
       const pdf = new jsPDF({
         orientation: 'landscape',
       })
-      
+
       const imgProps = pdf.getImageProperties(dataUrl)
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-      
+
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`${mindmap?.title || 'mindmap'}.pdf`)
       toast.success("Mindmap downloaded as PDF")
@@ -253,7 +245,7 @@ export default function Toolbar({
 
   const handleDownloadText = () => {
     let textContent = `# ${mindmap?.title || 'Untitled Mindmap'}\n\n`
-    
+
     // Simple text representation - can be improved based on node hierarchy
     nodes.forEach(node => {
       const label = node.data?.label || 'Untitled Node'
@@ -270,20 +262,20 @@ export default function Toolbar({
     toast.success("Mindmap downloaded as Text")
   }
 
-  
+
 
   return (
     <div className="flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto">
       {/* Back Button */}
       <BackButton />
-      
+
       {/* Divider */}
       <div className="w-px h-6 bg-border"></div>
 
       {/* Title & Editing */}
       {mindmap && (
-        <div 
-          onClick={() => userRole !== 'viewer' && setIsEditing?.(true)} 
+        <div
+          onClick={() => userRole !== 'viewer' && setIsEditing?.(true)}
           className={`flex-shrink-0 ${userRole !== 'viewer' ? 'cursor-pointer' : 'cursor-default'}`}
         >
           {isEditing && userRole !== 'viewer' ? (
@@ -296,13 +288,12 @@ export default function Toolbar({
               className="text-sm font-bold text-foreground bg-input border-2 border-primary rounded px-2 py-1 w-48"
             />
           ) : (
-            <h1 
+            <h1
               ref={titleRef}
-              className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${
-                userRole !== 'viewer' 
-                  ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors' 
+              className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${userRole !== 'viewer'
+                  ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors'
                   : 'border-transparent'
-              }`}
+                }`}
               onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
               onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
             >
@@ -390,11 +381,109 @@ export default function Toolbar({
           <History className="h-4 w-4" />
         </Button>
       </div>
-        size="icon"
-        title="Tutorial"
-        className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+
+      {/* Undo/Redo - Disabled for viewers */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={undo}
+          disabled={!canUndo || userRole === 'viewer'}
+          title="Undo (Ctrl+Z)"
+          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-        <HandHelping className="h-4 w-4"/>
+          <Undo2 className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={redo}
+          disabled={!canRedo || userRole === 'viewer'}
+          title="Redo (Ctrl+Y)"
+          className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <Redo2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Zoom Tools */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomIn}
+          title="Zoom In"
+          className="h-8 w-8"
+        >
+          <ZoomIn className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleZoomOut}
+          title="Zoom Out"
+          className="h-8 w-8"
+        >
+          <ZoomOut className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleFitView}
+          title="Fit View"
+          className="h-8 w-8"
+        >
+          <Maximize2 className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Export */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Download Options"
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <Download className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => handleDownloadImage('png')}>
+              <ImageIcon className="h-4 w-4 mr-2" />
+              PNG Image
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDownloadImage('jpeg')}>
+              <ImageIcon className="h-4 w-4 mr-2" />
+              JPG Image
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadPDF}>
+              <File className="h-4 w-4 mr-2" />
+              PDF Document
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadText}>
+              <FileText className="h-4 w-4 mr-2" />
+              Text File
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleDownloadJSON}>
+              <FileJson className="h-4 w-4 mr-2" />
+              JSON Data
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/*Tutorial guide*/}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Tutorial"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+        >
+          <HandHelping className="h-4 w-4" />
         </Button>
       </div>
 
@@ -435,7 +524,7 @@ export default function Toolbar({
 
         {/* Save Button - Hidden for viewers */}
         {userRole !== 'viewer' && !autoSaveEnabled && (
-          <Button 
+          <Button
             onClick={handleSave}
             disabled={isSaving || saveStatus === 'saved'}
             className="flex items-center gap-1 rounded-lg bg-primary px-3 py-1 text-xs text-primary-foreground font-medium hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed h-8 whitespace-nowrap"
