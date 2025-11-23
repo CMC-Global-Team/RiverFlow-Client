@@ -1,0 +1,89 @@
+{
+    "title": "Simple, Transparent Pricing",
+    "subtitle": "Choose the perfect plan for your needs. Always flexible to scale.",
+    "featureComparison": "Feature Comparison",
+    "table": {
+        "feature": "Feature",
+        "starter": "Starter",
+        "professional": "Professional",
+        "enterprise": "Enterprise"
+    },
+    "features": {
+        "mindmaps": "Mindmaps",
+        "teamMembers": "Team Members",
+        "realTimeCollab": "Real-time Collaboration",
+        "apiAccess": "API Access",
+        "customIntegrations": "Custom Integrations",
+        "prioritySupport": "Priority Support"
+    },
+    "values": {
+        "unlimited": "Unlimited",
+        "yes": "Yes",
+        "no": "No"
+    },
+    "plans": {
+        "starter": {
+            "name": "Starter",
+            "description": "Perfect for individuals",
+            "features": [
+                "Up to 5 mindmaps",
+                "Basic shapes and text",
+                "Personal workspace",
+                "Export as PNG",
+                "Community support"
+            ]
+        },
+        "professional": {
+            "name": "Professional",
+            "description": "For teams and professionals",
+            "features": [
+                "Unlimited mindmaps",
+                "Advanced styling options",
+                "Team collaboration (up to 5 members)",
+                "Real-time sync",
+                "Export multiple formats",
+                "Priority email support",
+                "Custom templates"
+            ]
+        },
+        "enterprise": {
+            "name": "Enterprise",
+            "description": "For large organizations",
+            "features": [
+                "Everything in Professional",
+                "Unlimited team members",
+                "Advanced permissions",
+                "API access",
+                "Custom integrations",
+                "Dedicated support",
+                "SSO & security features",
+                "Analytics dashboard"
+            ]
+        }
+    },
+    "faq": {
+        "title": "Frequently Asked Questions",
+        "items": [
+            {
+                "question": "Can I change my plan anytime?",
+                "answer": "Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately."
+            },
+            {
+                "question": "Is there a free trial?",
+                "answer": "Yes, start with our free Starter plan. No credit card required."
+            },
+            {
+                "question": "What payment methods do you accept?",
+                "answer": "We accept all major credit cards, PayPal, and bank transfers for Enterprise plans."
+            },
+            {
+                "question": "Do you offer discounts for annual billing?",
+                "answer": "Yes, save 20% when you choose annual billing instead of monthly."
+            }
+        ]
+    },
+    "card": {
+        "mostPopular": "Most Popular",
+        "getStarted": "Get Started"
+    }
+}
