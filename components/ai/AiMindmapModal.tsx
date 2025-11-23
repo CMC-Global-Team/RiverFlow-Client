@@ -77,40 +77,35 @@ export default function AiMindmapModal({ isOpen, onClose, onGenerated }: AiMindm
   }
 
   const modal = (
-    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+    <div className="fixed inset-0 z-[1000] bg-black/40 backdrop-blur-sm">
+      <div className="absolute right-0 top-0 h-full w-[400px] max-w-[90vw] shadow-2xl border-l border-border bg-card animate-in slide-in-from-right duration-200">
+        <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <Sparkles className="h-5 w-5" />
-            <div>
-              <div className="text-2xl font-bold">Tạo Mindmap bằng AI</div>
-              <div className="text-sm text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</div>
+            <div className="p-2 rounded-md bg-primary text-primary-foreground">
+              <Sparkles className="h-4 w-4" />
             </div>
+            <div className="text-sm font-semibold">Tạo Mindmap bằng AI</div>
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors"><X className="h-5 w-5"/></button>
+          <button onClick={onClose} className="p-2 rounded-md hover:bg-muted transition-colors" aria-label="Đóng"><X className="h-4 w-4"/></button>
         </div>
-        <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="md:col-span-2 space-y-4">
-            <PromptChat messages={messages} onSend={onSend} />
-            <FileUpload files={files} onChange={setFiles} />
-          </div>
-          <div className="space-y-4">
-            <ModeSelector value={mode} onChange={setMode} normalCost={MODE_COST.normal} maxCost={MODE_COST.max} />
-            <ModelSelector value={model} onChange={setModel} models={MODELS} />
-            <CreditCost balance={user?.credit ?? 0} cost={MODE_COST[mode]} />
-            {error && <div className="text-sm text-destructive">{error}</div>}
-            <button
-              onClick={onGenerate}
-              disabled={loading}
-              className="w-full rounded-lg bg-primary px-4 py-2 text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
-            >
-              {loading ? (
-                <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin"/>Đang tạo...</span>
-              ) : (
-                'Tạo Mindmap'
-              )}
-            </button>
-          </div>
+        <div className="p-4 space-y-4">
+          <PromptChat messages={messages} onSend={onSend} />
+          <FileUpload files={files} onChange={setFiles} />
+          <ModeSelector value={mode} onChange={setMode} normalCost={MODE_COST.normal} maxCost={MODE_COST.max} />
+          <ModelSelector value={model} onChange={setModel} models={MODELS} />
+          <CreditCost balance={user?.credit ?? 0} cost={MODE_COST[mode]} />
+          {error && <div className="text-sm text-destructive">{error}</div>}
+          <button
+            onClick={onGenerate}
+            disabled={loading || (user?.credit ?? 0) < MODE_COST[mode]}
+            className="w-full rounded-lg bg-primary px-4 py-2 text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
+          >
+            {loading ? (
+              <span className="inline-flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin"/>Đang tạo...</span>
+            ) : (
+              'Tạo Mindmap'
+            )}
+          </button>
         </div>
       </div>
     </div>
