@@ -15,7 +15,8 @@ import {
     ChevronDown,
     ChevronRight,
     Shield,
-    Lock
+    Lock,
+    History
 } from "lucide-react"
 
 
@@ -130,7 +131,12 @@ const handleSelectTemplate = async (template: any) => {
                         >
                             <Lock className="h-4 w-4" /> Change Password
                         </Link>
-
+                        <Link
+                              href="/dashboard/billing/history"
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        >
+                            <History className="h-4 w-4" /> Payment History
+                        </Link>
 
                     </div>
                 )}
