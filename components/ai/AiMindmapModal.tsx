@@ -84,7 +84,7 @@ export default function AiMindmapModal({ isOpen, onClose, onGenerated }: AiMindm
             <Sparkles className="h-5 w-5" />
             <div>
               <div className="text-2xl font-bold">Tạo Mindmap bằng AI</div>
-              <div className="text-sm text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</div>
+              <div className="text-sm text-muted-foreground">Nhập prompt, chọn chế độ, đính kèm file và model</div>
             </div>
           </div>
           <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors"><X className="h-5 w-5"/></button>

@@ -4,7 +4,7 @@ import { useState } from "react"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { ReactFlowProvider } from "reactflow"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
-import Toolbar from "@/components/editor/toolbar"
+import BackButton from "@/components/editor/back-button"
 import Canvas from "@/components/editor/canvas"
 import { Sparkles, Loader2 } from "lucide-react"
 import PromptChat, { ChatMessage } from "@/components/ai/PromptChat"
@@ -69,10 +69,8 @@ function AiWorkspaceInner() {
           </div>
         </div>
 
-        <div className="absolute top-4 left-4 right-4 z-50 pointer-events-none">
-          <div className="pointer-events-auto">
-            <Toolbar />
-          </div>
+        <div className="absolute top-4 left-4 z-50 pointer-events-auto">
+          <BackButton />
         </div>
 
         <div className="absolute top-4 right-4 z-50 w-[380px] max-w-[90vw] pointer-events-auto">
