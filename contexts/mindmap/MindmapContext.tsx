@@ -1,8 +1,8 @@
 "use client"
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
-import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport } from 'reactflow'
-import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service' 
+import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport, MarkerType } from 'reactflow'
+import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service'
 import { fetchHistory } from '@/services/mindmap/history.service'
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
@@ -32,10 +32,10 @@ interface MindmapContextType {
   autoSaveEnabled: boolean
   setAutoSaveEnabled: (enabled: boolean) => void
   saveStatus: 'idle' | 'saving' | 'saved' | 'error'
-  canUndo: boolean 
-  canRedo: boolean 
-  undo: () => Promise<void> 
-  redo: () => Promise<void> 
+  canUndo: boolean
+  canRedo: boolean
+  undo: () => Promise<void>
+  redo: () => Promise<void>
   setFullMindmapState: (data: MindmapResponse | null) => void
   restoreFromHistory: (snapshot: { nodes?: any[]; edges?: any[]; viewport?: any }, historyId?: string | number | null) => Promise<void>
   participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
@@ -43,165 +43,167 @@ interface MindmapContextType {
   emitCursor: (cursor: { x: number; y: number }) => void
   emitActive: (active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => void
   clearActive: () => void
-}const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
+}
+
+const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
 
 interface AutoSaveOptions {
-  defaultEnabled?: boolean
-  debounceMs?: number
-  statusResetMs?: number
-  setIsSaving?: (value: boolean) => void
-  onError?: (error: unknown) => void
+  defaultEnabled?: boolean
+  debounceMs?: number
+  statusResetMs?: number
+  setIsSaving?: (value: boolean) => void
+  onError?: (error: unknown) => void
 }
 
 interface UseMindmapAutoSaveResult {
-  autoSaveEnabled: boolean
-  setAutoSaveEnabled: (enabled: boolean) => void
-  saveStatus: SaveStatus
-  scheduleAutoSave: (debounceMsOverride?: number) => void
-  saveImmediately: () => Promise<void>
-  cancelScheduledSave: () => void
-  markSynced: (status?: SaveStatus) => void
+  autoSaveEnabled: boolean
+  setAutoSaveEnabled: (enabled: boolean) => void
+  saveStatus: SaveStatus
+  scheduleAutoSave: (debounceMsOverride?: number) => void
+  saveImmediately: () => Promise<void>
+  cancelScheduledSave: () => void
+  markSynced: (status?: SaveStatus) => void
 }
 
 function useMindmapAutoSave(
-  onSave: () => Promise<void>,
-  {
-    defaultEnabled = true,
-    debounceMs = 1500,
-    statusResetMs = 2000,
-    setIsSaving,
-    onError,
-  }: AutoSaveOptions = {}
+  onSave: () => Promise<void>,
+  {
+    defaultEnabled = true,
+    debounceMs = 1500,
+    statusResetMs = 2000,
+    setIsSaving,
+    onError,
+  }: AutoSaveOptions = {}
 ): UseMindmapAutoSaveResult {
-  const [autoSaveEnabled, setAutoSaveEnabledState] = useState(defaultEnabled)
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const statusTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const isMountedRef = useRef(true)
+  const [autoSaveEnabled, setAutoSaveEnabledState] = useState(defaultEnabled)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const statusTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const isMountedRef = useRef(true)
 
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current)
-        saveTimerRef.current = null
-      }
-      if (statusTimerRef.current) {
-        clearTimeout(statusTimerRef.current)
-        statusTimerRef.current = null
-      }
-    }
-  }, [])
+  useEffect(() => {
+    return () => {
+      isMountedRef.current = false
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current)
+        saveTimerRef.current = null
+      }
+      if (statusTimerRef.current) {
+        clearTimeout(statusTimerRef.current)
+        statusTimerRef.current = null
+      }
+    }
+  }, [])
 
-  const clearSaveTimer = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = null
-    }
-  }, [])
+  const clearSaveTimer = useCallback(() => {
+    if (saveTimerRef.current) {
+      clearTimeout(saveTimerRef.current)
+      saveTimerRef.current = null
+    }
+  }, [])
 
-  const clearStatusTimer = useCallback(() => {
-    if (statusTimerRef.current) {
-      clearTimeout(statusTimerRef.current)
-      statusTimerRef.current = null
-    }
-  }, [])
+  const clearStatusTimer = useCallback(() => {
+    if (statusTimerRef.current) {
+      clearTimeout(statusTimerRef.current)
+      statusTimerRef.current = null
+    }
+  }, [])
 
-  const scheduleStatusReset = useCallback(() => {
-    clearStatusTimer()
-    statusTimerRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return
-      setSaveStatus('idle')
-    }, statusResetMs)
-  }, [clearStatusTimer, statusResetMs])
+  const scheduleStatusReset = useCallback(() => {
+    clearStatusTimer()
+    statusTimerRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return
+      setSaveStatus('idle')
+    }, statusResetMs)
+  }, [clearStatusTimer, statusResetMs])
 
-  const runSave = useCallback(async () => {
-    clearSaveTimer()
-    clearStatusTimer()
-    setIsSaving?.(true)
-    setSaveStatus('saving')
-    try {
-      await onSave()
-      if (!isMountedRef.current) return
-      setSaveStatus('saved')
-      scheduleStatusReset()
-    } catch (error) {
-      if (isMountedRef.current) {
-        setSaveStatus('error')
-      }
-      onError?.(error)
-      throw error
-    } finally {
-      setIsSaving?.(false)
-    }
-  }, [clearSaveTimer, clearStatusTimer, onSave, onError, scheduleStatusReset, setIsSaving])
+  const runSave = useCallback(async () => {
+    clearSaveTimer()
+    clearStatusTimer()
+    setIsSaving?.(true)
+    setSaveStatus('saving')
+    try {
+      await onSave()
+      if (!isMountedRef.current) return
+      setSaveStatus('saved')
+      scheduleStatusReset()
+    } catch (error) {
+      if (isMountedRef.current) {
+        setSaveStatus('error')
+      }
+      onError?.(error)
+      throw error
+    } finally {
+      setIsSaving?.(false)
+    }
+  }, [clearSaveTimer, clearStatusTimer, onSave, onError, scheduleStatusReset, setIsSaving])
 
-  const scheduleAutoSave = useCallback(
-    (debounceMsOverride?: number) => {
-      if (!autoSaveEnabled) return
-      clearSaveTimer()
-      const delay = debounceMsOverride ?? debounceMs
-      saveTimerRef.current = setTimeout(() => {
-        runSave().catch(() => {})
-      }, delay)
-    },
-    [autoSaveEnabled, clearSaveTimer, debounceMs, runSave]
-  )
+  const scheduleAutoSave = useCallback(
+    (debounceMsOverride?: number) => {
+      if (!autoSaveEnabled) return
+      clearSaveTimer()
+      const delay = debounceMsOverride ?? debounceMs
+      saveTimerRef.current = setTimeout(() => {
+        runSave().catch(() => { })
+      }, delay)
+    },
+    [autoSaveEnabled, clearSaveTimer, debounceMs, runSave]
+  )
 
-  const saveImmediately = useCallback(async () => {
-    await runSave()
-  }, [runSave])
+  const saveImmediately = useCallback(async () => {
+    await runSave()
+  }, [runSave])
 
-  const cancelScheduledSave = useCallback(() => {
-    clearSaveTimer()
-  }, [clearSaveTimer])
+  const cancelScheduledSave = useCallback(() => {
+    clearSaveTimer()
+  }, [clearSaveTimer])
 
-  const markSynced = useCallback(
-    (status: SaveStatus = 'saved') => {
-      if (!isMountedRef.current) return
-      clearStatusTimer()
-      setSaveStatus(status)
-      if (status === 'saved') {
-        scheduleStatusReset()
-      }
-    },
-    [clearStatusTimer, scheduleStatusReset]
-  )
+  const markSynced = useCallback(
+    (status: SaveStatus = 'saved') => {
+      if (!isMountedRef.current) return
+      clearStatusTimer()
+      setSaveStatus(status)
+      if (status === 'saved') {
+        scheduleStatusReset()
+      }
+    },
+    [clearStatusTimer, scheduleStatusReset]
+  )
 
-  const handleToggleAutoSave = useCallback(
-    (enabled: boolean) => {
-      setAutoSaveEnabledState(enabled)
-      if (!enabled) {
-        cancelScheduledSave()
-        clearStatusTimer()
-        setSaveStatus('idle')
-      }
-    },
-    [cancelScheduledSave, clearStatusTimer]
-  )
+  const handleToggleAutoSave = useCallback(
+    (enabled: boolean) => {
+      setAutoSaveEnabledState(enabled)
+      if (!enabled) {
+        cancelScheduledSave()
+        clearStatusTimer()
+        setSaveStatus('idle')
+      }
+    },
+    [cancelScheduledSave, clearStatusTimer]
+  )
 
-  return {
-    autoSaveEnabled,
-    setAutoSaveEnabled: handleToggleAutoSave,
-    saveStatus,
-    scheduleAutoSave,
-    saveImmediately,
-    cancelScheduledSave,
-    markSynced,
-  }
+  return {
+    autoSaveEnabled,
+    setAutoSaveEnabled: handleToggleAutoSave,
+    saveStatus,
+    scheduleAutoSave,
+    saveImmediately,
+    cancelScheduledSave,
+    markSynced,
+  }
 }
 
 export function MindmapProvider({ children }: { children: React.ReactNode }) {
-  const [mindmap, setMindmap] = useState<MindmapResponse | null>(null)
-  const [nodes, setNodes] = useState<Node[]>([])
-  const [edges, setEdges] = useState<Edge[]>([])
-  const [viewport, setViewport] = useState<Viewport | null>(null)
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
-  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
-  const [isSaving, setIsSaving] = useState(false)
-  const { toast } = useToast()
+  const [mindmap, setMindmap] = useState<MindmapResponse | null>(null)
+  const [nodes, setNodes] = useState<Node[]>([])
+  const [edges, setEdges] = useState<Edge[]>([])
+  const [viewport, setViewport] = useState<Viewport | null>(null)
+  const [selectedNode, setSelectedNode] = useState<Node | null>(null)
+  const [selectedEdge, setSelectedEdge] = useState<Edge | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
+  const { toast } = useToast()
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
@@ -235,10 +237,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setCanRedo(historyRef.current.future.length > 0)
   }, [getSnapshot])
 
-  useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
-  useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
-  useEffect(() => { latestEdgesRef.current = edges; }, [edges]);
-  useEffect(() => { latestViewportRef.current = viewport; }, [viewport]);
+  useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
+  useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
+  useEffect(() => { latestEdgesRef.current = edges; }, [edges]);
+  useEffect(() => { latestViewportRef.current = viewport; }, [viewport]);
 
   const setFullMindmapState = useCallback((data: MindmapResponse | null) => {
     if (!data) {
@@ -268,7 +270,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         }
       }
     });
-    
+
     if (normalizedNodes.length === 0) {
       let centerX = 400, centerY = 300;
       if (typeof window !== 'undefined') {
@@ -285,22 +287,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       normalizedNodes = [rootNode];
     }
-    
+
     const normalizedEdges = (data.edges || []).map((edge: any) => ({
       ...edge,
       animated: edge.animated !== undefined ? edge.animated : true,
       type: edge.type || 'smoothstep',
+      markerEnd: edge.markerEnd || { type: MarkerType.ArrowClosed },
     }));
-    
+
     setNodes(normalizedNodes);
     setEdges(normalizedEdges);
     setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
     historyRef.current = { past: [], future: [] }
-    
+
     setCanUndo(historyRef.current.past.length > 0)
     setCanRedo(historyRef.current.future.length > 0)
 
-  }, []); // useCallback rỗng vì nó là hàm setter
+  }, []);
 
   useEffect(() => {
     if (!mindmap) return
@@ -315,7 +318,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const onJoined = (res: any) => { roomRef.current = res?.room || null }
     const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
     const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
-    const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep' }, eds)) }
+    const onConnectEdge = (connection: any) => { setEdges((eds) => addEdge({ ...connection, animated: true, type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed } }, eds)) }
     const onViewportEv = (v: any) => { setViewport(v) }
     const onNodeUpdate = (updated: any) => {
       setNodes((nds) => nds.map((n) => (n.id === updated.id ? { ...updated } : n)))
@@ -440,12 +443,11 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         })
         setCanUndo(!!hasSnap)
         setCanRedo(false)
-      } catch {}
+      } catch { }
     }
     run()
   }, [mindmap])
 
-  // --- Cập nhật 'loadMindmap' ---
   const performSave = useCallback(async () => {
     const currentMindmap = latestMindmapRef.current
     if (!currentMindmap) {
@@ -478,45 +480,43 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setFullMindmapState(responseData)
   }, [setFullMindmapState])
 
-  const {
-    autoSaveEnabled,
-    setAutoSaveEnabled,
-    saveStatus,
-    scheduleAutoSave,
-    saveImmediately,
-    cancelScheduledSave,
-    markSynced,
-  } = useMindmapAutoSave(performSave, {
-    setIsSaving,
-    onError: (error) => {
-      console.error('Mindmap save failed:', error)
-      toast({
-        variant: 'destructive',
-        title: 'Save failed',
-        description: 'Unable to sync your changes. They will retry shortly.',
-      })
-    },
-  })
+  const {
+    autoSaveEnabled,
+    setAutoSaveEnabled,
+    saveStatus,
+    scheduleAutoSave,
+    saveImmediately,
+    cancelScheduledSave,
+    markSynced,
+  } = useMindmapAutoSave(performSave, {
+    setIsSaving,
+    onError: (error) => {
+      console.error('Mindmap save failed:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Save failed',
+        description: 'Unable to sync your changes. They will retry shortly.',
+      })
+    },
+  })
 
-  const loadMindmap = useCallback(async (id: string) => {
-    try {
-      const data = await getMindmapById(id)
-      setFullMindmapState(data)
-      markSynced('idle')
-    } catch (error) {
-      console.error('Error loading mindmap:', error)
-    }
-  }, [markSynced, setFullMindmapState])
+  const loadMindmap = useCallback(async (id: string) => {
+    try {
+      const data = await getMindmapById(id)
+      setFullMindmapState(data)
+      markSynced('idle')
+    } catch (error) {
+      console.error('Error loading mindmap:', error)
+    }
+  }, [markSynced, setFullMindmapState])
 
-  const saveMindmap = useCallback(async () => {
-    try {
-      await saveImmediately()
-    } catch (error) {
-      throw error
-    }
-  }, [saveImmediately])
-
-// Node changes handler
+  const saveMindmap = useCallback(async () => {
+    try {
+      await saveImmediately()
+    } catch (error) {
+      throw error
+    }
+  }, [saveImmediately])
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
@@ -530,7 +530,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     [scheduleAutoSave, recordSnapshot]
   )
 
-  // Edge changes handler
   const onEdgesChange = useCallback(
     (changes: EdgeChange[]) => {
       recordSnapshot()
@@ -543,7 +542,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     [scheduleAutoSave, recordSnapshot]
   )
 
-  // Connection handler
   const onConnect = useCallback(
     (connection: Connection) => {
       recordSnapshot()
@@ -551,6 +549,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         ...connection,
         animated: true,
         type: "smoothstep",
+        markerEnd: {
+          type: MarkerType.ArrowClosed,
+        },
       }
       setEdges((eds) => addEdge(newEdge, eds))
       scheduleAutoSave()
@@ -561,7 +562,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     [scheduleAutoSave, recordSnapshot]
   )
 
-  // Add new node
   const addNode = useCallback((position: { x: number; y: number }, shape: string = 'rectangle') => {
     recordSnapshot()
     const newNode: Node = {
@@ -585,7 +585,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const deleteNode = useCallback((nodeId: string) => {
     recordSnapshot()
-     const edgesSnapshot = latestEdgesRef.current;
+    const edgesSnapshot = latestEdgesRef.current;
     const toDelete = new Set<string>();
     const queue: string[] = [nodeId];
     toDelete.add(nodeId);
@@ -604,7 +604,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setNodes((nds) => nds.filter((node) => !toDelete.has(node.id)));
     setEdges((eds) => eds.filter((edge) => !(toDelete.has(edge.source) || toDelete.has(edge.target))));
 
-     if (selectedNode && toDelete.has(selectedNode.id)) {
+    if (selectedNode && toDelete.has(selectedNode.id)) {
       setSelectedNode(null);
     }
     if (selectedEdge && (toDelete.has(selectedEdge.source) || toDelete.has(selectedEdge.target))) {
@@ -617,7 +617,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (s && room) emitNodesChange(s, room, Array.from(toDelete).map((id) => ({ type: 'remove', id })))
   }, [scheduleAutoSave, recordSnapshot])
 
-  // Delete edge
   const deleteEdge = useCallback((edgeId: string) => {
     recordSnapshot()
     setEdges((eds) => eds.filter((edge) => edge.id !== edgeId))
@@ -630,7 +629,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (s && room) emitEdgesChange(s, room, [{ type: 'remove', id: edgeId }])
   }, [scheduleAutoSave, recordSnapshot])
 
-  // Update node data
   const updateNodeData = useCallback((nodeId: string, newData: any) => {
     recordSnapshot()
     let updatedNodeRef: any = null
@@ -700,7 +698,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
-  // Update edge data
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
     recordSnapshot()
     let updated: any = null
@@ -729,7 +726,6 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
-  // Set title
   const setTitle = useCallback((title: string) => {
     if (mindmap) {
       setMindmap({ ...mindmap, title })
@@ -903,11 +899,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
 }
 
-// (Hook useMindmapContext giữ nguyên)
 export function useMindmapContext() {
-  const context = useContext(MindmapContext)
-  if (context === undefined) {
-    throw new Error('useMindmapContext must be used within a MindmapProvider')
-  }
-  return context
+  const context = useContext(MindmapContext)
+  if (context === undefined) {
+    throw new Error('useMindmapContext must be used within a MindmapProvider')
+  }
+  return context
 }
