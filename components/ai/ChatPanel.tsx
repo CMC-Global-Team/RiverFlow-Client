@@ -36,26 +36,16 @@ export default function ChatPanel() {
   const header = useMemo(() => {
     return (
       <div className="flex items-center justify-between">
-        <div
-          onPointerDown={(e) => {
-            draggingRef.current = true
-            dragStartRef.current = { x: e.clientX, y: e.clientY }
-            posStartRef.current = { ...pos }
-            window.addEventListener("pointermove", handleDrag)
-            window.addEventListener("pointerup", stopDrag)
-          }}
-          className="inline-flex items-center gap-2 px-2 py-1 rounded-md border hover:bg-muted cursor-move select-none"
-        >
+        <div className="inline-flex items-center gap-2 px-2 py-1 rounded-md border bg-background/60 select-none">
           <GripVertical className="h-4 w-4" />
           <Badge variant="outline" className="gap-2">
             <Sparkles className="h-4 w-4" />
             AI Mindmap
           </Badge>
         </div>
-        <div className="text-xs text-muted-foreground">Kéo để di chuyển • Góc dưới để thay đổi kích thước</div>
       </div>
     )
-  }, [pos])
+  }, [])
 
   const handleDrag = (e: PointerEvent) => {
     if (!draggingRef.current) return
@@ -112,9 +102,20 @@ export default function ChatPanel() {
 
   return (
     <div className="pointer-events-auto" style={{ position: "absolute", left: pos.x, top: pos.y, width: size.w, height: size.h }}>
-      <Card className="h-full p-4 bg-background/85 backdrop-blur border shadow-lg flex flex-col">
+      <Card
+        className="h-full p-4 bg-background/85 backdrop-blur border shadow-lg flex flex-col"
+        onPointerDown={(e) => {
+          const el = e.target as HTMLElement
+          if (el && el.closest('[data-no-drag="true"]')) return
+          draggingRef.current = true
+          dragStartRef.current = { x: e.clientX, y: e.clientY }
+          posStartRef.current = { ...pos }
+          window.addEventListener("pointermove", handleDrag)
+          window.addEventListener("pointerup", stopDrag)
+        }}
+      >
         {header}
-        <div className="mt-3 flex-1">
+        <div className="mt-3 flex-1" data-no-drag="true">
           <ScrollArea className="h-full pr-3">
             <div className="space-y-4">
               {messages.map((m) => (
@@ -128,7 +129,7 @@ export default function ChatPanel() {
             </div>
           </ScrollArea>
         </div>
-        <div className="mt-3">
+        <div className="mt-3" data-no-drag="true">
           <ChatInput onSend={handleSend} mode={mode} onModeChange={setMode} onFilesSelected={(files) => setAttachments(files)} disabled={pending} />
         </div>
         <div onPointerDown={startResize} className="absolute bottom-2 right-2 size-4 rounded-sm bg-muted border cursor-se-resize" />
