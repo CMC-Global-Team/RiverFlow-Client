@@ -24,6 +24,34 @@ export const createMindmap = async (
   return response.data;
 };
 
+export const generateMindmapByAI = async (
+  payload: {
+    prompt: string;
+    mode: 'normal' | 'max';
+    model: string;
+    files?: File[];
+    messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
+  }
+): Promise<MindmapResponse> => {
+  const formData = new FormData();
+  formData.append('prompt', payload.prompt);
+  formData.append('mode', payload.mode);
+  formData.append('model', payload.model);
+  if (payload.messages) {
+    formData.append('messages', JSON.stringify(payload.messages));
+  }
+  (payload.files || []).forEach((f) => formData.append('files', f));
+
+  const response = await apiClient.post<MindmapResponse>(
+    `${MINDMAP_API_BASE}/ai/generate`,
+    formData,
+    {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }
+  );
+  return response.data;
+};
+
 /**
  * Get all mindmaps for current user
  */
