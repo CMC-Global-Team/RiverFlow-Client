@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useLogout } from "@/hooks/auth/useLogout"
 import TemplateModal from "./template-modal"
+import AiMindmapModal from "@/components/ai/AiMindmapModal"
 import { useRouter } from "next/navigation"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import Link from "next/link"
@@ -24,6 +25,7 @@ import {
 export default function Sidebar() {
 
   const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout, isLoading } = useLogout()
   const {create} = useMindmapActions();
@@ -34,6 +36,10 @@ export default function Sidebar() {
 const handleCreateNew = () => {
   setShowTemplateModal(true)
 
+}
+
+const handleCreateWithAI = () => {
+  setShowAiModal(true)
 }
 
 //handle select template
@@ -47,6 +53,12 @@ const handleSelectTemplate = async (template: any) => {
   )
   if(newMindmap){
     router.push(`/editor?id=${newMindmap.id}`)
+  }
+}
+
+const handleAiGenerated = (m: any) => {
+  if (m?.id) {
+    router.push(`/editor?id=${m.id}`)
   }
 }
 
@@ -73,14 +85,24 @@ const handleSelectTemplate = async (template: any) => {
 
       <nav className="space-y-2 p-4">
         {/* New Mindmap */}
-        <button
-          className={`w-full flex rounded-lg bg-primary py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all ${isCollapsed ? 'justify-center gap-0 px-3' : 'items-center gap-3 px-4'}`}
-          onClick={handleCreateNew}
-          aria-label="New Mindmap"
-        >
-          <Plus className="h-5 w-5" />
-          {!isCollapsed && <span>New Mindmap</span>}
-        </button>
+        <div className={`w-full flex ${isCollapsed ? 'flex-col gap-2' : 'flex-row gap-2'}`}>
+          <button
+            className={`flex-1 flex rounded-lg bg-primary py-2.5 text-primary-foreground font-medium hover:bg-primary/90 transition-all ${isCollapsed ? 'justify-center gap-0 px-3' : 'items-center gap-3 px-4'}`}
+            onClick={handleCreateNew}
+            aria-label="New Mindmap"
+          >
+            <Plus className="h-5 w-5" />
+            {!isCollapsed && <span>New Mindmap</span>}
+          </button>
+          <button
+            className={`flex-1 flex rounded-lg bg-accent py-2.5 text-accent-foreground font-medium hover:bg-accent/90 transition-all ${isCollapsed ? 'justify-center gap-0 px-3' : 'items-center gap-3 px-4'}`}
+            onClick={handleCreateWithAI}
+            aria-label="AI Mindmap"
+          >
+            <Plus className="h-5 w-5" />
+            {!isCollapsed && <span>Tạo bằng AI</span>}
+          </button>
+        </div>
 
         {/* Navigation Items */}
 
@@ -142,6 +164,11 @@ const handleSelectTemplate = async (template: any) => {
       isOpen={showTemplateModal}
       onClose={() => setShowTemplateModal(false)}
       onSelectTemplate={handleSelectTemplate}
+      />
+      <AiMindmapModal
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        onGenerated={handleAiGenerated}
       />
       
 
