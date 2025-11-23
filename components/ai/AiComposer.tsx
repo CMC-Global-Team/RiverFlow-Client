@@ -73,11 +73,11 @@ function Draggable({ children, initialPos, handle }: { children: React.ReactNode
 }
 
 export default function AiComposer() {
-  const [mode, setMode] = useState("normal")
+  const [mode, setMode] = useState<"normal" | "thinking" | "max">("normal")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
   const [chatOpen, setChatOpen] = useState(false)
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string }[]>([])
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max" }[]>([])
   const [inputValue, setInputValue] = useState("")
 
   const handleUploadClick = () => fileInputRef.current?.click()
@@ -111,7 +111,7 @@ export default function AiComposer() {
                 if (e.key === "Enter") {
                   const t = inputValue.trim()
                   if (!t) return
-                  setMessages((m) => [...m, { role: "user", text: t }])
+                  setMessages((m) => [...m, { role: "user", text: t, mode }])
                   setChatOpen(true)
                   setInputValue("")
                 }
@@ -151,7 +151,7 @@ export default function AiComposer() {
             <Button size="icon" className="size-10 rounded-xl" onClick={() => {
               const t = inputValue.trim()
               if (!t) return
-              setMessages((m) => [...m, { role: "user", text: t }])
+              setMessages((m) => [...m, { role: "user", text: t, mode }])
               setChatOpen(true)
               setInputValue("")
             }}>
@@ -169,19 +169,24 @@ export default function AiComposer() {
           <div className="w-[420px] rounded-2xl border bg-popover text-popover-foreground shadow-xl ring-1 ring-border">
             <div className="draggable-handle flex items-center justify-between gap-2 px-3 py-2 border-b cursor-move">
               <div className="flex items-center gap-2">
-                <div className="h-2 w-24 rounded-full bg-muted" />
                 <span className="text-sm font-medium">Cuộc hội thoại</span>
+                <span className="text-xs px-2 py-1 rounded bg-muted">{modeLabel}</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setChatOpen(false)} title="Đóng">
                 <X className="size-4" />
               </Button>
             </div>
             <ScrollArea className="h-[360px] p-3">
-              <div className="space-y-3">
+              <div className="space-y-4">
                 {messages.map((m, i) => (
                   <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                    <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
-                      {m.text}
+                    <div className="flex flex-col items-end gap-1">
+                      <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
+                        {m.text}
+                      </div>
+                      {m.role === "user" && m.mode ? (
+                        <div className="text-[11px] text-muted-foreground">{m.mode === "max" ? "Max Mode" : m.mode === "thinking" ? "Thinking Mode" : "Normal Mode"}</div>
+                      ) : null}
                     </div>
                   </div>
                 ))}
