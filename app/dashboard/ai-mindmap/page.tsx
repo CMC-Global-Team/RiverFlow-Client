@@ -15,6 +15,7 @@ import CreditCost from "@/components/ai/CreditCost"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { generateMindmapByAI } from "@/services/mindmap/mindmap.service"
 import { getUserProfile } from "@/services/auth/update-user.service"
+import CreditTopupSheet from "@/components/payment/CreditTopupSheet"
 
 function AiWorkspaceInner() {
   const { user, updateUser } = useAuth()
@@ -25,6 +26,7 @@ function AiWorkspaceInner() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isTopupOpen, setIsTopupOpen] = useState(false)
 
   const MODE_COST = { normal: 1, max: 3 }
   const MODELS = ['gpt-4o-mini', 'gpt-4.1', 'claude-3.5']
@@ -75,11 +77,27 @@ function AiWorkspaceInner() {
 
         <div className="absolute top-4 right-4 z-50 w-[380px] max-w-[90vw] pointer-events-auto">
           <div className="rounded-lg border border-border bg-card/95 backdrop-blur-sm shadow-2xl">
-            <div className="flex items-center gap-2 p-3 border-b border-border">
+            <div className="flex items-center justify-between gap-2 p-3 border-b border-border">
               <div className="p-2 rounded-md bg-primary text-primary-foreground">
                 <Sparkles className="h-4 w-4" />
               </div>
               <div className="text-sm font-semibold">Tạo Mindmap bằng AI</div>
+              <div className="flex items-center gap-2">
+                {loading && (
+                  <span className="inline-flex items-center gap-1 text-xs text-muted-foreground">
+                    <Loader2 className="h-3 w-3 animate-spin" />
+                    Đang tạo
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsTopupOpen(true)}
+                  className="text-xs rounded-md px-2 py-1 bg-primary text-white hover:opacity-90"
+                  aria-label="Nạp credit"
+                >
+                  Nạp
+                </button>
+              </div>
             </div>
             <div className="p-3 space-y-3">
               <PromptChat messages={messages} onSend={onSend} />
@@ -90,7 +108,7 @@ function AiWorkspaceInner() {
               {error && <div className="text-sm text-destructive">{error}</div>}
               <button
                 onClick={onGenerate}
-                disabled={loading}
+                disabled={loading || (user?.credit ?? 0) < MODE_COST[mode]}
                 className="w-full rounded-lg bg-primary px-4 py-2 text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50"
               >
                 {loading ? (
@@ -101,6 +119,7 @@ function AiWorkspaceInner() {
               </button>
             </div>
           </div>
+          <CreditTopupSheet open={isTopupOpen} onOpenChange={setIsTopupOpen} />
         </div>
       </div>
     </div>
