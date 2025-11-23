@@ -95,9 +95,6 @@ function DashboardContent() {
   const handleCreateNew = () => {
     setShowTemplateModal(true)
   }
-  const handleCreateWithAI = () => {
-    router.push('/dashboard/ai-mindmap')
-  }
     const handleEditInfo = (id: string) => {
         const mindmap = mindmaps.find((m) => m.id === id)
         if (mindmap) {
@@ -235,13 +232,6 @@ function DashboardContent() {
                   <Plus className="h-5 w-5" />
                   Create New Mindmap
                 </button>
-                <button 
-                  onClick={handleCreateWithAI}
-                  className="flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
-                >
-                  <Plus className="h-5 w-5" />
-                  Tạo bằng AI
-                </button>
               </div>
             )}
 
@@ -286,13 +276,6 @@ function DashboardContent() {
                   >
                     <Plus className="h-5 w-5" />
                     Create with Template
-                  </button>
-                  <button 
-                    onClick={handleCreateWithAI}
-                    className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Tạo bằng AI
                   </button>
                 </div>
               </div>
