@@ -29,6 +29,8 @@ import FILTER_BAR_EN from "@/locales/en/filterBar.json";
 import FILTER_BAR_VI from "@/locales/vi/filterBar.json";
 import VIEW_TOGGLE_EN from "@/locales/en/viewToggle.json";
 import VIEW_TOGGLE_VI from "@/locales/vi/viewToggle.json";
+import DELETE_CONFIRM_DIALOG_EN from "@/locales/en/deleteConfirmDialog.json";
+import DELETE_CONFIRM_DIALOG_VI from "@/locales/vi/deleteConfirmDialog.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -51,6 +53,7 @@ const resource = {
         templateModal: TEMPLATE_MODAL_EN,
         filterBar: FILTER_BAR_EN,
         viewToggle: VIEW_TOGGLE_EN,
+        deleteConfirmDialog: DELETE_CONFIRM_DIALOG_EN,
     },
     vi: {
         home: HOME_VI,
@@ -67,6 +70,7 @@ const resource = {
         templateModal: TEMPLATE_MODAL_VI,
         filterBar: FILTER_BAR_VI,
         viewToggle: VIEW_TOGGLE_VI,
+        deleteConfirmDialog: DELETE_CONFIRM_DIALOG_VI,
     }
 } as const
 const defaultNS = 'home'
@@ -86,7 +90,9 @@ i18n.use(initReactI18next).init({
         "sideBar", 
         "templateModal", 
         "filterBar",
-        "viewToggle"],
+        "viewToggle",
+        "deleteConfirmDialog"
+    ],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {
