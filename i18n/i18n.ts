@@ -11,12 +11,12 @@ import OTHER_EN from "@/locales/en/other.json"
 import OTHER_VI from "@/locales/vi/other.json"
 import DASHBOARD_EN from "@/locales/en/dashboard.json";
 import DASHBOARD_VI from "@/locales/vi/dashboard.json";
-import CHANGE_PASSWORD_EN from "@/locales/en/changePassword.json";
-import CHANGE_PASSWORD_VI from "@/locales/vi/changePassword.json";
+import CHANGE_PASSWORD_EN from "@/locales/en/change-password.json";
+import CHANGE_PASSWORD_VI from "@/locales/vi/change-password.json";
 import MINDMAPS_EN from "@/locales/en/mindmaps.json"
 import MINDMAPS_VI from "@/locales/vi/mindmaps.json"
-import SETTINGS_EN from "@/locales/en/setting.json";
-import SETTINGS_VI from "@/locales/vi/setting.json";
+import SETTINGS_EN from "@/locales/en/settings.json";
+import SETTINGS_VI from "@/locales/vi/settings.json";
 
 export const locale = {
     en: "English",
