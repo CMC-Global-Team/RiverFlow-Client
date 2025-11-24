@@ -93,7 +93,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
             )}
             
             {/* Language Switcher */}
-            <LanguageSwitcher />
+            {/* <LanguageSwitcher /> */}
           </div>
               
           {/* Mobile Menu Button */}
