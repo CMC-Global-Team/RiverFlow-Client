@@ -190,15 +190,20 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const wantsDelete = /(xóa|xoá|remove|delete|loại bỏ|bỏ|drop)/.test(t)
     const wantsEdit = /(sửa|chỉnh|update|edit|điều chỉnh)/.test(t)
     const wantsAdd = /(thêm|mở rộng|expand|add|tạo|generate|create)/.test(t)
+    const wantsAllDelete = /(xóa toàn bộ|xoá toàn bộ|xóa hết|xoá hết|delete all|delete entire|clear all|remove everything)/.test(t)
+    const onlyDelete = wantsDelete && !wantsAdd && !wantsReplace && !wantsEdit
     const pruneIds = wantsDelete ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
     const editIds = wantsEdit ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
     const action = wantsReplace ? 'replace' : wantsDelete ? 'prune' : wantsEdit ? 'edit' : wantsAdd ? 'expand' : 'expand'
+    const finalPruneIds = wantsAllDelete ? ns.map(n => String(n.id)) : pruneIds
     const plan = {
       action,
-      pruneIds,
+      pruneIds: finalPruneIds,
       editIds,
       mentioned,
       prefer: { structure: structureType, language: langPref },
+      clearAll: wantsAllDelete,
+      onlyDelete,
       summary: `action=${action}; prune=${pruneIds.length}; edit=${editIds.length}; mentioned=${mentioned.length}`,
     }
     return plan
@@ -221,8 +226,20 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         if (agentPlan.action === 'replace') {
           setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
         }
-        if (agentPlan.action === 'prune' && agentPlan.pruneIds.length) {
-          for (const id of agentPlan.pruneIds) deleteNode(id)
+        if (agentPlan.action === 'prune') {
+          if (agentPlan.clearAll) {
+            setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
+            setMessages((m) => [...m, { role: 'assistant', text: 'RiverFlow Agent: Đã xóa toàn bộ mindmap' }])
+            await saveMindmap()
+            return
+          }
+          if (agentPlan.pruneIds.length) {
+            for (const id of agentPlan.pruneIds) deleteNode(id)
+            if (agentPlan.onlyDelete) {
+              await saveMindmap()
+              return
+            }
+          }
         }
 
         
