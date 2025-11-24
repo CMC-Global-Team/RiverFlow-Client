@@ -28,25 +28,30 @@ export const generateMindmapByAI = async (
   payload: {
     prompt: string;
     mode: 'normal' | 'max';
-    model: string;
+    model?: string;
     files?: File[];
     messages?: Array<{ role: 'user' | 'assistant'; content: string }>;
   }
 ): Promise<MindmapResponse> => {
   const formData = new FormData();
   formData.append('prompt', payload.prompt);
+  // Compatibility: some backends expect 'topic' instead of 'prompt'
+  formData.append('topic', payload.prompt);
   formData.append('mode', payload.mode);
-  formData.append('model', payload.model);
-  if (payload.messages) {
-    formData.append('messages', JSON.stringify(payload.messages));
-  }
+  formData.append('model', payload.model ?? 'gemini-2.5-flash');
+  formData.append('messages', JSON.stringify(payload.messages ?? []));
   (payload.files || []).forEach((f) => formData.append('files', f));
 
   const response = await apiClient.post<MindmapResponse>(
     `${MINDMAP_API_BASE}/ai/generate`,
     formData,
     {
-      headers: { 'Content-Type': 'multipart/form-data' },
+      headers: {
+        // Để axios tự set boundary cho multipart/form-data
+        'Accept': 'application/json',
+        'X-Suppress-403-Logout': '1',
+        'Idempotency-Key': (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`)
+      },
     }
   );
   return response.data;
