@@ -9,6 +9,8 @@ import PRICING_EN from "@/locales/en/pricing.json"
 import PRICING_VI from "@/locales/vi/pricing.json"
 import OTHER_EN from "@/locales/en/other.json"
 import OTHER_VI from "@/locales/vi/other.json"
+import DASHBOARD_EN from "@/locales/en/dashboard.json";
+import DASHBOARD_VI from "@/locales/vi/dashboard.json";
 
 export const locale = {
     en: "English",
@@ -21,13 +23,15 @@ const resource = {
         home: HOME_EN,
         about: ABOUT_EN,
         pricing: PRICING_EN,
-        other: OTHER_EN
+        other: OTHER_EN,
+        dashboard: DASHBOARD_EN,
     },
     vi: {
         home: HOME_VI,
         about: ABOUT_VI,
         pricing: PRICING_VI,
-        other: OTHER_VI
+        other: OTHER_VI,
+        dashboard: DASHBOARD_VI,
     }
 } as const
 const defaultNS = 'home'
