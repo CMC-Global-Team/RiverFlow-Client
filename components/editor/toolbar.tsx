@@ -201,14 +201,36 @@ export default function Toolbar({
   }
 
   const handleDownloadImage = async (format: 'png' | 'jpeg') => {
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) return
+    const container = document.querySelector('.react-flow__renderer') as HTMLElement
+    if (!container) return
 
+    const original = reactFlowInstance.getViewport()
+    const styleEl = document.createElement('style')
+    styleEl.setAttribute('data-export-hide', 'true')
+    styleEl.textContent = `.react-flow__handle{display:none !important;opacity:0 !important;}`
+    document.head.appendChild(styleEl)
+    reactFlowInstance.fitView({ padding: 0.2, duration: 0 })
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const edgePaths = Array.from(container.querySelectorAll('.react-flow__edge-path')) as SVGPathElement[]
+    const revertFns: (() => void)[] = []
+    edgePaths.forEach((p) => {
+      const prevStroke = p.getAttribute('stroke')
+      const prevWidth = p.getAttribute('stroke-width')
+      const prevFill = p.getAttribute('fill')
+      const cs = getComputedStyle(p)
+      p.setAttribute('stroke', cs.stroke || '#b1b1b1')
+      p.setAttribute('stroke-width', cs.strokeWidth || '2')
+      p.setAttribute('fill', 'none')
+      revertFns.push(() => {
+        if (prevStroke == null) p.removeAttribute('stroke'); else p.setAttribute('stroke', prevStroke)
+        if (prevWidth == null) p.removeAttribute('stroke-width'); else p.setAttribute('stroke-width', prevWidth)
+        if (prevFill == null) p.removeAttribute('fill'); else p.setAttribute('fill', prevFill)
+      })
+    })
     try {
       const dataUrl = format === 'png'
-        ? await toPng(viewport, { backgroundColor: '#ffffff' })
-        : await toJpeg(viewport, { backgroundColor: '#ffffff' })
-
+        ? await toPng(container, { backgroundColor: '#ffffff' })
+        : await toJpeg(container, { backgroundColor: '#ffffff' })
       const link = document.createElement('a')
       link.download = `${mindmap?.title || 'mindmap'}.${format}`
       link.href = dataUrl
@@ -217,29 +239,56 @@ export default function Toolbar({
     } catch (err) {
       console.error('Error downloading image:', err)
       toast.error("Failed to download image")
+    } finally {
+      try { document.head.removeChild(styleEl) } catch {}
+      try { revertFns.forEach((fn) => fn()) } catch {}
+      reactFlowInstance.setViewport(original)
     }
   }
 
   const handleDownloadPDF = async () => {
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) return
+    const container = document.querySelector('.react-flow__renderer') as HTMLElement
+    if (!container) return
 
-    try {
-      const dataUrl = await toPng(viewport, { backgroundColor: '#ffffff' })
-      const pdf = new jsPDF({
-        orientation: 'landscape',
+    const original = reactFlowInstance.getViewport()
+    const styleEl = document.createElement('style')
+    styleEl.setAttribute('data-export-hide', 'true')
+    styleEl.textContent = `.react-flow__handle{display:none !important;opacity:0 !important;}`
+    document.head.appendChild(styleEl)
+    reactFlowInstance.fitView({ padding: 0.2, duration: 0 })
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
+    const edgePaths = Array.from(container.querySelectorAll('.react-flow__edge-path')) as SVGPathElement[]
+    const revertFns: (() => void)[] = []
+    edgePaths.forEach((p) => {
+      const prevStroke = p.getAttribute('stroke')
+      const prevWidth = p.getAttribute('stroke-width')
+      const prevFill = p.getAttribute('fill')
+      const cs = getComputedStyle(p)
+      p.setAttribute('stroke', cs.stroke || '#b1b1b1')
+      p.setAttribute('stroke-width', cs.strokeWidth || '2')
+      p.setAttribute('fill', 'none')
+      revertFns.push(() => {
+        if (prevStroke == null) p.removeAttribute('stroke'); else p.setAttribute('stroke', prevStroke)
+        if (prevWidth == null) p.removeAttribute('stroke-width'); else p.setAttribute('stroke-width', prevWidth)
+        if (prevFill == null) p.removeAttribute('fill'); else p.setAttribute('fill', prevFill)
       })
-
+    })
+    try {
+      const dataUrl = await toPng(container, { backgroundColor: '#ffffff' })
+      const pdf = new jsPDF({ orientation: 'landscape' })
       const imgProps = pdf.getImageProperties(dataUrl)
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`${mindmap?.title || 'mindmap'}.pdf`)
       toast.success("Mindmap downloaded as PDF")
     } catch (err) {
       console.error('Error downloading PDF:', err)
       toast.error("Failed to download PDF")
+    } finally {
+      try { document.head.removeChild(styleEl) } catch {}
+      try { revertFns.forEach((fn) => fn()) } catch {}
+      reactFlowInstance.setViewport(original)
     }
   }
 
