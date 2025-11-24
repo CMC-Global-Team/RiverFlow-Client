@@ -477,14 +477,14 @@ const templateMetadata = [
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             onClick={handleSelect}
             disabled={!selectedTemplate}
             className="px-6 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Mindmap
+            {t("createMindmap")}
           </button>
         </div>
       </div>
