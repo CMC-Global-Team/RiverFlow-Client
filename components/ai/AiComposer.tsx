@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X, Sparkles } from "lucide-react"
+import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -173,19 +173,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
                 <Upload className="size-4" />
               </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-8 rounded-lg"
-                onClick={() => {
-                  const t = inputValue.trim()
-                  if (!t || loading) return
-                  setInputValue("")
-                  void sendPrompt(t)
-                }}
-              >
-                <Sparkles className="size-4" />
-              </Button>
+              
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
             <Input

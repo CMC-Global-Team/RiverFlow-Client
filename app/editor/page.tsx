@@ -37,6 +37,7 @@ function EditorInner() {
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
   const ai = searchParams.get('ai')
+  const [isAiOpen, setIsAiOpen] = useState(ai === '1')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
   
@@ -532,6 +533,8 @@ function EditorInner() {
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
               onChatClick={() => setIsChatOpen(true)}
+              onAiToggle={() => setIsAiOpen((prev) => !prev)}
+              aiOpen={isAiOpen}
             />
           </div>
         </div>
@@ -540,7 +543,7 @@ function EditorInner() {
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
-      {ai === '1' ? <AiComposer defaultOpen /> : null}
+      {isAiOpen ? <AiComposer defaultOpen /> : null}
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
