@@ -1,0 +1,26 @@
+{
+  "welcomeBack": "Chào mừng trở lại",
+  "recentMindmaps": "Dưới đây là các sơ đồ tư duy gần đây của bạn",
+  "createWithTemplate": "Tạo từ mẫu có sẵn",
+  "createWithAI": "Tạo bằng AI",
+  "loadingMindmaps": "Đang tải sơ đồ tư duy của bạn...",
+  "failedToLoadMindmaps": "Không thể tải danh sách sơ đồ tư duy",
+  "sessionExpiredMessage": "Phiên đăng nhập của bạn có thể đã hết hạn. Vui lòng đăng nhập lại.",
+  "retry": "Thử lại",
+  "noMindmaps": "Bạn chưa có sơ đồ tư duy nào.",
+
+  "confirmDelete": "Bạn có chắc chắn muốn xóa sơ đồ tư duy này? Hành động này không thể hoàn tác.",
+  "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi dự án cộng tác này? Bạn sẽ mất quyền truy cập.",
+
+  "duplicating": "Đang nhân bản sơ đồ tư duy...",
+  "pleaseWait": "Vui lòng chờ",
+  "duplicateSuccess": "Nhân bản sơ đồ tư duy thành công",
+  "created": "Đã tạo \"{title}\"",
+  "duplicateFailed": "Nhân bản sơ đồ tư duy thất bại",
+
+  "leftProject": "Đã rời dự án",
+  "leftProjectSuccess": "Bạn đã rời khỏi dự án thành công",
+  "leaveProjectFailed": "Rời dự án thất bại",
+
+  "error": "Lỗi"
+}
