@@ -216,11 +216,11 @@ function ChangePasswordContent() {
 
                                     {/* NEW PASSWORD */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">New Password</Label>
+                                        <Label className="text-sm font-semibold">{t("newPassword")}</Label>
                                         <div className="relative">
                                             <Input
                                                 type={showNewPassword ? "text" : "password"}
-                                                placeholder="Enter your new password (min. 6 characters)"
+                                                placeholder={t("enterNewPassword")}
                                                 className="pr-10 h-11 text-base"
                                                 {...register("newPassword")}
                                                 onChange={(e) => {
@@ -245,7 +245,7 @@ function ChangePasswordContent() {
                                         {newPasswordValue && (
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-sm">
-                                                    <span className="text-muted-foreground">Password Strength</span>
+                                                    <span className="text-muted-foreground">{t("passwordStrength")}</span>
                                                     <span className={`font-semibold ${
                                                         passwordStrength.level === "Weak" ? "text-red-500" :
                                                         passwordStrength.level === "Fair" ? "text-amber-500" :
