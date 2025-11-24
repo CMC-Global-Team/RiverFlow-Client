@@ -45,15 +45,15 @@ export default function LanguageSwitcher() {
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
-      <button
+        <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-2.5 py-2 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted transition-colors min-w-[100px]"
         aria-label="Switch language"
       >
-        <Globe className="h-4 w-4 text-muted-foreground" />
+        <Globe className="h-5 w-5 text-muted-foreground" />
         <span className="text-base">{currentLang.flag}</span>
         <ChevronDown 
-          className={`h-3 w-3 text-muted-foreground transition-transform ${
+          className={`h-4 w-4 text-muted-foreground transition-transform ml-auto ${
             isOpen ? "rotate-180" : ""
           }`} 
         />
