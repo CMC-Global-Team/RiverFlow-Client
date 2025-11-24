@@ -31,6 +31,7 @@ import {
   MessageSquare,
   Menu
 } from "lucide-react"
+import { Sparkles } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
 import { toast } from "sonner"
@@ -70,6 +71,8 @@ interface ToolbarProps {
   userRole?: 'owner' | 'editor' | 'viewer' | null
   onHistoryClick?: () => void
   onChatClick?: () => void
+  onAiToggle?: () => void
+  aiOpen?: boolean
 }
 
 export default function Toolbar({
@@ -89,6 +92,8 @@ export default function Toolbar({
   userRole,
   onHistoryClick,
   onChatClick,
+  onAiToggle,
+  aiOpen,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -544,6 +549,15 @@ export default function Toolbar({
 
       {/* Chat */}
       <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="AI Composer"
+          className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
+          onClick={onAiToggle}
+        >
+          <Sparkles className="h-4 w-4" />
+        </Button>
         <Button
           variant="ghost"
           size="icon"

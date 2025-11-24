@@ -41,18 +41,18 @@ export default function Sidebar() {
   }
 
 
-  //handle select template
-  const handleSelectTemplate = async (template: any) => {
-    const newMindmap = await create(
-      {
-        title: "Untitled Mindmap",
-        nodes: template.initialNodes,
-        edges: template.initialEdges,
-      }
-    )
-    if (newMindmap) {
-      router.push(`/editor?id=${newMindmap.id}`)
-    }
+//handle select template
+const handleSelectTemplate = async (template: any) => {
+  if (template?.id === 'ai') {
+    return
+  }
+  const newMindmap = await create({
+    title: "Untitled Mindmap",
+    nodes: template.initialNodes,
+    edges: template.initialEdges,
+  })
+  if (newMindmap) {
+    router.push(`/editor?id=${newMindmap.id}`)
   }
 
 

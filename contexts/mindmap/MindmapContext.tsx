@@ -289,12 +289,33 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       normalizedNodes = [rootNode];
     }
 
-    const normalizedEdges = (data.edges || []).map((edge: any) => ({
-      ...edge,
-      animated: edge.animated !== undefined ? edge.animated : true,
-      type: edge.type || 'smoothstep',
-      markerEnd: edge.markerEnd || { type: MarkerType.ArrowClosed },
-    }));
+    const incomingEdges = Array.isArray(data.edges) ? data.edges : []
+    const edgeIds = new Set<string>()
+    const edgeSigs = new Set<string>()
+    const normalizedEdges: any[] = []
+    for (let i = 0; i < incomingEdges.length; i++) {
+      const e: any = incomingEdges[i] || {}
+      const base = {
+        ...e,
+        animated: e.animated !== undefined ? e.animated : true,
+        type: e.type || 'smoothstep',
+        markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+      }
+      const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
+      if (edgeSigs.has(sig)) continue
+      let id = String(base.id || '')
+      if (!id || edgeIds.has(id)) {
+        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        while (edgeIds.has(uid)) {
+          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        }
+        base.id = uid
+        id = uid
+      }
+      edgeIds.add(id)
+      edgeSigs.add(sig)
+      normalizedEdges.push(base)
+    }
 
     setNodes(normalizedNodes);
     setEdges(normalizedEdges);
@@ -585,7 +606,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         )
         if (exists) return eds
         const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}`,
+          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
           ...connection,
           animated: true,
           type: "smoothstep",
@@ -737,6 +758,54 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
+  const applyStreamingAdditions = useCallback((addNodes: any[] = [], addEdges: any[] = []) => {
+    const existingNodes = latestNodesRef.current || []
+    const existingEdges = latestEdgesRef.current || []
+    const nodeIds = new Set<string>(existingNodes.map((n: any) => String(n.id)))
+    const edgeIds = new Set<string>(existingEdges.map((e: any) => String(e.id)))
+    const edgeSigs = new Set<string>(existingEdges.map((e: any) => `${e.source}|${e.target}|${e.sourceHandle || ''}|${e.targetHandle || ''}`))
+
+    const finalNodes: any[] = []
+    for (let n of addNodes) {
+      const nid = String(n.id)
+      if (!nodeIds.has(nid)) {
+        nodeIds.add(nid)
+        finalNodes.push(n)
+      }
+    }
+
+    const finalEdges: any[] = []
+    for (let e of addEdges) {
+      let id = String((e as any).id || '')
+      const sig = `${(e as any).source}|${(e as any).target}|${(e as any).sourceHandle || ''}|${(e as any).targetHandle || ''}`
+      if (edgeSigs.has(sig)) continue
+      if (!id || edgeIds.has(id)) {
+        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        while (edgeIds.has(uid)) {
+          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        }
+        (e as any).id = uid
+        id = uid
+      }
+      edgeIds.add(id)
+      edgeSigs.add(sig)
+      finalEdges.push({ ...e })
+    }
+
+    if (finalNodes.length === 0 && finalEdges.length === 0) return
+
+    recordSnapshot()
+    if (finalNodes.length > 0) setNodes((nds) => [...nds, ...finalNodes])
+    if (finalEdges.length > 0) setEdges((eds) => [...eds, ...finalEdges])
+    scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) {
+      if (finalNodes.length > 0) emitNodesChange(s, room, finalNodes.map((n) => ({ type: 'add', item: n })) as any)
+      if (finalEdges.length > 0) emitEdgesChange(s, room, finalEdges.map((e) => ({ type: 'add', item: e })) as any)
+    }
+  }, [scheduleAutoSave, recordSnapshot])
+
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
     recordSnapshot()
     let updated: any = null
@@ -876,6 +945,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     undo,
     redo,
     setFullMindmapState,
+    applyStreamingAdditions,
     restoreFromHistory: async (snapshot: any, historyId?: string | number | null) => {
       const m = latestMindmapRef.current
       if (!m || !snapshot) return

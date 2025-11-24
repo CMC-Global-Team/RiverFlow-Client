@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { createMindmap } from "@/services/mindmap/mindmap.service"
 
 interface Template {
   id: string
@@ -353,7 +354,14 @@ const templateMetadata = [
     if (selectedTemplate) {
       setLoading(selectedTemplate.id)
       try {
-        // If template has filePath, reload it to ensure we have the latest data
+        if (selectedTemplate.id === 'ai') {
+          const created = await createMindmap({ title: 'Untitled Mindmap', nodes: [], edges: [], category: 'ai', aiGenerated: false })
+          if (created?.id) {
+            router.push(`/editor?id=${created.id}&ai=1`)
+            onClose()
+            return
+          }
+        }
         if (selectedTemplate.filePath) {
           const response = await fetch(selectedTemplate.filePath)
           if (response.ok) {
@@ -410,7 +418,7 @@ const templateMetadata = [
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
-                onClick={() => router.push('/dashboard/ai-mindmap')}
+                onClick={() => setSelectedTemplate({ id: 'ai', name: 'AI Mindmap', description: 'Generate mindmap with AI', icon: <Sparkles className="h-6 w-6" />, initialNodes: [], initialEdges: [] })}
                 className="relative p-6 rounded-lg border-2 cursor-pointer transition-all md:col-span-2 lg:col-span-3 border-primary bg-primary/10 hover:bg-primary/15 hover:shadow-lg"
               >
                 <div className="flex items-start gap-4">
@@ -418,8 +426,8 @@ const templateMetadata = [
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">{t("createAIMindmap")}</h3>
-                    <p className="text-xs text-muted-foreground">{t("enterPromptChooseModeAttachFileAndModel")}</p>
+                    <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
+                    <p className="text-xs text-muted-foreground">Tạo mindmap mới bằng AI</p>
                   </div>
                   <div className="absolute right-6 top-6">
                     <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">{t("new")}</span>
@@ -470,6 +478,8 @@ const templateMetadata = [
             </div>
           )}
         </div>
+
+        
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border">

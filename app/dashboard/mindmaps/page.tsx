@@ -41,7 +41,6 @@ function MyMindmapsContent() {
   const [sortBy, setSortBy] = useState("updatedAt")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showAiModal, setShowAiModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -91,12 +90,14 @@ function MyMindmapsContent() {
   }
 
   const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      return
+    }
     const newMindmap = await create({
       title: "Untitled Mindmap",
       nodes: template.initialNodes,
       edges: template.initialEdges,
     })
-
     if (newMindmap) {
       router.push(`/editor?id=${newMindmap.id}`)
     }
