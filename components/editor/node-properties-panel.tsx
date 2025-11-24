@@ -46,8 +46,6 @@ export default function NodePropertiesPanel() {
     "#8b5cf6", "#ec4899", "#14b8a6", "#000000", "#ffffff"
   ]
 
-  if (!selectedNode) return null
-
   useEffect(() => {
     // Only update innerHTML when node ID changes (switching nodes), not while editing
     if (labelRef.current && labelRef.current !== document.activeElement) {
@@ -57,6 +55,7 @@ export default function NodePropertiesPanel() {
       descRef.current.innerHTML = selectedNode.data.description || ""
     }
   }, [selectedNode?.id])
+
 
   const saveField = (field: "label" | "description") => {
     const ref = field === "label" ? labelRef.current : descRef.current
@@ -214,6 +213,8 @@ export default function NodePropertiesPanel() {
     deleteNode(selectedNode.id)
     toast.success("Node deleted")
   }
+
+  if (!selectedNode) return null
 
   return (
     <div className="h-full bg-transparent">
