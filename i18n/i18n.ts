@@ -17,7 +17,20 @@ import MINDMAPS_EN from "@/locales/en/mindmaps.json"
 import MINDMAPS_VI from "@/locales/vi/mindmaps.json"
 import SETTINGS_EN from "@/locales/en/settings.json";
 import SETTINGS_VI from "@/locales/vi/settings.json";
-
+import DASHBOARD_HEADER_EN from "@/locales/en/dashboardHeader.json";
+import DASHBOARD_HEADER_VI from "@/locales/vi/dashboardHeader.json";
+import MINDMAPCARD_EN from "@/locales/en/mindmapsCard.json";
+import MINDMAPCARD_VI from "@/locales/vi/mindmapsCard.json";
+import SIDE_BAR_EN from "@/locales/en/sideBar.json";
+import SIDE_BAR_VI from "@/locales/vi/sideBar.json";
+import TEMPLATE_MODAL_EN from "@/locales/en/templateModal.json";
+import TEMPLATE_MODAL_VI from "@/locales/vi/templateModal.json";
+import FILTER_BAR_EN from "@/locales/en/filterBar.json";
+import FILTER_BAR_VI from "@/locales/vi/filterBar.json";
+import VIEW_TOGGLE_EN from "@/locales/en/viewToggle.json";
+import VIEW_TOGGLE_VI from "@/locales/vi/viewToggle.json";
+import DELETE_CONFIRM_DIALOG_EN from "@/locales/en/deleteConfirmDialog.json";
+import DELETE_CONFIRM_DIALOG_VI from "@/locales/vi/deleteConfirmDialog.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -34,6 +47,13 @@ const resource = {
         "change-password": CHANGE_PASSWORD_EN,
         mindmaps: MINDMAPS_EN,
         settings: SETTINGS_EN,
+        dashboardHeader: DASHBOARD_HEADER_EN,
+        mindmapsCard: MINDMAPCARD_EN,
+        sideBar: SIDE_BAR_EN,
+        templateModal: TEMPLATE_MODAL_EN,
+        filterBar: FILTER_BAR_EN,
+        viewToggle: VIEW_TOGGLE_EN,
+        deleteConfirmDialog: DELETE_CONFIRM_DIALOG_EN,
     },
     vi: {
         home: HOME_VI,
@@ -44,13 +64,35 @@ const resource = {
         "change-password": CHANGE_PASSWORD_VI,
         mindmaps: MINDMAPS_VI,
         settings: SETTINGS_VI,
+        dashboardHeader: DASHBOARD_HEADER_VI,
+        mindmapsCard: MINDMAPCARD_VI,
+        sideBar: SIDE_BAR_VI,
+        templateModal: TEMPLATE_MODAL_VI,
+        filterBar: FILTER_BAR_VI,
+        viewToggle: VIEW_TOGGLE_VI,
+        deleteConfirmDialog: DELETE_CONFIRM_DIALOG_VI,
     }
 } as const
 const defaultNS = 'home'
 i18n.use(initReactI18next).init({
     resources: resource,
     lng: "vi",
-    ns: ["home", "about", "pricing", "other", "dashboard", "change-password", "mindmaps", "settings"],
+    ns: ["home", 
+        "about", 
+        "pricing", 
+        "other", 
+        "dashboard", 
+        "dashboardHeader", 
+        "change-password", 
+        "mindmaps", 
+        "settings",
+        "mindmapsCard", 
+        "sideBar", 
+        "templateModal", 
+        "filterBar",
+        "viewToggle",
+        "deleteConfirmDialog"
+    ],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {

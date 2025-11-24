@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -21,80 +22,6 @@ interface TemplateModalProps {
   onClose: () => void
   onSelectTemplate: (template: Template) => void
 }
-
-// Template metadata from public/templates folder
-const templateMetadata = [
-  {
-    id: "blank",
-    name: "Blank Canvas",
-    description: "Start from scratch with an empty mindmap",
-    icon: <Layout className="h-6 w-6" />,
-    filePath: null, // Built-in template
-  },
-  {
-    id: "basic-mindmap",
-    name: "Basic Mindmap",
-    description: "Mindmap mẫu cơ bản với nhiều node",
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/basic-mindmap.json",
-  },
-  {
-    id: "simple-structure",
-    name: "Simple Structure",
-    description: "Cấu trúc đơn giản với central node và branches",
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/simple-structure.json",
-  },
-  {
-    id: "complex-mindmap",
-    name: "Complex Mindmap",
-    description: "Mindmap phức tạp với nhiều nhánh",
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/complex-mindmap.json",
-  },
-  {
-    id: "hierarchical-structure",
-    name: "Hierarchical Structure",
-    description: "Cấu trúc phân cấp rõ ràng",
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/hierarchical-structure.json",
-  },
-  {
-    id: "radial-mindmap",
-    name: "Radial Mindmap",
-    description: "Mindmap dạng phóng xạ",
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/radial-mindmap.json",
-  },
-  {
-    id: "brainstorming",
-    name: "Brainstorming",
-    description: "Lý tưởng cho các buổi brainstorming sáng tạo",
-    icon: <Sparkles className="h-6 w-6" />,
-    filePath: "/templates/brainstorming.json",
-  },
-  {
-    id: "project-planning",
-    name: "Project Planning",
-    description: "Hoàn hảo cho lập kế hoạch dự án",
-    icon: <Workflow className="h-6 w-6" />,
-    filePath: "/templates/project-planning.json",
-  },
-  {
-    id: "decision-tree",
-    name: "Decision Tree",
-    description: "Cây quyết định cho phân tích lựa chọn",
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/decision-tree.json",
-  },
-  {
-    id: "study-notes",
-    name: "Study Notes",
-    description: "Tổ chức tài liệu học tập của bạn",
-    icon: <FileText className="h-6 w-6" />,
-    filePath: "/templates/study-notes.json",
-  },
-]
 
 const builtInTemplates: Template[] = [
   {
@@ -289,6 +216,82 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const router = useRouter()
+  const { t } = useTranslation("templateModal")
+
+// Template metadata from public/templates folder
+const templateMetadata = [
+  {
+    id: "blank",
+    name: t("blankCanvas"),
+    description: t("startFromScratch"),
+    icon: <Layout className="h-6 w-6" />,
+    filePath: null, // Built-in template
+  },
+  {
+    id: "basic-mindmap",
+    name: t("basicMindmap"),
+    description: t("basicMindmapDescription"),
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/basic-mindmap.json",
+  },
+  {
+    id: "simple-structure",
+    name: t("simpleStructure"),
+    description: t("simpleStructureDescription"),
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/simple-structure.json",
+  },
+  {
+    id: "complex-mindmap",
+    name: t("complexMindmap"),
+    description: t("complexMindmapDescription"),
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/complex-mindmap.json",
+  },
+  {
+    id: "hierarchical-structure",
+    name: t("hierarchicalStructure"),
+    description: t("hierarchicalStructureDescription"),
+    icon: <GitBranch className="h-6 w-6" />,
+    filePath: "/templates/hierarchical-structure.json",
+  },
+  {
+    id: "radial-mindmap",
+    name: t("radialMindmap"),
+    description: t("radialMindmapDescription"),
+    icon: <Network className="h-6 w-6" />,
+    filePath: "/templates/radial-mindmap.json",
+  },
+  {
+    id: "brainstorming",
+    name: t("brainstorming"),
+    description: t("brainstormingDescription"),
+    icon: <Sparkles className="h-6 w-6" />,
+    filePath: "/templates/brainstorming.json",
+  },
+  {
+    id: "project-planning",
+    name: t("projectPlanning"),
+    description: t("projectPlanningDescription"),
+    icon: <Workflow className="h-6 w-6" />,
+    filePath: "/templates/project-planning.json",
+  },
+  {
+    id: "decision-tree",
+    name: t("decisionTree"),
+    description: t("decisionTreeDescription"),
+    icon: <GitBranch className="h-6 w-6" />,
+    filePath: "/templates/decision-tree.json",
+  },
+  {
+    id: "study-notes",
+    name: t("studyNotes"),
+    description: t("studyNotesDescription"),
+    icon: <FileText className="h-6 w-6" />,
+    filePath: "/templates/study-notes.json",
+  },
+]
+
 
   // Load templates from public/templates folder
   useEffect(() => {
@@ -327,7 +330,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
               }
             }
           } catch (err) {
-            console.error(`Failed to load template ${meta.filePath}:`, err)
+            console.error(`${t("failedToLoadTemplate")} ${meta.filePath}:`, err)
           }
         })
 
@@ -384,9 +387,9 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Choose a Template</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("chooseATemplate")}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Select a template to get started or start from blank
+              {t("selectATemplateToGetStartedOrStartFromBlank")}
             </p>
           </div>
           <button
@@ -402,7 +405,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           {isLoadingTemplates ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Đang tải templates...</p>
+              <p className="text-muted-foreground">{t("loadingTemplates")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -415,11 +418,11 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
-                    <p className="text-xs text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</p>
+                    <h3 className="font-semibold text-foreground mb-1">{t("createAIMindmap")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("enterPromptChooseModeAttachFileAndModel")}</p>
                   </div>
                   <div className="absolute right-6 top-6">
-                    <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">Mới</span>
+                    <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">{t("new")}</span>
                   </div>
                 </div>
               </div>
@@ -474,14 +477,14 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
             onClick={onClose}
             className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             onClick={handleSelect}
             disabled={!selectedTemplate}
             className="px-6 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Create Mindmap
+            {t("createMindmap")}
           </button>
         </div>
       </div>
