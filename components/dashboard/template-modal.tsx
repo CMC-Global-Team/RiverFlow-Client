@@ -216,76 +216,77 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const router = useRouter()
+  const { t } = useTranslation("templateModal")
 
 // Template metadata from public/templates folder
 const templateMetadata = [
   {
     id: "blank",
-    name: "Blank Canvas",
-    description: "Start from scratch with an empty mindmap",
+    name: t("blankCanvas"),
+    description: t("startFromScratch"),
     icon: <Layout className="h-6 w-6" />,
     filePath: null, // Built-in template
   },
   {
     id: "basic-mindmap",
-    name: "Basic Mindmap",
-    description: "Mindmap mẫu cơ bản với nhiều node",
+    name: t("basicMindmap"),
+    description: t("basicMindmapDescription"),
     icon: <Network className="h-6 w-6" />,
     filePath: "/templates/basic-mindmap.json",
   },
   {
     id: "simple-structure",
-    name: "Simple Structure",
-    description: "Cấu trúc đơn giản với central node và branches",
+    name: t("simpleStructure"),
+    description: t("simpleStructureDescription"),
     icon: <Network className="h-6 w-6" />,
     filePath: "/templates/simple-structure.json",
   },
   {
     id: "complex-mindmap",
-    name: "Complex Mindmap",
-    description: "Mindmap phức tạp với nhiều nhánh",
+    name: t("complexMindmap"),
+    description: t("complexMindmapDescription"),
     icon: <Network className="h-6 w-6" />,
     filePath: "/templates/complex-mindmap.json",
   },
   {
     id: "hierarchical-structure",
-    name: "Hierarchical Structure",
-    description: "Cấu trúc phân cấp rõ ràng",
+    name: t("hierarchicalStructure"),
+    description: t("hierarchicalStructureDescription"),
     icon: <GitBranch className="h-6 w-6" />,
     filePath: "/templates/hierarchical-structure.json",
   },
   {
     id: "radial-mindmap",
-    name: "Radial Mindmap",
-    description: "Mindmap dạng phóng xạ",
+    name: t("radialMindmap"),
+    description: t("radialMindmapDescription"),
     icon: <Network className="h-6 w-6" />,
     filePath: "/templates/radial-mindmap.json",
   },
   {
     id: "brainstorming",
-    name: "Brainstorming",
-    description: "Lý tưởng cho các buổi brainstorming sáng tạo",
+    name: t("brainstorming"),
+    description: t("brainstormingDescription"),
     icon: <Sparkles className="h-6 w-6" />,
     filePath: "/templates/brainstorming.json",
   },
   {
     id: "project-planning",
-    name: "Project Planning",
-    description: "Hoàn hảo cho lập kế hoạch dự án",
+    name: t("projectPlanning"),
+    description: t("projectPlanningDescription"),
     icon: <Workflow className="h-6 w-6" />,
     filePath: "/templates/project-planning.json",
   },
   {
     id: "decision-tree",
-    name: "Decision Tree",
-    description: "Cây quyết định cho phân tích lựa chọn",
+    name: t("decisionTree"),
+    description: t("decisionTreeDescription"),
     icon: <GitBranch className="h-6 w-6" />,
     filePath: "/templates/decision-tree.json",
   },
   {
     id: "study-notes",
-    name: "Study Notes",
-    description: "Tổ chức tài liệu học tập của bạn",
+    name: t("studyNotes"),
+    description: t("studyNotesDescription"),
     icon: <FileText className="h-6 w-6" />,
     filePath: "/templates/study-notes.json",
   },
