@@ -201,22 +201,22 @@ function MyMindmapsContent() {
   }
 
   const handleLeave = async (id: string) => {
-    if (!confirm('Are you sure you want to leave this project?')) return
+    if (!confirm(t("confirmLeaveProject"))) return
     
     setActionLoading(id)
     try {
       await leaveCollaboration(id)
       toast({ 
-        title: "Left project",
-        description: "You have successfully left the project."
+        title: t("leftProject"),
+        description: t("leftProjectDescription")
       })
       await refetch()
     } catch (error) {
-      console.error("Leave failed:", error)
+      console.error(t("leaveFailed"), error)
       toast({ 
         variant: "destructive", 
-        title: "Error", 
-        description: "Failed to leave the project." 
+        title: t("leaveFailed"), 
+        description: t("leaveFailedDescription") 
       })
     } finally {
       setActionLoading(null)
