@@ -237,7 +237,7 @@ function MyMindmapsContent() {
                 <div>
                   <h1 className="text-3xl font-bold text-foreground">{t("myMindmaps")}</h1>
                   <p className="mt-2 text-muted-foreground">
-                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} {t("mindmap")}{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length} {filteredAndSortedMindmaps.length !== 1 ? t("mindmaps") : t("mindmap")} {selectedStatus === "archived" ? t("archived") : ""}
                     {filteredAndSortedMindmaps.length !== mindmaps.length && 
                       ` (${mindmaps.length} total)`
                     }
