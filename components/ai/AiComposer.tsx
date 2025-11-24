@@ -130,17 +130,100 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           mindmapId: mindmap.id,
           targetType: 'auto',
           nodeId: selectedNode ? selectedNode.id : undefined,
-          language: lang,
+          language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
           hints: text ? [text] : undefined,
           levels,
           firstLevelCount,
+          structureType,
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
         const summary = `Đã cập nhật mindmap hiện tại.`
         setMessages((m) => [...m, { role: 'assistant', text: summary }])
-        setFullMindmapState(result)
+
+        const enrich = (r: MindmapResponse, pref: typeof structureType) => {
+          const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
+          const edges = Array.isArray(r.edges) ? [...r.edges] : []
+          const inMap = new Map<string, number>()
+          edges.forEach(e => {
+            const t = String(e.target ?? e["target"]) || ""
+            if (t) inMap.set(t, (inMap.get(t) || 0) + 1)
+          })
+          const rootNode = nodes.find(n => !inMap.has(String(n.id))) || nodes[0]
+          const ax = Number(rootNode?.position?.x ?? 0) || 0
+          const ay = Number(rootNode?.position?.y ?? 0) || 0
+          const childrenByParent: Record<string, string[]> = {}
+          edges.forEach(e => {
+            const p = String(e.source ?? e["source"]) || ""
+            const c = String(e.target ?? e["target"]) || ""
+            if (!p || !c) return
+            if (!childrenByParent[p]) childrenByParent[p] = []
+            childrenByParent[p].push(c)
+          })
+          const depth = new Map<string, number>()
+          const q: string[] = []
+          if (rootNode?.id) { depth.set(String(rootNode.id), 0); q.push(String(rootNode.id)) }
+          for (let i = 0; i < q.length; i++) {
+            const pid = q[i]
+            const d = depth.get(pid) || 0
+            const kids = childrenByParent[pid] || []
+            kids.forEach(cid => { if (!depth.has(cid)) { depth.set(cid, d + 1); q.push(cid) } })
+          }
+          const shapes = ["rectangle","circle","diamond","hexagon","ellipse","roundedRectangle"]
+          const edgeTypes = ["smoothstep","step","straight"]
+          const siblingsIndex: Record<string, number> = {}
+          Object.keys(childrenByParent).forEach(pid => {
+            const arr = childrenByParent[pid]
+            arr.forEach((cid, idx) => { siblingsIndex[cid] = idx })
+          })
+          const siblingsCount: Record<string, number> = {}
+          Object.keys(childrenByParent).forEach(pid => { siblingsCount[pid] = (childrenByParent[pid] || []).length })
+          const jitter = () => (Math.random() - 0.5) * 60
+          const radius = (d: number) => 240 + d * 60
+          const angleFor = (cid: string, parentId: string) => {
+            const idx = siblingsIndex[cid] || 0
+            const total = (childrenByParent[parentId] || []).length || 1
+            return (2 * Math.PI) * (idx / total)
+          }
+          const posFor = (n: any) => {
+            const id = String(n.id)
+            const d = depth.get(id) || 0
+            const parentEntry = edges.find(e => String(e.target ?? e["target"]) === id)
+            const parentId = parentEntry ? String(parentEntry.source ?? parentEntry["source"]) : String(rootNode?.id)
+            if (pref === "timeline") {
+              return { x: ax + d * 280 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 120 }
+            }
+            if (pref === "org" || pref === "tree") {
+              return { x: ax + d * 280, y: ay + ((siblingsIndex[id] || 0) * 150) + jitter() }
+            }
+            if (pref === "fishbone") {
+              const dir = d % 2 === 0 ? -1 : 1
+              return { x: ax + d * 240 + jitter(), y: ay + dir * (80 + (siblingsIndex[id] || 0) * 40) }
+            }
+            const ang = angleFor(id, parentId)
+            return { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
+          }
+          const nextNodes = nodes.map(n => {
+            const px = n.position?.x
+            const py = n.position?.y
+            const needs = (typeof px !== 'number' || typeof py !== 'number' || (px === 0 && py === 0))
+            const p = needs ? posFor(n) : { x: px, y: py }
+            const hasType = !!n.type && n.type !== 'default'
+            const shape = n.data?.shape || shapes[Math.floor(Math.random() * shapes.length)]
+            const type = hasType ? n.type : shape
+            const data = { ...(n.data || {}), shape }
+            return { ...n, type, position: p, data }
+          })
+          const nextEdges = edges.map(e => {
+            const t = edgeTypes[Math.floor(Math.random() * edgeTypes.length)]
+            return { ...e, type: t, animated: true }
+          })
+          return { ...r, nodes: nextNodes, edges: nextEdges }
+        }
+
+        const adjusted = enrich(result, structureType)
+        setFullMindmapState(adjusted)
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
         setMessages((m) => [...m, { role: 'assistant', text: msg }])
