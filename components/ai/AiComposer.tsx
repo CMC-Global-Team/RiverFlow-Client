@@ -87,7 +87,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
-  const { mindmap, selectedNode, setFullMindmapState } = useMindmapContext()
+  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap } = useMindmapContext()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -113,6 +113,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       if (n.toLowerCase().startsWith('en')) return 'en'
     }
     return 'vi'
+  }
+
+  const shouldReplace = (s: string) => {
+    const t = (s || '').toLowerCase()
+    return /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
   }
 
   const sendPrompt = async (text: string) => {
@@ -179,8 +184,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           })
           const siblingsCount: Record<string, number> = {}
           Object.keys(childrenByParent).forEach(pid => { siblingsCount[pid] = (childrenByParent[pid] || []).length })
-          const jitter = () => (Math.random() - 0.5) * 60
-          const radius = (d: number) => 240 + d * 60
+          const jitter = () => (Math.random() - 0.5) * 80
+          const radius = (d: number) => 400 + d * 80
           const angleFor = (cid: string, parentId: string) => {
             const idx = siblingsIndex[cid] || 0
             const total = (childrenByParent[parentId] || []).length || 1
@@ -192,14 +197,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             const parentEntry = edges.find(e => String(e.target ?? e["target"]) === id)
             const parentId = parentEntry ? String(parentEntry.source ?? parentEntry["source"]) : String(rootNode?.id)
             if (pref === "timeline") {
-              return { x: ax + d * 280 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 120 }
+              return { x: ax + d * 320 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 160 }
             }
             if (pref === "org" || pref === "tree") {
-              return { x: ax + d * 280, y: ay + ((siblingsIndex[id] || 0) * 150) + jitter() }
+              return { x: ax + d * 320, y: ay + ((siblingsIndex[id] || 0) * 180) + jitter() }
             }
             if (pref === "fishbone") {
               const dir = d % 2 === 0 ? -1 : 1
-              return { x: ax + d * 240 + jitter(), y: ay + dir * (80 + (siblingsIndex[id] || 0) * 40) }
+              return { x: ax + d * 280 + jitter(), y: ay + dir * (120 + (siblingsIndex[id] || 0) * 60) }
             }
             const ang = angleFor(id, parentId)
             return { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
@@ -223,7 +228,57 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
 
         const adjusted = enrich(result, structureType)
-        setFullMindmapState(adjusted)
+
+        const wantsReplace = shouldReplace(text)
+        if (!wantsReplace) {
+          // Append mode: stream nodes/edges into current mindmap
+          const startNodes = Array.isArray(nodes) ? [...nodes] : []
+          const startEdges = Array.isArray(edges) ? [...edges] : []
+          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
+          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
+          let curNodes = [...startNodes]
+          let curEdges = [...startEdges]
+          const tick = () => {
+            if (addSeqNodes.length > 0) {
+              const n = addSeqNodes.shift() as any
+              curNodes = [...curNodes, n]
+              const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+              curEdges = [...startEdges, ...eReady]
+              const nextState = { ...(mindmap as any), nodes: curNodes, edges: curEdges }
+              setFullMindmapState(nextState)
+              setTimeout(tick, 45)
+            } else {
+              const nextState = { ...(mindmap as any), nodes: curNodes, edges: adjusted.edges }
+              setFullMindmapState(nextState)
+              void saveMindmap()
+            }
+          }
+          setTimeout(tick, 60)
+        } else {
+          // Replace mode: clear old, then stream new nodes
+          const baseState = { ...(mindmap as any), nodes: [], edges: [] }
+          setFullMindmapState(baseState)
+          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
+          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
+          let curNodes: any[] = []
+          let curEdges: any[] = []
+          const tick = () => {
+            if (addSeqNodes.length > 0) {
+              const n = addSeqNodes.shift() as any
+              curNodes = [...curNodes, n]
+              const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+              curEdges = [...eReady]
+              const nextState = { ...(mindmap as any), nodes: curNodes, edges: curEdges }
+              setFullMindmapState(nextState)
+              setTimeout(tick, 45)
+            } else {
+              const nextState = { ...(mindmap as any), nodes: curNodes, edges: adjusted.edges }
+              setFullMindmapState(nextState)
+              void saveMindmap()
+            }
+          }
+          setTimeout(tick, 60)
+        }
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
         setMessages((m) => [...m, { role: 'assistant', text: msg }])
@@ -250,13 +305,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="size-8 rounded-lg">
                     <Sliders className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
+                <DropdownMenuContent align="start" className="min-w-[260px] p-2 bg-background shadow-md border rounded-xl">
                   <DropdownMenuLabel>Settings</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuSub>
@@ -266,7 +319,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                         {structureType === "mindmap" ? "Mind Map" : structureType === "logic" ? "Logic Chart" : structureType === "brace" ? "Brace Map" : structureType === "org" ? "Org Chart" : structureType === "tree" ? "Tree Chart" : structureType === "timeline" ? "Timeline" : "Fishbone"}
                       </span>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
+                    <DropdownMenuSubContent className="min-w-[240px] p-2 bg-background shadow-md border rounded-lg">
                       <DropdownMenuRadioGroup value={structureType} onValueChange={(v) => setStructureType(v as any)}>
                         <DropdownMenuRadioItem value="mindmap">Mind Map</DropdownMenuRadioItem>
                         <DropdownMenuRadioItem value="logic">Logic Chart</DropdownMenuRadioItem>
@@ -285,7 +338,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                         {langPref === "auto" ? "Auto" : langPref === "vi" ? "Tiếng Việt" : "English"}
                       </span>
                     </DropdownMenuSubTrigger>
-                    <DropdownMenuSubContent>
+                    <DropdownMenuSubContent className="min-w-[200px] p-2 bg-background shadow-md border rounded-lg">
                       <DropdownMenuRadioGroup value={langPref} onValueChange={(v) => setLangPref(v as any)}>
                         <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
                         <DropdownMenuRadioItem value="vi">Tiếng Việt</DropdownMenuRadioItem>
@@ -293,20 +346,6 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                       </DropdownMenuRadioGroup>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
-                </DropdownMenuContent>
-              </DropdownMenu>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => setStructureType("mindmap")}>MindMap</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("logic")}>Logic Chart</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("brace")}>Brace Map</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("org")}>Org Chart</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("tree")}>Tree Chart</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("timeline")}>TimeLine</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setStructureType("fishbone")}>Fishbone</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLangPref("auto")}>Language: Auto</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLangPref("vi")}>Language: Tiếng Việt</DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLangPref("en")}>Language: English</DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setChatOpen(true)}>
