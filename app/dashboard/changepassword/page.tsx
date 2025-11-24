@@ -137,16 +137,16 @@ function ChangePasswordContent() {
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Lock className="w-5 h-5 text-primary" />
                                         </div>
-                                        <h1 className="text-2xl font-bold">Change Password</h1>
+                                        <h1 className="text-2xl font-bold">{t("changePassword")}</h1>
                                     </div>
                                     <p className="text-muted-foreground text-sm">
-                                        Keep your account secure by updating your password regularly.
+                                        {t("keepYourAccountSecure")}
                                     </p>
                                 </div>
 
                                 {/* SECURITY TIPS */}
                                 <div className="space-y-3">
-                                    <h3 className="font-semibold text-sm">Security Tips</h3>
+                                    <h3 className="font-semibold text-sm">{t("securityTips")}</h3>
                                     <div className="space-y-2">
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -154,7 +154,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.minLength ? "text-foreground" : "text-muted-foreground"
-                                            }`}>At least 6 characters</span>
+                                            }`}>{t("atLeast6Characters")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -162,7 +162,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasUppercase && passwordRequirements.hasLowercase ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Mix uppercase & lowercase</span>
+                                            }`}>{t("mixUppercaseAndLowercase")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -170,7 +170,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasNumbers ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Include numbers</span>
+                                            }`}>{t("includeNumbers")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -178,7 +178,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasSpecialChar ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Add special characters</span>
+                                            }`}>{t("addSpecialCharacters")}</span>
                                         </div>
                                     </div>
                                 </div>
