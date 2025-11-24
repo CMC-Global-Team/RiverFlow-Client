@@ -450,7 +450,7 @@ export default function Toolbar({
               <Download className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
+          <DropdownMenuContent align="end" className="bg-background">
             <DropdownMenuItem onClick={() => handleDownloadImage('png')}>
               <ImageIcon className="h-4 w-4 mr-2" />
               PNG Image
