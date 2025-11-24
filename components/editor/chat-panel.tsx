@@ -66,7 +66,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
       })
     }
     s.on('chat:typing', onTyping)
-    return () => { s.off('chat:message', onMsg) }
+    return () => { s.off('chat:message', onMsg); s.off('chat:typing', onTyping) }
   }, [])
 
   useEffect(() => {
