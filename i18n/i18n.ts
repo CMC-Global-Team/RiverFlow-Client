@@ -15,6 +15,8 @@ import CHANGE_PASSWORD_EN from "@/locales/en/changePassword.json";
 import CHANGE_PASSWORD_VI from "@/locales/vi/changePassword.json";
 import MINDMAPS_EN from "@/locales/en/mindmaps.json"
 import MINDMAPS_VI from "@/locales/vi/mindmaps.json"
+import SETTINGS_EN from "@/locales/en/setting.json";
+import SETTINGS_VI from "@/locales/vi/setting.json";
 
 export const locale = {
     en: "English",
@@ -31,6 +33,7 @@ const resource = {
         dashboard: DASHBOARD_EN,
         "change-password": CHANGE_PASSWORD_EN,
         mindmaps: MINDMAPS_EN,
+        settings: SETTINGS_EN,
     },
     vi: {
         home: HOME_VI,
@@ -40,13 +43,14 @@ const resource = {
         dashboard: DASHBOARD_VI,
         "change-password": CHANGE_PASSWORD_VI,
         mindmaps: MINDMAPS_VI,
+        settings: SETTINGS_VI,
     }
 } as const
 const defaultNS = 'home'
 i18n.use(initReactI18next).init({
     resources: resource,
     lng: "vi",
-    ns: ["home", "about", "pricing", "other", "dashboard", "change-password", "mindmaps"],
+    ns: ["home", "about", "pricing", "other", "dashboard", "change-password", "mindmaps", "settings"],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {
