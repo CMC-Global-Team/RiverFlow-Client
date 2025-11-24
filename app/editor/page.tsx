@@ -6,6 +6,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
+import ChatPanel from "@/components/editor/chat-panel"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
@@ -53,6 +54,7 @@ function EditorInner() {
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
@@ -527,6 +529,7 @@ function EditorInner() {
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
+              onChatClick={() => setIsChatOpen(true)}
             />
           </div>
         </div>
@@ -534,6 +537,7 @@ function EditorInner() {
 
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}

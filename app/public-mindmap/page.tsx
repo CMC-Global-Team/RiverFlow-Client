@@ -5,6 +5,7 @@ import { Loader2, AlertCircle } from "lucide-react"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
+import ChatPanel from "@/components/editor/chat-panel"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import { useSearchParams } from "next/navigation"
@@ -35,6 +36,7 @@ function PublicMindmapInner() {
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -232,6 +234,7 @@ function PublicMindmapInner() {
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
+              onChatClick={() => setIsChatOpen(true)}
             />
           </div>
         </div>
@@ -239,6 +242,7 @@ function PublicMindmapInner() {
 
       {/* Floating Properties Panel - Outside relative container (same as editor page) */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
