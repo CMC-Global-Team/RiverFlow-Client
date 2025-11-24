@@ -303,11 +303,11 @@ function MyMindmapsContent() {
               <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
                 <AlertCircle className="h-5 w-5" />
                 <div className="flex-1">
-                  <p className="font-semibold">Failed to load mindmaps</p>
+                  <p className="font-semibold">{t("failedToLoadMindmaps")}</p>
                   <p className="text-sm">{error}</p>
                   {error.includes("403") && (
                     <p className="text-xs mt-1">
-                      You may need to log in again. Your session might have expired.
+                      {t("sessionExpired")}
                     </p>
                   )}
                 </div>
@@ -315,7 +315,7 @@ function MyMindmapsContent() {
                   onClick={refetch}
                   className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Retry
+                  {t("retry")}
                 </button>
               </div>
             )}
