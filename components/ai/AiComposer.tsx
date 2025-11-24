@@ -85,60 +85,60 @@ export default function AiComposer() {
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
-  const mapModeToParams = () => {
-    switch (mode) {
-      case 'thinking':
-        return { detailLevel: 'deep' as const, maxNodes: 40, maxDepth: 4 }
-      case 'max':
-        return { detailLevel: 'deep' as const, maxNodes: 60, maxDepth: 5 }
-      default:
-        return { detailLevel: 'normal' as const, maxNodes: 30, maxDepth: 3 }
-    }
-  }
+  // const mapModeToParams = () => {
+  //   switch (mode) {
+  //     case 'thinking':
+  //       return { detailLevel: 'deep' as const, maxNodes: 40, maxDepth: 4 }
+  //     case 'max':
+  //       return { detailLevel: 'deep' as const, maxNodes: 60, maxDepth: 5 }
+  //     default:
+  //       return { detailLevel: 'normal' as const, maxNodes: 30, maxDepth: 3 }
+  //   }
+  // }
 
-  const detectLang = () => {
-    if (typeof document !== 'undefined') {
-      const htmlLang = document.documentElement.lang
-      if (htmlLang) return htmlLang
-    }
-    if (typeof navigator !== 'undefined') {
-      const n = navigator.language || ''
-      if (n.toLowerCase().startsWith('vi')) return 'vi'
-      if (n.toLowerCase().startsWith('en')) return 'en'
-    }
-    return 'vi'
-  }
+  // const detectLang = () => {
+  //   if (typeof document !== 'undefined') {
+  //     const htmlLang = document.documentElement.lang
+  //     if (htmlLang) return htmlLang
+  //   }
+  //   if (typeof navigator !== 'undefined') {
+  //     const n = navigator.language || ''
+  //     if (n.toLowerCase().startsWith('vi')) return 'vi'
+  //     if (n.toLowerCase().startsWith('en')) return 'en'
+  //   }
+  //   return 'vi'
+  // }
 
-  const sendPrompt = async (text: string) => {
-    setChatOpen(true)
-    setLoading(true)
-    setMessages((m) => [...m, { role: 'user', text, mode }])
-    try {
-      const params = mapModeToParams()
-      const nowIso = new Date().toISOString()
-      const lang = detectLang()
-      const result = await generateAIMindmap({
-        topic: text,
-        detailLevel: params.detailLevel,
-        maxNodes: params.maxNodes,
-        maxDepth: params.maxDepth,
-        lang,
-        includeSources: false,
-        nowIso,
-      })
-      setLastResult(result)
-      const summary = `Đã tạo mindmap: ${result.topic} (${result.lang}). Tổng nút: ${Array.isArray(result.nodes) ? result.nodes.length : 0}.`
-      setMessages((m) => [...m, { role: 'assistant', text: summary }])
-    } catch (err: any) {
-      const code = err?.response?.data?.error?.code || 'ERROR'
-      const message = err?.response?.data?.error?.message || err?.message || 'Không thể tạo mindmap.'
-      const hints: string[] | undefined = err?.response?.data?.error?.hints
-      const hintStr = hints && hints.length ? `\nGợi ý: ${hints.join(' • ')}` : ''
-      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi (${code}): ${message}${hintStr}` }])
-    } finally {
-      setLoading(false)
-    }
-  }
+  // const sendPrompt = async (text: string) => {
+  //   setChatOpen(true)
+  //   setLoading(true)
+  //   setMessages((m) => [...m, { role: 'user', text, mode }])
+  //   try {
+  //     const params = mapModeToParams()
+  //     const nowIso = new Date().toISOString()
+  //     const lang = detectLang()
+  //     const result = await generateAIMindmap({
+  //       topic: text,
+  //       detailLevel: params.detailLevel,
+  //       maxNodes: params.maxNodes,
+  //       maxDepth: params.maxDepth,
+  //       lang,
+  //       includeSources: false,
+  //       nowIso,
+  //     })
+  //     setLastResult(result)
+  //     const summary = `Đã tạo mindmap: ${result.topic} (${result.lang}). Tổng nút: ${Array.isArray(result.nodes) ? result.nodes.length : 0}.`
+  //     setMessages((m) => [...m, { role: 'assistant', text: summary }])
+  //   } catch (err: any) {
+  //     const code = err?.response?.data?.error?.code || 'ERROR'
+  //     const message = err?.response?.data?.error?.message || err?.message || 'Không thể tạo mindmap.'
+  //     const hints: string[] | undefined = err?.response?.data?.error?.hints
+  //     const hintStr = hints && hints.length ? `\nGợi ý: ${hints.join(' • ')}` : ''
+  //     setMessages((m) => [...m, { role: 'assistant', text: `Lỗi (${code}): ${message}${hintStr}` }])
+  //   } finally {
+  //     setLoading(false)
+  //   }
+  // }
 
   return (
     <>
@@ -168,9 +168,9 @@ export default function AiComposer() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const t = inputValue.trim()
-                  if (!t || loading) return
+                  // if (!t || loading) return
                   setInputValue("")
-                  void sendPrompt(t)
+                  // void sendPrompt(t)
                 }
               }}
             />
