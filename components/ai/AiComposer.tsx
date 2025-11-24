@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
+import { useAuth } from "@/hooks/auth/useAuth"
+import { getUserProfile } from "@/services/auth/update-user.service"
+import { getSocket } from "@/lib/realtime"
 import type { MindmapResponse } from "@/types/mindmap.types"
  
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -88,6 +91,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
   const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode } = useMindmapContext()
+  const { user, updateUser } = useAuth()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -207,6 +211,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     try {
       const lang = detectLang()
       if (mindmap?.id) {
+        const s = getSocket()
+        s.emit('agent:typing', { isTyping: true })
         const modeLabel = mode
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
@@ -239,6 +245,13 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           const logs = (result as any).aiAgentLogs as string[]
           setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: normalizeAgentText(t) }))])
         }
+
+        try {
+          const profile = await getUserProfile()
+          if (user) {
+            updateUser({ ...user, credit: Number(profile.credit || 0) })
+          }
+        } catch {}
 
         const enrich = (r: MindmapResponse, pref: typeof structureType) => {
           const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
@@ -399,6 +412,10 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       const hintStr = hints && hints.length ? `\nGợi ý: ${hints.join(' • ')}` : ''
       setMessages((m) => [...m, { role: 'assistant', text: `Lỗi (${code}): ${message}${hintStr}` }])
     } finally {
+      try {
+        const s = getSocket()
+        s.emit('agent:typing', { isTyping: false })
+      } catch {}
       setLoading(false)
     }
   }
@@ -511,6 +528,10 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <div className="ml-1 inline-flex items-center gap-1 px-2 h-8 rounded-lg border bg-muted">
+              <Coins className="size-4 text-yellow-500" />
+              <span className="text-sm">{Number(user?.credit || 0)}</span>
+            </div>
             <Button size="icon" className="size-10 rounded-xl" disabled={loading} onClick={() => {
               const t = inputValue.trim()
               if (!t || loading) return
