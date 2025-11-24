@@ -96,9 +96,6 @@ function DashboardContent() {
   const handleCreateNew = () => {
     setShowTemplateModal(true)
   }
-  const handleCreateWithAI = () => {
-    router.push('/dashboard/ai-mindmap')
-  }
     const handleEditInfo = (id: string) => {
         const mindmap = mindmaps.find((m) => m.id === id)
         if (mindmap) {
