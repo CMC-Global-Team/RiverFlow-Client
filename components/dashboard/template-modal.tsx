@@ -330,7 +330,7 @@ const templateMetadata = [
               }
             }
           } catch (err) {
-            console.error(`Failed to load template ${meta.filePath}:`, err)
+            console.error(`${t("failedToLoadTemplate")} ${meta.filePath}:`, err)
           }
         })
 
@@ -387,9 +387,9 @@ const templateMetadata = [
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Choose a Template</h2>
+            <h2 className="text-2xl font-bold text-foreground">{t("chooseATemplate")}</h2>
             <p className="text-sm text-muted-foreground mt-1">
-              Select a template to get started or start from blank
+              {t("selectATemplateToGetStartedOrStartFromBlank")}
             </p>
           </div>
           <button
@@ -405,7 +405,7 @@ const templateMetadata = [
           {isLoadingTemplates ? (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Đang tải templates...</p>
+              <p className="text-muted-foreground">{t("loadingTemplates")}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -418,11 +418,11 @@ const templateMetadata = [
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
-                    <p className="text-xs text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</p>
+                    <h3 className="font-semibold text-foreground mb-1">{t("createAIMindmap")}</h3>
+                    <p className="text-xs text-muted-foreground">{t("enterPromptChooseModeAttachFileAndModel")}</p>
                   </div>
                   <div className="absolute right-6 top-6">
-                    <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">Mới</span>
+                    <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">{t("new")}</span>
                   </div>
                 </div>
               </div>
