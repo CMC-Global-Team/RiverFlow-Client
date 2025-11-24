@@ -72,22 +72,40 @@ function idempotencyHeader(id?: string) {
 // ===== API calls =====
 
 export async function generateAIMindmap(body: GenerateMindmapBody, opts?: { idempotencyKey?: string }): Promise<AIMindmapV1> {
-  const res = await apiClient.post<AIMindmapV1>(
-    '/api/ai/mindmaps/generate',
-    body,
-    {
-      headers: {
-        Accept: 'application/json',
-        ...idempotencyHeader(opts?.idempotencyKey),
-      },
+  try {
+    const res = await apiClient.post<AIMindmapV1>(
+      '/ai/mindmaps/generate',
+      body,
+      {
+        headers: {
+          Accept: 'application/json',
+          ...idempotencyHeader(opts?.idempotencyKey),
+        },
+      }
+    )
+    return res.data
+  } catch (err: any) {
+    // Fallback for legacy route if new route not found
+    if (err?.response?.status === 404) {
+      const res2 = await apiClient.post<AIMindmapV1>(
+        '/mindmaps/ai/generate',
+        body,
+        {
+          headers: {
+            Accept: 'application/json',
+            ...idempotencyHeader(opts?.idempotencyKey),
+          },
+        }
+      )
+      return res2.data
     }
-  )
-  return res.data
+    throw err
+  }
 }
 
 export async function updateAIMindmap(body: UpdateMindmapBody, opts?: { idempotencyKey?: string }): Promise<AIMindmapV1> {
   const res = await apiClient.post<AIMindmapV1>(
-    '/api/ai/mindmaps/update',
+    '/ai/mindmaps/update',
     body,
     {
       headers: {
@@ -101,7 +119,7 @@ export async function updateAIMindmap(body: UpdateMindmapBody, opts?: { idempote
 
 export async function validateAIMindmap(body: ValidateMindmapBody): Promise<{ valid: boolean; errors?: Array<{ path: string; code: string; message: string }> }> {
   const res = await apiClient.post<{ valid: boolean; errors?: Array<{ path: string; code: string; message: string }> }>(
-    '/api/ai/mindmaps/validate',
+    '/ai/mindmaps/validate',
     body,
     {
       headers: { Accept: 'application/json' },
@@ -111,12 +129,12 @@ export async function validateAIMindmap(body: ValidateMindmapBody): Promise<{ va
 }
 
 export async function getAIModels(): Promise<AIModelInfo> {
-  const res = await apiClient.get<AIModelInfo>('/api/ai/models', { headers: { Accept: 'application/json' } })
+  const res = await apiClient.get<AIModelInfo>('/ai/models', { headers: { Accept: 'application/json' } })
   return res.data
 }
 
 export async function getAIHealth(): Promise<AIHealthInfo> {
-  const res = await apiClient.get<AIHealthInfo>('/api/ai/health', { headers: { Accept: 'application/json' } })
+  const res = await apiClient.get<AIHealthInfo>('/ai/health', { headers: { Accept: 'application/json' } })
   return res.data
 }
 
@@ -125,7 +143,7 @@ export function openGenerateStream(onData: (chunk: any) => void, onEnd?: () => v
   if (typeof window === 'undefined') return null
   // Build absolute URL for EventSource
   const base = (process.env.NEXT_PUBLIC_API_URL || '').replace(/\/$/, '')
-  const url = `${base}/api/ai/mindmaps/generate/stream`
+  const url = `${base}/ai/mindmaps/generate/stream`
   const es = new EventSource(url, { withCredentials: true })
   es.onmessage = (ev) => {
     try { onData(JSON.parse(ev.data)) } catch { /* ignore parse errors */ }
