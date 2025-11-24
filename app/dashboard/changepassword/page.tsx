@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -24,16 +25,16 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 
 import { changePassword } from "@/services/auth/changePassword.service";
-
+const { t } = useTranslation('dashboard');
 // VALIDATION SCHEMA
 const ChangePasswordSchema = z
     .object({
-        currentPassword: z.string().min(1, "Please enter your current password"),
-        newPassword: z.string().min(6, "New password must be at least 6 characters"),
-        confirmPassword: z.string().min(1, "Please confirm your new password"),
+        currentPassword: z.string().min(1, t("currentPasswordRequired")),
+        newPassword: z.string().min(6, t("newPasswordMinLength")),
+        confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
     })
     .refine((data) => data.newPassword === data.confirmPassword, {
-        message: "Passwords do not match",
+        message: t("passwordsDoNotMatch"),
         path: ["confirmPassword"],
     });
 
