@@ -74,19 +74,19 @@ export default function FilterBar({
   sortBy,
   onSortChange,
 }: FilterBarProps) {
+  const { t } = useTranslation("filterBar")
   const statuses = [
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
+  { value: "active", label: t("active") },
+  { value: "archived", label: t("archived") },
 ]
 
 const sortOptions = [
-  { value: "updatedAt", label: "Last Modified" },
-  { value: "createdAt", label: "Date Created" },
-  { value: "title", label: "Title" },
-  { value: "nodeCount", label: "Node Count" },
+  { value: "updatedAt", label: t("lastModified") },
+  { value: "createdAt", label: t("dateCreated") },
+  { value: "title", label: t("title") },
+  { value: "nodeCount", label: t("nodeCount") },
 ]
 
-  const { t } = useTranslation("filterBar")
   return (
     <div className="flex flex-wrap items-center gap-4 p-4 bg-card rounded-lg border border-border shadow-sm">
       <div className="flex items-center gap-2">
