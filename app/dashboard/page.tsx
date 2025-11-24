@@ -163,14 +163,14 @@ function DashboardContent() {
 
   const handleDuplicate = async (id: string) => {
     setActionLoading(id);
-    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." });
+    toast({ title: t("duplicating"), description: t("pleaseWait") });
 
     try {
       const newMindmap = await duplicateMindmap(id);
       
       toast({ 
-        title: "Nhân bản thành công!",
-        description: `Đã tạo "${newMindmap.title}".`
+        title: t("duplicateSuccess"),
+        description: t("created", { title: newMindmap.title })
       });
       await refetch();
 
@@ -178,8 +178,8 @@ function DashboardContent() {
       console.error("Duplicate failed:", error);
       toast({ 
         variant: "destructive", 
-        title: "Lỗi", 
-        description: "Không thể nhân bản mind map." 
+        title: t("error"), 
+        description: t("duplicateFailed") 
       });
     } finally {
       setActionLoading(null); 
