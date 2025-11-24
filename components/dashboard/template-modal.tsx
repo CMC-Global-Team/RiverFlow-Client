@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2, ChevronDown, Coins } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { generateAIMindmap } from "@/services/ai/ai.service"
+import { generateMindmapProject } from "@/services/ai/ai.service"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -358,16 +358,15 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       try {
         if (selectedTemplate.id === 'ai') {
           const lang = (typeof document !== 'undefined' ? document.documentElement.lang : '') || (typeof navigator !== 'undefined' ? (navigator.language || '').slice(0,2) : 'vi')
-          const res = await generateAIMindmap({
+          const mode = aiMode === 'normal' ? 'normal' : 'max'
+          const res = await generateMindmapProject({
             topic: aiPrompt.trim(),
-            detailLevel: aiMode === 'thinking' || aiMode === 'max' ? 'deep' : 'normal',
-            lang: lang === 'en' ? 'en' : 'vi',
-            maxNodes: aiMode === 'max' ? 60 : aiMode === 'thinking' ? 40 : 30,
-            maxDepth: aiMode === 'max' ? 5 : aiMode === 'thinking' ? 4 : 3,
-            includeSources: false,
-            nowIso: new Date().toISOString(),
+            mode,
+            language: lang === 'en' ? 'en' : 'vi',
+            levels: mode === 'normal' ? 2 : 3,
+            firstLevelCount: mode === 'normal' ? 4 : 5,
           })
-          const id = (res as any)?.id
+          const id = res?.id
           if (id) {
             router.push(`/editor?id=${id}`)
             onClose()

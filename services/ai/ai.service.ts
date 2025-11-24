@@ -1,4 +1,5 @@
 import apiClient from '@/lib/apiClient'
+import type { MindmapResponse } from '@/types/mindmap.types'
 
 // ===== Types =====
 export type DetailLevel = 'brief' | 'normal' | 'deep'
@@ -152,5 +153,10 @@ export function openGenerateStream(onData: (chunk: any) => void, onEnd?: () => v
   es.onopen = () => { /* connected */ }
   ;(es as any).onend = () => { onEnd?.(); es.close() }
   return es
+}
+
+export async function generateMindmapProject(payload: { topic: string; mode?: string; language?: string; levels?: number; firstLevelCount?: number; tags?: string[] }): Promise<MindmapResponse> {
+  const res = await apiClient.post<MindmapResponse>('/mindmaps/ai/generate', payload, { headers: { Accept: 'application/json' } })
+  return res.data
 }
 
