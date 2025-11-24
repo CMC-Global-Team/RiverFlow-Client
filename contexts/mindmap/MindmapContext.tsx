@@ -289,12 +289,33 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       normalizedNodes = [rootNode];
     }
 
-    const normalizedEdges = (data.edges || []).map((edge: any) => ({
-      ...edge,
-      animated: edge.animated !== undefined ? edge.animated : true,
-      type: edge.type || 'smoothstep',
-      markerEnd: edge.markerEnd || { type: MarkerType.ArrowClosed },
-    }));
+    const incomingEdges = Array.isArray(data.edges) ? data.edges : []
+    const edgeIds = new Set<string>()
+    const edgeSigs = new Set<string>()
+    const normalizedEdges: any[] = []
+    for (let i = 0; i < incomingEdges.length; i++) {
+      const e: any = incomingEdges[i] || {}
+      const base = {
+        ...e,
+        animated: e.animated !== undefined ? e.animated : true,
+        type: e.type || 'smoothstep',
+        markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+      }
+      const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
+      if (edgeSigs.has(sig)) continue
+      let id = String(base.id || '')
+      if (!id || edgeIds.has(id)) {
+        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        while (edgeIds.has(uid)) {
+          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        }
+        base.id = uid
+        id = uid
+      }
+      edgeIds.add(id)
+      edgeSigs.add(sig)
+      normalizedEdges.push(base)
+    }
 
     setNodes(normalizedNodes);
     setEdges(normalizedEdges);
@@ -585,7 +606,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         )
         if (exists) return eds
         const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}`,
+          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
           ...connection,
           animated: true,
           type: "smoothstep",
