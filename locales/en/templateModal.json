@@ -1,0 +1,45 @@
+{
+  "blankCanvas": "Blank Canvas",
+  "startFromScratch": "Start from scratch with an empty mindmap",
+
+  "basicMindmap": "Basic Mindmap",
+  "basicMindmapDescription": "A simple mindmap with central node and main branches",
+
+  "simpleStructure": "Simple Structure",
+  "simpleStructureDescription": "Clean and minimal hierarchical structure",
+
+  "complexMindmap": "Complex Mindmap",
+  "complexMindmapDescription": "Rich multi-level mindmap with many branches and details",
+
+  "hierarchicalStructure": "Hierarchical Structure",
+  "hierarchicalStructureDescription": "Perfect for org charts, taxonomies, and nested concepts",
+
+  "radialMindmap": "Radial Mindmap",
+  "radialMindmapDescription": "Symmetric radial layout ideal for balanced topics",
+
+  "brainstorming": "Brainstorming Session",
+  "brainstormingDescription": "Ideal for creative ideation and group brainstorming",
+
+  "projectPlanning": "Project Planning",
+  "projectPlanningDescription": "Timeline, tasks, milestones and dependencies ready",
+
+  "decisionTree": "Decision Tree",
+  "decisionTreeDescription": "Map out decisions, outcomes and probabilities",
+
+  "studyNotes": "Study Notes",
+  "studyNotesDescription": "Organized structure for learning and revision",
+
+  "chooseATemplate": "Choose a Template",
+  "selectATemplateToGetStartedOrStartFromBlank": "Select a template to get started or start from blank",
+
+  "createAIMindmap": "Create Mindmap with AI",
+  "enterPromptChooseModeAttachFileAndModel": "Enter prompt, choose mode, attach files and model",
+  "new": "New",
+
+  "loadingTemplates": "Loading templates...",
+
+  "failedToLoadTemplate": "Failed to load template",
+
+  "cancel": "Cancel",
+  "createMindmap": "Create Mindmap"
+}
