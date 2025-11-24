@@ -9,7 +9,7 @@
  * - Path starting with /api: removes /api from baseURL and appends path
  * - Relative path: appends to baseURL
  */
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://riverflow-server.onrender.com/api";
 
 export function getAvatarUrl(avatarPath: string | undefined | null): string | undefined {
   if (!avatarPath) {
@@ -21,10 +21,7 @@ export function getAvatarUrl(avatarPath: string | undefined | null): string | un
     return avatarPath;
   }
 
-  if (!API_BASE_URL) {
-    console.warn('NEXT_PUBLIC_API_URL is not set. Please verify .env.production.');
-    return avatarPath;
-  }
+  // API_BASE_URL always has a sensible default. If env missing, falls back to Render backend.
 
   // If path starts with /api, remove /api from baseURL and append path
   if (avatarPath.startsWith('/api')) {
