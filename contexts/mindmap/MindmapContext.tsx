@@ -737,6 +737,19 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
+  const applyStreamingAdditions = useCallback((addNodes: any[] = [], addEdges: any[] = []) => {
+    recordSnapshot()
+    setNodes((nds) => [...nds, ...addNodes])
+    setEdges((eds) => [...eds, ...addEdges])
+    scheduleAutoSave()
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) {
+      if (addNodes.length > 0) emitNodesChange(s, room, addNodes.map((n) => ({ type: 'add', item: n })) as any)
+      if (addEdges.length > 0) emitEdgesChange(s, room, addEdges.map((e) => ({ type: 'add', item: e })) as any)
+    }
+  }, [scheduleAutoSave, recordSnapshot])
+
   const updateEdgeData = useCallback((edgeId: string, updates: any) => {
     recordSnapshot()
     let updated: any = null
@@ -876,6 +889,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     undo,
     redo,
     setFullMindmapState,
+    applyStreamingAdditions,
     restoreFromHistory: async (snapshot: any, historyId?: string | number | null) => {
       const m = latestMindmapRef.current
       if (!m || !snapshot) return

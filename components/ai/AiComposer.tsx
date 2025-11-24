@@ -87,7 +87,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
-  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap } = useMindmapContext()
+  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions } = useMindmapContext()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -120,6 +120,13 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
   }
 
+  const inferTargetType = (s: string): 'node' | 'description' | 'structure' => {
+    const t = (s || '').toLowerCase()
+    if (/(sửa|chỉnh|update|edit|thay đổi|xóa|xoá|remove|delete)/.test(t)) return 'node'
+    if (/(mô tả|description|ghi chú|note)/.test(t)) return 'description'
+    return 'structure'
+  }
+
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
     setLoading(true)
@@ -133,7 +140,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         
         const payload: any = {
           mindmapId: mindmap.id,
-          targetType: 'auto',
+          targetType: inferTargetType(text),
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
@@ -185,29 +192,46 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           const siblingsCount: Record<string, number> = {}
           Object.keys(childrenByParent).forEach(pid => { siblingsCount[pid] = (childrenByParent[pid] || []).length })
           const jitter = () => (Math.random() - 0.5) * 80
-          const radius = (d: number) => 400 + d * 80
+          const radius = (d: number) => 600 + d * 200
           const angleFor = (cid: string, parentId: string) => {
             const idx = siblingsIndex[cid] || 0
             const total = (childrenByParent[parentId] || []).length || 1
-            return (2 * Math.PI) * (idx / total)
+            return (2 * Math.PI) * (idx / Math.max(1, total))
           }
+          const minDist = 160
+          const placed: { x: number; y: number }[] = []
           const posFor = (n: any) => {
             const id = String(n.id)
             const d = depth.get(id) || 0
             const parentEntry = edges.find(e => String(e.target ?? e["target"]) === id)
             const parentId = parentEntry ? String(parentEntry.source ?? parentEntry["source"]) : String(rootNode?.id)
+            let p: { x: number; y: number }
             if (pref === "timeline") {
-              return { x: ax + d * 320 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 160 }
-            }
-            if (pref === "org" || pref === "tree") {
-              return { x: ax + d * 320, y: ay + ((siblingsIndex[id] || 0) * 180) + jitter() }
-            }
-            if (pref === "fishbone") {
+              p = { x: ax + d * 450 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 240 }
+            } else if (pref === "org" || pref === "tree") {
+              p = { x: ax + d * 420, y: ay + ((siblingsIndex[id] || 0) * 240) + jitter() }
+            } else if (pref === "fishbone") {
               const dir = d % 2 === 0 ? -1 : 1
-              return { x: ax + d * 280 + jitter(), y: ay + dir * (120 + (siblingsIndex[id] || 0) * 60) }
+              p = { x: ax + d * 360 + jitter(), y: ay + dir * (180 + (siblingsIndex[id] || 0) * 90) }
+            } else {
+              const ang = angleFor(id, parentId)
+              p = { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
             }
-            const ang = angleFor(id, parentId)
-            return { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
+            let tries = 0
+            while (tries < 24) {
+              let ok = true
+              for (let i = 0; i < placed.length; i++) {
+                const q = placed[i]
+                const dx = p.x - q.x
+                const dy = p.y - q.y
+                if (Math.sqrt(dx * dx + dy * dy) < minDist) { ok = false; break }
+              }
+              if (ok) break
+              p = { x: p.x + (Math.random() - 0.5) * minDist, y: p.y + (Math.random() - 0.5) * minDist }
+              tries++
+            }
+            placed.push({ x: p.x, y: p.y })
+            return p
           }
           const nextNodes = nodes.map(n => {
             const px = n.position?.x
@@ -220,10 +244,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             const data = { ...(n.data || {}), shape }
             return { ...n, type, position: p, data }
           })
-          const nextEdges = edges.map(e => {
-            const t = edgeTypes[Math.floor(Math.random() * edgeTypes.length)]
-            return { ...e, type: t, animated: true }
-          })
+          const nextEdges = edges.map(e => ({ ...e, type: 'smoothstep', animated: true }))
           return { ...r, nodes: nextNodes, edges: nextEdges }
         }
 
@@ -231,49 +252,35 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
         const wantsReplace = shouldReplace(text)
         if (!wantsReplace) {
-          // Append mode: stream nodes/edges into current mindmap
           const startNodes = Array.isArray(nodes) ? [...nodes] : []
-          const startEdges = Array.isArray(edges) ? [...edges] : []
           const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
           const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
           let curNodes = [...startNodes]
-          let curEdges = [...startEdges]
           const tick = () => {
             if (addSeqNodes.length > 0) {
               const n = addSeqNodes.shift() as any
               curNodes = [...curNodes, n]
               const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-              curEdges = [...startEdges, ...eReady]
-              const nextState = { ...(mindmap as any), nodes: curNodes, edges: curEdges }
-              setFullMindmapState(nextState)
+              applyStreamingAdditions([n], eReady)
               setTimeout(tick, 45)
             } else {
-              const nextState = { ...(mindmap as any), nodes: curNodes, edges: adjusted.edges }
-              setFullMindmapState(nextState)
               void saveMindmap()
             }
           }
           setTimeout(tick, 60)
         } else {
-          // Replace mode: clear old, then stream new nodes
-          const baseState = { ...(mindmap as any), nodes: [], edges: [] }
-          setFullMindmapState(baseState)
+          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
           const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
           const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
           let curNodes: any[] = []
-          let curEdges: any[] = []
           const tick = () => {
             if (addSeqNodes.length > 0) {
               const n = addSeqNodes.shift() as any
               curNodes = [...curNodes, n]
               const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-              curEdges = [...eReady]
-              const nextState = { ...(mindmap as any), nodes: curNodes, edges: curEdges }
-              setFullMindmapState(nextState)
+              applyStreamingAdditions([n], eReady)
               setTimeout(tick, 45)
             } else {
-              const nextState = { ...(mindmap as any), nodes: curNodes, edges: adjusted.edges }
-              setFullMindmapState(nextState)
               void saveMindmap()
             }
           }
