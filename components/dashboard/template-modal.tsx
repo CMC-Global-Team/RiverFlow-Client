@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { generateMindmapProject } from "@/services/ai/ai.service"
+import { createMindmap } from "@/services/mindmap/mindmap.service"
 
 interface Template {
   id: string
@@ -352,17 +352,9 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       setLoading(selectedTemplate.id)
       try {
         if (selectedTemplate.id === 'ai') {
-          const lang = (typeof document !== 'undefined' ? document.documentElement.lang : '') || (typeof navigator !== 'undefined' ? (navigator.language || '').slice(0,2) : 'vi')
-          const res = await generateMindmapProject({
-            topic: 'Untitled Mindmap',
-            mode: 'normal',
-            language: lang === 'en' ? 'en' : 'vi',
-            levels: 2,
-            firstLevelCount: 4,
-          })
-          const id = res?.id
-          if (id) {
-            router.push(`/editor?id=${id}`)
+          const created = await createMindmap({ title: 'Untitled Mindmap', nodes: [], edges: [], category: 'ai', aiGenerated: false })
+          if (created?.id) {
+            router.push(`/editor?id=${created.id}&ai=1`)
             onClose()
             return
           }

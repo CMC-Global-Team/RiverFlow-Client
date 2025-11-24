@@ -76,11 +76,11 @@ function Draggable({ children, initialPos, handle }: { children: React.ReactNode
   )
 }
 
-export default function AiComposer() {
+export default function AiComposer({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const [mode, setMode] = useState<"normal" | "thinking" | "max">("normal")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
-  const [chatOpen, setChatOpen] = useState(false)
+  const [chatOpen, setChatOpen] = useState(defaultOpen)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max" }[]>([])
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)

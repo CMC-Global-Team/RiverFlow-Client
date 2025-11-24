@@ -7,6 +7,7 @@ import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapCo
 import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
 import ChatPanel from "@/components/editor/chat-panel"
+import AiComposer from "@/components/ai/AiComposer"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
@@ -35,6 +36,7 @@ function EditorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
+  const ai = searchParams.get('ai')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
   
@@ -538,6 +540,7 @@ function EditorInner() {
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
       <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      {ai === '1' ? <AiComposer defaultOpen /> : null}
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
