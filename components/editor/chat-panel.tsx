@@ -1,0 +1,158 @@
+"use client"
+
+import { useEffect, useRef, useState } from "react"
+import { GripVertical, X, Send } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import { getSocket } from "@/lib/realtime"
+
+interface ChatMessage {
+  id: string
+  room: string
+  clientId: string
+  userId?: string | number | null
+  name: string
+  color: string
+  message: string
+  createdAt: string
+}
+
+export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void }) {
+  const { mindmap, participants } = useMindmapContext()
+  const [position, setPosition] = useState({ x: 24, y: 100 })
+  const [size, setSize] = useState({ width: 360, height: 420 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
+  const [isResizing, setIsResizing] = useState(false)
+  const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
+  const [input, setInput] = useState("")
+  const [messages, setMessages] = useState<ChatMessage[]>([])
+  const panelRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      setPosition((p) => ({ ...p }))
+    }
+  }, [])
+
+  useEffect(() => {
+    const s = getSocket()
+    const onMsg = (msg: ChatMessage) => {
+      setMessages((prev) => {
+        const next = [...prev, msg]
+        return next.length > 500 ? next.slice(next.length - 500) : next
+      })
+      setTimeout(() => {
+        listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
+      }, 10)
+    }
+    s.on('chat:message', onMsg)
+    return () => { s.off('chat:message', onMsg) }
+  }, [])
+
+  if (!isOpen) return null
+  if (!mindmap) return null
+
+  const room = `mindmap:${mindmap.id}`
+  const socket = getSocket()
+  const myId = socket.id
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if ((e.target as HTMLElement).closest('.resize-handle')) return
+    setIsDragging(true)
+    setDragStart({ x: e.clientX - position.x, y: e.clientY - position.y })
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (isDragging) {
+      e.stopPropagation()
+      setPosition({ x: e.clientX - dragStart.x, y: e.clientY - dragStart.y })
+    }
+  }
+
+  const handleMouseUp = () => { setIsDragging(false) }
+
+  const handleResizeStart = (e: React.MouseEvent) => {
+    setIsResizing(true)
+    setResizeStart({ x: e.clientX, y: e.clientY, width: size.width, height: size.height })
+    e.stopPropagation()
+  }
+
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isResizing) return
+      const dx = e.clientX - resizeStart.x
+      const dy = e.clientY - resizeStart.y
+      setSize({ width: Math.max(320, resizeStart.width + dx), height: Math.max(260, resizeStart.height + dy) })
+    }
+    const onUp = () => setIsResizing(false)
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [isResizing, resizeStart])
+
+  const send = () => {
+    const text = input.trim()
+    if (!text) return
+    socket.emit('chat:message', room, { text })
+    setInput("")
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') send()
+  }
+
+  return (
+    <div
+      ref={panelRef}
+      className="fixed rounded-lg border border-border bg-card shadow-2xl backdrop-blur-sm bg-card/95 overflow-hidden z-50 pointer-events-auto"
+      style={{ transform: `translate(${position.x}px, ${position.y}px)`, width: `${size.width}px`, height: `${size.height}px`, cursor: isDragging ? 'grabbing' : 'default' }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onMouseLeave={handleMouseUp}
+    >
+      <div className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0 gap-2" onMouseDown={handleMouseDown}>
+        <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+        <h3 className="text-sm font-semibold text-foreground flex-1 min-w-0">Chat</h3>
+        <Button variant="ghost" size="icon" onClick={onClose} className="h-6 w-6 flex-shrink-0">
+          <X className="h-4 w-4" />
+        </Button>
+      </div>
+
+      <div className="flex flex-col" style={{ height: `calc(100% - 45px)` }}>
+        <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2">
+          {messages.map((m) => {
+            const isMine = m.clientId === myId
+            return (
+              <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+                <div className={`max-w-[70%] rounded-lg px-3 py-2 shadow-sm ${isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+                  <div className="text-[10px] opacity-70 mb-1 flex items-center gap-1">
+                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: m.color }}></span>
+                    <span>{isMine ? 'You' : m.name || 'Anonymous'}</span>
+                    <span>• {new Date(m.createdAt).toLocaleTimeString()}</span>
+                  </div>
+                  <div className="text-sm break-words whitespace-pre-wrap">{m.message}</div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <div className="p-3 border-t border-border flex items-center gap-2">
+          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown} placeholder="Nhập tin nhắn..." />
+          <Button onClick={send} className="h-9 w-9" variant="default" title="Gửi">
+            <Send className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} title="Drag to resize" />
+    </div>
+  )
+}
+

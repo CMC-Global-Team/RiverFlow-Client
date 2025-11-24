@@ -28,6 +28,7 @@ import {
   Image as ImageIcon,
   FileJson,
   File,
+  MessageSquare,
   Menu
 } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -68,6 +69,7 @@ interface ToolbarProps {
   onShareClick?: () => void
   userRole?: 'owner' | 'editor' | 'viewer' | null
   onHistoryClick?: () => void
+  onChatClick?: () => void
 }
 
 export default function Toolbar({
@@ -86,6 +88,7 @@ export default function Toolbar({
   onShareClick,
   userRole,
   onHistoryClick,
+  onChatClick,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -533,6 +536,19 @@ export default function Toolbar({
           className="hover:bg-primary/10 hover:text-primary h-8 w-8"
         >
           <HandHelping className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Chat */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Chat"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          onClick={onChatClick}
+        >
+          <MessageSquare className="h-4 w-4" />
         </Button>
       </div>
 
