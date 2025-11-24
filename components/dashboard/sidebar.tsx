@@ -3,7 +3,6 @@
 import { useState } from "react"
 import { useLogout } from "@/hooks/auth/useLogout"
 import TemplateModal from "./template-modal"
-import AiComposer from "@/components/ai/AiComposer"
 import { useRouter } from "next/navigation"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import Link from "next/link"
@@ -31,7 +30,6 @@ export default function Sidebar() {
   const {create} = useMindmapActions();
   const [settingsOpen, setSettingsOpen] = useState(false)
   const router = useRouter()
-  const [showAiModal, setShowAiModal] = useState(false)
 
   //handle create new mindmap
 const handleCreateNew = () => {
@@ -43,8 +41,6 @@ const handleCreateNew = () => {
 //handle select template
 const handleSelectTemplate = async (template: any) => {
   if (template?.id === 'ai') {
-    setShowTemplateModal(false)
-    setShowAiModal(true)
     return
   }
   const newMindmap = await create({
@@ -156,7 +152,6 @@ const handleSelectTemplate = async (template: any) => {
       onClose={() => setShowTemplateModal(false)}
       onSelectTemplate={handleSelectTemplate}
       />
-      {showAiModal ? <AiComposer /> : null}
       
 
       {/* Logout */}
