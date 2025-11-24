@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { GripVertical, X, Send } from "lucide-react"
+import { GripVertical, X, Send, Smile } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -14,8 +14,41 @@ interface ChatMessage {
   userId?: string | number | null
   name: string
   color: string
+  avatar?: string | null
   message: string
   createdAt: string
+}
+
+function EmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const onDoc = (e: MouseEvent) => {
+      if (!ref.current) return
+      if (!(e.target as HTMLElement).closest('[data-emoji-root]')) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [])
+  const emojis = ["🙂","😊","😂","😍","😎","👍","👏","🙌","🤝","🚀","🎉","❤️","🔥","🤔","😡","🤯","😭","🤗","🙏"]
+  return (
+    <div className="relative" data-emoji-root ref={ref}>
+      <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setOpen((v) => !v)} title="Chọn biểu tượng">
+        <Smile className="h-4 w-4" />
+      </Button>
+      {open && (
+        <div className="absolute bottom-full mb-2 left-0 z-50 rounded-md border border-border bg-popover p-2 shadow-lg">
+          <div className="grid grid-cols-6 gap-1">
+            {emojis.map((em) => (
+              <button key={em} className="h-7 w-7 text-base rounded hover:bg-muted" onClick={() => { onPick(em); setOpen(false) }}>
+                {em}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolean; onClose?: () => void }) {
@@ -149,44 +182,40 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
           {messages.map((m) => {
             const isMine = m.clientId === myId
             return (
-              <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+              <div key={m.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`} title={new Date(m.createdAt).toLocaleTimeString()}>
+                {!isMine && (
+                  <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
+                    {m.avatar ? (
+                      <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'A').slice(0,1).toUpperCase()}</span>
+                    )}
+                  </div>
+                )}
                 <div className={`max-w-[70%] rounded-lg px-3 py-2 shadow-sm ${isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
                   <div className="text-[10px] opacity-70 mb-1 flex items-center gap-1">
                     <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: m.color }}></span>
                     <span>{isMine ? 'You' : m.name || 'Anonymous'}</span>
-                    <span>• {new Date(m.createdAt).toLocaleTimeString()}</span>
                   </div>
                   <div className="text-sm break-words whitespace-pre-wrap">{m.message}</div>
                 </div>
+                {isMine && (
+                  <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
+                    {m.avatar ? (
+                      <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'Y').slice(0,1).toUpperCase()}</span>
+                    )}
+                  </div>
+                )}
               </div>
             )
           })}
         </div>
 
-        <div className="p-3 border-t border-border flex items-center gap-2">
-          <Input
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value)
-              socket.emit('chat:typing', room, { isTyping: true })
-              if (stopTimerRef.current) clearTimeout(stopTimerRef.current)
-              stopTimerRef.current = setTimeout(() => {
-                socket.emit('chat:typing', room, { isTyping: false })
-              }, 1200)
-            }}
-            onBlur={() => {
-              socket.emit('chat:typing', room, { isTyping: false })
-            }}
-            onKeyDown={onKeyDown}
-            placeholder="Nhập tin nhắn..."
-          />
-          <Button onClick={send} className="h-9 w-9" variant="default" title="Gửi">
-            <Send className="h-4 w-4" />
-          </Button>
-        </div>
-        {Object.keys(typingUsers).length > 0 && (
-          <div className="px-3 pb-2">
-            <div className="flex items-center gap-2">
+        <div className="p-3 border-t border-border">
+          {Object.keys(typingUsers).length > 0 && (
+            <div className="flex items-center gap-2 mb-2">
               <div className="flex -space-x-2">
                 {Object.values(typingUsers).map((u) => (
                   <div key={u.clientId} className="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-card bg-muted text-[10px] overflow-hidden">
@@ -202,8 +231,30 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
               </div>
               <span className="text-xs text-muted-foreground">...</span>
             </div>
+          )}
+          <div className="flex items-center gap-2">
+            <Input
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value)
+                socket.emit('chat:typing', room, { isTyping: true })
+                if (stopTimerRef.current) clearTimeout(stopTimerRef.current)
+                stopTimerRef.current = setTimeout(() => {
+                  socket.emit('chat:typing', room, { isTyping: false })
+                }, 1200)
+              }}
+              onBlur={() => {
+                socket.emit('chat:typing', room, { isTyping: false })
+              }}
+              onKeyDown={onKeyDown}
+              placeholder="Nhập tin nhắn..."
+            />
+            <EmojiPicker onPick={(em) => { socket.emit('chat:message', room, { text: em }); socket.emit('chat:typing', room, { isTyping: false }) }} />
+            <Button onClick={send} className="h-9 w-9" variant="default" title="Gửi">
+              <Send className="h-4 w-4" />
+            </Button>
           </div>
-        )}
+          </div>
       </div>
 
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} title="Drag to resize" />
