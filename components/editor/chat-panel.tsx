@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { getSocket } from "@/lib/realtime"
+import { getAvatarUrl } from "@/lib/avatar-utils"
 
 interface ChatMessage {
   id: string
@@ -186,7 +187,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                 {!isMine && (
                   <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
                     {m.avatar ? (
-                      <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={getAvatarUrl(m.avatar) || ''} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'A').slice(0,1).toUpperCase()}</span>
                     )}
@@ -202,7 +203,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                 {isMine && (
                   <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
                     {m.avatar ? (
-                      <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={getAvatarUrl(m.avatar) || ''} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'Y').slice(0,1).toUpperCase()}</span>
                     )}
@@ -220,7 +221,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                 {Object.values(typingUsers).map((u) => (
                   <div key={u.clientId} className="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-card bg-muted text-[10px] overflow-hidden">
                     {u.avatar ? (
-                      <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                      <img src={getAvatarUrl(u.avatar) || ''} alt="" className="w-full h-full object-cover" />
                     ) : (
                       <span className="font-semibold" style={{ color: '#fff', backgroundColor: u.color, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {(u.name || 'A').slice(0, 1).toUpperCase()}
