@@ -1,0 +1,89 @@
+{
+    "title": "Bảng giá đơn giản, minh bạch",
+    "subtitle": "Chọn gói phù hợp với nhu cầu của bạn. Luôn linh hoạt để mở rộng.",
+    "featureComparison": "So sánh tính năng",
+    "table": {
+        "feature": "Tính năng",
+        "starter": "Cơ bản",
+        "professional": "Chuyên nghiệp",
+        "enterprise": "Doanh nghiệp"
+    },
+    "features": {
+        "mindmaps": "Bản đồ tư duy",
+        "teamMembers": "Thành viên nhóm",
+        "realTimeCollab": "Cộng tác thời gian thực",
+        "apiAccess": "Truy cập API",
+        "customIntegrations": "Tích hợp tùy chỉnh",
+        "prioritySupport": "Hỗ trợ ưu tiên"
+    },
+    "values": {
+        "unlimited": "Không giới hạn",
+        "yes": "Có",
+        "no": "Không"
+    },
+    "plans": {
+        "starter": {
+            "name": "Cơ bản",
+            "description": "Hoàn hảo cho cá nhân",
+            "features": [
+                "Tối đa 5 bản đồ tư duy",
+                "Hình dạng và văn bản cơ bản",
+                "Không gian làm việc cá nhân",
+                "Xuất dưới dạng PNG",
+                "Hỗ trợ cộng đồng"
+            ]
+        },
+        "professional": {
+            "name": "Chuyên nghiệp",
+            "description": "Cho đội nhóm và chuyên gia",
+            "features": [
+                "Không giới hạn bản đồ tư duy",
+                "Tùy chọn kiểu dáng nâng cao",
+                "Cộng tác nhóm (tối đa 5 thành viên)",
+                "Đồng bộ thời gian thực",
+                "Xuất nhiều định dạng",
+                "Hỗ trợ qua email ưu tiên",
+                "Mẫu tùy chỉnh"
+            ]
+        },
+        "enterprise": {
+            "name": "Doanh nghiệp",
+            "description": "Cho tổ chức lớn",
+            "features": [
+                "Mọi thứ trong gói Chuyên nghiệp",
+                "Không giới hạn thành viên nhóm",
+                "Quyền hạn nâng cao",
+                "Truy cập API",
+                "Tích hợp tùy chỉnh",
+                "Hỗ trợ chuyên dụng",
+                "Tính năng bảo mật & SSO",
+                "Bảng điều khiển phân tích"
+            ]
+        }
+    },
+    "faq": {
+        "title": "Câu hỏi thường gặp",
+        "items": [
+            {
+                "question": "Tôi có thể thay đổi gói bất cứ lúc nào không?",
+                "answer": "Có, bạn có thể nâng cấp hoặc hạ cấp gói của mình bất cứ lúc nào. Thay đổi có hiệu lực ngay lập tức."
+            },
+            {
+                "question": "Có bản dùng thử miễn phí không?",
+                "answer": "Có, bắt đầu với gói Cơ bản miễn phí của chúng tôi. Không cần thẻ tín dụng."
+            },
+            {
+                "question": "Bạn chấp nhận phương thức thanh toán nào?",
+                "answer": "Chúng tôi chấp nhận tất cả các thẻ tín dụng chính, PayPal và chuyển khoản ngân hàng cho các gói Doanh nghiệp."
+            },
+            {
+                "question": "Bạn có giảm giá cho thanh toán hàng năm không?",
+                "answer": "Có, tiết kiệm 20% khi bạn chọn thanh toán hàng năm thay vì hàng tháng."
+            }
+        ]
+    },
+    "card": {
+        "mostPopular": "Phổ biến nhất",
+        "getStarted": "Bắt đầu"
+    }
+}

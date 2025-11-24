@@ -4,5 +4,130 @@
   "features": "Tính năng",
   "pricing": "Giá",
   "about": "Giới thiệu",
-  "docs": "Tài liệu"
+  "docs": "Tài liệu",
+  "dark": "Tối",
+  "light": "Sáng",
+  "login": "Đăng nhập",
+  "logout": "Đăng xuất",
+  "logging out...": "Đang đăng xuất...",
+  "heroSection": {
+    "welcome": "Chào mừng đến với RiverFlow",
+    "title": {
+      "createBeautiful": "Tạo nên những",
+      "mindmaps": "bản đồ tư duy",
+      "together": "tuyệt đẹp cùng nhau"
+    },
+    "subtitle": "Cộng tác trong thời gian thực, sắp xếp suy nghĩ của bạn và biến ý tưởng thành hiện thực với trình biên tập bản đồ tư duy trực quan của RiverFlow.",
+    "buttons": {
+      "dashboard": "Đến bảng điều khiển",
+      "getStarted": "Bắt đầu miễn phí",
+      "watchDemo": "Xem demo"
+    },
+    "stats": {
+      "activeUsers": "Người dùng hoạt động",
+      "mindmapsCreated": "Bản đồ tư duy đã tạo",
+      "uptime": "Thời gian hoạt động"
+    }
+  },
+  "featuresSection": {
+    "title": "Tính năng mạnh mẽ cho đội ngũ sáng tạo",
+    "subtitle": "Mọi thứ bạn cần để tạo, cộng tác và chia sẻ những bản đồ tư duy tuyệt đẹp.",
+    "lightningFast": {
+      "title": "Nhanh như chớp",
+      "description": "Cộng tác thời gian thực không độ trễ. Thấy thay đổi ngay lập tức khi nhóm của bạn làm việc."
+    },
+    "teamCollaboration": {
+      "title": "Cộng tác nhóm",
+      "description": "Mời thành viên nhóm và cùng nhau làm việc trên bản đồ tư duy trong thời gian thực."
+    },
+    "securePrivate": {
+      "title": "Bảo mật & Riêng tư",
+      "submit": "Đăng nhập",
+      "submitting": "Đang đăng nhập...",
+      "orContinueWith": "Hoặc tiếp tục với",
+      "github": "GitHub",
+      "successTitle": "Đăng nhập thành công!",
+      "successDesc": "Chào mừng trở lại, {{name}}!",
+      "failedTitle": "Đăng nhập thất bại",
+      "unverifiedEmail": "Email chưa được xác thực",
+      "validationError": "Lỗi",
+      "validationDesc": "Vui lòng nhập đầy đủ email và mật khẩu!"
+    },
+    "signup": {
+      "fullName": "Họ và tên",
+      "fullNamePlaceholder": "Nguyễn Văn A",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Mật khẩu",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "Mật khẩu phải có ít nhất 6 ký tự",
+      "confirmPassword": "Xác nhận mật khẩu",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Tạo tài khoản",
+      "submitting": "Đang tạo tài khoản...",
+      "orSignUpWith": "Hoặc đăng ký với",
+      "github": "GitHub",
+      "successTitle": "Đăng ký thành công!",
+      "successDesc": "Chào mừng {{name}}! Vui lòng kiểm tra email để xác thực tài khoản.",
+      "failedTitle": "Đăng ký thất bại",
+      "passwordMismatch": "Mật khẩu xác nhận không khớp!",
+      "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự!"
+    },
+    "forgotPassword": {
+      "backToLogin": "Quay lại đăng nhập",
+      "description": "Nhập địa chỉ email của bạn và chúng tôi sẽ gửi link để đặt lại mật khẩu.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Gửi link đặt lại mật khẩu",
+      "submitting": "Đang gửi...",
+      "checkEmail": "Kiểm tra email của bạn",
+      "failedTitle": "Gửi yêu cầu thất bại",
+      "validationError": "Lỗi",
+      "validationDesc": "Vui lòng nhập email!"
+    },
+    "customizable": {
+      "title": "Tùy chỉnh linh hoạt",
+      "description": "Điều chỉnh màu sắc, bố cục và phong cách để tạo nên bản đồ tư duy mang dấu ấn của riêng bạn."
+    },
+
+    "easySharing": {
+      "title": "Chia sẻ dễ dàng",
+      "description": "Chia sẻ bản đồ tư duy của bạn ngay lập tức với đồng đội hoặc khách hàng chỉ bằng một liên kết an toàn."
+    },
+
+    "mobileReady": {
+      "title": "Tương thích di động",
+      "description": "Tạo, chỉnh sửa và cộng tác trên bản đồ tư duy một cách mượt mà trên mọi thiết bị di động."
+    },
+    "securePrivate": {
+      "title": "Bảo mật & Riêng tư",
+      "description": "Ý tưởng của bạn luôn được bảo vệ với mã hóa cấp doanh nghiệp và các lớp kiểm soát quyền riêng tư."
+    }
+
+
+  },
+  "product": "Sản phẩm",
+  "security": "Bảo mật",
+  "company": "Công ty",
+  "blog": "Blog",
+  "contact": "Liên hệ",
+  "followUs": "Theo dõi chúng tôi",
+  "privacy": "Quyền riêng tư",
+  "terms": "Điều khoản",
+  "cookies": "Cookies",
+  "copyright": "© 2025 RiverFlow. Bảo lưu mọi quyền.",
+  "slogan": "Cùng nhau tạo nên những bản đồ tư duy tuyệt đẹp.",
+  "ctaSection": {
+    "authenticated": {
+      "title": "Sẵn sàng bắt đầu tạo nội dung?",
+      "description": "Hãy vào bảng điều khiển và bắt đầu sắp xếp ý tưởng của bạn với RiverFlow.",
+      "button": "Đến bảng điều khiển"
+    },
+    "guest": {
+      "title": "Sẵn sàng tạo bản đồ tư duy đầu tiên?",
+      "description": "Tham gia cùng hàng nghìn đội nhóm đang dùng RiverFlow để sắp xếp ý tưởng và cộng tác hiệu quả.",
+      "button": "Bắt đầu dùng thử miễn phí"
+    }
+  }
+
 }

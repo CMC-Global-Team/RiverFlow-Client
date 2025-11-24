@@ -1,0 +1,32 @@
+{
+  "myMindmaps": "Sơ Đồ Tư Duy Của Tôi",
+  "mindmap": "sơ đồ tư duy",
+  "createNew": "Tạo Mới",
+  "createWithAI": "Tạo bằng AI",
+  "loadingMindmaps": "Đang tải sơ đồ tư duy của bạn...",
+  "failedToLoadMindmaps": "Không thể tải sơ đồ tư duy",
+  "sessionExpired": "Phiên đăng nhập của bạn có thể đã hết hạn. Vui lòng đăng nhập lại.",
+  "retry": "Thử lại",
+
+  "noMindmapsYet": "Chưa có sơ đồ tư duy nào",
+  "noMindmapsDescription": "Bắt đầu tạo sơ đồ tư duy đầu tiên để sắp xếp ý tưởng, lập kế hoạch dự án hoặc brainstorm sáng tạo.",
+  "noArchivedMindmaps": "Không có sơ đồ tư duy nào trong lưu trữ",
+  "archivedMindmapsDescription": "Các sơ đồ tư duy bạn lưu trữ sẽ xuất hiện ở đây.",
+  "noResultsFound": "Không tìm thấy sơ đồ tư duy nào",
+  "tryAdjustingFilters": "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.",
+
+  "createMindmap": "Tạo Sơ Đồ Tư Duy",
+
+  "duplicating": "Đang sao chép sơ đồ tư duy...",
+  "pleaseWait": "Vui lòng chờ",
+  "duplicateSuccess": "Đã sao chép thành công!",
+  "created": "Đã tạo: {{title}}",
+  "duplicateFailedTitle": "Sao chép thất bại",
+  "duplicateFailedDescription": "Đã xảy ra lỗi. Vui lòng thử lại.",
+
+  "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi sơ đồ tư duy cộng tác này không?",
+  "leftProject": "Đã rời dự án",
+  "leftProjectDescription": "Bạn đã rời khỏi sơ đồ tư duy thành công.",
+  "leaveFailed": "Rời dự án thất bại",
+  "leaveFailedDescription": "Đã xảy ra lỗi. Vui lòng thử lại."
+}

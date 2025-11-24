@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Lock, Eye, EyeOff, CheckCircle, AlertCircle, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -25,44 +26,6 @@ import { toast } from "sonner";
 
 import { changePassword } from "@/services/auth/changePassword.service";
 
-// VALIDATION SCHEMA
-const ChangePasswordSchema = z
-    .object({
-        currentPassword: z.string().min(1, "Please enter your current password"),
-        newPassword: z.string().min(6, "New password must be at least 6 characters"),
-        confirmPassword: z.string().min(1, "Please confirm your new password"),
-    })
-    .refine((data) => data.newPassword === data.confirmPassword, {
-        message: "Passwords do not match",
-        path: ["confirmPassword"],
-    });
-
-type FormType = z.infer<typeof ChangePasswordSchema>;
-
-// PASSWORD STRENGTH CALCULATOR
-const calculatePasswordStrength = (password: string) => {
-    if (!password) return { score: 0, level: "weak", color: "bg-red-500" };
-
-    let score = 0;
-
-    // Length checks
-    if (password.length >= 6) score += 20;
-    if (password.length >= 8) score += 10;
-    if (password.length >= 12) score += 10;
-
-    // Character type checks
-    if (/[a-z]/.test(password)) score += 10;
-    if (/[A-Z]/.test(password)) score += 10;
-    if (/[0-9]/.test(password)) score += 10;
-    if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
-
-    // Determine level and color
-    if (score < 30) return { score: 30, level: "Weak", color: "bg-red-500" };
-    if (score < 60) return { score: 60, level: "Fair", color: "bg-amber-500" };
-    if (score < 80) return { score: 80, level: "Good", color: "bg-amber-400" };
-    return { score: 100, level: "Strong", color: "bg-green-500" };
-};
-
 // PASSWORD REQUIREMENTS CHECKER
 const checkPasswordRequirements = (password: string) => {
     return {
@@ -82,6 +45,45 @@ function ChangePasswordContent() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [newPasswordValue, setNewPasswordValue] = useState("");
+    const { t } = useTranslation("change-password");
+
+    // VALIDATION SCHEMA
+    const ChangePasswordSchema = z
+        .object({
+            currentPassword: z.string().min(1, t("currentPasswordRequired")),
+            newPassword: z.string().min(6, t("newPasswordMinLength")),
+            confirmPassword: z.string().min(1, t("confirmPasswordRequired")),
+        })
+        .refine((data) => data.newPassword === data.confirmPassword, {
+            message: t("passwordsDoNotMatch"),
+            path: ["confirmPassword"],
+        });
+
+    type FormType = z.infer<typeof ChangePasswordSchema>;
+    
+     // PASSWORD STRENGTH CALCULATOR
+    const calculatePasswordStrength = (password: string) => {
+        if (!password) return { score: 0, level: t("weak"), color: "bg-red-500" };
+
+        let score = 0;
+
+        // Length checks
+        if (password.length >= 6) score += 20;
+        if (password.length >= 8) score += 10;
+        if (password.length >= 12) score += 10;
+
+        // Character type checks
+        if (/[a-z]/.test(password)) score += 10;
+        if (/[A-Z]/.test(password)) score += 10;
+        if (/[0-9]/.test(password)) score += 10;
+        if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
+
+        // Determine level and color
+        if (score < 30) return { score: 30, level: t("weak"), color: "bg-red-500" };
+        if (score < 60) return { score: 60, level: t("fair"), color: "bg-amber-500" };
+        if (score < 80) return { score: 80, level: t("good"), color: "bg-amber-400" };
+        return { score: 100, level: t("strong"), color: "bg-green-500" };
+    };
 
     const {
         register,
@@ -105,12 +107,12 @@ function ChangePasswordContent() {
         try {
             await changePassword(data);
 
-            toast.success("Password changed successfully!");
+            toast.success(t("passwordChangedSuccessfully"));
             reset();
             setNewPasswordValue("");
             setSuccessModal(true);
         } catch (err: any) {
-            const msg = err.message || "Failed to change password";
+            const msg = err.message || t("failedToChangePassword");
             setErrorMsg(msg);
             setErrorModal(true);
             toast.error(msg);
@@ -136,16 +138,16 @@ function ChangePasswordContent() {
                                         <div className="p-2 bg-primary/10 rounded-lg">
                                             <Lock className="w-5 h-5 text-primary" />
                                         </div>
-                                        <h1 className="text-2xl font-bold">Change Password</h1>
+                                        <h1 className="text-2xl font-bold">{t("changePassword")}</h1>
                                     </div>
                                     <p className="text-muted-foreground text-sm">
-                                        Keep your account secure by updating your password regularly.
+                                        {t("keepYourAccountSecure")}
                                     </p>
                                 </div>
 
                                 {/* SECURITY TIPS */}
                                 <div className="space-y-3">
-                                    <h3 className="font-semibold text-sm">Security Tips</h3>
+                                    <h3 className="font-semibold text-sm">{t("securityTips")}</h3>
                                     <div className="space-y-2">
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -153,7 +155,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.minLength ? "text-foreground" : "text-muted-foreground"
-                                            }`}>At least 6 characters</span>
+                                            }`}>{t("atLeast6Characters")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -161,7 +163,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasUppercase && passwordRequirements.hasLowercase ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Mix uppercase & lowercase</span>
+                                            }`}>{t("mixUppercaseAndLowercase")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -169,7 +171,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasNumbers ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Include numbers</span>
+                                            }`}>{t("includeNumbers")}</span>
                                         </div>
                                         <div className="flex gap-2 text-sm">
                                             <CheckCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 transition-colors ${
@@ -177,7 +179,7 @@ function ChangePasswordContent() {
                                             }`} />
                                             <span className={`${
                                                 passwordRequirements.hasSpecialChar ? "text-foreground" : "text-muted-foreground"
-                                            }`}>Add special characters</span>
+                                            }`}>{t("addSpecialCharacters")}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -185,7 +187,7 @@ function ChangePasswordContent() {
                                 {/* INFO BOX */}
                                 <div className="p-4 bg-blue-500/10 border border-blue-200 dark:border-blue-900 rounded-xl">
                                     <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed">
-                                        <span className="font-semibold">💡 Tip:</span> Never reuse passwords from other accounts. Change your password every 3 months for optimal security.
+                                        <span className="font-semibold">💡 Tip:</span> {t("neverReusePasswords")}
                                     </p>
                                 </div>
                             </div>
@@ -196,11 +198,11 @@ function ChangePasswordContent() {
 
                                     {/* CURRENT PASSWORD */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">Current Password</Label>
+                                        <Label className="text-sm font-semibold">{t("currentPassword")}</Label>
                                         <div className="relative">
                                             <Input
                                                 type="password"
-                                                placeholder="Enter your current password"
+                                                placeholder={t("enterCurrentPassword")}
                                                 className="pr-10 h-11 text-base"
                                                 {...register("currentPassword")}
                                             />
@@ -215,11 +217,11 @@ function ChangePasswordContent() {
 
                                     {/* NEW PASSWORD */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">New Password</Label>
+                                        <Label className="text-sm font-semibold">{t("newPassword")}</Label>
                                         <div className="relative">
                                             <Input
                                                 type={showNewPassword ? "text" : "password"}
-                                                placeholder="Enter your new password (min. 6 characters)"
+                                                placeholder={t("enterNewPassword")}
                                                 className="pr-10 h-11 text-base"
                                                 {...register("newPassword")}
                                                 onChange={(e) => {
@@ -244,11 +246,11 @@ function ChangePasswordContent() {
                                         {newPasswordValue && (
                                             <div className="space-y-2">
                                                 <div className="flex items-center justify-between text-sm">
-                                                    <span className="text-muted-foreground">Password Strength</span>
+                                                    <span className="text-muted-foreground">{t("passwordStrength")}</span>
                                                     <span className={`font-semibold ${
-                                                        passwordStrength.level === "Weak" ? "text-red-500" :
-                                                        passwordStrength.level === "Fair" ? "text-amber-500" :
-                                                        passwordStrength.level === "Good" ? "text-amber-400" :
+                                                        passwordStrength.score === 30  ? "text-red-500" :
+                                                        passwordStrength.score === 60  ? "text-amber-500" :
+                                                        passwordStrength.score === 80  ? "text-amber-400" :
                                                         "text-green-500"
                                                     }`}>
                                                         {passwordStrength.level}
@@ -273,11 +275,11 @@ function ChangePasswordContent() {
 
                                     {/* CONFIRM NEW PASSWORD */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">Confirm New Password</Label>
+                                        <Label className="text-sm font-semibold">{t("confirmNewPassword")}</Label>
                                         <div className="relative">
                                             <Input
                                                 type={showConfirmPassword ? "text" : "password"}
-                                                placeholder="Confirm your new password"
+                                                placeholder={t("confirmNewPassword")}
                                                 className="pr-10 h-11 text-base"
                                                 {...register("confirmPassword")}
                                             />
@@ -308,7 +310,7 @@ function ChangePasswordContent() {
                                             onClick={handleSubmit(onSubmit)}
                                             className="w-full h-11 font-semibold text-base"
                                         >
-                                            {isSubmitting ? "Updating..." : "Update Password"}
+                                            {isSubmitting ? t("updating") : t("updatePassword")}
                                         </Button>
                                     </div>
                                 </div>
@@ -328,13 +330,13 @@ function ChangePasswordContent() {
                             </div>
                         </div>
                         <DialogTitle className="text-2xl font-bold mb-3">
-                            Password Updated Successfully
+                            {t("passwordUpdated")}
                         </DialogTitle>
                         <DialogDescription className="text-base text-muted-foreground mb-6">
-                            Your password has been changed successfully. Your account is now more secure.
+                            {t("passwordUpdatedDescription")}
                         </DialogDescription>
                         <Button onClick={() => setSuccessModal(false)} className="w-full h-11 text-base">
-                            Done
+                            {t("done")}
                         </Button>
                     </div>
                 </DialogContent>
@@ -350,13 +352,13 @@ function ChangePasswordContent() {
                             </div>
                         </div>
                         <DialogTitle className="text-2xl font-bold text-red-600 mb-3">
-                            Failed to Update Password
+                            {t("failedToUpdatePassword")}
                         </DialogTitle>
                         <DialogDescription className="text-base text-red-600/80 mb-6">
                             {errorMsg}
                         </DialogDescription>
                         <Button variant="outline" onClick={() => setErrorModal(false)} className="w-full h-11 text-base">
-                            Close
+                            {t("close")}
                         </Button>
                     </div>
                 </DialogContent>

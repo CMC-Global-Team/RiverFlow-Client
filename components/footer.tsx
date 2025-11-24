@@ -1,7 +1,10 @@
 import Link from "next/link"
 import { Github, Twitter, Linkedin } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export default function Footer() {
+  const { t } = useTranslation()
+
   return (
     <footer className="border-t border-border bg-muted/30">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">
@@ -12,26 +15,26 @@ export default function Footer() {
               <div className="h-8 w-8 rounded-lg bg-gradient-to-br from-primary to-accent"></div>
               <span className="text-lg font-bold text-foreground">RiverFlow</span>
             </div>
-            <p className="text-sm text-muted-foreground">Create beautiful mindmaps together.</p>
+            <p className="text-sm text-muted-foreground">{t("slogan")}</p>
           </div>
 
           {/* Product */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Product</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("product")}</h4>
             <ul className="space-y-2">
               <li>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Features
+                  {t("features")}
                 </Link>
               </li>
               <li>
                 <Link href="/pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Pricing
+                  {t("pricing")}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Security
+                  {t("security")}
                 </Link>
               </li>
             </ul>
@@ -39,21 +42,21 @@ export default function Footer() {
 
           {/* Company */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Company</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("company")}</h4>
             <ul className="space-y-2">
               <li>
                 <Link href="/about" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  About
+                  {t("about")}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Blog
+                  {t("blog")}
                 </Link>
               </li>
               <li>
                 <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                  Contact
+                  {t("contact")}
                 </Link>
               </li>
             </ul>
@@ -61,7 +64,7 @@ export default function Footer() {
 
           {/* Social */}
           <div>
-            <h4 className="font-semibold text-foreground mb-4">Follow Us</h4>
+            <h4 className="font-semibold text-foreground mb-4">{t("followUs")}</h4>
             <div className="flex gap-4">
               <Link href="#" className="text-muted-foreground hover:text-primary transition-colors">
                 <Github className="h-5 w-5" />
@@ -78,16 +81,16 @@ export default function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between">
-          <p className="text-sm text-muted-foreground">© 2025 RiverFlow. All rights reserved.</p>
+          <p className="text-sm text-muted-foreground">{t("copyright")}</p>
           <div className="flex gap-6 mt-4 md:mt-0">
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Privacy
+              {t("privacy")}
             </Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Terms
+              {t("terms")}
             </Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-              Cookies
+              {t("cookies")}
             </Link>
           </div>
         </div>

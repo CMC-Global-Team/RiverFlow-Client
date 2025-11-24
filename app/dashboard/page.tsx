@@ -11,6 +11,7 @@ import gsap from "gsap"
 import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import TemplateModal from "@/components/dashboard/template-modal"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
@@ -30,7 +31,7 @@ function DashboardContent() {
   const [showAiModal, setShowAiModal] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
-
+    const { t } = useTranslation("dashboard")
     const [showEditModal, setShowEditModal] = useState(false)
     const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
     const { toast } = useToast()
@@ -67,7 +68,7 @@ function DashboardContent() {
   }, [loading, mindmaps])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mindmap?')) return
+    if (!confirm(t("confirmDelete"))) return
     
     setActionLoading(id)
     const success = await remove(id)
@@ -159,23 +160,23 @@ function DashboardContent() {
 
   const handleDuplicate = async (id: string) => {
     setActionLoading(id);
-    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." });
+    toast({ title: t("duplicating"), description: t("pleaseWait") });
 
     try {
       const newMindmap = await duplicateMindmap(id);
       
       toast({ 
-        title: "Nhân bản thành công!",
-        description: `Đã tạo "${newMindmap.title}".`
+        title: t("duplicateSuccess"),
+        description: t("created", { title: newMindmap.title })
       });
       await refetch();
 
     } catch (error) {
-      console.error("Duplicate failed:", error);
+      console.error(t("duplicateFailed"), error);
       toast({ 
         variant: "destructive", 
-        title: "Lỗi", 
-        description: "Không thể nhân bản mind map." 
+        title: t("error"), 
+        description: t("duplicateFailed") 
       });
     } finally {
       setActionLoading(null); 
@@ -183,22 +184,22 @@ function DashboardContent() {
   };
 
   const handleLeave = async (id: string) => {
-    if (!confirm('Are you sure you want to leave this project?')) return
+    if (!confirm(t("confirmLeaveProject"))) return
     
     setActionLoading(id)
     try {
       await leaveCollaboration(id)
       toast({ 
-        title: "Left project",
-        description: "You have successfully left the project."
+        title: t("leftProject"),
+        description: t("leftProjectSuccess")
       })
       await refetch()
     } catch (error) {
-      console.error("Leave failed:", error)
+      console.error(t("leaveProjectFailed"), error)
       toast({ 
         variant: "destructive", 
-        title: "Error", 
-        description: "Failed to leave the project." 
+        title: t("error"), 
+        description: t("leaveProjectFailed") 
       })
     } finally {
       setActionLoading(null)
@@ -217,9 +218,9 @@ function DashboardContent() {
             {/* Welcome Section */}
             <div className="mb-8">
               <h1 className="text-3xl font-bold text-foreground">
-                Welcome back, {user?.fullName || "User"}
+                {t("welcomeBack")}, {user?.fullName || "User"}
               </h1>
-              <p className="mt-2 text-muted-foreground">Here are your recent mindmaps</p>
+              <p className="mt-2 text-muted-foreground">{t("recentMindmaps")}</p>
             </div>
 
             {/* Quick Action - Only show if user has mindmaps */}
@@ -239,11 +240,11 @@ function DashboardContent() {
             {loading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-3 text-muted-foreground">Loading mindmaps...</span>
+                <span className="ml-3 text-muted-foreground">{t("loadingMindmaps")}</span>
               </div>
             )}
 
-            {/* Error State */}
+                        {/* Error State */}
             {error && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
                 <AlertCircle className="h-5 w-5" />
@@ -268,14 +269,14 @@ function DashboardContent() {
             {/* Empty State */}
             {!loading && !error && mindmaps.length === 0 && (
               <div className="text-center py-12 space-y-3">
-                <p className="text-muted-foreground">No mindmaps yet. Create your first one!</p>
+                <p className="text-muted-foreground">{t("noMindmaps")}</p>
                 <div className="flex items-center justify-center gap-3">
                   <button 
                     onClick={handleCreateNew}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                   >
                     <Plus className="h-5 w-5" />
-                    Create with Template
+                    {t("createNew")}
                   </button>
                 </div>
               </div>
