@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useLogout } from "@/hooks/auth/useLogout"
 import TemplateModal from "./template-modal"
 import { useRouter } from "next/navigation"
@@ -24,6 +25,7 @@ import {
 
 export default function Sidebar() {
 
+  const { t } = useTranslation("sideBar")
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout, isLoading } = useLogout()
@@ -82,7 +84,7 @@ const handleSelectTemplate = async (template: any) => {
           aria-label="New Mindmap"
         >
           <Plus className="h-5 w-5" />
-          {!isCollapsed && <span>New Mindmap</span>}
+          {!isCollapsed && <span>{t("newMindmap")}</span>}
         </button>
 
         {/* Navigation Items */}
@@ -94,7 +96,7 @@ const handleSelectTemplate = async (template: any) => {
             className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
           >
             <LayoutGrid className="h-5 w-5" />
-            {!isCollapsed && <span className="text-sm font-medium">Dashboard</span>}
+            {!isCollapsed && <span className="text-sm font-medium">{t("dashboard")}</span>}
           </Link>
 
           <Link
@@ -102,7 +104,7 @@ const handleSelectTemplate = async (template: any) => {
             className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
           >
             <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="text-sm font-medium">My Mindmaps</span>}
+            {!isCollapsed && <span className="text-sm font-medium">{t("myMindmaps")}</span>}
           </Link>
 
             <div className="space-y-1">
@@ -112,7 +114,7 @@ const handleSelectTemplate = async (template: any) => {
                 >
                     <div className="flex items-center gap-3">
                         <Settings className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">{t("settings")}</span>}
                     </div>
 
                     {!isCollapsed && (
@@ -129,13 +131,13 @@ const handleSelectTemplate = async (template: any) => {
                             href="/dashboard/changepassword"
                             className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                         >
-                            <Lock className="h-4 w-4" /> Change Password
+                            <Lock className="h-4 w-4" /> {t("changePassword")}
                         </Link>
                         <Link
                               href="/dashboard/billing/history"
                               className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                         >
-                            <History className="h-4 w-4" /> Payment History
+                            <History className="h-4 w-4" /> {t("paymentHistory")}
                         </Link>
 
                     </div>
@@ -161,7 +163,7 @@ const handleSelectTemplate = async (template: any) => {
           className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-all disabled:opacity-50"
         >
           <LogOut className="h-5 w-5" />
-          {!isCollapsed && <span className="text-sm font-medium">{isLoading ? "Logging out..." : "Logout"}</span>}
+          {!isCollapsed && <span className="text-sm font-medium">{isLoading ? t("loggingOut") : t("logout")}</span>}
         </button>
       </div>
     </aside>
