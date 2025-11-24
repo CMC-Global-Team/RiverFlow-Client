@@ -38,10 +38,10 @@ function EmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
         <Smile className="h-4 w-4" />
       </Button>
       {open && (
-        <div className="absolute bottom-full mb-2 left-0 z-50 rounded-md border border-border bg-popover p-2 shadow-lg">
-          <div className="grid grid-cols-6 gap-1">
+        <div className="absolute bottom-full right-0 mb-2 z-50 rounded-md border border-border bg-popover p-2 shadow-lg w-64">
+          <div className="grid grid-cols-8 gap-1">
             {emojis.map((em) => (
-              <button key={em} className="h-7 w-7 text-base rounded hover:bg-muted" onClick={() => { onPick(em); setOpen(false) }}>
+              <button key={em} className="h-7 w-7 text-xl rounded hover:bg-muted" onClick={() => { onPick(em); setOpen(false) }}>
                 {em}
               </button>
             ))}
