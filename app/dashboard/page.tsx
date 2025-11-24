@@ -279,21 +279,21 @@ function DashboardContent() {
             {/* Empty State */}
             {!loading && !error && mindmaps.length === 0 && (
               <div className="text-center py-12 space-y-3">
-                <p className="text-muted-foreground">No mindmaps yet. Create your first one!</p>
+                <p className="text-muted-foreground">{t("noMindmaps")}</p>
                 <div className="flex items-center justify-center gap-3">
                   <button 
                     onClick={handleCreateNew}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                   >
                     <Plus className="h-5 w-5" />
-                    Create with Template
+                    {t("createWithTemplate")}
                   </button>
                   <button 
                     onClick={handleCreateWithAI}
                     className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
                   >
                     <Plus className="h-5 w-5" />
-                    Tạo bằng AI
+                    {t("createWithAI")}
                   </button>
                 </div>
               </div>
