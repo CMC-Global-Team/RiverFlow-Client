@@ -181,7 +181,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
         const agentPlan = composeAgentPlan(text)
-        setMessages((m) => [...m, { role: 'assistant', text: `Gemini Agent Plan: ${agentPlan.summary}` }])
+        setMessages((m) => [...m, { role: 'assistant', text: `🧭 Agent: ${agentPlan.summary}` }])
         if (agentPlan.action === 'replace') {
           setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
         }
@@ -203,7 +203,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        const summary = `Gemini MindMap Generate: áp dụng ${agentPlan.action}`
+        const summary = `✨ Generate: áp dụng ${agentPlan.action}`
         setMessages((m) => [...m, { role: 'assistant', text: summary }])
         if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
           const logs = (result as any).aiAgentLogs as string[]
@@ -247,14 +247,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           })
           const siblingsCount: Record<string, number> = {}
           Object.keys(childrenByParent).forEach(pid => { siblingsCount[pid] = (childrenByParent[pid] || []).length })
-          const jitter = () => (Math.random() - 0.5) * 80
-          const radius = (d: number) => 600 + d * 200
+          const jitter = () => (Math.random() - 0.5) * 120
+          const radius = (d: number) => 1200 + d * 400
           const angleFor = (cid: string, parentId: string) => {
             const idx = siblingsIndex[cid] || 0
             const total = (childrenByParent[parentId] || []).length || 1
             return (2 * Math.PI) * (idx / Math.max(1, total))
           }
-          const minDist = 160
+          const minDist = 360
           const placed: { x: number; y: number }[] = []
           const posFor = (n: any) => {
             const id = String(n.id)
@@ -263,12 +263,12 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             const parentId = parentEntry ? String(parentEntry.source ?? parentEntry["source"]) : String(rootNode?.id)
             let p: { x: number; y: number }
             if (pref === "timeline") {
-              p = { x: ax + d * 450 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 240 }
+              p = { x: ax + d * 900 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 360 }
             } else if (pref === "org" || pref === "tree") {
-              p = { x: ax + d * 420, y: ay + ((siblingsIndex[id] || 0) * 240) + jitter() }
+              p = { x: ax + d * 800, y: ay + ((siblingsIndex[id] || 0) * 360) + jitter() }
             } else if (pref === "fishbone") {
               const dir = d % 2 === 0 ? -1 : 1
-              p = { x: ax + d * 360 + jitter(), y: ay + dir * (180 + (siblingsIndex[id] || 0) * 90) }
+              p = { x: ax + d * 700 + jitter(), y: ay + dir * (300 + (siblingsIndex[id] || 0) * 160) }
             } else {
               const ang = angleFor(id, parentId)
               p = { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
