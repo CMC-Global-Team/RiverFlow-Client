@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { generateAIMindmap, type AIMindmapV1 } from "@/services/ai/ai.service"
 
 function Draggable({ children, initialPos, handle }: { children: React.ReactNode; initialPos?: { x: number; y: number }; handle?: string }) {
   const ref = useRef<HTMLDivElement | null>(null)
@@ -79,8 +80,65 @@ export default function AiComposer() {
   const [chatOpen, setChatOpen] = useState(false)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max" }[]>([])
   const [inputValue, setInputValue] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [lastResult, setLastResult] = useState<AIMindmapV1 | null>(null)
 
   const handleUploadClick = () => fileInputRef.current?.click()
+
+  const mapModeToParams = () => {
+    switch (mode) {
+      case 'thinking':
+        return { detailLevel: 'deep' as const, maxNodes: 40, maxDepth: 4 }
+      case 'max':
+        return { detailLevel: 'deep' as const, maxNodes: 60, maxDepth: 5 }
+      default:
+        return { detailLevel: 'normal' as const, maxNodes: 30, maxDepth: 3 }
+    }
+  }
+
+  const detectLang = () => {
+    if (typeof document !== 'undefined') {
+      const htmlLang = document.documentElement.lang
+      if (htmlLang) return htmlLang
+    }
+    if (typeof navigator !== 'undefined') {
+      const n = navigator.language || ''
+      if (n.toLowerCase().startsWith('vi')) return 'vi'
+      if (n.toLowerCase().startsWith('en')) return 'en'
+    }
+    return 'vi'
+  }
+
+  const sendPrompt = async (text: string) => {
+    setChatOpen(true)
+    setLoading(true)
+    setMessages((m) => [...m, { role: 'user', text, mode }])
+    try {
+      const params = mapModeToParams()
+      const nowIso = new Date().toISOString()
+      const lang = detectLang()
+      const result = await generateAIMindmap({
+        topic: text,
+        detailLevel: params.detailLevel,
+        maxNodes: params.maxNodes,
+        maxDepth: params.maxDepth,
+        lang,
+        includeSources: false,
+        nowIso,
+      })
+      setLastResult(result)
+      const summary = `Đã tạo mindmap: ${result.topic} (${result.lang}). Tổng nút: ${Array.isArray(result.nodes) ? result.nodes.length : 0}.`
+      setMessages((m) => [...m, { role: 'assistant', text: summary }])
+    } catch (err: any) {
+      const code = err?.response?.data?.error?.code || 'ERROR'
+      const message = err?.response?.data?.error?.message || err?.message || 'Không thể tạo mindmap.'
+      const hints: string[] | undefined = err?.response?.data?.error?.hints
+      const hintStr = hints && hints.length ? `\nGợi ý: ${hints.join(' • ')}` : ''
+      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi (${code}): ${message}${hintStr}` }])
+    } finally {
+      setLoading(false)
+    }
+  }
 
   return (
     <>
@@ -110,10 +168,9 @@ export default function AiComposer() {
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   const t = inputValue.trim()
-                  if (!t) return
-                  setMessages((m) => [...m, { role: "user", text: t, mode }])
-                  setChatOpen(true)
+                  if (!t || loading) return
                   setInputValue("")
+                  void sendPrompt(t)
                 }
               }}
             />
@@ -148,14 +205,13 @@ export default function AiComposer() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="icon" className="size-10 rounded-xl" onClick={() => {
+            <Button size="icon" className="size-10 rounded-xl" disabled={loading} onClick={() => {
               const t = inputValue.trim()
-              if (!t) return
-              setMessages((m) => [...m, { role: "user", text: t, mode }])
-              setChatOpen(true)
+              if (!t || loading) return
               setInputValue("")
+              void sendPrompt(t)
             }}>
-              <ArrowUp className="size-4" />
+              {loading ? <span className="animate-pulse text-xs">...</span> : <ArrowUp className="size-4" />}
             </Button>
           </div>
         </div>
