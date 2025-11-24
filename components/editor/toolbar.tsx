@@ -204,15 +204,45 @@ export default function Toolbar({
     const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
     if (!viewport) return
 
-    try {
-      const dataUrl = format === 'png'
-        ? await toPng(viewport, { backgroundColor: '#ffffff' })
-        : await toJpeg(viewport, { backgroundColor: '#ffffff' })
+    const pad = 64
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    nodes.forEach((n) => {
+      const x = (n as any).positionAbsolute?.x ?? n.position?.x ?? 0
+      const y = (n as any).positionAbsolute?.y ?? n.position?.y ?? 0
+      const w = (n as any).width ?? 150
+      const h = (n as any).height ?? 67
+      if (x < minX) minX = x
+      if (y < minY) minY = y
+      if (x + w > maxX) maxX = x + w
+      if (y + h > maxY) maxY = y + h
+    })
 
-      const link = document.createElement('a')
-      link.download = `${mindmap?.title || 'mindmap'}.${format}`
-      link.href = dataUrl
-      link.click()
+    const hasBounds = Number.isFinite(minX) && Number.isFinite(minY) && Number.isFinite(maxX) && Number.isFinite(maxY)
+
+    try {
+      if (hasBounds) {
+        const width = Math.ceil(maxX - minX + pad * 2)
+        const height = Math.ceil(maxY - minY + pad * 2)
+        const style = { transform: `translate(${-minX + pad}px, ${-minY + pad}px) scale(1)` }
+        const dataUrl = format === 'png'
+          ? await toPng(viewport, { backgroundColor: '#ffffff', width, height, style })
+          : await toJpeg(viewport, { backgroundColor: '#ffffff', width, height, style })
+        const link = document.createElement('a')
+        link.download = `${mindmap?.title || 'mindmap'}.${format}`
+        link.href = dataUrl
+        link.click()
+      } else {
+        const dataUrl = format === 'png'
+          ? await toPng(viewport, { backgroundColor: '#ffffff' })
+          : await toJpeg(viewport, { backgroundColor: '#ffffff' })
+        const link = document.createElement('a')
+        link.download = `${mindmap?.title || 'mindmap'}.${format}`
+        link.href = dataUrl
+        link.click()
+      }
       toast.success(`Mindmap downloaded as ${format.toUpperCase()}`)
     } catch (err) {
       console.error('Error downloading image:', err)
@@ -224,16 +254,33 @@ export default function Toolbar({
     const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
     if (!viewport) return
 
-    try {
-      const dataUrl = await toPng(viewport, { backgroundColor: '#ffffff' })
-      const pdf = new jsPDF({
-        orientation: 'landscape',
-      })
+    const pad = 64
+    let minX = Infinity
+    let minY = Infinity
+    let maxX = -Infinity
+    let maxY = -Infinity
+    nodes.forEach((n) => {
+      const x = (n as any).positionAbsolute?.x ?? n.position?.x ?? 0
+      const y = (n as any).positionAbsolute?.y ?? n.position?.y ?? 0
+      const w = (n as any).width ?? 150
+      const h = (n as any).height ?? 67
+      if (x < minX) minX = x
+      if (y < minY) minY = y
+      if (x + w > maxX) maxX = x + w
+      if (y + h > maxY) maxY = y + h
+    })
 
+    const hasBounds = Number.isFinite(minX) && Number.isFinite(minY) && Number.isFinite(maxX) && Number.isFinite(maxY)
+
+    try {
+      const styleOpts = hasBounds
+        ? { width: Math.ceil(maxX - minX + pad * 2), height: Math.ceil(maxY - minY + pad * 2), style: { transform: `translate(${-minX + pad}px, ${-minY + pad}px) scale(1)` } }
+        : {}
+      const dataUrl = await toPng(viewport, { backgroundColor: '#ffffff', ...(styleOpts as any) })
+      const pdf = new jsPDF({ orientation: 'landscape' })
       const imgProps = pdf.getImageProperties(dataUrl)
       const pdfWidth = pdf.internal.pageSize.getWidth()
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
-
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`${mindmap?.title || 'mindmap'}.pdf`)
       toast.success("Mindmap downloaded as PDF")
