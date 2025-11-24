@@ -238,9 +238,9 @@ function MyMindmapsContent() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">My Mindmaps</h1>
+                  <h1 className="text-3xl font-bold text-foreground">{t("myMindmaps")}</h1>
                   <p className="mt-2 text-muted-foreground">
-                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} mindmap{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} {t("mindmap")}{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
                     {filteredAndSortedMindmaps.length !== mindmaps.length && 
                       ` (${mindmaps.length} total)`
                     }
@@ -254,14 +254,14 @@ function MyMindmapsContent() {
                       className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                     >
                       <Plus className="h-5 w-5" />
-                      Create New
+                      {t("createNew")}
                     </button>
                     <button
                       onClick={handleCreateWithAI}
                       className="flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
                     >
                       <Plus className="h-5 w-5" />
-                      Tạo bằng AI
+                      {t("createWithAI")}
                     </button>
                   </div>
                 )}
@@ -294,7 +294,7 @@ function MyMindmapsContent() {
             {loading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-3 text-muted-foreground">Loading mindmaps...</span>
+                <span className="ml-3 text-muted-foreground">{t("loadingMindmaps")}</span>
               </div>
             )}
 
