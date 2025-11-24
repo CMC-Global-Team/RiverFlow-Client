@@ -1,0 +1,61 @@
+{
+    "title": "Về",
+    "brand": "RiverFlow",
+    "mission": "Chúng tôi đang thực hiện sứ mệnh cách mạng hóa cách các nhóm cộng tác và tổ chức ý tưởng của họ. RiverFlow ra đời từ sự thất vọng về các công cụ bản đồ tư duy hiện có cảm thấy cồng kềnh và rời rạc.",
+    "story": {
+        "title": "Câu chuyện của chúng tôi",
+        "p1": "RiverFlow bắt đầu vào năm 2023 khi người sáng lập Sarah của chúng tôi nhận ra rằng các công cụ bản đồ tư duy hiện có đang thiếu một thứ quan trọng: khả năng cộng tác liền mạch trong thời gian thực.",
+        "p2": "Sau nhiều tháng nghiên cứu và tạo mẫu, chúng tôi đã xây dựng RiverFlow từ đầu với cốt lõi là sự cộng tác. Ngày nay, hàng ngàn đội nhóm sử dụng RiverFlow để sắp xếp suy nghĩ và biến ý tưởng của họ thành hiện thực.",
+        "p3": "Chúng tôi chỉ mới bắt đầu. Tầm nhìn của chúng tôi là trở thành nền tảng hàng đầu cho các đội ngũ sáng tạo trên toàn thế giới."
+    },
+    "stats": {
+        "mindmapsCreated": "Bản đồ tư duy đã tạo",
+        "activeUsers": "Người dùng hoạt động",
+        "countries": "Quốc gia"
+    },
+    "values": {
+        "title": "Giá trị của chúng tôi",
+        "innovation": {
+            "title": "Đổi mới",
+            "description": "Chúng tôi liên tục đẩy lùi ranh giới để tạo ra các công cụ tốt hơn cho tư duy sáng tạo."
+        },
+        "collaboration": {
+            "title": "Cộng tác",
+            "description": "Làm việc nhóm tạo nên thành công. Chúng tôi tin vào sức mạnh của những ý tưởng tập thể."
+        },
+        "performance": {
+            "title": "Hiệu suất",
+            "description": "Tốc độ và độ tin cậy là không thể thương lượng. Chúng tôi tối ưu hóa cho từng mili giây."
+        },
+        "userCentric": {
+            "title": "Lấy người dùng làm trung tâm",
+            "description": "Mọi quyết định đều được hướng dẫn bởi nhu cầu và phản hồi của người dùng."
+        }
+    },
+    "team": {
+        "title": "Gặp gỡ đội ngũ của chúng tôi",
+        "members": {
+            "sarah": {
+                "role": "Nhà sáng lập & CEO",
+                "bio": "Đam mê các công cụ cộng tác và tư duy sáng tạo. Hơn 10 năm kinh nghiệm trong thiết kế sản phẩm."
+            },
+            "alex": {
+                "role": "CTO",
+                "bio": "Kỹ sư full-stack với chuyên môn về cộng tác thời gian thực. Đã xây dựng 3 công ty khởi nghiệp."
+            },
+            "emma": {
+                "role": "Trưởng phòng Thiết kế",
+                "bio": "Nhà thiết kế UX từng đoạt giải thưởng tập trung vào giao diện trực quan và trải nghiệm người dùng."
+            },
+            "james": {
+                "role": "Nhà phát triển chính",
+                "bio": "Người đóng góp mã nguồn mở và chuyên gia tối ưu hóa hiệu suất."
+            }
+        }
+    },
+    "cta": {
+        "title": "Tham gia cộng đồng của chúng tôi",
+        "description": "Trở thành một phần của cộng đồng ngày càng tăng của các đội ngũ sáng tạo sử dụng RiverFlow để tổ chức ý tưởng của họ.",
+        "button": "Bắt đầu ngay hôm nay"
+    }
+}

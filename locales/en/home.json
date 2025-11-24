@@ -4,5 +4,131 @@
   "features": "Features",
   "pricing": "Pricing",
   "about": "About",
-  "docs": "Docs"
+  "docs": "Docs",
+  "dark": "Dark",
+  "light": "Light",
+  "login": "Login",
+  "logout": "Logout",
+  "logging out...": "Logging out...",
+  "heroSection": {
+    "welcome": "Welcome to RiverFlow",
+    "title": {
+      "createBeautiful": "Create Beautiful",
+      "mindmaps": "Mindmaps",
+      "together": "Together"
+    },
+    "subtitle": "Collaborate in real-time, organize your thoughts, and bring your ideas to life with RiverFlow's intuitive mindmap editor.",
+    "buttons": {
+      "dashboard": "Go to Dashboard",
+      "getStarted": "Get Started Free",
+      "watchDemo": "Watch Demo"
+    },
+    "stats": {
+      "activeUsers": "Active Users",
+      "mindmapsCreated": "Mindmaps Created",
+      "uptime": "Uptime"
+    }
+  },
+  "featuresSection": {
+    "title": "Powerful Features for Creative Teams",
+    "subtitle": "Everything you need to create, collaborate, and share beautiful mindmaps.",
+    "lightningFast": {
+      "title": "Lightning Fast",
+      "description": "Real-time collaboration with zero lag. See changes instantly as your team works."
+    },
+    "teamCollaboration": {
+      "title": "Team Collaboration",
+      "description": "Invite team members and work together on mindmaps in real-time."
+    },
+    "securePrivate": {
+      "title": "Secure & Private",
+      "forgotPassword": "Forgot password?",
+      "submit": "Sign In",
+      "submitting": "Signing in...",
+      "orContinueWith": "Or continue with",
+      "github": "GitHub",
+      "successTitle": "Login successful!",
+      "successDesc": "Welcome back, {{name}}!",
+      "failedTitle": "Login failed",
+      "unverifiedEmail": "Email not verified",
+      "validationError": "Error",
+      "validationDesc": "Please enter both email and password!"
+    },
+    "signup": {
+      "fullName": "Full Name",
+      "fullNamePlaceholder": "John Doe",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "password": "Password",
+      "passwordPlaceholder": "••••••••",
+      "passwordHint": "Password must be at least 6 characters",
+      "confirmPassword": "Confirm Password",
+      "confirmPasswordPlaceholder": "••••••••",
+      "submit": "Create Account",
+      "submitting": "Creating account...",
+      "orSignUpWith": "Or sign up with",
+      "github": "GitHub",
+      "successTitle": "Registration successful!",
+      "successDesc": "Welcome {{name}}! Please check your email to verify your account.",
+      "failedTitle": "Registration failed",
+      "passwordMismatch": "Passwords do not match!",
+      "passwordTooShort": "Password must be at least 6 characters!"
+    },
+    "forgotPassword": {
+      "backToLogin": "Back to login",
+      "description": "Enter your email address and we will send you a link to reset your password.",
+      "email": "Email",
+      "emailPlaceholder": "you@example.com",
+      "submit": "Send reset link",
+      "submitting": "Sending...",
+      "checkEmail": "Check your email",
+      "failedTitle": "Request failed",
+      "validationError": "Error",
+      "validationDesc": "Please enter your email!"
+    },
+    "customizable": {
+      "title": "Fully Customizable",
+      "description": "Adjust colors, layouts, and styles to make your mindmaps truly your own."
+    },
+
+    "easySharing": {
+      "title": "Easy Sharing",
+      "description": "Share your mindmaps instantly with teammates or clients using a single secure link."
+    },
+
+    "mobileReady": {
+      "title": "Mobile Ready",
+      "description": "Create, edit, and collaborate on your mindmaps seamlessly across all mobile devices."
+    },
+    "securePrivate": {
+      "title": "Secure & Private",
+      "description": "Your ideas are protected with enterprise-grade encryption and privacy controls."
+    }
+
+
+  },
+  "product": "Product",
+  "security": "Security",
+  "company": "Company",
+  "blog": "Blog",
+  "contact": "Contact",
+  "followUs": "Follow Us",
+  "privacy": "Privacy",
+  "terms": "Terms",
+  "cookies": "Cookies",
+  "copyright": "© 2025 RiverFlow. All rights reserved.",
+  "slogan": "Create beautiful mindmaps together.",
+  "ctaSection": {
+    "authenticated": {
+      "title": "Ready to Start Creating?",
+      "description": "Go to your dashboard and start organizing your ideas with RiverFlow.",
+      "button": "Go to Dashboard"
+    },
+    "guest": {
+      "title": "Ready to Create Your First Mindmap?",
+      "description": "Join thousands of teams using RiverFlow to organize their ideas and collaborate effectively.",
+      "button": "Start Free Trial"
+    }
+  }
+
 }

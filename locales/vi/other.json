@@ -1,0 +1,57 @@
+{
+  "signup": {
+    "title": "Tạo tài khoản",
+    "fullName": "Họ và tên",
+    "fullNamePlaceholder": "Nguyễn Văn A",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "password": "Mật khẩu",
+    "confirmPassword": "Xác nhận mật khẩu",
+    "passwordPlaceholder": "••••••••",
+    "passwordHint": "Mật khẩu phải có ít nhất 6 ký tự",
+    "submit": "Tạo tài khoản",
+    "submitting": "Đang tạo tài khoản...",
+    "divider": "Hoặc đăng ký với",
+    "github": "GitHub",
+    "successTitle": "Đăng ký thành công!",
+    "successDesc": "Chào mừng {{name}}! Vui lòng kiểm tra email để xác thực tài khoản.",
+    "failedTitle": "Đăng ký thất bại",
+    "passwordMismatch": "Mật khẩu xác nhận không khớp!",
+    "passwordTooShort": "Mật khẩu phải có ít nhất 6 ký tự!",
+    "googleFailed": "Đăng nhập Google thất bại",
+    "googleMissing": "Không nhận được credential từ Google"
+  },
+
+  "login": {
+    "title": "Đăng nhập",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "forgot": "Quên mật khẩu?",
+    "submit": "Đăng nhập",
+    "submitting": "Đang đăng nhập...",
+    "divider": "Hoặc tiếp tục với",
+    "github": "GitHub",
+    "successTitle": "Đăng nhập thành công!",
+    "successDesc": "Chào mừng trở lại, {{name}}!",
+    "failedTitle": "Đăng nhập thất bại",
+    "unverifiedEmail": "Email chưa được xác thực",
+    "missingFields": "Vui lòng nhập đầy đủ email và mật khẩu!"
+  },
+
+  "forgot": {
+    "back": "Quay lại đăng nhập",
+    "description": "Nhập email của bạn và chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
+    "email": "Email",
+    "emailPlaceholder": "you@example.com",
+    "submit": "Gửi link đặt lại mật khẩu",
+    "submitting": "Đang gửi...",
+    "successTitle": "Kiểm tra email của bạn",
+    "failedTitle": "Gửi yêu cầu thất bại",
+    "missingEmail": "Vui lòng nhập email!"
+  },
+  "slogan": "Tạo bản đồ tư duy tuyệt đẹp cùng nhau",
+  "tabs": {
+    "login": "Đăng nhập",
+    "signup": "Đăng ký"
+  }
+}
