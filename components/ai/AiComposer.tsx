@@ -139,6 +139,36 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
+  const normalizeAgentText = (t: string) => {
+    const s = (t || '').replace(/^[^A-Za-zÀ-ỹ]+\s*/, '')
+    if (/Agent:\s*action\s*=\s*replace/i.test(s)) {
+      const m = s.match(/mentioned\s*=\s*(\d+)/i)
+      const del = s.match(/prune\s*=\s*(\d+)/i)
+      const edit = s.match(/edit\s*=\s*(\d+)/i)
+      return `RiverFlow Agent: Kế hoạch thay thế toàn bộ (xóa: ${del?.[1] || 0}, sửa: ${edit?.[1] || 0}, liên quan: ${m?.[1] || 0})`
+    }
+    if (/Generate:\s*áp dụng\s*replace/i.test(s)) return 'RiverFlow Agent: Thực hiện thay thế mindmap theo kế hoạch'
+    if (/Agent Plan:/i.test(s)) return 'RiverFlow Agent: Kế hoạch đã thiết lập'
+    if (/Agent Analyze:/i.test(s)) {
+      const tgt = s.match(/target\s*=\s*([a-z]+)/i)?.[1]
+      const st = s.match(/structureType\s*=\s*([a-z]+)/i)?.[1]
+      return `RiverFlow Agent: Phân tích tác vụ=${tgt || 'structure'}${st ? `, kiểu=${st}` : ''}`
+    }
+    if (/Pruned subtree of\s+/i.test(s)) {
+      const lbl = s.replace(/.*Pruned subtree of\s+/i, '')
+      return `RiverFlow Agent: Đã xóa toàn bộ nhánh "${lbl}"`
+    }
+    if (/Updated node label:/i.test(s)) {
+      const m = s.match(/Updated node label:\s*(.+)\s*→\s*(.+)/i)
+      return `RiverFlow Agent: Đã đổi tên node "${m?.[1] || ''}" thành "${m?.[2] || ''}"`
+    }
+    if (/Replace:\s*rebuilt structure with\s*(\d+)/i.test(s)) {
+      const m = s.match(/Replace:\s*rebuilt structure with\s*(\d+)/i)
+      return `RiverFlow Agent: Đã tạo lại cấu trúc gồm ${m?.[1] || '0'} node`
+    }
+    return `RiverFlow Agent: ${s}`
+  }
+
   const composeAgentPlan = (text: string) => {
     const t = (text || '').toLowerCase()
     const ns = Array.isArray(nodes) ? nodes : []
@@ -181,7 +211,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
         const agentPlan = composeAgentPlan(text)
-        setMessages((m) => [...m, { role: 'assistant', text: `🧭 Agent: ${agentPlan.summary}` }])
+        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(`Agent: ${agentPlan.summary}`) }])
         if (agentPlan.action === 'replace') {
           setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
         }
@@ -203,11 +233,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        const summary = `✨ Generate: áp dụng ${agentPlan.action}`
-        setMessages((m) => [...m, { role: 'assistant', text: summary }])
+        const summary = `Generate: áp dụng ${agentPlan.action}`
+        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(summary) }])
         if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
           const logs = (result as any).aiAgentLogs as string[]
-          setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: t }))])
+          setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: normalizeAgentText(t) }))])
         }
 
         const enrich = (r: MindmapResponse, pref: typeof structureType) => {
@@ -512,7 +542,10 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               <div className="space-y-4">
                 {messages.map((m, i) => (
                   <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
-                    <div className="flex flex-col items-end gap-1">
+                    <div className="flex flex-col items-start gap-1">
+                      {m.role !== "user" ? (
+                        <div className="text-[11px] text-muted-foreground">RiverFlow Agent</div>
+                      ) : null}
                       <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
                         {m.text}
                       </div>
