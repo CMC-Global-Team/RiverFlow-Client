@@ -25,6 +25,8 @@ import SIDE_BAR_EN from "@/locales/en/sideBar.json";
 import SIDE_BAR_VI from "@/locales/vi/sideBar.json";
 import TEMPLATEMODAL_EN from "@/locales/en/templateModal.json";
 import TEMPLATEMODAL_VI from "@/locales/vi/templateModal.json";
+import FILTER_BAR_EN from "@/locales/en/filterBar.json";
+import FILTER_BAR_VI from "@/locales/vi/filterBar.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -45,6 +47,7 @@ const resource = {
         mindmapsCard: MINDMAPCARD_EN,
         sideBar: SIDE_BAR_EN,
         templateModal: TEMPLATEMODAL_EN,
+        filterBar: FILTER_BAR_EN,
     },
     vi: {
         home: HOME_VI,
@@ -59,13 +62,26 @@ const resource = {
         mindmapsCard: MINDMAPCARD_VI,
         sideBar: SIDE_BAR_VI,
         templateModal: TEMPLATEMODAL_VI,
+        filterBar: FILTER_BAR_VI,
     }
 } as const
 const defaultNS = 'home'
 i18n.use(initReactI18next).init({
     resources: resource,
     lng: "vi",
-    ns: ["home", "about", "pricing", "other", "dashboard", "dashboardHeader", "change-password", "mindmaps", "settings","mindmapsCard", "sideBar", "templateModal"],
+    ns: ["home", 
+        "about", 
+        "pricing", 
+        "other", 
+        "dashboard", 
+        "dashboardHeader", 
+        "change-password", 
+        "mindmaps", 
+        "settings",
+        "mindmapsCard", 
+        "sideBar", 
+        "templateModal", 
+        "filterBar"],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {
