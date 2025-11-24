@@ -175,7 +175,7 @@ function DashboardContent() {
       await refetch();
 
     } catch (error) {
-      console.error("Duplicate failed:", error);
+      console.error(t("duplicateFailed"), error);
       toast({ 
         variant: "destructive", 
         title: t("error"), 
@@ -187,22 +187,22 @@ function DashboardContent() {
   };
 
   const handleLeave = async (id: string) => {
-    if (!confirm('Are you sure you want to leave this project?')) return
+    if (!confirm(t("confirmLeaveProject"))) return
     
     setActionLoading(id)
     try {
       await leaveCollaboration(id)
       toast({ 
-        title: "Left project",
-        description: "You have successfully left the project."
+        title: t("leftProject"),
+        description: t("leftProjectSuccess")
       })
       await refetch()
     } catch (error) {
-      console.error("Leave failed:", error)
+      console.error(t("leaveProjectFailed"), error)
       toast({ 
         variant: "destructive", 
-        title: "Error", 
-        description: "Failed to leave the project." 
+        title: t("error"), 
+        description: t("leaveProjectFailed") 
       })
     } finally {
       setActionLoading(null)
