@@ -248,9 +248,9 @@ function ChangePasswordContent() {
                                                 <div className="flex items-center justify-between text-sm">
                                                     <span className="text-muted-foreground">{t("passwordStrength")}</span>
                                                     <span className={`font-semibold ${
-                                                        passwordStrength.level === "Weak" ? "text-red-500" :
-                                                        passwordStrength.level === "Fair" ? "text-amber-500" :
-                                                        passwordStrength.level === "Good" ? "text-amber-400" :
+                                                        passwordStrength.score === 30  ? "text-red-500" :
+                                                        passwordStrength.score === 60  ? "text-amber-500" :
+                                                        passwordStrength.score === 80  ? "text-amber-400" :
                                                         "text-green-500"
                                                     }`}>
                                                         {passwordStrength.level}
