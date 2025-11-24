@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import AiComposer from "@/components/ai/AiComposer"
 
 interface Template {
   id: string
@@ -289,6 +290,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const router = useRouter()
+  const [showAiComposer, setShowAiComposer] = useState(false)
 
   // Load templates from public/templates folder
   useEffect(() => {
@@ -407,7 +409,11 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
-                onClick={() => router.push('/dashboard/ai-mindmap')}
+                onClick={() => {
+                  setShowAiComposer(true)
+                  onClose()
+                  onSelectTemplate({ id: 'ai', name: 'AI Mindmap', description: '', icon: <Sparkles className="h-6 w-6" />, initialNodes: [], initialEdges: [] })
+                }}
                 className="relative p-6 rounded-lg border-2 cursor-pointer transition-all md:col-span-2 lg:col-span-3 border-primary bg-primary/10 hover:bg-primary/15 hover:shadow-lg"
               >
                 <div className="flex items-start gap-4">
@@ -489,8 +495,19 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   )
 
   if (typeof document !== 'undefined') {
-    return createPortal(modalContent, document.body)
+    return createPortal(
+      <>
+        {modalContent}
+        {showAiComposer ? <AiComposer /> : null}
+      </>,
+      document.body
+    )
   }
-  return modalContent
+  return (
+    <>
+      {modalContent}
+      {showAiComposer ? <AiComposer /> : null}
+    </>
+  )
 }
 

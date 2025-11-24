@@ -13,6 +13,7 @@ import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import TemplateModal from "@/components/dashboard/template-modal"
+import AiComposer from "@/components/ai/AiComposer"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
@@ -139,15 +140,17 @@ function DashboardContent() {
 
 
     const handleSelectTemplate = async (template: any) => {
-    // Create mindmap with selected template
+      if (template?.id === 'ai') {
+        setShowTemplateModal(false)
+        setShowAiModal(true)
+        return
+      }
       const newMindmap = await create({
         title: "Untitled Mindmap",
         nodes: template.initialNodes,
         edges: template.initialEdges,
       })
-
       if (newMindmap) {
-        // Navigate to editor with the new mindmap ID
         router.push(`/editor?id=${newMindmap.id}`)
       }
     }
@@ -321,6 +324,7 @@ function DashboardContent() {
         onClose={() => setShowTemplateModal(false)}
         onSelectTemplate={handleSelectTemplate}
       />
+      {showAiModal ? <AiComposer /> : null}
       
         {/* Delete Confirmation Dialog */}
         <DeleteConfirmDialog

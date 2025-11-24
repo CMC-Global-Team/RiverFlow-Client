@@ -14,6 +14,7 @@ import MindmapGrid from "@/components/mindmap/MindmapGrid"
 import MindmapList from "@/components/mindmap/MindmapList"
 import EmptyState from "@/components/mindmap/EmptyState"
 import TemplateModal from "@/components/dashboard/template-modal"
+import AiComposer from "@/components/ai/AiComposer"
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog"
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal"
 import { useMindmapsByStatus } from "@/hooks/mindmap/useMindmapsByStatus"
@@ -91,12 +92,16 @@ function MyMindmapsContent() {
   }
 
   const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      setShowTemplateModal(false)
+      setShowAiModal(true)
+      return
+    }
     const newMindmap = await create({
       title: "Untitled Mindmap",
       nodes: template.initialNodes,
       edges: template.initialEdges,
     })
-
     if (newMindmap) {
       router.push(`/editor?id=${newMindmap.id}`)
     }
@@ -374,6 +379,7 @@ function MyMindmapsContent() {
         onClose={() => setShowTemplateModal(false)}
         onSelectTemplate={handleSelectTemplate}
       />
+      {showAiModal ? <AiComposer /> : null}
       
 
       {/* Delete Confirmation Dialog */}
