@@ -231,14 +231,7 @@ function DashboardContent() {
                   className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                 >
                   <Plus className="h-5 w-5" />
-                  {t("createWithTemplate")}
-                </button>
-                <button 
-                  onClick={handleCreateWithAI}
-                  className="flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
-                >
-                  <Plus className="h-5 w-5" />
-                  {t("createWithAI")}
+                  Create New Mindmap
                 </button>
               </div>
             )}
@@ -251,16 +244,16 @@ function DashboardContent() {
               </div>
             )}
 
-            {/* Error State */}
+                        {/* Error State */}
             {error && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
                 <AlertCircle className="h-5 w-5" />
                 <div className="flex-1">
-                  <p className="font-semibold">{t("failedToLoadMindmaps")}</p>
+                  <p className="font-semibold">Failed to load mindmaps</p>
                   <p className="text-sm">{error}</p>
                   {error.includes('403') && (
                     <p className="text-xs mt-1">
-                      {t("sessionExpiredMessage")}
+                      You may need to log in again. Your session might have expired.
                     </p>
                   )}
                 </div>
@@ -268,29 +261,22 @@ function DashboardContent() {
                   onClick={refetch}
                   className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  {t("retry")}
+                  Retry
                 </button>
               </div>
             )}
 
-            {/* Empty State */}
+                        {/* Empty State */}
             {!loading && !error && mindmaps.length === 0 && (
               <div className="text-center py-12 space-y-3">
-                <p className="text-muted-foreground">{t("noMindmaps")}</p>
+                <p className="text-muted-foreground">No mindmaps yet. Create your first one!</p>
                 <div className="flex items-center justify-center gap-3">
                   <button 
                     onClick={handleCreateNew}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                   >
                     <Plus className="h-5 w-5" />
-                    {t("createWithTemplate")}
-                  </button>
-                  <button 
-                    onClick={handleCreateWithAI}
-                    className="inline-flex items-center gap-2 rounded-lg bg-accent px-6 py-3 text-accent-foreground font-semibold hover:bg-accent/90 transition-all"
-                  >
-                    <Plus className="h-5 w-5" />
-                    {t("createWithAI")}
+                    Create with Template
                   </button>
                 </div>
               </div>
