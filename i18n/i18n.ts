@@ -23,10 +23,12 @@ import MINDMAPCARD_EN from "@/locales/en/mindmapsCard.json";
 import MINDMAPCARD_VI from "@/locales/vi/mindmapsCard.json";
 import SIDE_BAR_EN from "@/locales/en/sideBar.json";
 import SIDE_BAR_VI from "@/locales/vi/sideBar.json";
-import TEMPLATEMODAL_EN from "@/locales/en/templateModal.json";
-import TEMPLATEMODAL_VI from "@/locales/vi/templateModal.json";
+import TEMPLATE_MODAL_EN from "@/locales/en/templateModal.json";
+import TEMPLATE_MODAL_VI from "@/locales/vi/templateModal.json";
 import FILTER_BAR_EN from "@/locales/en/filterBar.json";
 import FILTER_BAR_VI from "@/locales/vi/filterBar.json";
+import VIEW_TOGGLE_EN from "@/locales/en/viewToggle.json";
+import VIEW_TOGGLE_VI from "@/locales/vi/viewToggle.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -46,8 +48,9 @@ const resource = {
         dashboardHeader: DASHBOARD_HEADER_EN,
         mindmapsCard: MINDMAPCARD_EN,
         sideBar: SIDE_BAR_EN,
-        templateModal: TEMPLATEMODAL_EN,
+        templateModal: TEMPLATE_MODAL_EN,
         filterBar: FILTER_BAR_EN,
+        viewToggle: VIEW_TOGGLE_EN,
     },
     vi: {
         home: HOME_VI,
@@ -61,8 +64,9 @@ const resource = {
         dashboardHeader: DASHBOARD_HEADER_VI,
         mindmapsCard: MINDMAPCARD_VI,
         sideBar: SIDE_BAR_VI,
-        templateModal: TEMPLATEMODAL_VI,
+        templateModal: TEMPLATE_MODAL_VI,
         filterBar: FILTER_BAR_VI,
+        viewToggle: VIEW_TOGGLE_VI,
     }
 } as const
 const defaultNS = 'home'
@@ -81,7 +85,8 @@ i18n.use(initReactI18next).init({
         "mindmapsCard", 
         "sideBar", 
         "templateModal", 
-        "filterBar"],
+        "filterBar",
+        "viewToggle"],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {
