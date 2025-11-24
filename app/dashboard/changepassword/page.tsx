@@ -186,7 +186,7 @@ function ChangePasswordContent() {
                                 {/* INFO BOX */}
                                 <div className="p-4 bg-blue-500/10 border border-blue-200 dark:border-blue-900 rounded-xl">
                                     <p className="text-xs text-blue-900 dark:text-blue-100 leading-relaxed">
-                                        <span className="font-semibold">💡 Tip:</span> Never reuse passwords from other accounts. Change your password every 3 months for optimal security.
+                                        <span className="font-semibold">💡 Tip:</span> {t("neverReusePasswords")}
                                     </p>
                                 </div>
                             </div>
@@ -197,11 +197,11 @@ function ChangePasswordContent() {
 
                                     {/* CURRENT PASSWORD */}
                                     <div className="space-y-3">
-                                        <Label className="text-sm font-semibold">Current Password</Label>
+                                        <Label className="text-sm font-semibold">{t("currentPassword")}</Label>
                                         <div className="relative">
                                             <Input
                                                 type="password"
-                                                placeholder="Enter your current password"
+                                                placeholder={t("enterCurrentPassword")}
                                                 className="pr-10 h-11 text-base"
                                                 {...register("currentPassword")}
                                             />
