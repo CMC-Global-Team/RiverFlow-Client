@@ -325,19 +325,19 @@ function MyMindmapsContent() {
               <EmptyState
                 title={
                   searchQuery || showFavoritesOnly
-                    ? "No mindmaps match your filters"
+                    ? t("noResultsFound")
                     : selectedStatus === "archived"
-                    ? "No archived mindmaps"
-                    : "No mindmaps yet"
+                    ? t("noArchivedMindmaps")
+                    : t("noMindmapsYet")
                 }
                 description={
                   searchQuery || showFavoritesOnly
-                    ? "Try adjusting your filters or search query"
+                    ? t("tryAdjustingFilters")
                     : selectedStatus === "archived"
-                    ? "Mindmaps you archive will appear here"
-                    : "Create your first mindmap to get started"
+                    ? t("archivedMindmapsDescription")
+                    : t("noMindmapsDescription")
                 }
-                actionLabel="Create Mindmap"
+                actionLabel={t("createMindmap")}
                 onAction={selectedStatus === "active" ? handleCreateNew : undefined}
               />
             )}
