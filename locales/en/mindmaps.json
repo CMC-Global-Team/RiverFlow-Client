@@ -1,32 +1,39 @@
 {
   "myMindmaps": "My Mindmaps",
+  "mindmaps": "mindmaps",
   "mindmap": "mindmap",
+  "archived": "archived",
+
   "createNew": "Create New",
-  "createWithAI": "Create with AI",
-  "loadingMindmaps": "Loading your mindmaps...",
+  "createMindmap": "Create Mindmap",
+
+  "loadingMindmaps": "Loading mindmaps...",
+
   "failedToLoadMindmaps": "Failed to load mindmaps",
-  "sessionExpired": "Your session may have expired. Please log in again.",
+  "sessionExpired": "Your session has expired. Please log in again.",
   "retry": "Retry",
 
-  "noMindmapsYet": "No mindmaps yet",
-  "noMindmapsDescription": "Start creating your first mindmap to organize ideas, plan projects, or brainstorm creatively.",
+  "noMindmapsYet": "You don't have any mindmaps yet",
+  "noMindmapsDescription": "Start your creative journey by creating your first mindmap!",
+
   "noArchivedMindmaps": "No archived mindmaps",
-  "archivedMindmapsDescription": "Mindmaps you archive will appear here.",
+  "archivedMindmapsDescription": "Your archived mindmaps will appear here.",
+
   "noResultsFound": "No mindmaps found",
   "tryAdjustingFilters": "Try adjusting your search or filters.",
 
-  "createMindmap": "Create Mindmap",
-
-  "duplicating": "Duplicating mindmap...",
+  "duplicating": "Duplicating...",
   "pleaseWait": "Please wait",
-  "duplicateSuccess": "Mindmap duplicated!",
-  "created": "Created: {{title}}",
-  "duplicateFailedTitle": "Failed to duplicate",
-  "duplicateFailedDescription": "Something went wrong. Please try again.",
+  "duplicateSuccess": "Duplicated successfully!",
+  "created": "Created copy: {title}",
 
-  "confirmLeaveProject": "Are you sure you want to leave this collaborative mindmap?",
+  "duplicateFailedTitle": "Duplicate failed",
+  "duplicateFailedDescription": "Something went wrong while duplicating the mindmap. Please try again.",
+
+  "confirmLeaveProject": "Are you sure you want to leave this project?\nThis action cannot be undone.",
   "leftProject": "Left project",
-  "leftProjectDescription": "You have successfully left the mindmap.",
+  "leftProjectDescription": "You have successfully left the collaborative mindmap.",
+
   "leaveFailed": "Failed to leave project",
-  "leaveFailedDescription": "An error occurred. Please try again."
+  "leaveFailedDescription": "Could not leave the project. Please try again later."
 }
