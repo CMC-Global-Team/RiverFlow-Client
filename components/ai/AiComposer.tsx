@@ -87,7 +87,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
-  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions } = useMindmapContext()
+  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode } = useMindmapContext()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -139,6 +139,37 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
+  const composeAgentPlan = (text: string) => {
+    const t = (text || '').toLowerCase()
+    const ns = Array.isArray(nodes) ? nodes : []
+    const es = Array.isArray(edges) ? edges : []
+    const tokenize = (s: string) => s.toLowerCase().split(/[^a-zà-ỹ0-9]+/).filter(Boolean)
+    const toks = tokenize(t)
+    const mentioned: { id: string; label: string }[] = []
+    for (const n of ns) {
+      const lbl = String(n?.data?.label || '')
+      const lt = tokenize(lbl)
+      const hit = lt.some((w) => toks.includes(w))
+      if (hit) mentioned.push({ id: String(n.id), label: lbl })
+    }
+    const wantsReplace = /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
+    const wantsDelete = /(xóa|xoá|remove|delete|loại bỏ|bỏ|drop)/.test(t)
+    const wantsEdit = /(sửa|chỉnh|update|edit|điều chỉnh)/.test(t)
+    const wantsAdd = /(thêm|mở rộng|expand|add|tạo|generate|create)/.test(t)
+    const pruneIds = wantsDelete ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
+    const editIds = wantsEdit ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
+    const action = wantsReplace ? 'replace' : wantsDelete ? 'prune' : wantsEdit ? 'edit' : wantsAdd ? 'expand' : 'expand'
+    const plan = {
+      action,
+      pruneIds,
+      editIds,
+      mentioned,
+      prefer: { structure: structureType, language: langPref },
+      summary: `action=${action}; prune=${pruneIds.length}; edit=${editIds.length}; mentioned=${mentioned.length}`,
+    }
+    return plan
+  }
+
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
     setLoading(true)
@@ -149,6 +180,15 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const modeLabel = mode
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
+        const agentPlan = composeAgentPlan(text)
+        setMessages((m) => [...m, { role: 'assistant', text: `Gemini Agent Plan: ${agentPlan.summary}` }])
+        if (agentPlan.action === 'replace') {
+          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
+        }
+        if (agentPlan.action === 'prune' && agentPlan.pruneIds.length) {
+          for (const id of agentPlan.pruneIds) deleteNode(id)
+        }
+
         
         const payload: any = {
           mindmapId: mindmap.id,
@@ -156,15 +196,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
-          hints: text ? [text, buildContextHint()] : undefined,
+          hints: text ? [text, buildContextHint(), `AGENT_PLAN:${JSON.stringify(agentPlan)}`] : undefined,
           levels,
           firstLevelCount,
           structureType,
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        const summary = `Đã cập nhật mindmap hiện tại.`
+        const summary = `Gemini MindMap Generate: áp dụng ${agentPlan.action}`
         setMessages((m) => [...m, { role: 'assistant', text: summary }])
+        if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
+          const logs = (result as any).aiAgentLogs as string[]
+          setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: t }))])
+        }
 
         const enrich = (r: MindmapResponse, pref: typeof structureType) => {
           const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
@@ -262,7 +306,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
         const adjusted = enrich(result, structureType)
 
-        const wantsReplace = shouldReplace(text)
+        const wantsReplace = agentPlan.action === 'replace'
         if (!wantsReplace) {
           const startNodes = Array.isArray(nodes) ? [...nodes] : []
           const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
