@@ -28,8 +28,10 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
   const [resizeStart, setResizeStart] = useState({ x: 0, y: 0, width: 0, height: 0 })
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
+  const [typingUsers, setTypingUsers] = useState<Record<string, { clientId: string; userId?: string | number | null; name: string; color: string; avatar?: string | null }>>({})
   const panelRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const stopTimerRef = useRef<any>(null)
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -49,6 +51,21 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
       }, 10)
     }
     s.on('chat:message', onMsg)
+    const onTyping = (data: any) => {
+      const c = data?.clientId
+      const isTyping = !!data?.isTyping
+      if (!c) return
+      setTypingUsers((prev) => {
+        const next = { ...prev }
+        if (isTyping) {
+          next[c] = { clientId: c, userId: data?.userId || null, name: data?.name || 'Anonymous', color: data?.color || '#3b82f6', avatar: data?.avatar || null }
+        } else {
+          delete next[c]
+        }
+        return next
+      })
+    }
+    s.on('chat:typing', onTyping)
     return () => { s.off('chat:message', onMsg) }
   }, [])
 
@@ -102,6 +119,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
     const text = input.trim()
     if (!text) return
     socket.emit('chat:message', room, { text })
+    socket.emit('chat:typing', room, { isTyping: false })
     setInput("")
   }
 
@@ -146,11 +164,46 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
         </div>
 
         <div className="p-3 border-t border-border flex items-center gap-2">
-          <Input value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={onKeyDown} placeholder="Nhập tin nhắn..." />
+          <Input
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value)
+              socket.emit('chat:typing', room, { isTyping: true })
+              if (stopTimerRef.current) clearTimeout(stopTimerRef.current)
+              stopTimerRef.current = setTimeout(() => {
+                socket.emit('chat:typing', room, { isTyping: false })
+              }, 1200)
+            }}
+            onBlur={() => {
+              socket.emit('chat:typing', room, { isTyping: false })
+            }}
+            onKeyDown={onKeyDown}
+            placeholder="Nhập tin nhắn..."
+          />
           <Button onClick={send} className="h-9 w-9" variant="default" title="Gửi">
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        {Object.keys(typingUsers).length > 0 && (
+          <div className="px-3 pb-2">
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-2">
+                {Object.values(typingUsers).map((u) => (
+                  <div key={u.clientId} className="inline-flex items-center justify-center w-6 h-6 rounded-full border-2 border-card bg-muted text-[10px] overflow-hidden">
+                    {u.avatar ? (
+                      <img src={u.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="font-semibold" style={{ color: '#fff', backgroundColor: u.color, width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {(u.name || 'A').slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <span className="text-xs text-muted-foreground">...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} title="Drag to resize" />
