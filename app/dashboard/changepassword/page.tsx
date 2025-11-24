@@ -42,7 +42,7 @@ type FormType = z.infer<typeof ChangePasswordSchema>;
 
 // PASSWORD STRENGTH CALCULATOR
 const calculatePasswordStrength = (password: string) => {
-    if (!password) return { score: 0, level: "weak", color: "bg-red-500" };
+    if (!password) return { score: 0, level: t("weak"), color: "bg-red-500" };
 
     let score = 0;
 
@@ -58,10 +58,10 @@ const calculatePasswordStrength = (password: string) => {
     if (/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) score += 20;
 
     // Determine level and color
-    if (score < 30) return { score: 30, level: "Weak", color: "bg-red-500" };
-    if (score < 60) return { score: 60, level: "Fair", color: "bg-amber-500" };
-    if (score < 80) return { score: 80, level: "Good", color: "bg-amber-400" };
-    return { score: 100, level: "Strong", color: "bg-green-500" };
+    if (score < 30) return { score: 30, level: t("weak"), color: "bg-red-500" };
+    if (score < 60) return { score: 60, level: t("fair"), color: "bg-amber-500" };
+    if (score < 80) return { score: 80, level: t("good"), color: "bg-amber-400" };
+    return { score: 100, level: t("strong"), color: "bg-green-500" };
 };
 
 // PASSWORD REQUIREMENTS CHECKER
