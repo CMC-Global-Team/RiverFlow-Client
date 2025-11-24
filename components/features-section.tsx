@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
-import { Zap, Users, Lock, Palette, Share2, Smartphone } from "lucide-react"
+import { Zap, Users, Lock, Palette, Share2, Smartphone,Sparkles,Layers,MousePointer2 } from "lucide-react"
 import gsap from "gsap"
 import { ScrollTrigger } from "gsap/ScrollTrigger"
 
@@ -38,6 +38,21 @@ const features = [
     title: "Mobile Ready",
     description: "Access your mindmaps on any device. Fully responsive design.",
   },
+  {
+      icon: Sparkles,
+      title: "AI-Powered Mind Map Creation",
+      description: "Transform ideas into complete mind maps in seconds with AI",
+    },
+   {
+      icon: MousePointer2,
+      title: "Intuitive Drag-and-Drop Interface",
+      description: "Simple, easy-to-use design for everyone",
+    },
+   {
+      icon: Layers,
+      title: "Professional Templates Library",
+      description: "Hundreds of pre-made templates for any purpose",
+    },
 ]
 
 export default function FeaturesSection() {
