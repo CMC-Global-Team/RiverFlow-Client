@@ -55,6 +55,7 @@ const handleSelectTemplate = async (template: any) => {
     router.push(`/editor?id=${newMindmap.id}`)
   }
 
+}
 
 
   const toggleSettings = () => {
