@@ -18,8 +18,8 @@ import {
     Lock,
     History
 } from "lucide-react"
-
-
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import LanguageSwitcher from "../LanguageSwitcher"
 
 
 export default function Sidebar() {
@@ -137,7 +137,9 @@ const handleSelectTemplate = async (template: any) => {
                         >
                             <History className="h-4 w-4" /> Payment History
                         </Link>
-
+                          <ThemeSwitcher />
+            <LanguageSwitcher />
+            
                     </div>
                 )}
             </div>
