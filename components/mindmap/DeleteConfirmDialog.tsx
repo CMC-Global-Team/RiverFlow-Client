@@ -1,6 +1,7 @@
 "use client"
 
 import { AlertTriangle } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 interface DeleteConfirmDialogProps {
   isOpen: boolean
@@ -17,6 +18,7 @@ export default function DeleteConfirmDialog({
   title,
   isLoading = false,
 }: DeleteConfirmDialogProps) {
+  const { t } = useTranslation("deleteConfirmDialog")
   if (!isOpen) return null
 
   return (
@@ -31,12 +33,12 @@ export default function DeleteConfirmDialog({
 
         {/* Content */}
         <div className="p-6 text-center">
-          <h3 className="text-xl font-bold text-foreground mb-2">Delete Mindmap?</h3>
+          <h3 className="text-xl font-bold text-foreground mb-2">{t("deleteMindmap")}?</h3>
           <p className="text-muted-foreground mb-4">
-            Are you sure you want to delete <span className="font-semibold text-foreground">"{title}"</span>?
+            {t("areYouSureDelete")} <span className="font-semibold text-foreground">"{title}"</span>?
           </p>
           <p className="text-sm text-muted-foreground">
-            This action cannot be undone. The mindmap will be moved to trash.
+            {t("cannotUndo")}
           </p>
         </div>
 
@@ -47,14 +49,14 @@ export default function DeleteConfirmDialog({
             disabled={isLoading}
             className="flex-1 px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50"
           >
-            Cancel
+            {t("cancel")}
           </button>
           <button
             onClick={onConfirm}
             disabled={isLoading}
             className="flex-1 px-4 py-2 rounded-lg bg-destructive text-destructive-foreground font-semibold hover:bg-destructive/90 transition-all disabled:opacity-50"
           >
-            {isLoading ? "Deleting..." : "Delete"}
+            {isLoading ? t("deleting") : t("delete")}
           </button>
         </div>
       </div>

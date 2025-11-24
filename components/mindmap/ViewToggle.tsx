@@ -1,13 +1,14 @@
 "use client"
 
 import { Grid3x3, List } from "lucide-react"
-
+import { useTranslation } from "react-i18next"
 interface ViewToggleProps {
   view: "grid" | "list"
   onViewChange: (view: "grid" | "list") => void
 }
 
 export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
+  const { t } = useTranslation("viewToggle")
   return (
     <div className="flex items-center gap-1 p-1 bg-muted rounded-lg">
       <button
@@ -18,7 +19,7 @@ export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         `}
       >
         <Grid3x3 className="h-4 w-4" />
-        <span className="text-sm font-medium">Grid</span>
+        <span className="text-sm font-medium">{t("grid")}</span>
       </button>
       <button
         onClick={() => onViewChange("list")}
@@ -28,7 +29,7 @@ export default function ViewToggle({ view, onViewChange }: ViewToggleProps) {
         `}
       >
         <List className="h-4 w-4" />
-        <span className="text-sm font-medium">List</span>
+        <span className="text-sm font-medium">{t("list")}</span>
       </button>
     </div>
   )

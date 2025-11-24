@@ -1,0 +1,14 @@
+{
+  "owner": "Chủ sở hữu",
+  "editNameAndDescription": "Chỉnh sửa tên & mô tả",
+  "duplicate": "Sao chép",
+  "addToFavorites": "Thêm vào mục yêu thích",
+  "removeFromFavorites": "Xóa khỏi mục yêu thích",
+  "archive": "Lưu trữ",
+  "unarchive": "Bỏ lưu trữ",
+  "delete": "Xóa",
+  "leaveProject": "Rời dự án",
+  "modified": "Đã chỉnh sửa",
+  "nodes": "nút",
+  "edges": "liên kết"
+}

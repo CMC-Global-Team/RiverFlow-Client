@@ -2,6 +2,7 @@
 
 import { Filter, ChevronDown, Star } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 
 interface FilterBarProps {
   selectedStatus: string
@@ -11,18 +12,6 @@ interface FilterBarProps {
   sortBy: string
   onSortChange: (sort: string) => void
 }
-
-const statuses = [
-  { value: "active", label: "Active" },
-  { value: "archived", label: "Archived" },
-]
-
-const sortOptions = [
-  { value: "updatedAt", label: "Last Modified" },
-  { value: "createdAt", label: "Date Created" },
-  { value: "title", label: "Title" },
-  { value: "nodeCount", label: "Node Count" },
-]
 
 function CustomSelect({ 
   value, 
@@ -85,11 +74,24 @@ export default function FilterBar({
   sortBy,
   onSortChange,
 }: FilterBarProps) {
+  const { t } = useTranslation("filterBar")
+  const statuses = [
+  { value: "active", label: t("active") },
+  { value: "archived", label: t("archived") },
+]
+
+const sortOptions = [
+  { value: "updatedAt", label: t("lastModified") },
+  { value: "createdAt", label: t("dateCreated") },
+  { value: "title", label: t("title") },
+  { value: "nodeCount", label: t("nodeCount") },
+]
+
   return (
     <div className="flex flex-wrap items-center gap-4 p-4 bg-card rounded-lg border border-border shadow-sm">
       <div className="flex items-center gap-2">
         <Filter className="h-5 w-5 text-primary" />
-        <span className="text-sm font-medium text-foreground">Filters:</span>
+        <span className="text-sm font-medium text-foreground">{t("filters")}:</span>
       </div>
 
       {/* Status Filter */}
@@ -97,7 +99,7 @@ export default function FilterBar({
         value={selectedStatus}
         onChange={onStatusChange}
         options={statuses}
-        placeholder="Status"
+        placeholder={t("status")}
       />
 
       {/* Favorites Toggle */}
@@ -112,17 +114,17 @@ export default function FilterBar({
         `}
       >
         <Star className={`h-4 w-4 ${showFavoritesOnly ? 'fill-yellow-500' : ''}`} />
-        <span className="text-sm font-medium">Favorites</span>
+        <span className="text-sm font-medium">{t("favorites")}</span>
       </button>
 
       {/* Sort By */}
       <div className="ml-auto flex items-center gap-2">
-        <span className="text-sm text-muted-foreground">Sort:</span>
+        <span className="text-sm text-muted-foreground">{t("sort")}:</span>
         <CustomSelect
           value={sortBy}
           onChange={onSortChange}
           options={sortOptions}
-          placeholder="Sort by"
+          placeholder={t("sortBy")}
         />
       </div>
     </div>

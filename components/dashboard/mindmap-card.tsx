@@ -2,6 +2,7 @@
 
 import { MoreVertical, Share2, Trash2, Edit, Star, Archive, Copy, LogOut } from "lucide-react"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { formatDistanceToNow } from "date-fns"
 import { createPortal } from "react-dom"
@@ -31,6 +32,7 @@ export default function MindmapCard({
   onLeave,
   onClick
 }: MindmapCardProps) {
+  const { t } = useTranslation("mindmapsCard")
   const [showMenu, setShowMenu] = useState(false)
   const isArchived = (mindmap as any).isArchived === true || (mindmap as any).status === "archived"
   const formatDate = (dateString: string) => {
@@ -76,7 +78,7 @@ export default function MindmapCard({
                   className="w-5 h-5 rounded-full object-cover"
                 />
               )}
-              <span>Owner: <span className="font-medium text-foreground">{mindmap.ownerName}</span></span>
+              <span>{t("owner")}: <span className="font-medium text-foreground">{mindmap.ownerName}</span></span>
             </div>
           )}
           
@@ -131,7 +133,7 @@ export default function MindmapCard({
                   }}
                 >
                   <Edit className="h-4 w-4" />
-                  Edit Name & Description
+                  {t("editNameAndDescription")}
                 </button>
                 {isOwner && (
                   <>
@@ -144,7 +146,7 @@ export default function MindmapCard({
                       }}
                     >
                       <Copy className="h-4 w-4" />
-                      Duplicate
+                      {t("duplicate")}
                     </button>
                     <button
                       className="w-full flex items-center gap-2 px-4 py-2.5 text-sm text-foreground hover:bg-muted transition-colors"
@@ -155,7 +157,7 @@ export default function MindmapCard({
                       }}
                     >
                       <Star className="h-4 w-4" />
-                      {mindmap.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+                      {mindmap.isFavorite ? t("removeFromFavorites") : t("addToFavorites")}
                     </button>
                     {!isArchived ? (
                       <button
@@ -167,7 +169,7 @@ export default function MindmapCard({
                         }}
                       >
                         <Archive className="h-4 w-4" />
-                        Archive
+                        {t("archive")}
                       </button>
                     ) : (
                       <button
@@ -179,7 +181,7 @@ export default function MindmapCard({
                         }}
                       >
                         <Archive className="h-4 w-4" />
-                        Unarchive
+                        {t("unarchive")}
                       </button>
                     )}
                   </>
@@ -195,7 +197,7 @@ export default function MindmapCard({
                     }}
                   >
                     <Trash2 className="h-4 w-4" />
-                    Delete
+                    {t("delete")}
                   </button>
                 ) : (
                   <button
@@ -207,7 +209,7 @@ export default function MindmapCard({
                     }}
                   >
                     <LogOut className="h-4 w-4" />
-                    Leave Project
+                    {t("leaveProject")}
                   </button>
                 )}
               </div>
@@ -219,9 +221,9 @@ export default function MindmapCard({
       {/* Footer */}
       <div className="flex items-center justify-between pt-4 border-t border-border">
         <div className="text-xs text-muted-foreground">
-          <p>Modified {formatDate(mindmap.updatedAt)}</p>
+          <p>{t("modified")} {formatDate(mindmap.updatedAt)}</p>
           <p className="mt-1">
-            {mindmap.nodeCount} nodes • {mindmap.edgeCount} edges
+            {mindmap.nodeCount} {t("nodes")} • {mindmap.edgeCount} {t("edges")}
           </p>
         </div>
         {mindmap.category && (

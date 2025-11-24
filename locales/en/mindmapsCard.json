@@ -1,0 +1,14 @@
+{
+  "owner": "Owner",
+  "editNameAndDescription": "Edit name & description",
+  "duplicate": "Duplicate",
+  "addToFavorites": "Add to favorites",
+  "removeFromFavorites": "Remove from favorites",
+  "archive": "Archive",
+  "unarchive": "Unarchive",
+  "delete": "Delete",
+  "leaveProject": "Leave project",
+  "modified": "Modified",
+  "nodes": "nodes",
+  "edges": "edges"
+}
