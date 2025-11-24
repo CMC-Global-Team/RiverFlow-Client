@@ -1,7 +1,7 @@
 {
   "welcomeBack": "Chào mừng trở lại",
   "recentMindmaps": "Dưới đây là các sơ đồ tư duy gần đây của bạn",
-  "createWithTemplate": "Tạo từ mẫu có sẵn",
+  "createNew": "Tạo từ mẫu có sẵn",
   "createWithAI": "Tạo bằng AI",
   "loadingMindmaps": "Đang tải sơ đồ tư duy của bạn...",
   "failedToLoadMindmaps": "Không thể tải danh sách sơ đồ tư duy",
