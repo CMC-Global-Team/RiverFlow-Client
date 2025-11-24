@@ -320,7 +320,7 @@ export default function Toolbar({
               <Plus className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent>
+          <DropdownMenuContent className="bg-background">
             <DropdownMenuItem onClick={() => handleAddNode("rectangle")} disabled={userRole === 'viewer'}>
               <Square className="h-4 w-4 mr-2" />
               Rectangle
