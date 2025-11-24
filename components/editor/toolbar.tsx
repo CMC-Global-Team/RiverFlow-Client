@@ -428,7 +428,8 @@ export default function Toolbar({
           size="icon"
           onClick={onHistoryClick}
           title="Lịch sử thay đổi"
-          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          disabled={userRole === 'viewer'}
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <History className="h-4 w-4" />
         </Button>
@@ -497,7 +498,8 @@ export default function Toolbar({
               variant="ghost"
               size="icon"
               title="Download Options"
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+              disabled={userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -533,7 +535,8 @@ export default function Toolbar({
           variant="ghost"
           size="icon"
           title="Tutorial"
-          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          disabled={userRole === 'viewer'}
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <HandHelping className="h-4 w-4" />
         </Button>

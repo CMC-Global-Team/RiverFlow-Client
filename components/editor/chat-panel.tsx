@@ -52,6 +52,22 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
     return () => { s.off('chat:message', onMsg) }
   }, [])
 
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!isResizing) return
+      const dx = e.clientX - resizeStart.x
+      const dy = e.clientY - resizeStart.y
+      setSize({ width: Math.max(320, resizeStart.width + dx), height: Math.max(260, resizeStart.height + dy) })
+    }
+    const onUp = () => setIsResizing(false)
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
+    return () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+    }
+  }, [isResizing, resizeStart])
+
   if (!isOpen) return null
   if (!mindmap) return null
 
@@ -80,21 +96,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
     e.stopPropagation()
   }
 
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!isResizing) return
-      const dx = e.clientX - resizeStart.x
-      const dy = e.clientY - resizeStart.y
-      setSize({ width: Math.max(320, resizeStart.width + dx), height: Math.max(260, resizeStart.height + dy) })
-    }
-    const onUp = () => setIsResizing(false)
-    document.addEventListener('mousemove', onMove)
-    document.addEventListener('mouseup', onUp)
-    return () => {
-      document.removeEventListener('mousemove', onMove)
-      document.removeEventListener('mouseup', onUp)
-    }
-  }, [isResizing, resizeStart])
+  
 
   const send = () => {
     const text = input.trim()
@@ -155,4 +157,3 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
     </div>
   )
 }
-
