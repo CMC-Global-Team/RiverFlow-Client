@@ -271,3 +271,25 @@ body {
   color: var(--foreground);
   transition: background-color 0.3s, color 0.3s;
 }
+
+/* MiniMap background */
+.react-flow__minimap {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* MiniMap mask (vùng highlight viewport) */
+.react-flow__minimap-mask {
+  fill: var(--muted) !important;
+  fill-opacity: 0.4 !important;
+}
+
+/* MiniMap nodes */
+.react-flow__minimap-node {
+  stroke: var(--border) !important;
+}
+
+/* MiniMap node fill (nếu không set nodeColor) */
+.react-flow__minimap-node:not([fill]) {
+  fill: var(--foreground) !important;
+}
