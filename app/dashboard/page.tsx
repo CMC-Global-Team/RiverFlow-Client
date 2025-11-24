@@ -11,6 +11,7 @@ import gsap from "gsap"
 import { useMindmaps } from "@/hooks/mindmap/useMindmaps"
 import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import TemplateModal from "@/components/dashboard/template-modal"
 import {MindmapSummary} from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
@@ -30,7 +31,7 @@ function DashboardContent() {
   const [showAiModal, setShowAiModal] = useState(false)
     const [showDeleteDialog, setShowDeleteDialog] = useState(false)
     const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
-
+    const { t } = useTranslation("dashboard")
     const [showEditModal, setShowEditModal] = useState(false)
     const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
     const { toast } = useToast()
@@ -67,7 +68,7 @@ function DashboardContent() {
   }, [loading, mindmaps])
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this mindmap?')) return
+    if (!confirm(t("confirmDelete"))) return
     
     setActionLoading(id)
     const success = await remove(id)
