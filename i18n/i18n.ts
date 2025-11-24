@@ -11,6 +11,8 @@ import OTHER_EN from "@/locales/en/other.json"
 import OTHER_VI from "@/locales/vi/other.json"
 import DASHBOARD_EN from "@/locales/en/dashboard.json";
 import DASHBOARD_VI from "@/locales/vi/dashboard.json";
+import CHANGE_PASSWORD_EN from "@/locales/en/changePassword.json";
+import CHANGE_PASSWORD_VI from "@/locales/vi/changePassword.json";
 
 export const locale = {
     en: "English",
@@ -25,6 +27,7 @@ const resource = {
         pricing: PRICING_EN,
         other: OTHER_EN,
         dashboard: DASHBOARD_EN,
+        "change-password": CHANGE_PASSWORD_EN,
     },
     vi: {
         home: HOME_VI,
@@ -32,13 +35,14 @@ const resource = {
         pricing: PRICING_VI,
         other: OTHER_VI,
         dashboard: DASHBOARD_VI,
+        "change-password": CHANGE_PASSWORD_VI,
     }
 } as const
 const defaultNS = 'home'
 i18n.use(initReactI18next).init({
     resources: resource,
     lng: "vi",
-    ns: ["home", "about", "pricing","other"],
+    ns: ["home", "about", "pricing", "other", "dashboard", "change-password"],
     defaultNS,
     fallbackLng: "vi",
     interpolation: {
