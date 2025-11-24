@@ -1,7 +1,8 @@
 import Link from "next/link"
 import { Github, Twitter, Linkedin } from "lucide-react"
 import { useTranslation } from "react-i18next"
-
+import { ThemeSwitcher } from "@/components/theme-switcher"
+import LanguageSwitcher from "./LanguageSwitcher"
 export default function Footer() {
   const { t } = useTranslation()
 
@@ -16,6 +17,7 @@ export default function Footer() {
               <span className="text-lg font-bold text-foreground">RiverFlow</span>
             </div>
             <p className="text-sm text-muted-foreground">{t("slogan")}</p>
+            
           </div>
 
           {/* Product */}
@@ -83,16 +85,22 @@ export default function Footer() {
         <div className="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between">
           <p className="text-sm text-muted-foreground">{t("copyright")}</p>
           <div className="flex gap-6 mt-4 md:mt-0">
+            
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+            
               {t("privacy")}
+               <LanguageSwitcher/>
             </Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               {t("terms")}
+              <ThemeSwitcher/>
             </Link>
             <Link href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
               {t("cookies")}
+               
             </Link>
           </div>
+          
         </div>
       </div>
     </footer>
