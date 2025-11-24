@@ -2,12 +2,9 @@
 
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
-import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2, ChevronDown, Coins } from "lucide-react"
+import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { generateMindmapProject } from "@/services/ai/ai.service"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 interface Template {
   id: string
@@ -293,8 +290,6 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const [loading, setLoading] = useState<string | null>(null)
   const [isLoadingTemplates, setIsLoadingTemplates] = useState(false)
   const router = useRouter()
-  const [aiPrompt, setAiPrompt] = useState("")
-  const [aiMode, setAiMode] = useState<"normal" | "thinking" | "max">("normal")
 
   // Load templates from public/templates folder
   useEffect(() => {
@@ -358,13 +353,12 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
       try {
         if (selectedTemplate.id === 'ai') {
           const lang = (typeof document !== 'undefined' ? document.documentElement.lang : '') || (typeof navigator !== 'undefined' ? (navigator.language || '').slice(0,2) : 'vi')
-          const mode = aiMode === 'normal' ? 'normal' : 'max'
           const res = await generateMindmapProject({
-            topic: aiPrompt.trim(),
-            mode,
+            topic: 'Untitled Mindmap',
+            mode: 'normal',
             language: lang === 'en' ? 'en' : 'vi',
-            levels: mode === 'normal' ? 2 : 3,
-            firstLevelCount: mode === 'normal' ? 4 : 5,
+            levels: 2,
+            firstLevelCount: 4,
           })
           const id = res?.id
           if (id) {
@@ -429,7 +423,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
-                onClick={() => setSelectedTemplate({ id: 'ai', name: 'AI Mindmap', description: 'Generate by AI', icon: <Sparkles className="h-6 w-6" />, initialNodes: [], initialEdges: [] })}
+                onClick={() => setSelectedTemplate({ id: 'ai', name: 'AI Mindmap', description: 'Generate mindmap with AI', icon: <Sparkles className="h-6 w-6" />, initialNodes: [], initialEdges: [] })}
                 className="relative p-6 rounded-lg border-2 cursor-pointer transition-all md:col-span-2 lg:col-span-3 border-primary bg-primary/10 hover:bg-primary/15 hover:shadow-lg"
               >
                 <div className="flex items-start gap-4">
@@ -438,7 +432,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
-                    <p className="text-xs text-muted-foreground">Nhập promt, chọn chế độ, đính kèm file và model</p>
+                    <p className="text-xs text-muted-foreground">Tạo mindmap mới bằng AI</p>
                   </div>
                   <div className="absolute right-6 top-6">
                     <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">Mới</span>
@@ -490,42 +484,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           )}
         </div>
 
-        {/* AI Prompt Inputs (shown when AI selected) */}
-        {selectedTemplate?.id === 'ai' && (
-          <div className="px-6 pt-2">
-            <div className="flex items-center gap-3">
-              <Input
-                placeholder="Nhập nội dung của bạn"
-                value={aiPrompt}
-                onChange={(e) => setAiPrompt(e.target.value)}
-                className="flex-1"
-              />
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" className="gap-1">
-                    {aiMode === 'max' ? 'Max Mode' : aiMode === 'thinking' ? 'Thinking Mode' : 'Normal Mode'}
-                    <ChevronDown className="h-4 w-4 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setAiMode('normal')}>
-                    <span className="flex-1">Normal Mode</span>
-                    <span className="flex items-center gap-1 text-muted-foreground">-1 <Coins className="h-4 w-4" /></span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAiMode('thinking')}>
-                    <span className="flex-1">Thinking Mode</span>
-                    <span className="flex items-center gap-1 text-muted-foreground">-3 <Coins className="h-4 w-4" /></span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setAiMode('max')}>
-                    <span className="flex-1">Max Mode</span>
-                    <span className="flex items-center gap-1 text-muted-foreground">-5 <Coins className="h-4 w-4" /></span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2">Chọn chế độ và nhập prompt rồi bấm Create Mindmap</p>
-          </div>
-        )}
+        
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
@@ -537,7 +496,7 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
           </button>
           <button
             onClick={handleSelect}
-            disabled={!selectedTemplate || (selectedTemplate?.id === 'ai' && !aiPrompt.trim())}
+            disabled={!selectedTemplate}
             className="px-6 py-2 rounded-lg bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Create Mindmap
