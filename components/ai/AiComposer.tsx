@@ -4,12 +4,12 @@ import { useEffect, useRef, useState, useCallback } from "react"
 import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { generateMindmapByAI } from "@/services/mindmap/mindmap.service"
+import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
 import type { MindmapResponse } from "@/types/mindmap.types"
-import { useRouter } from "next/navigation"
-import { createMindmap } from "@/services/mindmap/mindmap.service"
+ 
+import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 
 function Draggable({ children, initialPos, handle }: { children: React.ReactNode; initialPos?: { x: number; y: number }; handle?: string }) {
   const ref = useRef<HTMLDivElement | null>(null)
@@ -85,7 +85,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
-  const router = useRouter()
+  const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
+  const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
+  const { mindmap, selectedNode, setFullMindmapState } = useMindmapContext()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -118,31 +120,30 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     setLoading(true)
     setMessages((m) => [...m, { role: 'user', text, mode }])
     try {
-      const params = mapModeToParams()
-      const nowIso = new Date().toISOString()
       const lang = detectLang()
-      const legacyMode: 'normal' | 'max' = mode === 'normal' ? 'normal' : 'max'
-      const result = await generateMindmapByAI({
-        prompt: text,
-        mode: legacyMode,
-        // model omitted to use backend default
-        messages: [{ role: 'user', content: text }],
-      })
-      setLastResult(result)
-      const summary = `Đã tạo mindmap: ${result.title}. Tổng nút: ${Array.isArray(result.nodes) ? result.nodes.length : 0}.` 
-      setMessages((m) => [...m, { role: 'assistant', text: summary }])
-      if (result && result.id) {
-        router.push(`/editor?id=${result.id}`)
+      if (mindmap?.id) {
+        const modeLabel = mode
+        const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
+        const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
+        
+        const payload: any = {
+          mindmapId: mindmap.id,
+          targetType: 'auto',
+          nodeId: selectedNode ? selectedNode.id : undefined,
+          language: lang,
+          mode: 'normal',
+          hints: text ? [text] : undefined,
+          levels,
+          firstLevelCount,
+        }
+        const result = await optimizeMindmapByAI(payload)
+        setLastResult(result)
+        const summary = `Đã cập nhật mindmap hiện tại.`
+        setMessages((m) => [...m, { role: 'assistant', text: summary }])
+        setFullMindmapState(result)
       } else {
-        const created = await createMindmap({
-          title: result?.title || 'Untitled Mindmap',
-          nodes: Array.isArray(result?.nodes) ? result!.nodes : [],
-          edges: Array.isArray(result?.edges) ? (result as any).edges || [] : [],
-          aiGenerated: true,
-          category: 'ai-generated',
-          aiMetadata: { source: 'ai', mode: legacyMode, lang }
-        })
-        if (created?.id) router.push(`/editor?id=${created.id}`)
+        const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
+        setMessages((m) => [...m, { role: 'assistant', text: msg }])
       }
     } catch (err: any) {
       const code = err?.response?.data?.error?.code || 'ERROR'
@@ -158,15 +159,73 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   return (
     <>
       <Draggable>
-        <div className="rounded-2xl border bg-muted/20 backdrop-blur-sm shadow-md">
+        <div className="rounded-2xl border bg-background shadow-md">
           <div className="flex items-center gap-3 px-3 py-2">
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
                 <Plus className="size-4" />
               </Button>
-              <Button variant="ghost" size="icon" className="size-8 rounded-lg">
-                <Sliders className="size-4" />
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="size-8 rounded-lg">
+                    <Sliders className="size-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <span>Structure</span>
+                      <span className="ml-auto text-muted-foreground">
+                        {structureType === "mindmap" ? "Mind Map" : structureType === "logic" ? "Logic Chart" : structureType === "brace" ? "Brace Map" : structureType === "org" ? "Org Chart" : structureType === "tree" ? "Tree Chart" : structureType === "timeline" ? "Timeline" : "Fishbone"}
+                      </span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuRadioGroup value={structureType} onValueChange={(v) => setStructureType(v as any)}>
+                        <DropdownMenuRadioItem value="mindmap">Mind Map</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="logic">Logic Chart</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="brace">Brace Map</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="org">Org Chart</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="tree">Tree Chart</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="timeline">Timeline</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="fishbone">Fishbone</DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                  <DropdownMenuSub>
+                    <DropdownMenuSubTrigger>
+                      <span>Language</span>
+                      <span className="ml-auto text-muted-foreground">
+                        {langPref === "auto" ? "Auto" : langPref === "vi" ? "Tiếng Việt" : "English"}
+                      </span>
+                    </DropdownMenuSubTrigger>
+                    <DropdownMenuSubContent>
+                      <DropdownMenuRadioGroup value={langPref} onValueChange={(v) => setLangPref(v as any)}>
+                        <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="vi">Tiếng Việt</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuSubContent>
+                  </DropdownMenuSub>
+                </DropdownMenuContent>
+              </DropdownMenu>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => setStructureType("mindmap")}>MindMap</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("logic")}>Logic Chart</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("brace")}>Brace Map</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("org")}>Org Chart</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("tree")}>Tree Chart</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("timeline")}>TimeLine</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setStructureType("fishbone")}>Fishbone</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLangPref("auto")}>Language: Auto</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLangPref("vi")}>Language: Tiếng Việt</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLangPref("en")}>Language: English</DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={() => setChatOpen(true)}>
                 <MessageSquare className="size-4" />
               </Button>

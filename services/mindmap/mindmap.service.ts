@@ -57,6 +57,32 @@ export const generateMindmapByAI = async (
   return response.data;
 };
 
+export const optimizeMindmapByAI = async (
+  payload: {
+    mindmapId: string;
+    targetType: 'node' | 'description' | 'structure';
+    nodeId?: string;
+    language?: string;
+    mode?: string;
+    hints?: string[];
+    levels?: number;
+    firstLevelCount?: number;
+    tags?: string[];
+  }
+): Promise<MindmapResponse> => {
+  const response = await apiClient.post<MindmapResponse>(
+    `${MINDMAP_API_BASE}/ai/optimize`,
+    payload,
+    {
+      headers: {
+        Accept: 'application/json',
+        'Idempotency-Key': (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`)
+      },
+    }
+  );
+  return response.data;
+};
+
 /**
  * Get all mindmaps for current user
  */
