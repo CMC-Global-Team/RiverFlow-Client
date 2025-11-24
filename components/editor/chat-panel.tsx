@@ -18,6 +18,7 @@ interface ChatMessage {
   avatar?: string | null
   message: string
   createdAt: string
+  from?: string
 }
 
 function EmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
@@ -63,6 +64,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
   const [input, setInput] = useState("")
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [typingUsers, setTypingUsers] = useState<Record<string, { clientId: string; userId?: string | number | null; name: string; color: string; avatar?: string | null }>>({})
+  const [agentTyping, setAgentTyping] = useState(false)
   const panelRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const stopTimerRef = useRef<any>(null)
@@ -75,16 +77,78 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
 
   useEffect(() => {
     const s = getSocket()
-    const onMsg = (msg: ChatMessage) => {
-      setMessages((prev) => {
-        const next = [...prev, msg]
-        return next.length > 500 ? next.slice(next.length - 500) : next
-      })
+    const normalizeAgentText = (t: string) => {
+      const s = (t || '').replace(/^[^A-Za-zÀ-ỹ]+\s*/, '')
+      if (/Agent:\s*action\s*=\s*replace/i.test(s)) {
+        const m = s.match(/mentioned\s*=\s*(\d+)/i)
+        const del = s.match(/prune\s*=\s*(\d+)/i)
+        const edit = s.match(/edit\s*=\s*(\d+)/i)
+        return `RiverFlow Agent: Kế hoạch thay thế toàn bộ (xóa: ${del?.[1] || 0}, sửa: ${edit?.[1] || 0}, liên quan: ${m?.[1] || 0})`
+      }
+      if (/Generate:\s*áp dụng\s*replace/i.test(s)) return 'RiverFlow Agent: Thực hiện thay thế mindmap theo kế hoạch'
+      if (/Generate:\s*áp dụng\s*expand/i.test(s)) return 'RiverFlow Agent: Mở rộng mindmap theo kế hoạch'
+      if (/Agent Plan:/i.test(s)) return 'RiverFlow Agent: Kế hoạch đã thiết lập'
+      if (/Agent Analyze:/i.test(s)) {
+        const tgt = s.match(/target\s*=\s*([a-z]+)/i)?.[1]
+        const st = s.match(/structureType\s*=\s*([a-z]+)/i)?.[1]
+        return `RiverFlow Agent: Phân tích tác vụ=${tgt || 'structure'}${st ? `, kiểu=${st}` : ''}`
+      }
+      if (/Pruned subtree of\s+/i.test(s)) {
+        const lbl = s.replace(/.*Pruned subtree of\s+/i, '')
+        return `RiverFlow Agent: Đã xóa toàn bộ nhánh "${lbl}"`
+      }
+      if (/Pruned labels:/i.test(s)) {
+        const rest = s.replace(/.*Pruned labels:\s*/i, '')
+        return `RiverFlow Agent: Đã xóa nhánh: ${rest}`
+      }
+      if (/Edited label of node\s+/i.test(s)) return 'RiverFlow Agent: Đã cập nhật tên node'
+      if (/Updated description/i.test(s)) return 'RiverFlow Agent: Đã cập nhật mô tả mindmap'
+      if (/Replace:\s*rebuilt structure with\s*(\d+)/i.test(s)) {
+        const m = s.match(/Replace:\s*rebuilt structure with\s*(\d+)/i)
+        return `RiverFlow Agent: Đã tạo lại cấu trúc gồm ${m?.[1] || '0'} node`
+      }
+      if (/Expand:\s*added\s*(\d+)/i.test(s)) {
+        const m = s.match(/Expand:\s*added\s*(\d+)/i)
+        return `RiverFlow Agent: Đã thêm ${m?.[1] || '0'} node mới`
+      }
+      return `RiverFlow Agent: ${s}`
+    }
+
+    const onMsg = (msg: any) => {
+      const isAgent = typeof msg === 'string' || msg?.from === 'agent' || (!!msg?.message && !msg?.clientId)
+      if (isAgent) {
+        const raw = typeof msg === 'string' ? msg : (msg?.message || '')
+        const text = normalizeAgentText(raw)
+        const now = new Date().toISOString()
+        const agentMsg: ChatMessage = {
+          id: `agent-${Date.now()}`,
+          room: '',
+          clientId: 'agent',
+          userId: null,
+          name: 'RiverFlow Agent',
+          color: '#8b5cf6',
+          avatar: null,
+          message: text,
+          createdAt: now,
+          from: 'agent',
+        }
+        setMessages((prev) => {
+          const next = [...prev, agentMsg]
+          return next.length > 500 ? next.slice(next.length - 500) : next
+        })
+      } else {
+        setMessages((prev) => {
+          const next = [...prev, msg as ChatMessage]
+          return next.length > 500 ? next.slice(next.length - 500) : next
+        })
+      }
       setTimeout(() => {
         listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: 'smooth' })
       }, 10)
     }
     s.on('chat:message', onMsg)
+    const onAgentTyping = (data: any) => { setAgentTyping(!!data?.isTyping) }
+    s.on('agent:typing', onAgentTyping)
     const onTyping = (data: any) => {
       const c = data?.clientId
       const isTyping = !!data?.isTyping
@@ -100,7 +164,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
       })
     }
     s.on('chat:typing', onTyping)
-    return () => { s.off('chat:message', onMsg); s.off('chat:typing', onTyping) }
+    return () => { s.off('chat:message', onMsg); s.off('chat:typing', onTyping); s.off('agent:typing', onAgentTyping) }
   }, [])
 
   useEffect(() => {
@@ -182,9 +246,10 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
         <div ref={listRef} className="flex-1 overflow-y-auto p-3 space-y-2">
           {messages.map((m) => {
             const isMine = m.clientId === myId
+            const isAgent = m.from === 'agent' || m.name === 'RiverFlow Agent' || m.clientId === 'agent'
             return (
               <div key={m.id} className={`flex items-end gap-2 ${isMine ? 'justify-end' : 'justify-start'}`} title={new Date(m.createdAt).toLocaleTimeString()}>
-                {!isMine && (
+                {!isMine && !isAgent && (
                   <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
                     {m.avatar ? (
                       <img src={getAvatarUrl(m.avatar) || ''} alt="" className="w-full h-full object-cover" />
@@ -193,12 +258,17 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                     )}
                   </div>
                 )}
-                <div className={`max-w-[70%] rounded-lg px-3 py-2 shadow-sm ${isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
-                  <div className="text-[10px] opacity-70 mb-1 flex items-center gap-1">
-                    <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: m.color }}></span>
-                    <span>{isMine ? 'You' : m.name || 'Anonymous'}</span>
+                <div className={`max-w-[70%] px-1 py-0`}>
+                  {isAgent ? <div className="text-[11px] text-muted-foreground mb-1">RiverFlow Agent</div> : null}
+                  <div className={`rounded-lg px-3 py-2 shadow-sm ${isMine ? 'bg-primary text-primary-foreground' : 'bg-muted text-foreground'}`}>
+                    {!isAgent ? (
+                      <div className="text-[10px] opacity-70 mb-1 flex items-center gap-1">
+                        <span className="inline-block w-2 h-2 rounded-full" style={{ backgroundColor: m.color }}></span>
+                        <span>{isMine ? 'You' : m.name || 'Anonymous'}</span>
+                      </div>
+                    ) : null}
+                    <div className="text-sm break-words whitespace-pre-wrap">{m.message}</div>
                   </div>
-                  <div className="text-sm break-words whitespace-pre-wrap">{m.message}</div>
                 </div>
                 {isMine && (
                   <div className="inline-flex items-center justify-center w-7 h-7 rounded-full overflow-hidden border border-border">
@@ -212,6 +282,20 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
               </div>
             )
           })}
+          {agentTyping ? (
+            <div className="flex justify-start">
+              <div className="max-w-[70%] px-1 py-0">
+                <div className="text-[11px] text-muted-foreground mb-1">RiverFlow Agent</div>
+                <div className="rounded-lg px-3 py-2 shadow-sm bg-muted text-foreground inline-flex items-center gap-2">
+                  <div className="flex items-end gap-1">
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '0ms' }} />
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '200ms' }} />
+                    <span className="inline-block w-2 h-2 rounded-full bg-muted-foreground animate-bounce" style={{ animationDelay: '400ms' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
 
         <div className="p-3 border-t border-border">

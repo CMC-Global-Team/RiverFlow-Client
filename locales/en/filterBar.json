@@ -1,0 +1,15 @@
+{
+  "filters": "Filters",
+  "status": "Status",
+  "active": "Active",
+  "archived": "Archived",
+
+  "favorites": "Favorites",
+
+  "sort": "Sort",
+  "sortBy": "Sort by",
+  "lastModified": "Last Modified",
+  "dateCreated": "Date Created",
+  "title": "Title",
+  "nodeCount": "Node Count"
+}

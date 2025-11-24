@@ -1,32 +1,39 @@
 {
-  "myMindmaps": "Sơ Đồ Tư Duy Của Tôi",
-  "mindmap": "sơ đồ tư duy",
-  "createNew": "Tạo Mới",
-  "createWithAI": "Tạo bằng AI",
-  "loadingMindmaps": "Đang tải sơ đồ tư duy của bạn...",
-  "failedToLoadMindmaps": "Không thể tải sơ đồ tư duy",
-  "sessionExpired": "Phiên đăng nhập của bạn có thể đã hết hạn. Vui lòng đăng nhập lại.",
+  "myMindmaps": "Sơ đồ của tôi",
+  "mindmaps": "sơ đồ",
+  "mindmap": "sơ đồ",
+  "archived": "đã lưu trữ",
+
+  "createNew": "Tạo mới",
+  "createMindmap": "Tạo sơ đồ tư duy",
+
+  "loadingMindmaps": "Đang tải sơ đồ...",
+
+  "failedToLoadMindmaps": "Không thể tải danh sách sơ đồ",
+  "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   "retry": "Thử lại",
 
-  "noMindmapsYet": "Chưa có sơ đồ tư duy nào",
-  "noMindmapsDescription": "Bắt đầu tạo sơ đồ tư duy đầu tiên để sắp xếp ý tưởng, lập kế hoạch dự án hoặc brainstorm sáng tạo.",
-  "noArchivedMindmaps": "Không có sơ đồ tư duy nào trong lưu trữ",
-  "archivedMindmapsDescription": "Các sơ đồ tư duy bạn lưu trữ sẽ xuất hiện ở đây.",
-  "noResultsFound": "Không tìm thấy sơ đồ tư duy nào",
-  "tryAdjustingFilters": "Hãy thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.",
+  "noMindmapsYet": "Bạn chưa có sơ đồ nào",
+  "noMindmapsDescription": "Bắt đầu hành trình sáng tạo của bạn bằng cách tạo sơ đồ đầu tiên!",
 
-  "createMindmap": "Tạo Sơ Đồ Tư Duy",
+  "noArchivedMindmaps": "Không có sơ đồ nào trong lưu trữ",
+  "archivedMindmapsDescription": "Các sơ đồ đã được lưu trữ sẽ xuất hiện ở đây.",
 
-  "duplicating": "Đang sao chép sơ đồ tư duy...",
-  "pleaseWait": "Vui lòng chờ",
+  "noResultsFound": "Không tìm thấy sơ đồ nào",
+  "tryAdjustingFilters": "Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.",
+
+  "duplicating": "Đang sao chép...",
+  "pleaseWait": "Vui lòng chờ trong giây lát",
   "duplicateSuccess": "Đã sao chép thành công!",
-  "created": "Đã tạo: {{title}}",
-  "duplicateFailedTitle": "Sao chép thất bại",
-  "duplicateFailedDescription": "Đã xảy ra lỗi. Vui lòng thử lại.",
+  "created": "Đã tạo bản sao: {title}",
 
-  "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi sơ đồ tư duy cộng tác này không?",
+  "duplicateFailedTitle": "Sao chép thất bại",
+  "duplicateFailedDescription": "Đã xảy ra lỗi khi cố gắng sao chép sơ đồ. Vui lòng thử lại.",
+
+  "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi dự án này không?\nHành động này không thể hoàn tác.",
   "leftProject": "Đã rời dự án",
-  "leftProjectDescription": "Bạn đã rời khỏi sơ đồ tư duy thành công.",
+  "leftProjectDescription": "Bạn đã rời khỏi sơ đồ hợp tác thành công.",
+
   "leaveFailed": "Rời dự án thất bại",
-  "leaveFailedDescription": "Đã xảy ra lỗi. Vui lòng thử lại."
+  "leaveFailedDescription": "Không thể rời khỏi dự án. Vui lòng thử lại sau."
 }
