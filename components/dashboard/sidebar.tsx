@@ -26,7 +26,7 @@ import {
 
 export default function Sidebar() {
 
-  const { t } = useTranslation("settings")
+  const { t } = useTranslation("sideBar")
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false)
   const { logout, isLoading } = useLogout()
@@ -114,7 +114,7 @@ export default function Sidebar() {
             >
               <div className="flex items-center gap-3">
                 <Settings className="h-5 w-5" />
-                {!isCollapsed && <span className="text-sm font-medium">Settings</span>}
+                {!isCollapsed && <span className="text-sm font-medium">{t("settings")}</span>}
               </div>
 
               {!isCollapsed && (
