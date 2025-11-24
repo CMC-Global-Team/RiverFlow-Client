@@ -1,13 +1,15 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
+import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X, Sparkles } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { generateMindmapByAI } from "@/services/mindmap/mindmap.service"
 import type { MindmapResponse } from "@/types/mindmap.types"
+import { useRouter } from "next/navigation"
+import { createMindmap } from "@/services/mindmap/mindmap.service"
 
 function Draggable({ children, initialPos, handle }: { children: React.ReactNode; initialPos?: { x: number; y: number }; handle?: string }) {
   const ref = useRef<HTMLDivElement | null>(null)
@@ -83,6 +85,7 @@ export default function AiComposer() {
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
+  const router = useRouter()
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
@@ -128,6 +131,19 @@ export default function AiComposer() {
       setLastResult(result)
       const summary = `Đã tạo mindmap: ${result.title}. Tổng nút: ${Array.isArray(result.nodes) ? result.nodes.length : 0}.` 
       setMessages((m) => [...m, { role: 'assistant', text: summary }])
+      if (result && result.id) {
+        router.push(`/editor?id=${result.id}`)
+      } else {
+        const created = await createMindmap({
+          title: result?.title || 'Untitled Mindmap',
+          nodes: Array.isArray(result?.nodes) ? result!.nodes : [],
+          edges: Array.isArray(result?.edges) ? (result as any).edges || [] : [],
+          aiGenerated: true,
+          category: 'ai-generated',
+          aiMetadata: { source: 'ai', mode: legacyMode, lang }
+        })
+        if (created?.id) router.push(`/editor?id=${created.id}`)
+      }
     } catch (err: any) {
       const code = err?.response?.data?.error?.code || 'ERROR'
       const message = err?.response?.data?.error?.message || err?.message || 'Không thể tạo mindmap.'
@@ -156,6 +172,19 @@ export default function AiComposer() {
               </Button>
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
                 <Upload className="size-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 rounded-lg"
+                onClick={() => {
+                  const t = inputValue.trim()
+                  if (!t || loading) return
+                  setInputValue("")
+                  void sendPrompt(t)
+                }}
+              >
+                <Sparkles className="size-4" />
               </Button>
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
