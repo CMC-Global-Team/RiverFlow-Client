@@ -224,9 +224,38 @@ html {
   @apply bg-primary text-primary-foreground;
 }
 
+/* Controls container */
+.react-flow__controls {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Single control button */
+.react-flow__controls-button {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Icon inside button (stroke + fill) */
+.react-flow__controls-button svg {
+  stroke: var(--foreground) !important;
+  fill: var(--foreground) !important;   /* <== thêm dòng này */
+}
+
+/* Hover */
+.react-flow__controls-button:hover {
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+.react-flow__controls-button:hover svg {
+  stroke: var(--foreground) !important;
+  fill: var(--foreground) !important;  /* <== hover icon trắng luôn */
+}
 
 
-/*Dark light theme blablabl*/
+/* Dark light theme blablabl */
 :root {
   --background: #ffffff;
   --foreground: #000000;
