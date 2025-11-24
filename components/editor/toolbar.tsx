@@ -201,82 +201,47 @@ export default function Toolbar({
   }
 
   const handleDownloadImage = async (format: 'png' | 'jpeg') => {
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) return
+    const container = document.querySelector('.react-flow') as HTMLElement
+    if (!container) return
 
-    const pad = 64
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    nodes.forEach((n) => {
-      const x = (n as any).positionAbsolute?.x ?? n.position?.x ?? 0
-      const y = (n as any).positionAbsolute?.y ?? n.position?.y ?? 0
-      const w = (n as any).width ?? 150
-      const h = (n as any).height ?? 67
-      if (x < minX) minX = x
-      if (y < minY) minY = y
-      if (x + w > maxX) maxX = x + w
-      if (y + h > maxY) maxY = y + h
-    })
-
-    const hasBounds = Number.isFinite(minX) && Number.isFinite(minY) && Number.isFinite(maxX) && Number.isFinite(maxY)
-
+    const original = reactFlowInstance.getViewport()
+    const styleEl = document.createElement('style')
+    styleEl.setAttribute('data-export-hide', 'true')
+    styleEl.textContent = `.react-flow__handle{display:none !important;opacity:0 !important;} .react-flow__connectionline{display:none !important;}`
+    document.head.appendChild(styleEl)
+    reactFlowInstance.fitView({ padding: 0.2, duration: 0 })
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     try {
-      if (hasBounds) {
-        const width = Math.ceil(maxX - minX + pad * 2)
-        const height = Math.ceil(maxY - minY + pad * 2)
-        const style = { transform: `translate(${-minX + pad}px, ${-minY + pad}px) scale(1)` }
-        const dataUrl = format === 'png'
-          ? await toPng(viewport, { backgroundColor: '#ffffff', width, height, style })
-          : await toJpeg(viewport, { backgroundColor: '#ffffff', width, height, style })
-        const link = document.createElement('a')
-        link.download = `${mindmap?.title || 'mindmap'}.${format}`
-        link.href = dataUrl
-        link.click()
-      } else {
-        const dataUrl = format === 'png'
-          ? await toPng(viewport, { backgroundColor: '#ffffff' })
-          : await toJpeg(viewport, { backgroundColor: '#ffffff' })
-        const link = document.createElement('a')
-        link.download = `${mindmap?.title || 'mindmap'}.${format}`
-        link.href = dataUrl
-        link.click()
-      }
+      const dataUrl = format === 'png'
+        ? await toPng(container, { backgroundColor: '#ffffff' })
+        : await toJpeg(container, { backgroundColor: '#ffffff' })
+      const link = document.createElement('a')
+      link.download = `${mindmap?.title || 'mindmap'}.${format}`
+      link.href = dataUrl
+      link.click()
       toast.success(`Mindmap downloaded as ${format.toUpperCase()}`)
     } catch (err) {
       console.error('Error downloading image:', err)
       toast.error("Failed to download image")
+    } finally {
+      try { document.head.removeChild(styleEl) } catch {}
+      reactFlowInstance.setViewport(original)
     }
   }
 
   const handleDownloadPDF = async () => {
-    const viewport = document.querySelector('.react-flow__viewport') as HTMLElement
-    if (!viewport) return
+    const container = document.querySelector('.react-flow') as HTMLElement
+    if (!container) return
 
-    const pad = 64
-    let minX = Infinity
-    let minY = Infinity
-    let maxX = -Infinity
-    let maxY = -Infinity
-    nodes.forEach((n) => {
-      const x = (n as any).positionAbsolute?.x ?? n.position?.x ?? 0
-      const y = (n as any).positionAbsolute?.y ?? n.position?.y ?? 0
-      const w = (n as any).width ?? 150
-      const h = (n as any).height ?? 67
-      if (x < minX) minX = x
-      if (y < minY) minY = y
-      if (x + w > maxX) maxX = x + w
-      if (y + h > maxY) maxY = y + h
-    })
-
-    const hasBounds = Number.isFinite(minX) && Number.isFinite(minY) && Number.isFinite(maxX) && Number.isFinite(maxY)
-
+    const original = reactFlowInstance.getViewport()
+    const styleEl = document.createElement('style')
+    styleEl.setAttribute('data-export-hide', 'true')
+    styleEl.textContent = `.react-flow__handle{display:none !important;opacity:0 !important;} .react-flow__connectionline{display:none !important;}`
+    document.head.appendChild(styleEl)
+    reactFlowInstance.fitView({ padding: 0.2, duration: 0 })
+    await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)))
     try {
-      const styleOpts = hasBounds
-        ? { width: Math.ceil(maxX - minX + pad * 2), height: Math.ceil(maxY - minY + pad * 2), style: { transform: `translate(${-minX + pad}px, ${-minY + pad}px) scale(1)` } }
-        : {}
-      const dataUrl = await toPng(viewport, { backgroundColor: '#ffffff', ...(styleOpts as any) })
+      const dataUrl = await toPng(container, { backgroundColor: '#ffffff' })
       const pdf = new jsPDF({ orientation: 'landscape' })
       const imgProps = pdf.getImageProperties(dataUrl)
       const pdfWidth = pdf.internal.pageSize.getWidth()
@@ -287,6 +252,9 @@ export default function Toolbar({
     } catch (err) {
       console.error('Error downloading PDF:', err)
       toast.error("Failed to download PDF")
+    } finally {
+      try { document.head.removeChild(styleEl) } catch {}
+      reactFlowInstance.setViewport(original)
     }
   }
 
