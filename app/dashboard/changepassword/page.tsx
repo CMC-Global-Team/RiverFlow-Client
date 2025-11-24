@@ -106,12 +106,12 @@ function ChangePasswordContent() {
         try {
             await changePassword(data);
 
-            toast.success("Password changed successfully!");
+            toast.success(t("passwordChangedSuccessfully"));
             reset();
             setNewPasswordValue("");
             setSuccessModal(true);
         } catch (err: any) {
-            const msg = err.message || "Failed to change password";
+            const msg = err.message || t("failedToChangePassword");
             setErrorMsg(msg);
             setErrorModal(true);
             toast.error(msg);
