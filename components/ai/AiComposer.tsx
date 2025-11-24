@@ -127,6 +127,18 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return 'structure'
   }
 
+  const buildContextHint = () => {
+    const ns = Array.isArray(nodes) ? nodes : []
+    const es = Array.isArray(edges) ? edges : []
+    const inMap = new Map<string, number>()
+    es.forEach(e => { const t = String((e as any).target || '') ; if (t) inMap.set(t, (inMap.get(t) || 0) + 1) })
+    const rootNode = ns.find(n => !inMap.has(String(n.id))) || ns[0]
+    const rootLabel = String(rootNode?.data?.label || rootNode?.id || '')
+    const children = ns.filter(n => es.some(e => String((e as any).source || '') === String(rootNode?.id) && String((e as any).target || '') === String(n.id)))
+      .map(n => String(n?.data?.label || n.id)).slice(0, 12)
+    return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
+  }
+
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
     setLoading(true)
@@ -144,7 +156,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
-          hints: text ? [text] : undefined,
+          hints: text ? [text, buildContextHint()] : undefined,
           levels,
           firstLevelCount,
           structureType,
@@ -256,11 +268,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
           const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
           let curNodes = [...startNodes]
+          const addedEdgeKeys = new Set<string>()
           const tick = () => {
             if (addSeqNodes.length > 0) {
               const n = addSeqNodes.shift() as any
               curNodes = [...curNodes, n]
-              const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+              const eReady = addSeqEdges
+                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+                .filter((e) => {
+                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
+                  if (addedEdgeKeys.has(k)) return false
+                  addedEdgeKeys.add(k)
+                  return true
+                })
               applyStreamingAdditions([n], eReady)
               setTimeout(tick, 45)
             } else {
@@ -273,11 +293,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
           const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
           let curNodes: any[] = []
+          const addedEdgeKeys = new Set<string>()
           const tick = () => {
             if (addSeqNodes.length > 0) {
               const n = addSeqNodes.shift() as any
               curNodes = [...curNodes, n]
-              const eReady = addSeqEdges.filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+              const eReady = addSeqEdges
+                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+                .filter((e) => {
+                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
+                  if (addedEdgeKeys.has(k)) return false
+                  addedEdgeKeys.add(k)
+                  return true
+                })
               applyStreamingAdditions([n], eReady)
               setTimeout(tick, 45)
             } else {

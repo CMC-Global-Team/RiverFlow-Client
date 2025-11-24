@@ -738,15 +738,50 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [scheduleAutoSave, recordSnapshot])
 
   const applyStreamingAdditions = useCallback((addNodes: any[] = [], addEdges: any[] = []) => {
+    const existingNodes = latestNodesRef.current || []
+    const existingEdges = latestEdgesRef.current || []
+    const nodeIds = new Set<string>(existingNodes.map((n: any) => String(n.id)))
+    const edgeIds = new Set<string>(existingEdges.map((e: any) => String(e.id)))
+    const edgeSigs = new Set<string>(existingEdges.map((e: any) => `${e.source}|${e.target}|${e.sourceHandle || ''}|${e.targetHandle || ''}`))
+
+    const finalNodes: any[] = []
+    for (let n of addNodes) {
+      const nid = String(n.id)
+      if (!nodeIds.has(nid)) {
+        nodeIds.add(nid)
+        finalNodes.push(n)
+      }
+    }
+
+    const finalEdges: any[] = []
+    for (let e of addEdges) {
+      let id = String((e as any).id || '')
+      const sig = `${(e as any).source}|${(e as any).target}|${(e as any).sourceHandle || ''}|${(e as any).targetHandle || ''}`
+      if (edgeSigs.has(sig)) continue
+      if (!id || edgeIds.has(id)) {
+        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        while (edgeIds.has(uid)) {
+          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        }
+        (e as any).id = uid
+        id = uid
+      }
+      edgeIds.add(id)
+      edgeSigs.add(sig)
+      finalEdges.push({ ...e })
+    }
+
+    if (finalNodes.length === 0 && finalEdges.length === 0) return
+
     recordSnapshot()
-    setNodes((nds) => [...nds, ...addNodes])
-    setEdges((eds) => [...eds, ...addEdges])
+    if (finalNodes.length > 0) setNodes((nds) => [...nds, ...finalNodes])
+    if (finalEdges.length > 0) setEdges((eds) => [...eds, ...finalEdges])
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) {
-      if (addNodes.length > 0) emitNodesChange(s, room, addNodes.map((n) => ({ type: 'add', item: n })) as any)
-      if (addEdges.length > 0) emitEdgesChange(s, room, addEdges.map((e) => ({ type: 'add', item: e })) as any)
+      if (finalNodes.length > 0) emitNodesChange(s, room, finalNodes.map((n) => ({ type: 'add', item: n })) as any)
+      if (finalEdges.length > 0) emitEdgesChange(s, room, finalEdges.map((e) => ({ type: 'add', item: e })) as any)
     }
   }, [scheduleAutoSave, recordSnapshot])
 
