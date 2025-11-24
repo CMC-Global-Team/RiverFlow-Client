@@ -1,0 +1,26 @@
+{
+  "welcomeBack": "Welcome back",
+  "recentMindmaps": "Here are your recent mindmaps",
+  "createWithTemplate": "Create with Template",
+  "createWithAI": "Create with AI",
+  "loadingMindmaps": "Loading your mindmaps...",
+  "failedToLoadMindmaps": "Failed to load mindmaps",
+  "sessionExpiredMessage": "Your session may have expired. Please log in again.",
+  "retry": "Retry",
+  "noMindmaps": "You don't have any mindmaps yet.",
+  
+  "confirmDelete": "Are you sure you want to delete this mindmap? This action cannot be undone.",
+  "confirmLeaveProject": "Are you sure you want to leave this collaborative project? You will lose access to it.",
+
+  "duplicating": "Duplicating mindmap...",
+  "pleaseWait": "Please wait",
+  "duplicateSuccess": "Mindmap duplicated successfully",
+  "created": "Created \"{title}\"",
+  "duplicateFailed": "Failed to duplicate mindmap",
+  
+  "leftProject": "Left project",
+  "leftProjectSuccess": "You have successfully left the project",
+  "leaveProjectFailed": "Failed to leave the project",
+
+  "error": "Error"
+}

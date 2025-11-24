@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { useAuth } from "@/hooks/auth/useAuth"
 import Sidebar from "@/components/dashboard/sidebar"
@@ -23,6 +24,7 @@ import { useToast } from "@/hooks/use-toast"
 import { duplicateMindmap, leaveCollaboration } from "@/services/mindmap/mindmap.service"
 
 function MyMindmapsContent() {
+  const { t } = useTranslation("mindmaps")
   const router = useRouter()
   const { user } = useAuth()
   const [selectedStatus, setSelectedStatus] = useState<"active" | "archived">("active")
@@ -172,23 +174,23 @@ function MyMindmapsContent() {
 
   const handleDuplicate = async (id: string) => {
     setActionLoading(id)
-    toast({ title: "Đang nhân bản...", description: "Vui lòng chờ..." })
+    toast({ title: t("duplicating"), description: t("pleaseWait") })
 
     try {
       const newMindmap = await duplicateMindmap(id)
       
       toast({ 
-        title: "Nhân bản thành công!",
-        description: `Đã tạo "${newMindmap.title}".`
+        title: t("duplicateSuccess"),
+        description: t("created", { title: newMindmap.title })
       })
       await refetch()
 
     } catch (error) {
-      console.error("Duplicate failed:", error)
+      console.error(t("duplicateFailedTitle"), error)
       toast({ 
         variant: "destructive", 
-        title: "Lỗi", 
-        description: "Không thể nhân bản mind map." 
+        title: t("duplicateFailedTitle"), 
+        description: t("duplicateFailedDescription") 
       })
     } finally {
       setActionLoading(null) 
@@ -196,22 +198,22 @@ function MyMindmapsContent() {
   }
 
   const handleLeave = async (id: string) => {
-    if (!confirm('Are you sure you want to leave this project?')) return
+    if (!confirm(t("confirmLeaveProject"))) return
     
     setActionLoading(id)
     try {
       await leaveCollaboration(id)
       toast({ 
-        title: "Left project",
-        description: "You have successfully left the project."
+        title: t("leftProject"),
+        description: t("leftProjectDescription")
       })
       await refetch()
     } catch (error) {
-      console.error("Leave failed:", error)
+      console.error(t("leaveFailed"), error)
       toast({ 
         variant: "destructive", 
-        title: "Error", 
-        description: "Failed to leave the project." 
+        title: t("leaveFailed"), 
+        description: t("leaveFailedDescription") 
       })
     } finally {
       setActionLoading(null)
@@ -233,9 +235,9 @@ function MyMindmapsContent() {
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold text-foreground">My Mindmaps</h1>
+                  <h1 className="text-3xl font-bold text-foreground">{t("myMindmaps")}</h1>
                   <p className="mt-2 text-muted-foreground">
-                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} mindmap{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} {t("mindmap")}{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
                     {filteredAndSortedMindmaps.length !== mindmaps.length && 
                       ` (${mindmaps.length} total)`
                     }
@@ -249,7 +251,7 @@ function MyMindmapsContent() {
                       className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                     >
                       <Plus className="h-5 w-5" />
-                      Create New
+                      {t("createNew")}
                     </button>
                   </div>
                 )}
@@ -282,7 +284,7 @@ function MyMindmapsContent() {
             {loading && (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                <span className="ml-3 text-muted-foreground">Loading mindmaps...</span>
+                <span className="ml-3 text-muted-foreground">{t("loadingMindmaps")}</span>
               </div>
             )}
 
@@ -291,11 +293,11 @@ function MyMindmapsContent() {
               <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
                 <AlertCircle className="h-5 w-5" />
                 <div className="flex-1">
-                  <p className="font-semibold">Failed to load mindmaps</p>
+                  <p className="font-semibold">{t("failedToLoadMindmaps")}</p>
                   <p className="text-sm">{error}</p>
                   {error.includes("403") && (
                     <p className="text-xs mt-1">
-                      You may need to log in again. Your session might have expired.
+                      {t("sessionExpired")}
                     </p>
                   )}
                 </div>
@@ -303,7 +305,7 @@ function MyMindmapsContent() {
                   onClick={refetch}
                   className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Retry
+                  {t("retry")}
                 </button>
               </div>
             )}
@@ -313,19 +315,19 @@ function MyMindmapsContent() {
               <EmptyState
                 title={
                   searchQuery || showFavoritesOnly
-                    ? "No mindmaps match your filters"
+                    ? t("noResultsFound")
                     : selectedStatus === "archived"
-                    ? "No archived mindmaps"
-                    : "No mindmaps yet"
+                    ? t("noArchivedMindmaps")
+                    : t("noMindmapsYet")
                 }
                 description={
                   searchQuery || showFavoritesOnly
-                    ? "Try adjusting your filters or search query"
+                    ? t("tryAdjustingFilters")
                     : selectedStatus === "archived"
-                    ? "Mindmaps you archive will appear here"
-                    : "Create your first mindmap to get started"
+                    ? t("archivedMindmapsDescription")
+                    : t("noMindmapsDescription")
                 }
-                actionLabel="Create Mindmap"
+                actionLabel={t("createMindmap")}
                 onAction={selectedStatus === "active" ? handleCreateNew : undefined}
               />
             )}

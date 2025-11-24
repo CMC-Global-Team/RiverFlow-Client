@@ -81,13 +81,13 @@ export default function Header({ onAuthClick }: HeaderProps) {
                   onClick={() => onAuthClick("login")}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                  Login
+                    {t("login")}
                 </button>
                 <button
                   onClick={() => onAuthClick("signup")}
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                 >
-                  Get Started
+                    {t( "GetStarted")}
                 </button>
               </>
             )}

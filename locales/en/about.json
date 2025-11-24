@@ -1,0 +1,61 @@
+{
+    "title": "About",
+    "brand": "RiverFlow",
+    "mission": "We're on a mission to revolutionize how teams collaborate and organize their ideas. RiverFlow was born from the frustration of existing mindmap tools that felt clunky and disconnected.",
+    "story": {
+        "title": "Our Story",
+        "p1": "RiverFlow started in 2023 when our founder Sarah realized that existing mindmap tools were missing something crucial: the ability to collaborate seamlessly in real-time.",
+        "p2": "After months of research and prototyping, we built RiverFlow from the ground up with collaboration at its core. Today, thousands of teams use RiverFlow to organize their thoughts and bring their ideas to life.",
+        "p3": "We're just getting started. Our vision is to become the go-to platform for creative teams worldwide."
+    },
+    "stats": {
+        "mindmapsCreated": "Mindmaps Created",
+        "activeUsers": "Active Users",
+        "countries": "Countries"
+    },
+    "values": {
+        "title": "Our Values",
+        "innovation": {
+            "title": "Innovation",
+            "description": "We constantly push boundaries to create better tools for creative thinking."
+        },
+        "collaboration": {
+            "title": "Collaboration",
+            "description": "Teamwork makes the dream work. We believe in the power of collective ideas."
+        },
+        "performance": {
+            "title": "Performance",
+            "description": "Speed and reliability are non-negotiable. We optimize for every millisecond."
+        },
+        "userCentric": {
+            "title": "User-Centric",
+            "description": "Every decision is guided by our users' needs and feedback."
+        }
+    },
+    "team": {
+        "title": "Meet Our Team",
+        "members": {
+            "sarah": {
+                "role": "Founder & CEO",
+                "bio": "Passionate about collaborative tools and creative thinking. 10+ years in product design."
+            },
+            "alex": {
+                "role": "CTO",
+                "bio": "Full-stack engineer with expertise in real-time collaboration. Built 3 startups."
+            },
+            "emma": {
+                "role": "Head of Design",
+                "bio": "Award-winning UX designer focused on intuitive interfaces and user experience."
+            },
+            "james": {
+                "role": "Lead Developer",
+                "bio": "Open-source contributor and performance optimization specialist."
+            }
+        }
+    },
+    "cta": {
+        "title": "Join Our Community",
+        "description": "Be part of a growing community of creative teams using RiverFlow to organize their ideas.",
+        "button": "Get Started Today"
+    }
+}
