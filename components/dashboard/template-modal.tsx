@@ -219,79 +219,79 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const router = useRouter()
   const { t } = useTranslation("templateModal")
 
-// Template metadata from public/templates folder
-const templateMetadata = [
-  {
-    id: "blank",
-    name: t("blankCanvas"),
-    description: t("startFromScratch"),
-    icon: <Layout className="h-6 w-6" />,
-    filePath: null, // Built-in template
-  },
-  {
-    id: "basic-mindmap",
-    name: t("basicMindmap"),
-    description: t("basicMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/basic-mindmap.json",
-  },
-  {
-    id: "simple-structure",
-    name: t("simpleStructure"),
-    description: t("simpleStructureDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/simple-structure.json",
-  },
-  {
-    id: "complex-mindmap",
-    name: t("complexMindmap"),
-    description: t("complexMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/complex-mindmap.json",
-  },
-  {
-    id: "hierarchical-structure",
-    name: t("hierarchicalStructure"),
-    description: t("hierarchicalStructureDescription"),
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/hierarchical-structure.json",
-  },
-  {
-    id: "radial-mindmap",
-    name: t("radialMindmap"),
-    description: t("radialMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/radial-mindmap.json",
-  },
-  {
-    id: "brainstorming",
-    name: t("brainstorming"),
-    description: t("brainstormingDescription"),
-    icon: <Sparkles className="h-6 w-6" />,
-    filePath: "/templates/brainstorming.json",
-  },
-  {
-    id: "project-planning",
-    name: t("projectPlanning"),
-    description: t("projectPlanningDescription"),
-    icon: <Workflow className="h-6 w-6" />,
-    filePath: "/templates/project-planning.json",
-  },
-  {
-    id: "decision-tree",
-    name: t("decisionTree"),
-    description: t("decisionTreeDescription"),
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/decision-tree.json",
-  },
-  {
-    id: "study-notes",
-    name: t("studyNotes"),
-    description: t("studyNotesDescription"),
-    icon: <FileText className="h-6 w-6" />,
-    filePath: "/templates/study-notes.json",
-  },
-]
+  // Template metadata from public/templates folder
+  const templateMetadata = [
+    {
+      id: "blank",
+      name: t("blankCanvas"),
+      description: t("startFromScratch"),
+      icon: <Layout className="h-6 w-6" />,
+      filePath: null, // Built-in template
+    },
+    {
+      id: "basic-mindmap",
+      name: t("basicMindmap"),
+      description: t("basicMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/basic-mindmap.json",
+    },
+    {
+      id: "simple-structure",
+      name: t("simpleStructure"),
+      description: t("simpleStructureDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/simple-structure.json",
+    },
+    {
+      id: "complex-mindmap",
+      name: t("complexMindmap"),
+      description: t("complexMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/complex-mindmap.json",
+    },
+    {
+      id: "hierarchical-structure",
+      name: t("hierarchicalStructure"),
+      description: t("hierarchicalStructureDescription"),
+      icon: <GitBranch className="h-6 w-6" />,
+      filePath: "/templates/hierarchical-structure.json",
+    },
+    {
+      id: "radial-mindmap",
+      name: t("radialMindmap"),
+      description: t("radialMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/radial-mindmap.json",
+    },
+    {
+      id: "brainstorming",
+      name: t("brainstorming"),
+      description: t("brainstormingDescription"),
+      icon: <Sparkles className="h-6 w-6" />,
+      filePath: "/templates/brainstorming.json",
+    },
+    {
+      id: "project-planning",
+      name: t("projectPlanning"),
+      description: t("projectPlanningDescription"),
+      icon: <Workflow className="h-6 w-6" />,
+      filePath: "/templates/project-planning.json",
+    },
+    {
+      id: "decision-tree",
+      name: t("decisionTree"),
+      description: t("decisionTreeDescription"),
+      icon: <GitBranch className="h-6 w-6" />,
+      filePath: "/templates/decision-tree.json",
+    },
+    {
+      id: "study-notes",
+      name: t("studyNotes"),
+      description: t("studyNotesDescription"),
+      icon: <FileText className="h-6 w-6" />,
+      filePath: "/templates/study-notes.json",
+    },
+  ]
 
 
   // Load templates from public/templates folder
@@ -357,7 +357,7 @@ const templateMetadata = [
         if (selectedTemplate.id === 'ai') {
           const created = await createMindmap({ title: 'Untitled Mindmap', nodes: [], edges: [], category: 'ai', aiGenerated: false })
           if (created?.id) {
-            router.push(`/editor?id=${created.id}&ai=1`)
+            router.push(`/editor?id=${created.id}`)
             onClose()
             return
           }
@@ -440,10 +440,9 @@ const templateMetadata = [
                   onClick={() => setSelectedTemplate(template)}
                   className={`
                     relative p-6 rounded-lg border-2 cursor-pointer transition-all
-                    ${
-                      selectedTemplate?.id === template.id
-                        ? "border-primary bg-primary/5 shadow-lg"
-                        : "border-border hover:border-primary/50 hover:shadow-md"
+                    ${selectedTemplate?.id === template.id
+                      ? "border-primary bg-primary/5 shadow-lg"
+                      : "border-border hover:border-primary/50 hover:shadow-md"
                     }
                     ${loading === template.id ? "opacity-50 cursor-wait" : ""}
                   `}
@@ -479,7 +478,7 @@ const templateMetadata = [
           )}
         </div>
 
-        
+
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
