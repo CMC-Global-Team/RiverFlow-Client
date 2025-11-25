@@ -166,6 +166,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       const m = s.match(/Updated node label:\s*(.+)\s*→\s*(.+)/i)
       return `RiverFlow Agent: Đã đổi tên node "${m?.[1] || ''}" thành "${m?.[2] || ''}"`
     }
+    if (/Added node:/i.test(s)) {
+      const lbl = s.replace(/.*Added node:\s*/i, '')
+      return `RiverFlow Agent: Đã thêm node "${lbl}"`
+    }
+    if (/Added edge:/i.test(s)) {
+      const m = s.match(/Added edge:\s*(.+)\s*→\s*(.+)/i)
+      return `RiverFlow Agent: Đã thêm liên kết "${m?.[1] || ''}" → "${m?.[2] || ''}"`
+    }
     if (/Replace:\s*rebuilt structure with\s*(\d+)/i.test(s)) {
       const m = s.match(/Replace:\s*rebuilt structure with\s*(\d+)/i)
       return `RiverFlow Agent: Đã tạo lại cấu trúc gồm ${m?.[1] || '0'} node`
