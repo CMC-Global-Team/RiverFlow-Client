@@ -124,12 +124,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
   }
 
-  const inferTargetType = (s: string): 'node' | 'description' | 'structure' => {
-    const t = (s || '').toLowerCase()
-    if (/(sửa|chỉnh|update|edit|thay đổi|xóa|xoá|remove|delete)/.test(t)) return 'node'
-    if (/(mô tả|description|ghi chú|note)/.test(t)) return 'description'
-    return 'structure'
-  }
+  // Removed inferTargetType - backend AI now decides dynamically
 
   const buildContextHint = () => {
     const ns = Array.isArray(nodes) ? nodes : []
@@ -181,41 +176,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `RiverFlow Agent: ${s}`
   }
 
-  const composeAgentPlan = (text: string) => {
-    const t = (text || '').toLowerCase()
-    const ns = Array.isArray(nodes) ? nodes : []
-    const es = Array.isArray(edges) ? edges : []
-    const tokenize = (s: string) => s.toLowerCase().split(/[^a-zà-ỹ0-9]+/).filter(Boolean)
-    const toks = tokenize(t)
-    const mentioned: { id: string; label: string }[] = []
-    for (const n of ns) {
-      const lbl = String(n?.data?.label || '')
-      const lt = tokenize(lbl)
-      const hit = lt.some((w) => toks.includes(w))
-      if (hit) mentioned.push({ id: String(n.id), label: lbl })
-    }
-    const wantsReplace = /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
-    const wantsDelete = /(xóa|xoá|remove|delete|loại bỏ|bỏ|drop)/.test(t)
-    const wantsEdit = /(sửa|chỉnh|update|edit|điều chỉnh)/.test(t)
-    const wantsAdd = /(thêm|mở rộng|expand|add|tạo|generate|create)/.test(t)
-    const wantsAllDelete = /(xóa toàn bộ|xoá toàn bộ|xóa hết|xoá hết|delete all|delete entire|clear all|remove everything)/.test(t)
-    const onlyDelete = wantsDelete && !wantsAdd && !wantsReplace && !wantsEdit
-    const pruneIds = wantsDelete ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
-    const editIds = wantsEdit ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
-    const action = wantsReplace ? 'replace' : wantsDelete ? 'prune' : wantsEdit ? 'edit' : wantsAdd ? 'expand' : 'expand'
-    const finalPruneIds = wantsAllDelete ? ns.map(n => String(n.id)) : pruneIds
-    const plan = {
-      action,
-      pruneIds: finalPruneIds,
-      editIds,
-      mentioned,
-      prefer: { structure: structureType, language: langPref },
-      clearAll: wantsAllDelete,
-      onlyDelete,
-      summary: `action=${action}; prune=${pruneIds.length}; edit=${editIds.length}; mentioned=${mentioned.length}`,
-    }
-    return plan
-  }
+  // Removed composeAgentPlan - backend AI handles all planning now
 
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
@@ -229,26 +190,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const modeLabel = mode
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
-        const agentPlan = composeAgentPlan(text)
-        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(`Agent: ${agentPlan.summary}`) }])
-        if (agentPlan.action === 'replace') {
-          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-        }
-        if (agentPlan.action === 'prune') {
-          if (agentPlan.clearAll) {
-            setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-            setMessages((m) => [...m, { role: 'assistant', text: 'RiverFlow Agent: Đã xóa toàn bộ mindmap' }])
-            await saveMindmap()
-            return
-          }
-          if (agentPlan.pruneIds.length) {
-            for (const id of agentPlan.pruneIds) deleteNode(id)
-            if (agentPlan.onlyDelete) {
-              await saveMindmap()
-              return
-            }
-          }
-        }
+        // Removed client-side agentPlan - backend AI handles all planning
 
 
         const payload: any = {
@@ -264,8 +206,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        const summary = `Generate: áp dụng ${agentPlan.action}`
-        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(summary) }])
+        // Backend AI logs will be shown below - no need for client-side summary
         if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
           const logs = (result as any).aiAgentLogs as string[]
           setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: normalizeAgentText(t) }))])
@@ -372,60 +313,34 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           return { ...r, nodes: nextNodes, edges: nextEdges }
         }
 
+
         const adjusted = enrich(result, structureType)
 
-        const wantsReplace = agentPlan.action === 'replace'
-        if (!wantsReplace) {
-          const startNodes = Array.isArray(nodes) ? [...nodes] : []
-          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
-          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
-          let curNodes = [...startNodes]
-          const addedEdgeKeys = new Set<string>()
-          const tick = () => {
-            if (addSeqNodes.length > 0) {
-              const n = addSeqNodes.shift() as any
-              curNodes = [...curNodes, n]
-              const eReady = addSeqEdges
-                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-                .filter((e) => {
-                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
-                  if (addedEdgeKeys.has(k)) return false
-                  addedEdgeKeys.add(k)
-                  return true
-                })
-              applyStreamingAdditions([n], eReady)
-              setTimeout(tick, 45)
-            } else {
-              void saveMindmap()
-            }
+        // Backend AI decides add vs replace via ops - always stream additions
+        const startNodes = Array.isArray(nodes) ? [...nodes] : []
+        const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
+        const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
+        let curNodes = [...startNodes]
+        const addedEdgeKeys = new Set<string>()
+        const tick = () => {
+          if (addSeqNodes.length > 0) {
+            const n = addSeqNodes.shift() as any
+            curNodes = [...curNodes, n]
+            const eReady = addSeqEdges
+              .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
+              .filter((e) => {
+                const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
+                if (addedEdgeKeys.has(k)) return false
+                addedEdgeKeys.add(k)
+                return true
+              })
+            applyStreamingAdditions([n], eReady)
+            setTimeout(tick, 45)
+          } else {
+            void saveMindmap()
           }
-          setTimeout(tick, 60)
-        } else {
-          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
-          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
-          let curNodes: any[] = []
-          const addedEdgeKeys = new Set<string>()
-          const tick = () => {
-            if (addSeqNodes.length > 0) {
-              const n = addSeqNodes.shift() as any
-              curNodes = [...curNodes, n]
-              const eReady = addSeqEdges
-                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-                .filter((e) => {
-                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
-                  if (addedEdgeKeys.has(k)) return false
-                  addedEdgeKeys.add(k)
-                  return true
-                })
-              applyStreamingAdditions([n], eReady)
-              setTimeout(tick, 45)
-            } else {
-              void saveMindmap()
-            }
-          }
-          setTimeout(tick, 60)
         }
+        setTimeout(tick, 60)
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
         setMessages((m) => [...m, { role: 'assistant', text: msg }])
