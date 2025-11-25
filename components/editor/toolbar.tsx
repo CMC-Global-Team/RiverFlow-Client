@@ -248,8 +248,8 @@ export default function Toolbar({
       console.error('Error downloading image:', err)
       toast.error("Failed to download image")
     } finally {
-      try { document.head.removeChild(styleEl) } catch {}
-      try { revertFns.forEach((fn) => fn()) } catch {}
+      try { document.head.removeChild(styleEl) } catch { }
+      try { revertFns.forEach((fn) => fn()) } catch { }
       reactFlowInstance.setViewport(original)
     }
   }
@@ -294,8 +294,8 @@ export default function Toolbar({
       console.error('Error downloading PDF:', err)
       toast.error("Failed to download PDF")
     } finally {
-      try { document.head.removeChild(styleEl) } catch {}
-      try { revertFns.forEach((fn) => fn()) } catch {}
+      try { document.head.removeChild(styleEl) } catch { }
+      try { revertFns.forEach((fn) => fn()) } catch { }
       reactFlowInstance.setViewport(original)
     }
   }
@@ -348,8 +348,8 @@ export default function Toolbar({
             <h1
               ref={titleRef}
               className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${userRole !== 'viewer'
-                  ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors'
-                  : 'border-transparent'
+                ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors'
+                : 'border-transparent'
                 }`}
               onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
               onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
@@ -549,15 +549,18 @@ export default function Toolbar({
 
       {/* Chat */}
       <div className="flex items-center gap-1 flex-shrink-0">
-        <Button
-          variant="ghost"
-          size="icon"
-          title="AI Composer"
-          className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
-          onClick={onAiToggle}
-        >
-          <Sparkles className="h-4 w-4" />
-        </Button>
+        {/* Hide AI button for viewers */}
+        {userRole !== 'viewer' && (
+          <Button
+            variant="ghost"
+            size="icon"
+            title="AI Composer"
+            className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
+            onClick={onAiToggle}
+          >
+            <Sparkles className="h-4 w-4" />
+          </Button>
+        )}
         <Button
           variant="ghost"
           size="icon"
