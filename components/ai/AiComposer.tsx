@@ -84,27 +84,17 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
   const [chatOpen, setChatOpen] = useState(defaultOpen)
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max" }[]>([])
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max"; streaming?: boolean }[]>([])
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
-  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode } = useMindmapContext()
+  const [streamingText, setStreamingText] = useState<string>("")
+  const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode, loadMindmap } = useMindmapContext()
   const { user, updateUser } = useAuth()
 
   const handleUploadClick = () => fileInputRef.current?.click()
-
-  const mapModeToParams = () => {
-    switch (mode) {
-      case 'thinking':
-        return { detailLevel: 'deep' as const, maxNodes: 40, maxDepth: 4 }
-      case 'max':
-        return { detailLevel: 'deep' as const, maxNodes: 60, maxDepth: 5 }
-      default:
-        return { detailLevel: 'normal' as const, maxNodes: 30, maxDepth: 3 }
-    }
-  }
 
   const detectLang = () => {
     if (typeof document !== 'undefined') {
@@ -124,12 +114,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
   }
 
-  const inferTargetType = (s: string): 'node' | 'description' | 'structure' => {
-    const t = (s || '').toLowerCase()
-    if (/(sửa|chỉnh|update|edit|thay đổi|xóa|xoá|remove|delete)/.test(t)) return 'node'
-    if (/(mô tả|description|ghi chú|note)/.test(t)) return 'description'
-    return 'structure'
-  }
+  // Removed inferTargetType - backend AI now decides dynamically
 
   const buildContextHint = () => {
     const ns = Array.isArray(nodes) ? nodes : []
@@ -143,79 +128,59 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
-  const normalizeAgentText = (t: string) => {
-    const s = (t || '').replace(/^[^A-Za-zÀ-ỹ]+\s*/, '')
-    if (/Agent:\s*action\s*=\s*replace/i.test(s)) {
-      const m = s.match(/mentioned\s*=\s*(\d+)/i)
-      const del = s.match(/prune\s*=\s*(\d+)/i)
-      const edit = s.match(/edit\s*=\s*(\d+)/i)
-      return `RiverFlow Agent: Kế hoạch thay thế toàn bộ (xóa: ${del?.[1] || 0}, sửa: ${edit?.[1] || 0}, liên quan: ${m?.[1] || 0})`
-    }
-    if (/Generate:\s*áp dụng\s*replace/i.test(s)) return 'RiverFlow Agent: Thực hiện thay thế mindmap theo kế hoạch'
-    if (/Agent Plan:/i.test(s)) return 'RiverFlow Agent: Kế hoạch đã thiết lập'
-    if (/Agent Analyze:/i.test(s)) {
-      const tgt = s.match(/target\s*=\s*([a-z]+)/i)?.[1]
-      const st = s.match(/structureType\s*=\s*([a-z]+)/i)?.[1]
-      return `RiverFlow Agent: Phân tích tác vụ=${tgt || 'structure'}${st ? `, kiểu=${st}` : ''}`
-    }
-    if (/Pruned subtree of\s+/i.test(s)) {
-      const lbl = s.replace(/.*Pruned subtree of\s+/i, '')
-      return `RiverFlow Agent: Đã xóa toàn bộ nhánh "${lbl}"`
-    }
-    if (/Updated node label:/i.test(s)) {
-      const m = s.match(/Updated node label:\s*(.+)\s*→\s*(.+)/i)
-      return `RiverFlow Agent: Đã đổi tên node "${m?.[1] || ''}" thành "${m?.[2] || ''}"`
-    }
-    if (/Added node:/i.test(s)) {
-      const lbl = s.replace(/.*Added node:\s*/i, '')
-      return `RiverFlow Agent: Đã thêm node "${lbl}"`
-    }
-    if (/Added edge:/i.test(s)) {
-      const m = s.match(/Added edge:\s*(.+)\s*→\s*(.+)/i)
-      return `RiverFlow Agent: Đã thêm liên kết "${m?.[1] || ''}" → "${m?.[2] || ''}"`
-    }
-    if (/Replace:\s*rebuilt structure with\s*(\d+)/i.test(s)) {
-      const m = s.match(/Replace:\s*rebuilt structure with\s*(\d+)/i)
-      return `RiverFlow Agent: Đã tạo lại cấu trúc gồm ${m?.[1] || '0'} node`
-    }
-    return `RiverFlow Agent: ${s}`
-  }
+  // Setup WebSocket listeners for AI streaming
+  useEffect(() => {
+    if (!mindmap?.id) return
 
-  const composeAgentPlan = (text: string) => {
-    const t = (text || '').toLowerCase()
-    const ns = Array.isArray(nodes) ? nodes : []
-    const es = Array.isArray(edges) ? edges : []
-    const tokenize = (s: string) => s.toLowerCase().split(/[^a-zà-ỹ0-9]+/).filter(Boolean)
-    const toks = tokenize(t)
-    const mentioned: { id: string; label: string }[] = []
-    for (const n of ns) {
-      const lbl = String(n?.data?.label || '')
-      const lt = tokenize(lbl)
-      const hit = lt.some((w) => toks.includes(w))
-      if (hit) mentioned.push({ id: String(n.id), label: lbl })
+    const socket = getSocket()
+    const handleStreamStart = () => {
+      setStreamingText("")
+      setMessages((m) => [...m, { role: 'assistant', text: '', streaming: true }])
     }
-    const wantsReplace = /(sửa lại|đổi|thay|chuyển sang|thành|replace|change to|update to)/.test(t)
-    const wantsDelete = /(xóa|xoá|remove|delete|loại bỏ|bỏ|drop)/.test(t)
-    const wantsEdit = /(sửa|chỉnh|update|edit|điều chỉnh)/.test(t)
-    const wantsAdd = /(thêm|mở rộng|expand|add|tạo|generate|create)/.test(t)
-    const wantsAllDelete = /(xóa toàn bộ|xoá toàn bộ|xóa hết|xoá hết|delete all|delete entire|clear all|remove everything)/.test(t)
-    const onlyDelete = wantsDelete && !wantsAdd && !wantsReplace && !wantsEdit
-    const pruneIds = wantsDelete ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
-    const editIds = wantsEdit ? (mentioned.length ? mentioned.map(m => m.id) : (selectedNode ? [String(selectedNode.id)] : [])) : []
-    const action = wantsReplace ? 'replace' : wantsDelete ? 'prune' : wantsEdit ? 'edit' : wantsAdd ? 'expand' : 'expand'
-    const finalPruneIds = wantsAllDelete ? ns.map(n => String(n.id)) : pruneIds
-    const plan = {
-      action,
-      pruneIds: finalPruneIds,
-      editIds,
-      mentioned,
-      prefer: { structure: structureType, language: langPref },
-      clearAll: wantsAllDelete,
-      onlyDelete,
-      summary: `action=${action}; prune=${pruneIds.length}; edit=${editIds.length}; mentioned=${mentioned.length}`,
+
+    const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
+      setStreamingText((prev) => prev + data.chunk)
+      setMessages((m) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          lastMsg.text = lastMsg.text + data.chunk
+        }
+        return newMsgs
+      })
     }
-    return plan
-  }
+
+    const handleStreamDone = () => {
+      setMessages((m) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          delete lastMsg.streaming
+        }
+        return newMsgs
+      })
+      setStreamingText("")
+    }
+
+    const handleStreamError = (data: { error: string }) => {
+      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
+      setStreamingText("")
+    }
+
+    socket.on('ai:stream:start', handleStreamStart)
+    socket.on('ai:stream:chunk', handleStreamChunk)
+    socket.on('ai:stream:done', handleStreamDone)
+    socket.on('ai:stream:error', handleStreamError)
+
+    return () => {
+      socket.off('ai:stream:start', handleStreamStart)
+      socket.off('ai:stream:chunk', handleStreamChunk)
+      socket.off('ai:stream:done', handleStreamDone)
+      socket.off('ai:stream:error', handleStreamError)
+    }
+  }, [mindmap?.id])
+
+  // Removed composeAgentPlan - backend AI handles all planning now
 
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
@@ -229,26 +194,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const modeLabel = mode
         const levels = modeLabel === 'max' ? 4 : modeLabel === 'thinking' ? 3 : 2
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
-        const agentPlan = composeAgentPlan(text)
-        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(`Agent: ${agentPlan.summary}`) }])
-        if (agentPlan.action === 'replace') {
-          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-        }
-        if (agentPlan.action === 'prune') {
-          if (agentPlan.clearAll) {
-            setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-            setMessages((m) => [...m, { role: 'assistant', text: 'RiverFlow Agent: Đã xóa toàn bộ mindmap' }])
-            await saveMindmap()
-            return
-          }
-          if (agentPlan.pruneIds.length) {
-            for (const id of agentPlan.pruneIds) deleteNode(id)
-            if (agentPlan.onlyDelete) {
-              await saveMindmap()
-              return
-            }
-          }
-        }
+        // Removed client-side agentPlan - backend AI handles all planning
 
 
         const payload: any = {
@@ -256,175 +202,24 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           targetType: 'auto', // Let backend AI decide dynamically
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
-          mode: 'normal',
-          hints: text ? [text, buildContextHint(), `AGENT_PLAN:${JSON.stringify(agentPlan)}`] : undefined,
+          mode: mode, // Pass mode to backend for credit deduction
+          hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
           levels,
           firstLevelCount,
           structureType,
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        const summary = `Generate: áp dụng ${agentPlan.action}`
-        setMessages((m) => [...m, { role: 'assistant', text: normalizeAgentText(summary) }])
-        if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
-          const logs = (result as any).aiAgentLogs as string[]
-          setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: normalizeAgentText(t) }))])
-        }
+        // Streaming responses are handled by WebSocket listeners above
+        // AI natural language is streamed directly to modal - no processing needed here
 
-        try {
-          const profile = await getUserProfile()
-          if (user) {
-            updateUser({ ...user, credit: Number(profile.credit || 0) })
-          }
-        } catch { }
-
-        const enrich = (r: MindmapResponse, pref: typeof structureType) => {
-          const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
-          const edges = Array.isArray(r.edges) ? [...r.edges] : []
-          const inMap = new Map<string, number>()
-          edges.forEach(e => {
-            const t = String(e.target ?? e["target"]) || ""
-            if (t) inMap.set(t, (inMap.get(t) || 0) + 1)
-          })
-          const rootNode = nodes.find(n => !inMap.has(String(n.id))) || nodes[0]
-          const ax = Number(rootNode?.position?.x ?? 0) || 0
-          const ay = Number(rootNode?.position?.y ?? 0) || 0
-          const childrenByParent: Record<string, string[]> = {}
-          edges.forEach(e => {
-            const p = String(e.source ?? e["source"]) || ""
-            const c = String(e.target ?? e["target"]) || ""
-            if (!p || !c) return
-            if (!childrenByParent[p]) childrenByParent[p] = []
-            childrenByParent[p].push(c)
-          })
-          const depth = new Map<string, number>()
-          const q: string[] = []
-          if (rootNode?.id) { depth.set(String(rootNode.id), 0); q.push(String(rootNode.id)) }
-          for (let i = 0; i < q.length; i++) {
-            const pid = q[i]
-            const d = depth.get(pid) || 0
-            const kids = childrenByParent[pid] || []
-            kids.forEach(cid => { if (!depth.has(cid)) { depth.set(cid, d + 1); q.push(cid) } })
-          }
-          const shapes = ["rectangle", "circle", "diamond", "hexagon", "ellipse", "roundedRectangle"]
-          const edgeTypes = ["smoothstep", "step", "straight"]
-          const siblingsIndex: Record<string, number> = {}
-          Object.keys(childrenByParent).forEach(pid => {
-            const arr = childrenByParent[pid]
-            arr.forEach((cid, idx) => { siblingsIndex[cid] = idx })
-          })
-          const siblingsCount: Record<string, number> = {}
-          Object.keys(childrenByParent).forEach(pid => { siblingsCount[pid] = (childrenByParent[pid] || []).length })
-          const jitter = () => (Math.random() - 0.5) * 120
-          const radius = (d: number) => 1200 + d * 400
-          const angleFor = (cid: string, parentId: string) => {
-            const idx = siblingsIndex[cid] || 0
-            const total = (childrenByParent[parentId] || []).length || 1
-            return (2 * Math.PI) * (idx / Math.max(1, total))
-          }
-          const minDist = 360
-          const placed: { x: number; y: number }[] = []
-          const posFor = (n: any) => {
-            const id = String(n.id)
-            const d = depth.get(id) || 0
-            const parentEntry = edges.find(e => String(e.target ?? e["target"]) === id)
-            const parentId = parentEntry ? String(parentEntry.source ?? parentEntry["source"]) : String(rootNode?.id)
-            let p: { x: number; y: number }
-            if (pref === "timeline") {
-              p = { x: ax + d * 900 + jitter(), y: ay + ((siblingsIndex[id] || 0) - ((siblingsCount[parentId] || 1) / 2)) * 360 }
-            } else if (pref === "org" || pref === "tree") {
-              p = { x: ax + d * 800, y: ay + ((siblingsIndex[id] || 0) * 360) + jitter() }
-            } else if (pref === "fishbone") {
-              const dir = d % 2 === 0 ? -1 : 1
-              p = { x: ax + d * 700 + jitter(), y: ay + dir * (300 + (siblingsIndex[id] || 0) * 160) }
-            } else {
-              const ang = angleFor(id, parentId)
-              p = { x: ax + radius(d) * Math.cos(ang) + jitter(), y: ay + radius(d) * Math.sin(ang) + jitter() }
-            }
-            let tries = 0
-            while (tries < 24) {
-              let ok = true
-              for (let i = 0; i < placed.length; i++) {
-                const q = placed[i]
-                const dx = p.x - q.x
-                const dy = p.y - q.y
-                if (Math.sqrt(dx * dx + dy * dy) < minDist) { ok = false; break }
-              }
-              if (ok) break
-              p = { x: p.x + (Math.random() - 0.5) * minDist, y: p.y + (Math.random() - 0.5) * minDist }
-              tries++
-            }
-            placed.push({ x: p.x, y: p.y })
-            return p
-          }
-          const nextNodes = nodes.map(n => {
-            const px = n.position?.x
-            const py = n.position?.y
-            const needs = (typeof px !== 'number' || typeof py !== 'number' || (px === 0 && py === 0))
-            const p = needs ? posFor(n) : { x: px, y: py }
-            const hasType = !!n.type && n.type !== 'default'
-            const shape = n.data?.shape || shapes[Math.floor(Math.random() * shapes.length)]
-            const type = hasType ? n.type : shape
-            const data = { ...(n.data || {}), shape }
-            return { ...n, type, position: p, data }
-          })
-          const nextEdges = edges.map(e => ({ ...e, type: 'smoothstep', animated: true }))
-          return { ...r, nodes: nextNodes, edges: nextEdges }
-        }
-
-        const adjusted = enrich(result, structureType)
-
-        const wantsReplace = agentPlan.action === 'replace'
-        if (!wantsReplace) {
-          const startNodes = Array.isArray(nodes) ? [...nodes] : []
-          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
-          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
-          let curNodes = [...startNodes]
-          const addedEdgeKeys = new Set<string>()
-          const tick = () => {
-            if (addSeqNodes.length > 0) {
-              const n = addSeqNodes.shift() as any
-              curNodes = [...curNodes, n]
-              const eReady = addSeqEdges
-                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-                .filter((e) => {
-                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
-                  if (addedEdgeKeys.has(k)) return false
-                  addedEdgeKeys.add(k)
-                  return true
-                })
-              applyStreamingAdditions([n], eReady)
-              setTimeout(tick, 45)
-            } else {
-              void saveMindmap()
-            }
-          }
-          setTimeout(tick, 60)
-        } else {
-          setFullMindmapState({ ...(mindmap as any), nodes: [], edges: [] })
-          const addSeqNodes = Array.isArray(adjusted.nodes) ? [...adjusted.nodes] : []
-          const addSeqEdges = Array.isArray(adjusted.edges) ? [...adjusted.edges] : []
-          let curNodes: any[] = []
-          const addedEdgeKeys = new Set<string>()
-          const tick = () => {
-            if (addSeqNodes.length > 0) {
-              const n = addSeqNodes.shift() as any
-              curNodes = [...curNodes, n]
-              const eReady = addSeqEdges
-                .filter((e) => curNodes.some((cn) => String(cn.id) === String(e.source)) && curNodes.some((cn) => String(cn.id) === String(e.target)))
-                .filter((e) => {
-                  const k = `${String((e as any).source)}|${String((e as any).target)}|${String((e as any).sourceHandle || '')}|${String((e as any).targetHandle || '')}`
-                  if (addedEdgeKeys.has(k)) return false
-                  addedEdgeKeys.add(k)
-                  return true
-                })
-              applyStreamingAdditions([n], eReady)
-              setTimeout(tick, 45)
-            } else {
-              void saveMindmap()
-            }
-          }
-          setTimeout(tick, 60)
+        // CRITICAL FIX: Always reload mindmap after AI operations to prevent race condition
+        // Problem: Client's auto-save (1.5s after changes) was overwriting AI changes
+        // because client had stale state. This affected update_node, delete_node, add_node.
+        // Solution: Always reload from DB to sync state before auto-save triggers.
+        console.log('[AI Composer] Reloading mindmap after AI operation to sync state')
+        if (mindmap?.id) {
+          await loadMindmap(mindmap.id)
         }
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
@@ -441,6 +236,15 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const s = getSocket()
         s.emit('agent:typing', { isTyping: false })
       } catch { }
+
+      // Refresh credit balance after AI operation
+      try {
+        const profile = await getUserProfile()
+        if (user) {
+          updateUser({ ...user, credit: Number(profile.credit || 0) })
+        }
+      } catch { }
+
       setLoading(false)
     }
   }

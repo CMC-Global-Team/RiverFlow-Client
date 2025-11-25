@@ -32,7 +32,7 @@ function EmojiPicker({ onPick }: { onPick: (emoji: string) => void }) {
     document.addEventListener('mousedown', onDoc)
     return () => document.removeEventListener('mousedown', onDoc)
   }, [])
-  const emojis = ["🙂","😊","😂","😍","😎","👍","👏","🙌","🤝","🚀","🎉","❤️","🔥","🤔","😡","🤯","😭","🤗","🙏"]
+  const emojis = ["🙂", "😊", "😂", "😍", "😎", "👍", "👏", "🙌", "🤝", "🚀", "🎉", "❤️", "🔥", "🤔", "😡", "🤯", "😭", "🤗", "🙏"]
   return (
     <div className="relative" data-emoji-root ref={ref}>
       <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => setOpen((v) => !v)} title="Chọn biểu tượng">
@@ -118,6 +118,18 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
       const isAgent = typeof msg === 'string' || msg?.from === 'agent' || (!!msg?.message && !msg?.clientId)
       if (isAgent) {
         const raw = typeof msg === 'string' ? msg : (msg?.message || '')
+
+        // Skip AI streaming content - it's shown in the modal
+        if (raw.includes('```json') || raw.includes('"targetType"') || raw.includes('"ops"')) {
+          return
+        }
+
+        // Skip technical logs - they're not user-friendly
+        if (/Agent:|Generate:|Pruned|Edited|Updated|Replace:|Expand:|Node not found|Added node|Updated node|Deleted node/i.test(raw)) {
+          return
+        }
+
+        // Only show simple, friendly AI messages
         const text = normalizeAgentText(raw)
         const now = new Date().toISOString()
         const agentMsg: ChatMessage = {
@@ -211,7 +223,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
     e.stopPropagation()
   }
 
-  
+
 
   const send = () => {
     const text = input.trim()
@@ -254,7 +266,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                     {m.avatar ? (
                       <img src={getAvatarUrl(m.avatar) || ''} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'A').slice(0,1).toUpperCase()}</span>
+                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'A').slice(0, 1).toUpperCase()}</span>
                     )}
                   </div>
                 )}
@@ -275,7 +287,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                     {m.avatar ? (
                       <img src={getAvatarUrl(m.avatar) || ''} alt="" className="w-full h-full object-cover" />
                     ) : (
-                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'Y').slice(0,1).toUpperCase()}</span>
+                      <span className="w-full h-full flex items-center justify-center text-[11px] font-semibold" style={{ color: '#fff', backgroundColor: m.color }}>{(m.name || 'Y').slice(0, 1).toUpperCase()}</span>
                     )}
                   </div>
                 )}
@@ -339,7 +351,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
               <Send className="h-4 w-4" />
             </Button>
           </div>
-          </div>
+        </div>
       </div>
 
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} title="Drag to resize" />
