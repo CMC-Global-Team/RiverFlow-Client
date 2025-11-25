@@ -1,0 +1,15 @@
+{
+  "filters": "Bộ lọc",
+  "status": "Trạng thái",
+  "active": "Đang hoạt động",
+  "archived": "Đã lưu trữ",
+
+  "favorites": "Yêu thích",
+
+  "sort": "Sắp xếp",
+  "sortBy": "Sắp xếp theo",
+  "lastModified": "Thời gian sửa đổi",
+  "dateCreated": "Ngày tạo",
+  "title": "Tên sơ đồ",
+  "nodeCount": "Số lượng nút"
+}

@@ -12,8 +12,6 @@ import { useState, useEffect, useRef } from "react"
 export default function EdgePropertiesPanel() {
   const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
 
-  if (!selectedEdge) return null
-
   const [showTextColor, setShowTextColor] = useState(false)
   const textColorRef = useRef<HTMLDivElement>(null)
 
@@ -33,6 +31,8 @@ export default function EdgePropertiesPanel() {
       return () => document.removeEventListener("mousedown", handleClickOutside)
     }
   }, [showTextColor])
+
+  if (!selectedEdge) return null
 
   const edgeTypes = [
     { value: "default", label: "Default", description: "Straight line" },

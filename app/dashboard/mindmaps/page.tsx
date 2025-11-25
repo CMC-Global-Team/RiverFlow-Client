@@ -41,7 +41,6 @@ function MyMindmapsContent() {
   const [sortBy, setSortBy] = useState("updatedAt")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
-  const [showAiModal, setShowAiModal] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
   const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
   const [showEditModal, setShowEditModal] = useState(false)
@@ -91,12 +90,14 @@ function MyMindmapsContent() {
   }
 
   const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      return
+    }
     const newMindmap = await create({
       title: "Untitled Mindmap",
       nodes: template.initialNodes,
       edges: template.initialEdges,
     })
-
     if (newMindmap) {
       router.push(`/editor?id=${newMindmap.id}`)
     }
@@ -237,7 +238,7 @@ function MyMindmapsContent() {
                 <div>
                   <h1 className="text-3xl font-bold text-foreground">{t("myMindmaps")}</h1>
                   <p className="mt-2 text-muted-foreground">
-                    {filteredAndSortedMindmaps.length} {selectedStatus === "archived" ? "archived" : ""} {t("mindmap")}{filteredAndSortedMindmaps.length !== 1 ? "s" : ""}
+                    {filteredAndSortedMindmaps.length} {filteredAndSortedMindmaps.length !== 1 ? t("mindmaps") : t("mindmap")} {selectedStatus === "archived" ? t("archived") : ""}
                     {filteredAndSortedMindmaps.length !== mindmaps.length && 
                       ` (${mindmaps.length} total)`
                     }

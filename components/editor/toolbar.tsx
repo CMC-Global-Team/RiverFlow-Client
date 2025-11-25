@@ -28,8 +28,10 @@ import {
   Image as ImageIcon,
   FileJson,
   File,
+  MessageSquare,
   Menu
 } from "lucide-react"
+import { Sparkles } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
 import { toast } from "sonner"
@@ -68,6 +70,9 @@ interface ToolbarProps {
   onShareClick?: () => void
   userRole?: 'owner' | 'editor' | 'viewer' | null
   onHistoryClick?: () => void
+  onChatClick?: () => void
+  onAiToggle?: () => void
+  aiOpen?: boolean
 }
 
 export default function Toolbar({
@@ -86,6 +91,9 @@ export default function Toolbar({
   onShareClick,
   userRole,
   onHistoryClick,
+  onChatClick,
+  onAiToggle,
+  aiOpen,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -425,7 +433,8 @@ export default function Toolbar({
           size="icon"
           onClick={onHistoryClick}
           title="Lịch sử thay đổi"
-          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          disabled={userRole === 'viewer'}
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <History className="h-4 w-4" />
         </Button>
@@ -494,7 +503,8 @@ export default function Toolbar({
               variant="ghost"
               size="icon"
               title="Download Options"
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+              disabled={userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Download className="h-4 w-4" />
             </Button>
@@ -530,9 +540,32 @@ export default function Toolbar({
           variant="ghost"
           size="icon"
           title="Tutorial"
-          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          disabled={userRole === 'viewer'}
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <HandHelping className="h-4 w-4" />
+        </Button>
+      </div>
+
+      {/* Chat */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        <Button
+          variant="ghost"
+          size="icon"
+          title="AI Composer"
+          className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
+          onClick={onAiToggle}
+        >
+          <Sparkles className="h-4 w-4" />
+        </Button>
+        <Button
+          variant="ghost"
+          size="icon"
+          title="Chat"
+          className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          onClick={onChatClick}
+        >
+          <MessageSquare className="h-4 w-4" />
         </Button>
       </div>
 

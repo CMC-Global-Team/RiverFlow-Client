@@ -6,6 +6,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
+import ChatPanel from "@/components/editor/chat-panel"
+import AiComposer from "@/components/ai/AiComposer"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
@@ -34,6 +36,8 @@ function EditorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
+  const ai = searchParams.get('ai')
+  const [isAiOpen, setIsAiOpen] = useState(ai === '1')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
   
@@ -53,6 +57,7 @@ function EditorInner() {
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
@@ -527,6 +532,9 @@ function EditorInner() {
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
+              onChatClick={() => setIsChatOpen(true)}
+              onAiToggle={() => setIsAiOpen((prev) => !prev)}
+              aiOpen={isAiOpen}
             />
           </div>
         </div>
@@ -534,6 +542,8 @@ function EditorInner() {
 
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      {isAiOpen ? <AiComposer defaultOpen /> : null}
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}

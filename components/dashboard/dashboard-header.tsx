@@ -3,6 +3,7 @@
 import { Search, Bell, Coins } from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { useState } from "react"
+import { useTranslation } from "react-i18next"
 import { useAuth } from "@/hooks/auth/useAuth"
 
 import ProfileModal from "@/components/profile/ProfileModal"
@@ -18,6 +19,7 @@ export default function DashboardHeader({
   searchValue = "",
   onSearchChange,
 }: DashboardHeaderProps) {
+  const { t } = useTranslation("dashboardHeader")
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false)
   const [isTopupOpen, setIsTopupOpen] = useState(false)
   const { user } = useAuth()
@@ -33,7 +35,7 @@ export default function DashboardHeader({
               type="text"
               value={searchValue || ""}
               onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              placeholder="Search mindmaps..."
+              placeholder={t("searchMindmaps")}
               className="w-full rounded-lg border border-border bg-input pl-10 py-2 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
             />
           </div>
@@ -83,26 +85,26 @@ export default function DashboardHeader({
                           <span className="text-xs font-medium">{user?.credit ?? 0}</span>
                         </div>
                       </TooltipTrigger>
-                      <TooltipContent>Số dư credit</TooltipContent>
+                      <TooltipContent>{t("creditBalance")}</TooltipContent>
                     </Tooltip>
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setIsTopupOpen(true) }}
                       className="text-xs rounded-md px-2 py-1 bg-primary text-white hover:opacity-90"
-                      aria-label="Nạp credit"
+                      aria-label={t("topupCredit")}
                     >
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <span>Nạp</span>
+                          <span>{t("topup")}</span>
                         </TooltipTrigger>
-                        <TooltipContent>Nạp credit</TooltipContent>
+                        <TooltipContent>{t("topupCredit")}</TooltipContent>
                       </Tooltip>
                     </button>
                   </div>
                 </div>
               </div>
             </TooltipTrigger>
-            <TooltipContent>Xem thông tin cá nhân</TooltipContent>
+            <TooltipContent>{t("viewProfile")}</TooltipContent>
           </Tooltip>
         </div>
       </div>

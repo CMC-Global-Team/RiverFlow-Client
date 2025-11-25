@@ -1,0 +1,45 @@
+{
+  "blankCanvas": "Bản trắng",
+  "startFromScratch": "Bắt đầu từ một sơ đồ hoàn toàn trống",
+
+  "basicMindmap": "Sơ đồ cơ bản",
+  "basicMindmapDescription": "Sơ đồ đơn giản với nút trung tâm và các nhánh chính",
+
+  "simpleStructure": "Cấu trúc đơn giản",
+  "simpleStructureDescription": "Cấu trúc phân cấp sạch sẽ và tối giản",
+
+  "complexMindmap": "Sơ đồ phức tạp",
+  "complexMindmapDescription": "Sơ đồ nhiều tầng với rất nhiều nhánh và chi tiết",
+
+  "hierarchicalStructure": "Cấu trúc phân cấp",
+  "hierarchicalStructureDescription": "Lý tưởng cho sơ đồ tổ chức, phân loại và khái niệm lồng nhau",
+
+  "radialMindmap": "Sơ đồ hình tia",
+  "radialMindmapDescription": "Bố cục đối xứng phù hợp với các chủ đề cân bằng",
+
+  "brainstorming": "Phiên động não",
+  "brainstormingDescription": "Hoàn hảo cho việc sáng tạo ý tưởng và động não nhóm",
+
+  "projectPlanning": "Lập kế hoạch dự án",
+  "projectPlanningDescription": "Sẵn timeline, nhiệm vụ, mốc thời gian và phụ thuộc",
+
+  "decisionTree": "Cây quyết định",
+  "decisionTreeDescription": "Vẽ bản đồ các quyết định, kết quả và xác suất",
+
+  "studyNotes": "Ghi chép học tập",
+  "studyNotesDescription": "Cấu trúc gọn gàng để học tập và ôn bài",
+
+  "chooseATemplate": "Chọn một mẫu có sẵn",
+  "selectATemplateToGetStartedOrStartFromBlank": "Chọn mẫu để bắt đầu nhanh hoặc tạo từ bản trắng",
+
+  "createAIMindmap": "Tạo Mindmap bằng AI",
+  "enterPromptChooseModeAttachFileAndModel": "Nhập prompt, chọn chế độ, đính kèm file và chọn mô hình AI",
+  "new": "Mới",
+
+  "loadingTemplates": "Đang tải các mẫu...",
+
+  "failedToLoadTemplate": "Không tải được mẫu",
+
+  "cancel": "Hủy",
+  "createMindmap": "Tạo sơ đồ"
+}
