@@ -11,7 +11,7 @@ import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
 import type { MindmapResponse } from "@/types/mindmap.types"
- 
+
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 
 function Draggable({ children, initialPos, handle }: { children: React.ReactNode; initialPos?: { x: number; y: number }; handle?: string }) {
@@ -135,7 +135,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const ns = Array.isArray(nodes) ? nodes : []
     const es = Array.isArray(edges) ? edges : []
     const inMap = new Map<string, number>()
-    es.forEach(e => { const t = String((e as any).target || '') ; if (t) inMap.set(t, (inMap.get(t) || 0) + 1) })
+    es.forEach(e => { const t = String((e as any).target || ''); if (t) inMap.set(t, (inMap.get(t) || 0) + 1) })
     const rootNode = ns.find(n => !inMap.has(String(n.id))) || ns[0]
     const rootLabel = String(rootNode?.data?.label || rootNode?.id || '')
     const children = ns.filter(n => es.some(e => String((e as any).source || '') === String(rootNode?.id) && String((e as any).target || '') === String(n.id)))
@@ -250,10 +250,10 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           }
         }
 
-        
+
         const payload: any = {
           mindmapId: mindmap.id,
-          targetType: inferTargetType(text),
+          targetType: 'auto', // Let backend AI decide dynamically
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
@@ -276,7 +276,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           if (user) {
             updateUser({ ...user, credit: Number(profile.credit || 0) })
           }
-        } catch {}
+        } catch { }
 
         const enrich = (r: MindmapResponse, pref: typeof structureType) => {
           const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
@@ -306,8 +306,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             const kids = childrenByParent[pid] || []
             kids.forEach(cid => { if (!depth.has(cid)) { depth.set(cid, d + 1); q.push(cid) } })
           }
-          const shapes = ["rectangle","circle","diamond","hexagon","ellipse","roundedRectangle"]
-          const edgeTypes = ["smoothstep","step","straight"]
+          const shapes = ["rectangle", "circle", "diamond", "hexagon", "ellipse", "roundedRectangle"]
+          const edgeTypes = ["smoothstep", "step", "straight"]
           const siblingsIndex: Record<string, number> = {}
           Object.keys(childrenByParent).forEach(pid => {
             const arr = childrenByParent[pid]
@@ -440,7 +440,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       try {
         const s = getSocket()
         s.emit('agent:typing', { isTyping: false })
-      } catch {}
+      } catch { }
       setLoading(false)
     }
   }
@@ -505,7 +505,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               <Button variant="ghost" size="icon" className="size-8 rounded-lg" onClick={handleUploadClick}>
                 <Upload className="size-4" />
               </Button>
-              
+
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
             <Input
