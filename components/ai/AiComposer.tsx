@@ -84,12 +84,13 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
   const [chatOpen, setChatOpen] = useState(defaultOpen)
-  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max" }[]>([])
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max"; streaming?: boolean }[]>([])
   const [inputValue, setInputValue] = useState("")
   const [loading, setLoading] = useState(false)
   const [lastResult, setLastResult] = useState<MindmapResponse | null>(null)
   const [structureType, setStructureType] = useState<"mindmap" | "logic" | "brace" | "org" | "tree" | "timeline" | "fishbone">("mindmap")
   const [langPref, setLangPref] = useState<"auto" | "vi" | "en">("auto")
+  const [streamingText, setStreamingText] = useState<string>("")
   const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode } = useMindmapContext()
   const { user, updateUser } = useAuth()
 
@@ -138,43 +139,57 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
-  const normalizeAgentText = (t: string) => {
-    const s = (t || '').replace(/^[^A-Za-zÀ-ỹ]+\s*/, '')
-    if (/Agent:\s*action\s*=\s*replace/i.test(s)) {
-      const m = s.match(/mentioned\s*=\s*(\d+)/i)
-      const del = s.match(/prune\s*=\s*(\d+)/i)
-      const edit = s.match(/edit\s*=\s*(\d+)/i)
-      return `RiverFlow Agent: Kế hoạch thay thế toàn bộ (xóa: ${del?.[1] || 0}, sửa: ${edit?.[1] || 0}, liên quan: ${m?.[1] || 0})`
+  // Setup WebSocket listeners for AI streaming
+  useEffect(() => {
+    if (!mindmap?.id) return
+
+    const socket = getSocket()
+    const handleStreamStart = () => {
+      setStreamingText("")
+      setMessages((m) => [...m, { role: 'assistant', text: '', streaming: true }])
     }
-    if (/Generate:\s*áp dụng\s*replace/i.test(s)) return 'RiverFlow Agent: Thực hiện thay thế mindmap theo kế hoạch'
-    if (/Agent Plan:/i.test(s)) return 'RiverFlow Agent: Kế hoạch đã thiết lập'
-    if (/Agent Analyze:/i.test(s)) {
-      const tgt = s.match(/target\s*=\s*([a-z]+)/i)?.[1]
-      const st = s.match(/structureType\s*=\s*([a-z]+)/i)?.[1]
-      return `RiverFlow Agent: Phân tích tác vụ=${tgt || 'structure'}${st ? `, kiểu=${st}` : ''}`
+
+    const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
+      setStreamingText((prev) => prev + data.chunk)
+      setMessages((m) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          lastMsg.text = lastMsg.text + data.chunk
+        }
+        return newMsgs
+      })
     }
-    if (/Pruned subtree of\s+/i.test(s)) {
-      const lbl = s.replace(/.*Pruned subtree of\s+/i, '')
-      return `RiverFlow Agent: Đã xóa toàn bộ nhánh "${lbl}"`
+
+    const handleStreamDone = () => {
+      setMessages((m) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          delete lastMsg.streaming
+        }
+        return newMsgs
+      })
+      setStreamingText("")
     }
-    if (/Updated node label:/i.test(s)) {
-      const m = s.match(/Updated node label:\s*(.+)\s*→\s*(.+)/i)
-      return `RiverFlow Agent: Đã đổi tên node "${m?.[1] || ''}" thành "${m?.[2] || ''}"`
+
+    const handleStreamError = (data: { error: string }) => {
+      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
+      setStreamingText("")
     }
-    if (/Added node:/i.test(s)) {
-      const lbl = s.replace(/.*Added node:\s*/i, '')
-      return `RiverFlow Agent: Đã thêm node "${lbl}"`
+
+    socket.on('ai:stream:start', handleStreamStart)
+    socket.on('ai:stream:chunk', handleStreamChunk)
+    socket.on('ai:stream:done', handleStreamDone)
+    socket.on('ai:stream:error', handleStreamError)
+
+    return () => {
+      socket.off('ai:stream:start', handleStreamStart)
+      socket.off('ai:stream:chunk', handleStreamChunk)
+      socket.off('ai:stream:done', handleStreamDone)
+      socket.off('ai:stream:error', handleStreamError)
     }
-    if (/Added edge:/i.test(s)) {
-      const m = s.match(/Added edge:\s*(.+)\s*→\s*(.+)/i)
-      return `RiverFlow Agent: Đã thêm liên kết "${m?.[1] || ''}" → "${m?.[2] || ''}"`
-    }
-    if (/Replace:\s*rebuilt structure with\s*(\d+)/i.test(s)) {
-      const m = s.match(/Replace:\s*rebuilt structure with\s*(\d+)/i)
-      return `RiverFlow Agent: Đã tạo lại cấu trúc gồm ${m?.[1] || '0'} node`
-    }
-    return `RiverFlow Agent: ${s}`
-  }
+  }, [mindmap?.id])
 
   // Removed composeAgentPlan - backend AI handles all planning now
 
@@ -206,11 +221,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
-        // Backend AI logs will be shown below - no need for client-side summary
-        if (Array.isArray((result as any)?.aiAgentLogs) && (result as any).aiAgentLogs.length) {
-          const logs = (result as any).aiAgentLogs as string[]
-          setMessages((m) => [...m, ...logs.map((t) => ({ role: 'assistant', text: normalizeAgentText(t) }))])
-        }
+        // Streaming responses are handled by WebSocket listeners above
+        // No need to process aiAgentLogs here - natural language is streamed directly
 
         try {
           const profile = await getUserProfile()
