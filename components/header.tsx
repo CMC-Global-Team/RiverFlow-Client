@@ -6,8 +6,7 @@ import { Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { useLogout } from "@/hooks/auth/useLogout"
 import { useTranslation } from "react-i18next"
-import LanguageSwitcher from "./LanguageSwitcher"
-import { ThemeSwitcher } from "@/components/theme-switcher"
+
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
 }
@@ -93,9 +92,9 @@ export default function Header({ onAuthClick }: HeaderProps) {
             )}
             
             {/* Language Switcher */}
-            <LanguageSwitcher />
+          
           </div>
-              <ThemeSwitcher />
+              
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -132,7 +131,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
             
             {/* Language Switcher - Mobile */}
             <div className="px-4">
-              <LanguageSwitcher />
+              
             </div>
 
             <div className="px-4 pt-2 space-y-2">
