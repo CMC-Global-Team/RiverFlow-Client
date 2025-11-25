@@ -96,17 +96,6 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
   const handleUploadClick = () => fileInputRef.current?.click()
 
-  const mapModeToParams = () => {
-    switch (mode) {
-      case 'thinking':
-        return { detailLevel: 'deep' as const, maxNodes: 40, maxDepth: 4 }
-      case 'max':
-        return { detailLevel: 'deep' as const, maxNodes: 60, maxDepth: 5 }
-      default:
-        return { detailLevel: 'normal' as const, maxNodes: 30, maxDepth: 3 }
-    }
-  }
-
   const detectLang = () => {
     if (typeof document !== 'undefined') {
       const htmlLang = document.documentElement.lang
@@ -213,7 +202,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           targetType: 'auto', // Let backend AI decide dynamically
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
-          mode: 'normal',
+          mode: mode, // Pass mode to backend for credit deduction
           hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
           levels,
           firstLevelCount,
@@ -222,14 +211,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const result = await optimizeMindmapByAI(payload)
         setLastResult(result)
         // Streaming responses are handled by WebSocket listeners above
-        // No need to process aiAgentLogs here - natural language is streamed directly
-
-        try {
-          const profile = await getUserProfile()
-          if (user) {
-            updateUser({ ...user, credit: Number(profile.credit || 0) })
-          }
-        } catch { }
+        // AI natural language is streamed directly to modal - no processing needed here
 
         const enrich = (r: MindmapResponse, pref: typeof structureType) => {
           const nodes = Array.isArray(r.nodes) ? [...r.nodes] : []
@@ -368,6 +350,15 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const s = getSocket()
         s.emit('agent:typing', { isTyping: false })
       } catch { }
+
+      // Refresh credit balance after AI operation
+      try {
+        const profile = await getUserProfile()
+        if (user) {
+          updateUser({ ...user, credit: Number(profile.credit || 0) })
+        }
+      } catch { }
+
       setLoading(false)
     }
   }
