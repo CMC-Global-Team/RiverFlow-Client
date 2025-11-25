@@ -94,6 +94,22 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const { mindmap, nodes, edges, selectedNode, setFullMindmapState, saveMindmap, applyStreamingAdditions, updateNodeData, deleteNode, loadMindmap } = useMindmapContext()
   const { user, updateUser } = useAuth()
 
+  // Check if user can use AI
+  // Must be logged in AND have editor/owner role
+  const canUseAI = user && mindmap && (
+    mindmap.mysqlUserId === user.userId ||
+    mindmap.collaborators?.some(c =>
+      c.mysqlUserId === user.userId &&
+      c.status === 'accepted' &&
+      c.role === 'EDITOR'
+    )
+  )
+
+  // Hide AIComposer if user doesn't have permission
+  if (!canUseAI) {
+    return null
+  }
+
   const handleUploadClick = () => fileInputRef.current?.click()
 
   const detectLang = () => {
