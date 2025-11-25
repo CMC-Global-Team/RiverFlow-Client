@@ -257,7 +257,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           nodeId: selectedNode ? selectedNode.id : undefined,
           language: langPref === 'auto' ? lang : langPref,
           mode: 'normal',
-          hints: text ? [text, buildContextHint(), `AGENT_PLAN:${JSON.stringify(agentPlan)}`] : undefined,
+          hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
           levels,
           firstLevelCount,
           structureType,
