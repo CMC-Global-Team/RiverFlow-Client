@@ -305,9 +305,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       if (edgeSigs.has(sig)) continue
       let id = String(base.id || '')
       if (!id || edgeIds.has(id)) {
-        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         while (edgeIds.has(uid)) {
-          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         }
         base.id = uid
         id = uid
@@ -455,6 +455,90 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       markSynced('idle')
     }
     s.on('history:restore', onHistoryRestore)
+
+    // Permission change event listeners
+    const onPermissionCollaboratorChanged = async (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m) return
+
+      toast({
+        title: "Permission Updated",
+        description: `Your access level has been changed to ${data.newRole === 'EDITOR' ? 'Editor' : 'Viewer'}`,
+      })
+
+      // Reload mindmap to get updated permissions
+      try {
+        const updated = await getMindmapById(m.id)
+        setFullMindmapState(updated)
+      } catch (e) {
+        console.error('Failed to reload mindmap after permission change:', e)
+      }
+    }
+
+    const onPermissionCollaboratorRemoved = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m) return
+
+      toast({
+        title: "Access Removed",
+        description: "You have been removed from this mindmap",
+        variant: "destructive",
+      })
+
+      // Redirect to dashboard
+      setTimeout(() => {
+        if (typeof window !== 'undefined') {
+          window.location.href = '/'
+        }
+      }, 2000)
+    }
+
+    const onPermissionPublicChanged = async (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m) return
+
+      const { isPublic, accessLevel } = data
+
+      // Show notification based on change
+      if (isPublic === false || accessLevel === 'private') {
+        toast({
+          title: "Mindmap is now Private",
+          description: "This mindmap is no longer publicly accessible",
+          variant: "destructive",
+        })
+        setTimeout(() => {
+          if (typeof window !== 'undefined') {
+            window.location.href = '/'
+          }
+        }, 2000)
+      } else if (accessLevel === 'view') {
+        toast({
+          title: "Mindmap is now View-Only",
+          description: "You can only view this mindmap now",
+        })
+        try {
+          const updated = await getMindmapById(m.id)
+          setFullMindmapState(updated)
+        } catch (e) {
+          console.error('Failed to reload after permission change:', e)
+        }
+      } else if (accessLevel === 'edit') {
+        toast({
+          title: "Mindmap is now Editable",
+          description: "You can now edit this mindmap",
+        })
+        try {
+          const updated = await getMindmapById(m.id)
+          setFullMindmapState(updated)
+        } catch (e) {
+          console.error('Failed to reload after permission change:', e)
+        }
+      }
+    }
+
+    s.on('permission:collaborator:changed', onPermissionCollaboratorChanged)
+    s.on('permission:collaborator:removed', onPermissionCollaboratorRemoved)
+    s.on('permission:public:changed', onPermissionPublicChanged)
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -472,6 +556,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:nodes:update', onNodeUpdate)
       s.off('mindmap:edges:update', onEdgeUpdate)
       s.off('history:restore', onHistoryRestore)
+      s.off('permission:collaborator:changed', onPermissionCollaboratorChanged)
+      s.off('permission:collaborator:removed', onPermissionCollaboratorRemoved)
+      s.off('permission:public:changed', onPermissionPublicChanged)
     }
   }, [mindmap])
 
@@ -606,7 +693,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         )
         if (exists) return eds
         const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           ...connection,
           animated: true,
           type: "smoothstep",
@@ -780,9 +867,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const sig = `${(e as any).source}|${(e as any).target}|${(e as any).sourceHandle || ''}|${(e as any).targetHandle || ''}`
       if (edgeSigs.has(sig)) continue
       if (!id || edgeIds.has(id)) {
-        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         while (edgeIds.has(uid)) {
-          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         }
         (e as any).id = uid
         id = uid
