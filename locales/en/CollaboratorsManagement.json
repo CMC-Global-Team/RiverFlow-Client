@@ -1,0 +1,16 @@
+{
+  "noCollaborators": "No collaborators yet",
+  "invitedCollaborators": "{{count}} invited collaborator",
+  "invitedCollaborators_plural": "{{count}} invited collaborators",
+  "edit": "Edit",
+  "view": "View",
+  "accepted": "Accepted",
+  "pending": "Pending",
+  "rejected": "Rejected",
+  "updatedRole": "Updated role for {{email}}",
+  "updateRoleError": "Failed to update role",
+  "removed": "Removed {{email}} from the mindmap",
+  "removeError": "Failed to remove collaborator",
+  "delete": "Delete",
+  "cancel": "Cancel"
+}
