@@ -231,7 +231,7 @@ function DashboardContent() {
                   className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                 >
                   <Plus className="h-5 w-5" />
-                  Create New Mindmap
+                  {t("createNewMindmap")}
                 </button>
               </div>
             )}
