@@ -1,8 +1,7 @@
 {
   "welcomeBack": "Welcome back",
   "recentMindmaps": "Here are your recent mindmaps",
-  "createWithTemplate": "Create with Template",
-  "createWithAI": "Create with AI",
+  "createNewMindmap": "Create New Mindmap",
   "loadingMindmaps": "Loading your mindmaps...",
   "failedToLoadMindmaps": "Failed to load mindmaps",
   "sessionExpiredMessage": "Your session may have expired. Please log in again.",
