@@ -22,9 +22,9 @@
   "noResultsFound": "Không tìm thấy sơ đồ nào",
   "tryAdjustingFilters": "Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.",
 
-  "duplicating": "Đang sao chép...",
+  "duplicating": "Đang tạo bản sao...",
   "pleaseWait": "Vui lòng chờ trong giây lát",
-  "duplicateSuccess": "Đã sao chép thành công!",
+  "duplicateSuccess": "Đã tạo bản sao thành công!",
   "created": "Đã tạo bản sao: {title}",
 
   "duplicateFailedTitle": "Sao chép thất bại",

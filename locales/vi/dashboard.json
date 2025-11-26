@@ -11,12 +11,11 @@
   "confirmDelete": "Bạn có chắc chắn muốn xóa sơ đồ tư duy này? Hành động này không thể hoàn tác.",
   "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi dự án cộng tác này? Bạn sẽ mất quyền truy cập.",
 
-  "duplicating": "Đang nhân bản sơ đồ tư duy...",
+  "duplicating": "Đang tạo bản sao sơ đồ tư duy...",
   "pleaseWait": "Vui lòng chờ",
-  "duplicateSuccess": "Nhân bản sơ đồ tư duy thành công",
+  "duplicateSuccess": "Tạo bản sao sơ đồ tư duy thành công",
   "created": "Đã tạo \"{title}\"",
-  "duplicateFailed": "Nhân bản sơ đồ tư duy thất bại",
-
+  "duplicateFailed": "Tạo bản sao sơ đồ tư duy thất bại",
   "leftProject": "Đã rời dự án",
   "leftProjectSuccess": "Bạn đã rời khỏi dự án thành công",
   "leaveProjectFailed": "Rời dự án thất bại",
