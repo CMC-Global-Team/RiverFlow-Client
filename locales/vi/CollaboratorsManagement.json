@@ -1,0 +1,16 @@
+{
+  "noCollaborators": "Chưa có cộng tác viên nào",
+  "invitedCollaborators": "{{count}} cộng tác viên được mời",
+  "invitedCollaborators_plural": "{{count}} cộng tác viên được mời",
+  "edit": "Chỉnh sửa",
+  "view": "Xem",
+  "accepted": "Đã chấp nhận",
+  "pending": "Đang chờ",
+  "rejected": "Đã từ chối",
+  "updatedRole": "Đã cập nhật quyền cho {{email}}",
+  "updateRoleError": "Cập nhật quyền thất bại",
+  "removed": "Đã xóa {{email}} khỏi sơ đồ tư duy",
+  "removeError": "Xóa cộng tác viên thất bại",
+  "delete": "Xóa",
+  "cancel": "Hủy"
+}
