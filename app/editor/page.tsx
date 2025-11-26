@@ -6,6 +6,8 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { ReactFlowProvider } from "reactflow"
 import Toolbar from "@/components/editor/toolbar"
+import ChatPanel from "@/components/editor/chat-panel"
+import AiComposer from "@/components/ai/AiComposer"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
 import BackButton from "@/components/editor/back-button"
@@ -15,17 +17,17 @@ import { Label } from "@/components/ui/label"
 import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
-  import PublicShareModal from "@/components/mindmap/PublicShareModal"
-  import { 
-    inviteCollaborator,
-    updateCollaboratorRole,
-    removeCollaborator,
-    updatePublicAccess,
-    getCollaborators,
-    getPendingInvitations,
-    getPublicMindmap,
-    getMindmapById
-  } from "@/services/mindmap/mindmap.service"
+import PublicShareModal from "@/components/mindmap/PublicShareModal"
+import {
+  inviteCollaborator,
+  updateCollaboratorRole,
+  removeCollaborator,
+  updatePublicAccess,
+  getCollaborators,
+  getPendingInvitations,
+  getPublicMindmap,
+  getMindmapById
+} from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 import HistorySheet from "@/components/editor/history-sheet"
@@ -34,9 +36,10 @@ function EditorInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mindmapId = searchParams.get('id')
+  const [isAiOpen, setIsAiOpen] = useState(false)
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
-  
+
   const {
     mindmap,
     saveMindmap,
@@ -48,11 +51,12 @@ function EditorInner() {
     saveStatus,
     setFullMindmapState,
   } = useMindmapContext()
-  
+
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
@@ -150,12 +154,12 @@ function EditorInner() {
           }
 
           // Overlay pending invitations so UI shows pending even if collaborator record exists
-          ;(pendingCollaborators || []).forEach((p: any) => {
+          ; (pendingCollaborators || []).forEach((p: any) => {
             byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
           })
 
           // Only show accepted or pending entries in the UI
-          const combinedList = Object.values(byEmail).filter((c: any) => 
+          const combinedList = Object.values(byEmail).filter((c: any) =>
             c.status === 'accepted' || c.status === 'pending'
           )
 
@@ -270,7 +274,7 @@ function EditorInner() {
 
   const handleInvite = async (email: string, role: "EDITOR" | "VIEWER") => {
     if (!mindmapId) return;
-    
+
     try {
       await inviteCollaborator(mindmapId, email, role)
 
@@ -317,12 +321,12 @@ function EditorInner() {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
       })
 
-      const combinedList = Object.values(byEmail).filter((c: any) => 
+      const combinedList = Object.values(byEmail).filter((c: any) =>
         c.status === 'accepted' || c.status === 'pending'
       )
 
       setCollaborators(combinedList)
-      
+
       // Toast thành công sẽ hiển thị ở ShareModal; không cần hiển thị thêm ở đây
     } catch (error: any) {
       console.error(error)
@@ -339,7 +343,7 @@ function EditorInner() {
 
   const handleUpdateRole = async (email: string, role: "EDITOR" | "VIEWER") => {
     if (!mindmapId) return;
-    
+
     try {
       await updateCollaboratorRole(mindmapId, email, role)
 
@@ -384,12 +388,12 @@ function EditorInner() {
         byEmail[p.email] = { ...(byEmail[p.email] || {}), ...p, status: 'pending' }
       })
 
-      const combinedList = Object.values(byEmail).filter((c: any) => 
+      const combinedList = Object.values(byEmail).filter((c: any) =>
         c.status === 'accepted' || c.status === 'pending'
       )
 
       setCollaborators(combinedList)
-      
+
       // Không hiển thị toast ở đây để tránh trùng lặp; UI sẽ phản ánh thay đổi
     } catch (error: any) {
       console.error(error)
@@ -404,16 +408,16 @@ function EditorInner() {
 
   const handleRemoveCollaborator = async (email: string) => {
     if (!mindmapId) return;
-    
+
     try {
       await removeCollaborator(mindmapId, email)
-      
+
       // Only owners can load pending invitations
       const isOwner = mindmap?.mysqlUserId === user?.userId
       let pendingInvitesRaw: any[] = []
       const acceptedCollab = await getCollaborators(mindmapId)
       const acceptedList = toArray(acceptedCollab)
-      
+
       if (isOwner) {
         try {
           pendingInvitesRaw = await getPendingInvitations(mindmapId)
@@ -466,7 +470,7 @@ function EditorInner() {
 
   const handleTogglePublic = async (isPublic: boolean, accessLevel?: "view" | "edit" | "private") => {
     if (!mindmapId) return;
-    
+
     try {
       await updatePublicAccess(mindmapId, isPublic, accessLevel)
       // Fetch lại mindmap để lấy trạng thái mới và shareToken (nếu vừa công khai)
@@ -474,7 +478,7 @@ function EditorInner() {
       setFullMindmapState(updated)
 
       // Giữ nguyên trang Editor và modal; chỉ cập nhật state để ShareModal hiển thị link công khai đúng
-      
+
       toast({
         description: isPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư",
       })
@@ -511,7 +515,7 @@ function EditorInner() {
         {/* Floating Toolbar with Header Items */}
         <div className="absolute top-4 left-4 right-4 z-50 pointer-events-none">
           <div className="pointer-events-auto">
-            <Toolbar 
+            <Toolbar
               mindmap={mindmap}
               isEditing={isEditing}
               setIsEditing={setIsEditing}
@@ -527,6 +531,9 @@ function EditorInner() {
               onShareClick={() => setIsShareOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
+              onChatClick={() => setIsChatOpen(true)}
+              onAiToggle={() => setIsAiOpen((prev) => !prev)}
+              aiOpen={isAiOpen}
             />
           </div>
         </div>
@@ -534,6 +541,8 @@ function EditorInner() {
 
       {/* Floating Properties Panel - Outside relative container */}
       <PropertiesPanel canEdit={userRole === 'editor' || userRole === 'owner'} />
+      <ChatPanel isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
+      {isAiOpen ? <AiComposer defaultOpen /> : null}
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}

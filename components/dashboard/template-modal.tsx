@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next"
 import { createPortal } from "react-dom"
 import { X, Layout, Sparkles, FileText, Network, Workflow, Hexagon, GitBranch, Loader2 } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { createMindmap } from "@/services/mindmap/mindmap.service"
 
 interface Template {
   id: string
@@ -218,79 +219,79 @@ export default function TemplateModal({ isOpen, onClose, onSelectTemplate }: Tem
   const router = useRouter()
   const { t } = useTranslation("templateModal")
 
-// Template metadata from public/templates folder
-const templateMetadata = [
-  {
-    id: "blank",
-    name: t("blankCanvas"),
-    description: t("startFromScratch"),
-    icon: <Layout className="h-6 w-6" />,
-    filePath: null, // Built-in template
-  },
-  {
-    id: "basic-mindmap",
-    name: t("basicMindmap"),
-    description: t("basicMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/basic-mindmap.json",
-  },
-  {
-    id: "simple-structure",
-    name: t("simpleStructure"),
-    description: t("simpleStructureDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/simple-structure.json",
-  },
-  {
-    id: "complex-mindmap",
-    name: t("complexMindmap"),
-    description: t("complexMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/complex-mindmap.json",
-  },
-  {
-    id: "hierarchical-structure",
-    name: t("hierarchicalStructure"),
-    description: t("hierarchicalStructureDescription"),
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/hierarchical-structure.json",
-  },
-  {
-    id: "radial-mindmap",
-    name: t("radialMindmap"),
-    description: t("radialMindmapDescription"),
-    icon: <Network className="h-6 w-6" />,
-    filePath: "/templates/radial-mindmap.json",
-  },
-  {
-    id: "brainstorming",
-    name: t("brainstorming"),
-    description: t("brainstormingDescription"),
-    icon: <Sparkles className="h-6 w-6" />,
-    filePath: "/templates/brainstorming.json",
-  },
-  {
-    id: "project-planning",
-    name: t("projectPlanning"),
-    description: t("projectPlanningDescription"),
-    icon: <Workflow className="h-6 w-6" />,
-    filePath: "/templates/project-planning.json",
-  },
-  {
-    id: "decision-tree",
-    name: t("decisionTree"),
-    description: t("decisionTreeDescription"),
-    icon: <GitBranch className="h-6 w-6" />,
-    filePath: "/templates/decision-tree.json",
-  },
-  {
-    id: "study-notes",
-    name: t("studyNotes"),
-    description: t("studyNotesDescription"),
-    icon: <FileText className="h-6 w-6" />,
-    filePath: "/templates/study-notes.json",
-  },
-]
+  // Template metadata from public/templates folder
+  const templateMetadata = [
+    {
+      id: "blank",
+      name: t("blankCanvas"),
+      description: t("startFromScratch"),
+      icon: <Layout className="h-6 w-6" />,
+      filePath: null, // Built-in template
+    },
+    {
+      id: "basic-mindmap",
+      name: t("basicMindmap"),
+      description: t("basicMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/basic-mindmap.json",
+    },
+    {
+      id: "simple-structure",
+      name: t("simpleStructure"),
+      description: t("simpleStructureDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/simple-structure.json",
+    },
+    {
+      id: "complex-mindmap",
+      name: t("complexMindmap"),
+      description: t("complexMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/complex-mindmap.json",
+    },
+    {
+      id: "hierarchical-structure",
+      name: t("hierarchicalStructure"),
+      description: t("hierarchicalStructureDescription"),
+      icon: <GitBranch className="h-6 w-6" />,
+      filePath: "/templates/hierarchical-structure.json",
+    },
+    {
+      id: "radial-mindmap",
+      name: t("radialMindmap"),
+      description: t("radialMindmapDescription"),
+      icon: <Network className="h-6 w-6" />,
+      filePath: "/templates/radial-mindmap.json",
+    },
+    {
+      id: "brainstorming",
+      name: t("brainstorming"),
+      description: t("brainstormingDescription"),
+      icon: <Sparkles className="h-6 w-6" />,
+      filePath: "/templates/brainstorming.json",
+    },
+    {
+      id: "project-planning",
+      name: t("projectPlanning"),
+      description: t("projectPlanningDescription"),
+      icon: <Workflow className="h-6 w-6" />,
+      filePath: "/templates/project-planning.json",
+    },
+    {
+      id: "decision-tree",
+      name: t("decisionTree"),
+      description: t("decisionTreeDescription"),
+      icon: <GitBranch className="h-6 w-6" />,
+      filePath: "/templates/decision-tree.json",
+    },
+    {
+      id: "study-notes",
+      name: t("studyNotes"),
+      description: t("studyNotesDescription"),
+      icon: <FileText className="h-6 w-6" />,
+      filePath: "/templates/study-notes.json",
+    },
+  ]
 
 
   // Load templates from public/templates folder
@@ -353,7 +354,14 @@ const templateMetadata = [
     if (selectedTemplate) {
       setLoading(selectedTemplate.id)
       try {
-        // If template has filePath, reload it to ensure we have the latest data
+        if (selectedTemplate.id === 'ai') {
+          const created = await createMindmap({ title: 'Untitled Mindmap', nodes: [], edges: [], category: 'ai', aiGenerated: false })
+          if (created?.id) {
+            router.push(`/editor?id=${created.id}`)
+            onClose()
+            return
+          }
+        }
         if (selectedTemplate.filePath) {
           const response = await fetch(selectedTemplate.filePath)
           if (response.ok) {
@@ -410,7 +418,7 @@ const templateMetadata = [
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               <div
-                onClick={() => router.push('/dashboard/ai-mindmap')}
+                onClick={() => setSelectedTemplate({ id: 'ai', name: 'AI Mindmap', description: 'Generate mindmap with AI', icon: <Sparkles className="h-6 w-6" />, initialNodes: [], initialEdges: [] })}
                 className="relative p-6 rounded-lg border-2 cursor-pointer transition-all md:col-span-2 lg:col-span-3 border-primary bg-primary/10 hover:bg-primary/15 hover:shadow-lg"
               >
                 <div className="flex items-start gap-4">
@@ -418,8 +426,8 @@ const templateMetadata = [
                     <Sparkles className="h-6 w-6" />
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground mb-1">{t("createAIMindmap")}</h3>
-                    <p className="text-xs text-muted-foreground">{t("enterPromptChooseModeAttachFileAndModel")}</p>
+                    <h3 className="font-semibold text-foreground mb-1">Tạo Mindmap bằng AI</h3>
+                    <p className="text-xs text-muted-foreground">Tạo mindmap mới bằng AI</p>
                   </div>
                   <div className="absolute right-6 top-6">
                     <span className="px-3 py-1 rounded-md bg-primary text-primary-foreground text-xs font-semibold">{t("new")}</span>
@@ -432,10 +440,9 @@ const templateMetadata = [
                   onClick={() => setSelectedTemplate(template)}
                   className={`
                     relative p-6 rounded-lg border-2 cursor-pointer transition-all
-                    ${
-                      selectedTemplate?.id === template.id
-                        ? "border-primary bg-primary/5 shadow-lg"
-                        : "border-border hover:border-primary/50 hover:shadow-md"
+                    ${selectedTemplate?.id === template.id
+                      ? "border-primary bg-primary/5 shadow-lg"
+                      : "border-border hover:border-primary/50 hover:shadow-md"
                     }
                     ${loading === template.id ? "opacity-50 cursor-wait" : ""}
                   `}
@@ -470,6 +477,8 @@ const templateMetadata = [
             </div>
           )}
         </div>
+
+
 
         {/* Footer */}
         <div className="flex items-center justify-end gap-3 p-6 border-t border-border">

@@ -139,15 +139,15 @@ function DashboardContent() {
 
 
     const handleSelectTemplate = async (template: any) => {
-    // Create mindmap with selected template
+      if (template?.id === 'ai') {
+        return
+      }
       const newMindmap = await create({
         title: "Untitled Mindmap",
         nodes: template.initialNodes,
         edges: template.initialEdges,
       })
-
       if (newMindmap) {
-        // Navigate to editor with the new mindmap ID
         router.push(`/editor?id=${newMindmap.id}`)
       }
     }
