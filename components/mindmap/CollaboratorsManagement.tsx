@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { Translation, useTranslation } from "react-i18next"
 import { 
   Trash2, 
   Users,
@@ -44,6 +45,7 @@ export default function CollaboratorsManagement({
   isLoading = false,
   isOwner = false
 }: CollaboratorsManagementProps) {
+  const { t } = useTranslation("CollaboratorsManagement")
   const [loadingEmails, setLoadingEmails] = useState<Set<string>>(new Set())
   const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null)
   const { toast } = useToast()
@@ -58,11 +60,11 @@ export default function CollaboratorsManagement({
     try {
       await onUpdateRole(email, role)
       toast({ 
-        description: `Đã cập nhật quyền của ${email}`
+        description: t("updatedRole", { email })
       })
     } catch (error: any) {
       toast({ 
-        description: error?.message || "Lỗi cập nhật quyền",
+        description: error?.message || t("updateRoleError"),
         variant: "destructive"
       })
     } finally {
@@ -80,11 +82,11 @@ export default function CollaboratorsManagement({
       await onRemove(email)
       setConfirmDeleteEmail(null)
       toast({ 
-        description: `Đã xóa ${email} khỏi mindmap`
+        description: t("removed", { email })
       })
     } catch (error: any) {
       toast({ 
-        description: error?.response?.data?.message || "Lỗi xóa collaborator",
+        description: error?.response?.data?.message || t("removeError"),
         variant: "destructive"
       })
     } finally {
@@ -100,7 +102,7 @@ export default function CollaboratorsManagement({
     return (
       <div className="text-center py-6">
         <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">Chưa mời ai cộng tác</p>
+        <p className="text-sm text-muted-foreground">{t("noCollaborators")}</p>
       </div>
     )
   }
@@ -109,7 +111,7 @@ export default function CollaboratorsManagement({
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Users className="h-4 w-4" />
-        Danh sách người được mời ({collaborators.length})
+        {t("invitedCollaborators", { count: collaborators.length })}
       </h3>
       
       <div className="space-y-2">
@@ -131,7 +133,7 @@ export default function CollaboratorsManagement({
                       ? "bg-blue-500/20 text-blue-600 dark:text-blue-400" 
                       : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
                   }`}>
-                    {collaborator.role === "EDITOR" ? "Chỉnh sửa" : "Xem"}
+                    {collaborator.role === "EDITOR" ? t("edit") : t("view")}
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
                     collaborator.status === "accepted"
@@ -140,8 +142,8 @@ export default function CollaboratorsManagement({
                       ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
                       : "bg-red-500/20 text-red-600 dark:text-red-400"
                   }`}>
-                    {collaborator.status === "accepted" ? "Đã chấp nhận" : 
-                     collaborator.status === "pending" ? "Chờ phản hồi" : "Từ chối"}
+                    {collaborator.status === "accepted" ? t("accepted") : 
+                     collaborator.status === "pending" ? t("pending") : t("rejected")}
                   </span>
                 </div>
               </div>
@@ -162,8 +164,8 @@ export default function CollaboratorsManagement({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="VIEWER">Xem</SelectItem>
-                    <SelectItem value="EDITOR">Chỉnh sửa</SelectItem>
+                    <SelectItem value="VIEWER">{t("view")}</SelectItem>
+                    <SelectItem value="EDITOR">{t("edit")}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -181,7 +183,7 @@ export default function CollaboratorsManagement({
                     {loadingEmails.has(collaborator.email) ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      "Xóa"
+                      t("delete")
                     )}
                   </Button>
                   <Button
@@ -191,7 +193,7 @@ export default function CollaboratorsManagement({
                     onClick={() => setConfirmDeleteEmail(null)}
                     disabled={loadingEmails.has(collaborator.email)}
                   >
-                    Hủy
+                    {t("cancel")}
                   </Button>
                 </div>
               ) : isOwner ? (
@@ -201,7 +203,7 @@ export default function CollaboratorsManagement({
                   className="h-9 w-9 p-0"
                   onClick={() => setConfirmDeleteEmail(collaborator.email)}
                   disabled={loadingEmails.has(collaborator.email) || isLoading}
-                  title="Xóa"
+                  title={t("delete")}
                 >
                   {loadingEmails.has(collaborator.email) ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
