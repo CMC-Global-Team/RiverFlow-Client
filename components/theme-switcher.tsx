@@ -16,21 +16,20 @@ export function ThemeSwitcher() {
   }
 
   return (
-    <button
+  <button
       onClick={toggleTheme}
-      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border text-sm font-medium 
-                 hover:bg-muted transition-all text-foreground"
+      className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border bg-background hover:bg-muted transition-colors min-w-[100px]"
       title={theme === "light" ? "Switch to Dark Mode" : "Switch to Light Mode"}
     >
       {theme === "light" ? (
         <>
           <Moon className="h-5 w-5 text-primary" />
-          <span>{t("dark")}</span>
+          <span className="text-sm font-medium text-foreground">{t("dark")}</span>
         </>
       ) : (
         <>
           <Sun className="h-5 w-5 text-yellow-400" />
-          <span>{t("light")}</span>
+          <span className="text-sm font-medium text-foreground">{t("light")}</span>
         </>
       )}
     </button>

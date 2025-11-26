@@ -6,8 +6,7 @@ import { Menu, X, LogOut, User } from "lucide-react"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { useLogout } from "@/hooks/auth/useLogout"
 import { useTranslation } from "react-i18next"
-import LanguageSwitcher from "./LanguageSwitcher"
-import { ThemeSwitcher } from "@/components/theme-switcher"
+
 interface HeaderProps {
   onAuthClick: (tab: "login" | "signup") => void
 }
@@ -31,25 +30,25 @@ export default function Header({ onAuthClick }: HeaderProps) {
           <nav className="hidden md:flex items-center gap-8">
             <Link
               href="#features"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
                 {t("features")}
             </Link>
             <Link
               href="/pricing"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
                 {t("pricing")}
             </Link>
             <Link
               href="/about"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
                 {t("about")}
             </Link>
             <Link
               href="#"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
                 {t("docs")}
             </Link>
@@ -93,9 +92,9 @@ export default function Header({ onAuthClick }: HeaderProps) {
             )}
             
             {/* Language Switcher */}
-            <LanguageSwitcher />
+          
           </div>
-              <ThemeSwitcher />
+              
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -108,31 +107,32 @@ export default function Header({ onAuthClick }: HeaderProps) {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-3">
-            <Link
+              <Link
               href="#features"
-              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("features")}
+                {t("features")}
             </Link>
             <Link
               href="/pricing"
-              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
               {t("pricing")}
             </Link>
             <Link
               href="/about"
-              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
               {t("about")}
             </Link>
-            <Link href="#" className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground">
+            <Link href="#" 
+            className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all">
               {t("docs")}
             </Link>
             
             {/* Language Switcher - Mobile */}
             <div className="px-4">
-              <LanguageSwitcher />
+              
             </div>
 
             <div className="px-4 pt-2 space-y-2">

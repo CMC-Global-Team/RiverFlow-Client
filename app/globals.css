@@ -61,7 +61,7 @@
   --border: oklch(0.28 0.03 240);
   --input: oklch(0.22 0.02 240);
   --ring: oklch(0.65 0.25 280);
-  --primary: oklch(0.65 0.25 280);
+  --primary: oklch(0.65 0.25 260);
   --primary-foreground: oklch(0.12 0.02 240);
   --secondary: oklch(0.75 0.2 150);
   --secondary-foreground: oklch(0.12 0.02 240);
@@ -241,4 +241,56 @@ body {
   background-color: var(--background);
   color: var(--foreground);
   transition: background-color 0.3s, color 0.3s;
+}
+
+/* Controls container */
+.react-flow__controls {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* Single control button */
+.react-flow__controls-button {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+/* Icon inside button (stroke + fill) */
+.react-flow__controls-button svg {
+  stroke: var(--foreground) !important;
+  fill: var(--foreground) !important;   /* <== thêm dòng này */
+}
+
+/* Hover */
+.react-flow__controls-button:hover {
+  background-color: var(--muted) !important;
+  color: var(--foreground) !important;
+}
+
+.react-flow__controls-button:hover svg {
+  stroke: var(--foreground) !important;
+  fill: var(--foreground) !important;  /* <== hover icon trắng luôn */
+}
+
+/* MiniMap background */
+.react-flow__minimap {
+  background-color: var(--background) !important;
+  border: 1px solid var(--border) !important;
+}
+
+/* MiniMap mask (vùng highlight viewport) */
+.react-flow__minimap-mask {
+  fill: var(--muted) !important;
+  fill-opacity: 0.4 !important;
+}
+
+/* MiniMap nodes */
+.react-flow__minimap-node {
+  stroke: var(--border) !important;
+}
+
+/* MiniMap node fill (nếu không set nodeColor) */
+.react-flow__minimap-node:not([fill]) {
+  fill: var(--foreground) !important;
 }
