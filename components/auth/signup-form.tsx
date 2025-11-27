@@ -180,7 +180,7 @@ export default function SignupForm() {
             </div>
 
             {/* BUTTON */}
-            <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-primary py-2.5 font-semibold">
+            <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-primary py-2.5 font-semibold text-white">
                 {isLoading ? t("signup.submitting") : t("signup.submit")}
             </button>
 
