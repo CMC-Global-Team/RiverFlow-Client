@@ -158,7 +158,7 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
+                className="text-white w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
             >
                 {isLoading ? t("login.submitting") : t("login.submit")}
             </button>
