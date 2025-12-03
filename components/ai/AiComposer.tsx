@@ -229,28 +229,25 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             }
 
             console.log('[AI Composer] Calling /ai/thinking/otmz with', thinkingReq)
-            const otmz: Otmz = await createThinkingOtmz(thinkingReq)
+            // Pass mindmapId as query parameter for streaming
+            const otmzUrl = `/ai/thinking/otmz${mindmap.id ? `?mindmapId=${mindmap.id}` : ''}`
+            const otmz: Otmz = await fetch(otmzUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(thinkingReq),
+            }).then(r => r.json())
 
             console.log('[AI Composer] OTMZ received, calling /ai/thinking/actions')
-            const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang)
+            const actionsUrl = `/ai/thinking/actions${mindmap.id ? `?mindmapId=${mindmap.id}` : ''}`
+            const actionsRes: ActionList = await fetch(actionsUrl, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(otmz),
+            }).then(r => r.json())
 
-            // Hiển thị kết quả thinking mode trong chat (không đụng vào mindmap hiện tại)
-            setMessages((m) => [
-              ...m,
-              {
-                role: 'assistant',
-                text:
-                  `Thinking Mode kết thúc.\n` +
-                  `- Ngôn ngữ: ${effectiveLang}\n` +
-                  `- Số actions: ${Array.isArray(actionsRes.actions) ? actionsRes.actions.length : 0}\n` +
-                  (otmz?.optimizedContent
-                    ? `\nTóm tắt:\n${typeof otmz.optimizedContent === 'string'
-                      ? otmz.optimizedContent
-                      : JSON.stringify(otmz.optimizedContent, null, 2)
-                    }`
-                    : ''),
-              },
-            ])
+            // Note: Streaming messages are already displayed via WebSocket listeners
+            // No need to add additional messages here to avoid duplicates
+            console.log('[AI Composer] Thinking mode completed with streaming')
           } catch (err) {
             console.error('[AI Composer] Thinking mode error', err)
             throw err
