@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
+import { createThinkingOtmz, getThinkingActions, type ThinkingModeRequest, type Otmz, type ActionList } from "@/services/ai/ai.service"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
@@ -212,30 +213,74 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
         // Removed client-side agentPlan - backend AI handles all planning
 
+        const effectiveLang = (langPref === 'auto' ? lang : langPref) || 'vi'
 
-        const payload: any = {
-          mindmapId: mindmap.id,
-          targetType: 'auto', // Let backend AI decide dynamically
-          nodeId: selectedNode ? selectedNode.id : undefined,
-          language: langPref === 'auto' ? lang : langPref,
-          mode: mode, // Pass mode to backend for credit deduction
-          hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
-          levels,
-          firstLevelCount,
-          structureType,
-        }
-        const result = await optimizeMindmapByAI(payload)
-        setLastResult(result)
-        // Streaming responses are handled by WebSocket listeners above
-        // AI natural language is streamed directly to modal - no processing needed here
+        if (mode === 'thinking') {
+          // === Thinking Mode: dùng các endpoint /ai/thinking/... ===
+          try {
+            const thinkingReq: ThinkingModeRequest = {
+              topic: text || mindmap.title || 'Untitled',
+              language: effectiveLang,
+              structureType,
+              levels,
+              firstLevelCount,
+              tags: [],
+              mode: 'thinking',
+            }
 
-        // CRITICAL FIX: Always reload mindmap after AI operations to prevent race condition
-        // Problem: Client's auto-save (1.5s after changes) was overwriting AI changes
-        // because client had stale state. This affected update_node, delete_node, add_node.
-        // Solution: Always reload from DB to sync state before auto-save triggers.
-        console.log('[AI Composer] Reloading mindmap after AI operation to sync state')
-        if (mindmap?.id) {
-          await loadMindmap(mindmap.id)
+            console.log('[AI Composer] Calling /ai/thinking/otmz with', thinkingReq)
+            const otmz: Otmz = await createThinkingOtmz(thinkingReq)
+
+            console.log('[AI Composer] OTMZ received, calling /ai/thinking/actions')
+            const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang)
+
+            // Hiển thị kết quả thinking mode trong chat (không đụng vào mindmap hiện tại)
+            setMessages((m) => [
+              ...m,
+              {
+                role: 'assistant',
+                text:
+                  `Thinking Mode kết thúc.\n` +
+                  `- Ngôn ngữ: ${effectiveLang}\n` +
+                  `- Số actions: ${Array.isArray(actionsRes.actions) ? actionsRes.actions.length : 0}\n` +
+                  (otmz?.optimizedContent
+                    ? `\nTóm tắt:\n${typeof otmz.optimizedContent === 'string'
+                      ? otmz.optimizedContent
+                      : JSON.stringify(otmz.optimizedContent, null, 2)
+                    }`
+                    : ''),
+              },
+            ])
+          } catch (err) {
+            console.error('[AI Composer] Thinking mode error', err)
+            throw err
+          }
+        } else {
+          // === Normal / Max Mode: giữ nguyên flow optimizeMindmapByAI cũ ===
+          const payload: any = {
+            mindmapId: mindmap.id,
+            targetType: 'auto', // Let backend AI decide dynamically
+            nodeId: selectedNode ? selectedNode.id : undefined,
+            language: effectiveLang,
+            mode: mode, // Pass mode to backend for credit deduction
+            hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
+            levels,
+            firstLevelCount,
+            structureType,
+          }
+          const result = await optimizeMindmapByAI(payload)
+          setLastResult(result)
+          // Streaming responses are handled by WebSocket listeners above
+          // AI natural language is streamed directly to modal - no processing needed here
+
+          // CRITICAL FIX: Always reload mindmap after AI operations to prevent race condition
+          // Problem: Client's auto-save (1.5s after changes) was overwriting AI changes
+          // because client had stale state. This affected update_node, delete_node, add_node.
+          // Solution: Always reload from DB to sync state before auto-save triggers.
+          console.log('[AI Composer] Reloading mindmap after AI operation to sync state')
+          if (mindmap?.id) {
+            await loadMindmap(mindmap.id)
+          }
         }
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
