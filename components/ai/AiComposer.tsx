@@ -229,21 +229,12 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             }
 
             console.log('[AI Composer] Calling /ai/thinking/otmz with', thinkingReq)
-            // Pass mindmapId as query parameter for streaming
-            const otmzUrl = `/ai/thinking/otmz${mindmap.id ? `?mindmapId=${mindmap.id}` : ''}`
-            const otmz: Otmz = await fetch(otmzUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(thinkingReq),
-            }).then(r => r.json())
+            // Pass mindmapId to enable streaming
+            const otmz: Otmz = await createThinkingOtmz(thinkingReq, mindmap.id)
 
             console.log('[AI Composer] OTMZ received, calling /ai/thinking/actions')
-            const actionsUrl = `/ai/thinking/actions${mindmap.id ? `?mindmapId=${mindmap.id}` : ''}`
-            const actionsRes: ActionList = await fetch(actionsUrl, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(otmz),
-            }).then(r => r.json())
+            // Pass mindmapId to enable streaming
+            const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang, mindmap.id)
 
             // Note: Streaming messages are already displayed via WebSocket listeners
             // No need to add additional messages here to avoid duplicates

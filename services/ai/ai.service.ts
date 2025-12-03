@@ -176,7 +176,7 @@ export function openGenerateStream(onData: (chunk: any) => void, onEnd?: () => v
   }
   es.onerror = (e) => { onError?.(e); es.close() }
   es.onopen = () => { /* connected */ }
-  ;(es as any).onend = () => { onEnd?.(); es.close() }
+    ; (es as any).onend = () => { onEnd?.(); es.close() }
   return es
 }
 
@@ -188,11 +188,12 @@ export async function generateMindmapProject(payload: { topic: string; mode?: st
 // ===== Thinking Mode API calls =====
 
 // POST /api/ai/thinking/otmz
-export async function createThinkingOtmz(body: ThinkingModeRequest): Promise<Otmz> {
+export async function createThinkingOtmz(body: ThinkingModeRequest, mindmapId?: string): Promise<Otmz> {
   const res = await apiClient.post<Otmz>('/ai/thinking/otmz', body, {
     headers: {
       Accept: 'application/json',
     },
+    params: mindmapId ? { mindmapId } : undefined,
   })
   return res.data
 }
@@ -210,13 +211,17 @@ export async function getThinkingPrompt(query: ThinkingModeRequest): Promise<any
 }
 
 // POST /api/ai/thinking/actions
-// Body: Otmz, Query: language?
-export async function getThinkingActions(otmz: Otmz, language?: string): Promise<ActionList> {
+// Body: Otmz, Query: language?, mindmapId?
+export async function getThinkingActions(otmz: Otmz, language?: string, mindmapId?: string): Promise<ActionList> {
+  const params: any = {}
+  if (language) params.language = language
+  if (mindmapId) params.mindmapId = mindmapId
+
   const res = await apiClient.post<ActionList>('/ai/thinking/actions', otmz, {
     headers: {
       Accept: 'application/json',
     },
-    params: language ? { language } : undefined,
+    params: Object.keys(params).length > 0 ? params : undefined,
   })
   return res.data
 }
