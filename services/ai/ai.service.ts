@@ -226,3 +226,21 @@ export async function getThinkingActions(otmz: Otmz, language?: string, mindmapI
   return res.data
 }
 
+// POST /api/ai/thinking/generate
+// Body: ActionList, Query: mindmapId, structureType?
+export async function generateMindmapFromActions(
+  actionList: ActionList,
+  mindmapId: string,
+  structureType?: string
+): Promise<MindmapResponse> {
+  const params: any = { mindmapId }
+  if (structureType) params.structureType = structureType
+
+  const res = await apiClient.post<MindmapResponse>('/ai/thinking/generate', actionList, {
+    headers: {
+      Accept: 'application/json',
+    },
+    params,
+  })
+  return res.data
+}
