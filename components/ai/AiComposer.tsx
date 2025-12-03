@@ -240,15 +240,26 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             console.log('[AI Composer] Step 3: Calling Generator (Execute)')
             // Step 3: Generator - execute ActionList to create mindmap
             const structType = otmz?.meta?.structureType || structureType || 'mindmap'
-            await fetch(`/api/ai/thinking/generate?mindmapId=${mindmap.id}&structureType=${structType}`, {
+            const generatorResponse = await fetch(`/api/ai/thinking/generate?mindmapId=${mindmap.id}&structureType=${structType}`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify(actionsRes),
             })
 
-            // Refresh mindmap to show new nodes
+            if (!generatorResponse.ok) {
+              throw new Error('Generator failed')
+            }
+
+            const generatedMindmap = await generatorResponse.json()
+            console.log('[AI Composer] Mindmap generated:', generatedMindmap)
+
+            // Reload mindmap to show new nodes (same as Normal mode)
+            console.log('[AI Composer] Reloading mindmap after Thinking mode to sync state')
+            if (mindmap?.id) {
+              await loadMindmap(mindmap.id)
+            }
+
             console.log('[AI Composer] Thinking mode completed successfully!')
-            window.location.reload() // Temporary solution to refresh mindmap
           } catch (err) {
             console.error('[AI Composer] Thinking mode error', err)
             throw err
