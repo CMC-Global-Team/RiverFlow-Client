@@ -216,7 +216,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const effectiveLang = (langPref === 'auto' ? lang : langPref) || 'vi'
 
         if (mode === 'thinking') {
-          // === Thinking Mode: dùng các endpoint /ai/thinking/... ===
+          // === Thinking Mode: 3-step flow ===
+          // Step 1: Thinking (OTMZ) → Step 2: Agent (ActionList) → Step 3: Generator (Execute)
           try {
             const thinkingReq: ThinkingModeRequest = {
               topic: text || mindmap.title || 'Untitled',
@@ -228,17 +229,26 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               mode: 'thinking',
             }
 
-            console.log('[AI Composer] Calling /ai/thinking/otmz with', thinkingReq)
-            // Pass mindmapId to enable streaming
+            console.log('[AI Composer] Step 1: Calling Thinking (OTMZ)')
+            // Step 1: Thinking - optimize prompt to OTMZ
             const otmz: Otmz = await createThinkingOtmz(thinkingReq, mindmap.id)
 
-            console.log('[AI Composer] OTMZ received, calling /ai/thinking/actions')
-            // Pass mindmapId to enable streaming
+            console.log('[AI Composer] Step 2: Calling Agent (ActionList)')
+            // Step 2: Agent - convert OTMZ to ActionList
             const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang, mindmap.id)
 
-            // Note: Streaming messages are already displayed via WebSocket listeners
-            // No need to add additional messages here to avoid duplicates
-            console.log('[AI Composer] Thinking mode completed with streaming')
+            console.log('[AI Composer] Step 3: Calling Generator (Execute)')
+            // Step 3: Generator - execute ActionList to create mindmap
+            const structType = otmz?.meta?.structureType || structureType || 'mindmap'
+            await fetch(`/api/ai/thinking/generate?mindmapId=${mindmap.id}&structureType=${structType}`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(actionsRes),
+            })
+
+            // Refresh mindmap to show new nodes
+            console.log('[AI Composer] Thinking mode completed successfully!')
+            window.location.reload() // Temporary solution to refresh mindmap
           } catch (err) {
             console.error('[AI Composer] Thinking mode error', err)
             throw err
