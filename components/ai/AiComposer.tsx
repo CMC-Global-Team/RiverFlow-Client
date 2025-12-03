@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
-import { createThinkingOtmz, getThinkingActions, type ThinkingModeRequest, type Otmz, type ActionList } from "@/services/ai/ai.service"
+import { createThinkingOtmz, getThinkingActions, generateMindmapFromActions, type ThinkingModeRequest, type Otmz, type ActionList } from "@/services/ai/ai.service"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
@@ -238,19 +238,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang, mindmap.id)
 
             console.log('[AI Composer] Step 3: Calling Generator (Execute)')
-            // Step 3: Generator - execute ActionList to create mindmap
+            // Step 3: Generator - execute ActionList to create mindmap (with authentication)
             const structType = otmz?.meta?.structureType || structureType || 'mindmap'
-            const generatorResponse = await fetch(`/api/ai/thinking/generate?mindmapId=${mindmap.id}&structureType=${structType}`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(actionsRes),
-            })
-
-            if (!generatorResponse.ok) {
-              throw new Error('Generator failed')
-            }
-
-            const generatedMindmap = await generatorResponse.json()
+            const generatedMindmap = await generateMindmapFromActions(actionsRes, mindmap.id, structType)
             console.log('[AI Composer] Mindmap generated:', generatedMindmap)
 
             // Reload mindmap to show new nodes (same as Normal mode)
