@@ -69,7 +69,17 @@ function UserManagementContent() {
 
         // Filter by status
         if (selectedStatus !== 'all') {
-            result = result.filter(user => user.status === selectedStatus);
+            console.log('Filtering by status:', selectedStatus);
+            result = result.filter(user => {
+                const status = user.status;
+                if (status === undefined) {
+                    console.warn(`User ${user.email} has undefined status. Available keys:`, Object.keys(user));
+                    return false; // Hoặc true nếu muốn hiện
+                }
+                console.log(`User ${user.email} status:`, status);
+                // So sánh không phân biệt hoa thường để an toàn
+                return String(status).toLowerCase() === selectedStatus.toLowerCase();
+            });
         }
 
         // Sort
