@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
-import { flushSync } from "react-dom"
 import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -146,6 +145,50 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
+  // Typewriter effect refs
+  const streamingBufferRef = useRef("")
+  const displayedTextRef = useRef("")
+  const isStreamingRef = useRef(false)
+  const animationFrameRef = useRef<number>()
+  const lastFrameTimeRef = useRef(0)
+
+  // Animation loop for smooth typewriter effect
+  const animateTypewriter = useCallback((time: number) => {
+    if (!isStreamingRef.current && displayedTextRef.current.length === streamingBufferRef.current.length) {
+      return // Stop if done and fully displayed
+    }
+
+    const delta = time - lastFrameTimeRef.current
+    // Target ~30-50ms per character for natural reading speed, or faster if buffer is large
+    // If buffer is huge (>50 chars ahead), speed up to catch up
+    const bufferDiff = streamingBufferRef.current.length - displayedTextRef.current.length
+    const speed = bufferDiff > 50 ? 5 : bufferDiff > 20 ? 15 : 30
+
+    if (delta >= speed && bufferDiff > 0) {
+      // Add next character(s)
+      const charsToAdd = bufferDiff > 100 ? 5 : bufferDiff > 50 ? 3 : 1
+      const nextChars = streamingBufferRef.current.substring(
+        displayedTextRef.current.length,
+        displayedTextRef.current.length + charsToAdd
+      )
+
+      displayedTextRef.current += nextChars
+      lastFrameTimeRef.current = time
+
+      // Update UI
+      setMessages((prev) => {
+        const newMsgs = [...prev]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          lastMsg.text = displayedTextRef.current
+        }
+        return newMsgs
+      })
+    }
+
+    animationFrameRef.current = requestAnimationFrame(animateTypewriter)
+  }, [])
+
   // Setup WebSocket listeners for AI streaming
   useEffect(() => {
     if (!mindmap?.id && !user?.userId) return
@@ -162,46 +205,79 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       socket.emit('mindmap:join', { mindmapId: `user:${user.userId}` })
     }
 
+    // Start typewriter animation
+    const startTypewriter = () => {
+      isStreamingRef.current = true
+      streamingBufferRef.current = ""
+      displayedTextRef.current = ""
+      lastFrameTimeRef.current = 0
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = requestAnimationFrame(animateTypewriter)
+    }
+
     // Normal/Max mode streaming
     const handleStreamStart = () => {
       console.log('[AIComposer] Stream start event received')
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+      startTypewriter()
     }
 
     const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Stream chunk received:', data.chunk.substring(0, 50) + '...')
-
-      // Use flushSync to prevent React from batching state updates
-      // This ensures each chunk renders immediately for smooth streaming
-      flushSync(() => {
-        setStreamingText((prev: string) => prev + data.chunk)
-        setMessages((m: typeof messages) => {
-          const newMsgs = [...m]
-          const lastMsg = newMsgs[newMsgs.length - 1]
-          if (lastMsg && lastMsg.streaming) {
-            lastMsg.text = lastMsg.text + data.chunk
-          }
-          return newMsgs
-        })
-      })
+      // Append to buffer, let animation loop handle display
+      streamingBufferRef.current += data.chunk
     }
 
     const handleStreamDone = () => {
       console.log('[AIComposer] Stream done event received')
-      setMessages((m: typeof messages) => {
-        const newMsgs = [...m]
-        const lastMsg = newMsgs[newMsgs.length - 1]
-        if (lastMsg && lastMsg.streaming) {
-          delete lastMsg.streaming
+      // Don't stop animation immediately, let it finish displaying buffer
+      // We just mark streaming as done, but loop continues until displayed == buffer
+      // However, we need to eventually clean up the 'streaming' flag in messages
+
+      // We can't easily know when animation finishes inside this callback
+      // So we'll set a timeout or check in the animation loop
+
+      // For simplicity, let's just ensure we catch up quickly if needed
+      // But to keep it smooth, we let the loop finish naturally
+
+      // We need a way to remove the 'streaming' flag from message when done
+      // Let's do it in the animation loop when it finishes?
+      // Or just leave it for now, the 'streaming' flag is mostly for UI styling if any
+
+      // Let's update the final state after a delay to ensure completion
+      setTimeout(() => {
+        // Force completion if stuck
+        if (displayedTextRef.current !== streamingBufferRef.current) {
+          displayedTextRef.current = streamingBufferRef.current
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = displayedTextRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        } else {
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
         }
-        return newMsgs
-      })
-      setStreamingText("")
+        isStreamingRef.current = false
+        setStreamingText("")
+      }, 1000) // Give it 1s to finish animating, or force it
     }
 
     const handleStreamError = (data: { error: string }) => {
       console.error('[AIComposer] Stream error:', data.error)
+      isStreamingRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
       setStreamingText("")
     }
@@ -211,40 +287,48 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       console.log('[AIComposer] Thinking Mode stream start event received')
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+      startTypewriter()
     }
 
     const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Thinking Mode chunk received:', data.chunk.substring(0, 50) + '...')
-
-      // Use flushSync to prevent React from batching state updates
-      flushSync(() => {
-        setStreamingText((prev: string) => prev + data.chunk)
-        setMessages((m: typeof messages) => {
-          const newMsgs = [...m]
-          const lastMsg = newMsgs[newMsgs.length - 1]
-          if (lastMsg && lastMsg.streaming) {
-            lastMsg.text = lastMsg.text + data.chunk
-          }
-          return newMsgs
-        })
-      })
+      streamingBufferRef.current += data.chunk
     }
 
     const handleThinkingDone = (data: { fullText: string }) => {
       console.log('[AIComposer] Thinking Mode stream done event received')
-      setMessages((m: typeof messages) => {
-        const newMsgs = [...m]
-        const lastMsg = newMsgs[newMsgs.length - 1]
-        if (lastMsg && lastMsg.streaming) {
-          delete lastMsg.streaming
+      // Similar to normal mode, let animation finish
+      setTimeout(() => {
+        if (displayedTextRef.current !== streamingBufferRef.current) {
+          displayedTextRef.current = streamingBufferRef.current
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = displayedTextRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        } else {
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
         }
-        return newMsgs
-      })
-      setStreamingText("")
+        isStreamingRef.current = false
+        setStreamingText("")
+      }, 1000)
     }
 
     const handleThinkingError = (data: { error: string }) => {
       console.error('[AIComposer] Thinking Mode stream error:', data.error)
+      isStreamingRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
       setStreamingText("")
     }
@@ -267,6 +351,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     socket.on('ai:thinking:actionlist', handleThinkingActionList)
 
     return () => {
+      isStreamingRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+
       socket.off('ai:stream:start', handleStreamStart)
       socket.off('ai:stream:chunk', handleStreamChunk)
       socket.off('ai:stream:done', handleStreamDone)
@@ -277,7 +364,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       socket.off('ai:thinking:error', handleThinkingError)
       socket.off('ai:thinking:actionlist', handleThinkingActionList)
     }
-  }, [mindmap?.id, user?.userId])
+  }, [mindmap?.id, user?.userId, animateTypewriter])
 
   // Removed composeAgentPlan - backend AI handles all planning now
 
