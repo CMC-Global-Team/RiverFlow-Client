@@ -305,9 +305,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       if (edgeSigs.has(sig)) continue
       let id = String(base.id || '')
       if (!id || edgeIds.has(id)) {
-        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         while (edgeIds.has(uid)) {
-          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         }
         base.id = uid
         id = uid
@@ -455,6 +455,81 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       markSynced('idle')
     }
     s.on('history:restore', onHistoryRestore)
+
+    // Handle AI updates from other users - sync the entire mindmap state
+    const onAiUpdated = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m) return
+
+      // Check if this update is from another user
+      const currentSocket = socketRef.current
+      if (currentSocket && data?.userId === currentSocket.userId) {
+        // This is our own update, skip (we already have the changes)
+        return
+      }
+
+      console.log('[MindmapContext] Received AI update from another user:', data?.action)
+
+      // Apply the new nodes and edges from AI
+      if (data?.nodes && Array.isArray(data.nodes)) {
+        isApplyingHistoryRef.current = true
+        setNodes(data.nodes.map((node: any) => {
+          const nodeType = node.type === 'default' ? 'rectangle' : node.type
+          return {
+            ...node,
+            type: nodeType,
+            data: {
+              label: 'Node',
+              description: '',
+              color: '#3b82f6',
+              ...node.data,
+              shape: node.data?.shape || nodeType || 'rectangle',
+            }
+          }
+        }))
+      }
+
+      if (data?.edges && Array.isArray(data.edges)) {
+        const incomingEdges = data.edges
+        const edgeIds = new Set<string>()
+        const edgeSigs = new Set<string>()
+        const normalizedEdges: any[] = []
+        for (let i = 0; i < incomingEdges.length; i++) {
+          const e: any = incomingEdges[i] || {}
+          const base = {
+            ...e,
+            animated: e.animated !== undefined ? e.animated : true,
+            type: e.type || 'smoothstep',
+            markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+          }
+          const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
+          if (edgeSigs.has(sig)) continue
+          let id = String(base.id || '')
+          if (!id || edgeIds.has(id)) {
+            let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+            while (edgeIds.has(uid)) {
+              uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+            }
+            base.id = uid
+            id = uid
+          }
+          edgeIds.add(id)
+          edgeSigs.add(sig)
+          normalizedEdges.push(base)
+        }
+        setEdges(normalizedEdges)
+      }
+
+      isApplyingHistoryRef.current = false
+
+      // Show notification about AI update
+      toast({
+        title: 'AI Update',
+        description: 'Mindmap has been updated by AI',
+      })
+    }
+    s.on('mindmap:ai:updated', onAiUpdated)
+
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -472,6 +547,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:nodes:update', onNodeUpdate)
       s.off('mindmap:edges:update', onEdgeUpdate)
       s.off('history:restore', onHistoryRestore)
+      s.off('mindmap:ai:updated', onAiUpdated)
     }
   }, [mindmap])
 
@@ -606,7 +682,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         )
         if (exists) return eds
         const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
           ...connection,
           animated: true,
           type: "smoothstep",
@@ -780,9 +856,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const sig = `${(e as any).source}|${(e as any).target}|${(e as any).sourceHandle || ''}|${(e as any).targetHandle || ''}`
       if (edgeSigs.has(sig)) continue
       if (!id || edgeIds.has(id)) {
-        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         while (edgeIds.has(uid)) {
-          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
         }
         (e as any).id = uid
         id = uid
