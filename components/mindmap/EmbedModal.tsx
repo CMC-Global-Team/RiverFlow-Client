@@ -176,8 +176,8 @@ export default function EmbedModal({
                                     Mã nhúng Iframe
                                 </Label>
                                 <div className="relative">
-                                    <pre className="bg-muted/50 rounded-lg p-3 text-xs font-mono overflow-x-auto max-h-32">
-                                        {getIframeCode()}
+                                    <pre className="bg-muted/50 rounded-lg p-3 text-xs font-mono overflow-x-auto max-h-32 whitespace-pre-wrap break-all text-foreground">
+                                        <code>{getIframeCode()}</code>
                                     </pre>
                                     <Button
                                         size="icon"
