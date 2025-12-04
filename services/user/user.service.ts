@@ -23,6 +23,12 @@ export const getAllUsers = async (
         // Backend trả về array trực tiếp, không phải PageResponse
         // Chuyển đổi sang format PageResponse để tương thích với UI
         const users = response.data;
+
+        // DEBUG: Log cấu trúc user đầu tiên để kiểm tra tên trường
+        if (users.length > 0) {
+            console.log('Sample user data from API:', users[0]);
+        }
+
         return {
             content: users,
             totalElements: users.length,
@@ -59,10 +65,16 @@ export const updateUser = async (
     data: AdminUpdateUserRequest
 ): Promise<AdminUserResponse> => {
     try {
+        console.log(`Updating user ${userId} with data:`, data);
         const response = await apiClient.put<AdminUserResponse>(`/user/${userId}`, data);
+        console.log('Update success:', response.data);
         return response.data;
-    } catch (error) {
+    } catch (error: any) {
         console.error("Error updating user:", error);
+        if (error.response) {
+            console.error("Server response:", error.response.data);
+            console.error("Status code:", error.response.status);
+        }
         throw error;
     }
 };
