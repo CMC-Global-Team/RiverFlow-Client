@@ -52,6 +52,8 @@ function EditorInner() {
     setFullMindmapState,
     accessRevoked,
     clearAccessRevoked,
+    permissionChanged,
+    clearPermissionChanged,
   } = useMindmapContext()
 
   const { toast } = useToast()
@@ -123,6 +125,20 @@ function EditorInner() {
       router.push('/')
     }
   }, [accessRevoked, clearAccessRevoked, router, toast])
+
+  // Handle permission change - refresh page when permissions change
+  useEffect(() => {
+    if (permissionChanged?.changed) {
+      console.log('[Editor] Permission changed, refreshing page:', permissionChanged)
+      toast({
+        title: 'Permission Changed',
+        description: `Your access level has been updated. Refreshing page...`,
+      })
+      clearPermissionChanged()
+      // Refresh the page to get updated permissions
+      window.location.reload()
+    }
+  }, [permissionChanged, clearPermissionChanged, toast])
 
   // Load collaborators when mindmap is loaded
   useEffect(() => {
