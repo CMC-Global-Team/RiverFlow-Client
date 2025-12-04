@@ -43,6 +43,12 @@ function EmbedInner() {
                 setMindmapTitle(mindmapData.title || 'Untitled Mindmap')
                 setOwnerName(mindmapData.ownerName || '')
 
+                console.log('[Embed] Loaded mindmap:', {
+                    nodes: mindmapData.nodes?.length,
+                    edges: mindmapData.edges?.length,
+                    edgesData: mindmapData.edges
+                })
+
                 // Create a modified mindmap without id to prevent socket connection
                 // The MindmapContext only joins socket when mindmap.id exists
                 const embedData: MindmapResponse = {

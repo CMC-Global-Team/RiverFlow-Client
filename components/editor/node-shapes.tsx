@@ -19,7 +19,7 @@ interface NodeData {
 // Resize Handle Component
 const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: string; currentScale: number; canEdit?: boolean }) => {
   const { updateNodeData } = useMindmapContext()
-  
+
   const [isResizing, setIsResizing] = useState(false)
   const [hovering, setHovering] = useState(false)
   const startScaleRef = useRef(currentScale)
@@ -63,10 +63,10 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         const deltaY = e.clientY - startPosRef.current.y
         delta = (Math.hypot(deltaX, deltaY)) / 200 * (deltaX + deltaY >= 0 ? 1 : -1)
       }
-      
+
       let newScale = startScaleRef.current + delta
       newScale = Math.max(0.6, Math.min(2.0, newScale))
-      
+
       updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
     }
 
@@ -94,15 +94,15 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
     opacity: enabled && (hovering || isResizing) ? 1 : 0,
     transition: 'opacity 0.12s',
     pointerEvents: enabled ? ('auto' as const) : ('none' as const),
-    padding: `${(HIT_AREA - VISIBLE_SIZE)/2}px`,
-    margin: `-${(HIT_AREA - VISIBLE_SIZE)/2}px`,
+    padding: `${(HIT_AREA - VISIBLE_SIZE) / 2}px`,
+    margin: `-${(HIT_AREA - VISIBLE_SIZE) / 2}px`,
   }
 
   return (
     <>
       <div
         className="absolute top-0 left-0"
-        style={{...handleStyle, cursor: 'nwse-resize'}}
+        style={{ ...handleStyle, cursor: 'nwse-resize' }}
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
@@ -110,7 +110,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       />
       <div
         className="absolute top-0 right-0"
-        style={{...handleStyle, cursor: 'nesw-resize'}}
+        style={{ ...handleStyle, cursor: 'nesw-resize' }}
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
@@ -118,7 +118,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       />
       <div
         className="absolute bottom-0 left-0"
-        style={{...handleStyle, cursor: 'nesw-resize'}}
+        style={{ ...handleStyle, cursor: 'nesw-resize' }}
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
@@ -126,7 +126,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       />
       <div
         className="absolute bottom-0 right-0"
-        style={{...handleStyle, cursor: 'se-resize'}}
+        style={{ ...handleStyle, cursor: 'se-resize' }}
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
@@ -262,6 +262,10 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
 export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -274,34 +278,26 @@ export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodePr
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
-              selected ? "ring-2 ring-primary ring-offset-2" : ""
-            }`}
+            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
             style={{
               borderColor: color,
               backgroundColor: data.bgColor || "transparent"
             }}
           >
-          {isConnectable && (
-            <>
-              <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-              <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-              <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-              <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            </>
-          )}
-          <div className="space-y-1 pointer-events-auto">
-          <EditableContent data={data} id={id} />
-          </div>
-          {isConnectable && (
-            <>
-              <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-              <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-              <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-              <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            </>
-          )}
-          <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <div className="space-y-1 pointer-events-auto">
+              <EditableContent data={data} id={id} />
+            </div>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -322,6 +318,10 @@ RectangleNode.displayName = "RectangleNode"
 export const CircleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -334,73 +334,26 @@ export const CircleNode = memo(({ data, selected, id, isConnectable }: NodeProps
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${
-              selected ? "ring-2 ring-primary ring-offset-2" : ""
-            }`}
+            className={`rounded-full border-2 bg-background shadow-md transition-all w-32 h-32 flex items-center justify-center cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
             style={{
               borderColor: color,
               backgroundColor: data.bgColor || "transparent"
             }}
           >
-        <Handle
-            type="target"
-            id="target-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="target"
-            id="target-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />      <div className="text-center px-3 pointer-events-auto">
-        <EditableContent data={data} id={id} />
-      </div>
-        <Handle
-            type="source"
-            id="source-top"
-            position={Position.Top}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-right"
-            position={Position.Right}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-bottom"
-            position={Position.Bottom}
-            className="w-3 h-3"
-            style={{ background: color, left: "50%" }}
-        />
-        <Handle
-            type="source"
-            id="source-left"
-            position={Position.Left}
-            className="w-3 h-3"
-            style={{ background: color, top: "50%" }}
-        />
-        <ResizeHandle nodeId={id} currentScale={scale} />
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <div className="text-center px-3 pointer-events-auto">
+              <EditableContent data={data} id={id} />
+            </div>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -421,6 +374,10 @@ CircleNode.displayName = "CircleNode"
 export const DiamondNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -433,40 +390,33 @@ export const DiamondNode = memo(({ data, selected, id, isConnectable }: NodeProp
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="relative w-32 h-32">
-        {isConnectable && (
-          <>
-            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
 
-        <svg viewBox="0 0 100 100" className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}>
-          <polygon
-            points="50,5 95,50 50,95 5,50"
-            fill={data.bgColor || "#ffffff"}
-            stroke={color}
-            strokeWidth="2"
-            className={selected ? "stroke-[3]" : ""}
-          />
-        </svg>
+            <svg viewBox="0 0 100 100" className={`w-full h-full transition-all ${selected ? "drop-shadow-lg" : ""}`}>
+              <polygon
+                points="50,5 95,50 50,95 5,50"
+                fill={data.bgColor || "#ffffff"}
+                stroke={color}
+                strokeWidth="2"
+                className={selected ? "stroke-[3]" : ""}
+              />
+            </svg>
 
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-          <div className="text-center px-3 max-w-[80px]">
-            <EditableContent data={data} id={id} />
-          </div>
-        </div>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+              <div className="text-center px-3 max-w-[80px]">
+                <EditableContent data={data} id={id} />
+              </div>
+            </div>
 
-        {isConnectable && (
-          <>
-            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}
-        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -487,6 +437,10 @@ DiamondNode.displayName = "DiamondNode"
 export const HexagonNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -499,39 +453,33 @@ export const HexagonNode = memo(({ data, selected, id, isConnectable }: NodeProp
       <Tooltip>
         <TooltipTrigger asChild>
           <div className="relative w-36 h-32">
-        {isConnectable && (
-          <>
-            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%", top: "3%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%", right: "3%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%", bottom: "3%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%", left: "3%" }} isConnectable={isConnectable} />
-          </>
-        )}      <svg
-        viewBox="0 0 100 87"
-        className={`w-full h-full transition-all cursor-pointer relative ${selected ? "drop-shadow-lg" : ""}`}
-      >
-        <polygon
-          points="50,5 95,25 95,65 50,85 5,65 5,25"
-          fill={data.bgColor || "#ffffff"}
-          stroke={color}
-          strokeWidth="2"
-          className={selected ? "stroke-[3]" : ""}
-        />
-      </svg>
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-        <div className="text-center px-4">
-          <EditableContent data={data} id={id} />
-        </div>
-      </div>
-        {isConnectable && (
-          <>
-            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%", top: "3%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%", right: "3%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%", bottom: "3%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%", left: "3%" }} isConnectable={isConnectable} />
-          </>
-        )}
-        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%", top: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%", right: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%", bottom: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%", left: "3%" }} isConnectable={!!isConnectable} />
+            <svg
+              viewBox="0 0 100 87"
+              className={`w-full h-full transition-all cursor-pointer relative ${selected ? "drop-shadow-lg" : ""}`}
+            >
+              <polygon
+                points="50,5 95,25 95,65 50,85 5,65 5,25"
+                fill={data.bgColor || "#ffffff"}
+                stroke={color}
+                strokeWidth="2"
+                className={selected ? "stroke-[3]" : ""}
+              />
+            </svg>
+            <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+              <div className="text-center px-4">
+                <EditableContent data={data} id={id} />
+              </div>
+            </div>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%", top: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%", right: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%", bottom: "3%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%", left: "3%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -552,6 +500,10 @@ HexagonNode.displayName = "HexagonNode"
 export const EllipseNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -564,33 +516,26 @@ export const EllipseNode = memo(({ data, selected, id, isConnectable }: NodeProp
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${
-              selected ? "ring-2 ring-primary ring-offset-2" : ""
-            }`}
-          style={{
-            borderColor: color,
-            backgroundColor: data.bgColor || "transparent"
-          }}
-        >
-        {isConnectable && (
-          <>
-            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}      <div className="text-center px-4 pointer-events-auto">
-        <EditableContent data={data} id={id} />
-      </div>
-        {isConnectable && (
-          <>
-            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}
-        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            className={`rounded-full border-2 bg-background shadow-md transition-all w-40 h-24 flex items-center justify-center cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
+            style={{
+              borderColor: color,
+              backgroundColor: data.bgColor || "transparent"
+            }}
+          >
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <div className="text-center px-4 pointer-events-auto">
+              <EditableContent data={data} id={id} />
+            </div>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -611,6 +556,10 @@ EllipseNode.displayName = "EllipseNode"
 export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }: NodeProps<NodeData>) => {
   const color = data.color || "#3b82f6"
   const scale = data.scale || 1
+  // Always render handles for edge display, but hide visually when not connectable
+  const handleStyle = isConnectable
+    ? { background: color }
+    : { background: 'transparent', opacity: 0, pointerEvents: 'none' as const }
 
   return (
     <div
@@ -623,33 +572,26 @@ export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }:
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${
-              selected ? "ring-2 ring-primary ring-offset-2" : ""
-          }`}
-          style={{
-            borderColor: color,
-            backgroundColor: data.bgColor || "transparent"
-          }}
-        >
-        {isConnectable && (
-          <>
-            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}      <div className="space-y-1 pointer-events-auto">
-        <EditableContent data={data} id={id} />
-      </div>
-        {isConnectable && (
-          <>
-            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ background: color, left: "50%" }} isConnectable={isConnectable} />
-            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ background: color, top: "50%" }} isConnectable={isConnectable} />
-          </>
-        )}
-        <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+              }`}
+            style={{
+              borderColor: color,
+              backgroundColor: data.bgColor || "transparent"
+            }}
+          >
+            {/* Always render handles for edge connections to display properly */}
+            <Handle type="target" id="target-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="target" id="target-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <div className="space-y-1 pointer-events-auto">
+              <EditableContent data={data} id={id} />
+            </div>
+            <Handle type="source" id="source-top" position={Position.Top} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-right" position={Position.Right} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
+            <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
+            <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
           </div>
         </TooltipTrigger>
         {data.description && (

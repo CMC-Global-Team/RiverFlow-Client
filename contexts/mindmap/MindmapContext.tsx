@@ -342,6 +342,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mindmap) return
+    // Skip socket connection for embed mode (empty id)
+    if (!mindmap.id) return
     const s = getSocket()
     socketRef.current = s
     const payload: any = mindmap.isPublic === true && mindmap.shareToken
@@ -643,7 +645,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const run = async () => {
       const m = latestMindmapRef.current
-      if (!m) return
+      if (!m || !m.id) return // Skip if no mindmap or empty id (embed mode)
       try {
         const list = await fetchHistory(m.id, { limit: 50 })
         const hasSnap = Array.isArray(list) && list.some((it: any) => {
