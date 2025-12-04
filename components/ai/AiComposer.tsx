@@ -230,6 +230,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
+      console.log('[AIComposer] Received action list:', data)
       // Add action list as a separate message
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
     }
