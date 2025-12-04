@@ -27,93 +27,51 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
     return (
         <form
             onSubmit={handleSubmit}
-            style={{
-                marginBottom: '1.5rem',
-                border: '1px solid #ddd',
-                padding: '1.5rem',
-                borderRadius: '8px',
-                backgroundColor: '#f9f9f9'
-            }}
+            className="mb-6 border border-border p-6 rounded-lg bg-card"
         >
-            <h3 style={{ marginTop: 0, marginBottom: '1.5rem', fontSize: '1.25rem', fontWeight: '600' }}>
+            <h3 className="mt-0 mb-6 text-xl font-semibold">
                 {user ? 'Chỉnh Sửa Người Dùng' : 'Tạo Người Dùng Mới'}
             </h3>
 
-            <div style={{ marginBottom: '1rem' }}>
-                <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    color: '#333'
-                }}>
-                    Email: <span style={{ color: '#dc3545' }}>*</span>
+            <div className="mb-4">
+                <label className="block mb-2 font-semibold text-sm text-foreground">
+                    Email: <span className="text-destructive">*</span>
                 </label>
                 <input
                     type="email"
                     value={formData.email}
                     onChange={e => setFormData({ ...formData, email: e.target.value })}
                     required
-                    disabled={!!user} // Disable email edit for existing users
-                    style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        fontSize: '1rem',
-                        backgroundColor: user ? '#e9ecef' : 'white',
-                        cursor: user ? 'not-allowed' : 'text'
-                    }}
+                    disabled={!!user}
+                    className="w-full px-3 py-2 border border-input rounded bg-background text-foreground disabled:bg-muted disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="user@example.com"
                 />
                 {user && (
-                    <small style={{ color: '#6c757d', fontSize: '0.75rem', marginTop: '0.25rem', display: 'block' }}>
+                    <small className="text-muted-foreground text-xs mt-1 block">
                         Email không thể thay đổi
                     </small>
                 )}
             </div>
 
-            <div style={{ marginBottom: '1.5rem' }}>
-                <label style={{
-                    display: 'block',
-                    marginBottom: '0.5rem',
-                    fontWeight: '600',
-                    fontSize: '0.875rem',
-                    color: '#333'
-                }}>
-                    Tên: <span style={{ color: '#dc3545' }}>*</span>
+            <div className="mb-6">
+                <label className="block mb-2 font-semibold text-sm text-foreground">
+                    Tên: <span className="text-destructive">*</span>
                 </label>
                 <input
                     type="text"
                     value={formData.fullName}
                     onChange={e => setFormData({ ...formData, fullName: e.target.value })}
                     required
-                    style={{
-                        width: '100%',
-                        padding: '0.5rem',
-                        border: '1px solid #ccc',
-                        borderRadius: '4px',
-                        fontSize: '1rem'
-                    }}
+                    className="w-full px-3 py-2 border border-input rounded bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                     placeholder="Nhập tên người dùng"
                 />
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <div className="flex gap-2">
                 <button
                     type="submit"
                     disabled={submitting}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: submitting ? '#6c757d' : '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                    }}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:bg-muted disabled:cursor-not-allowed transition-colors font-medium text-sm"
                 >
                     {submitting ? 'Đang xử lý...' : (user ? 'Cập Nhật' : 'Tạo Mới')}
                 </button>
@@ -121,17 +79,7 @@ const UserForm: React.FC<UserFormProps> = ({ user, onSubmit, onCancel }) => {
                     type="button"
                     onClick={onCancel}
                     disabled={submitting}
-                    style={{
-                        padding: '0.5rem 1rem',
-                        backgroundColor: '#6c757d',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '4px',
-                        cursor: submitting ? 'not-allowed' : 'pointer',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        transition: 'background-color 0.2s'
-                    }}
+                    className="px-4 py-2 bg-muted text-foreground rounded hover:bg-muted/80 disabled:cursor-not-allowed transition-colors font-medium text-sm"
                 >
                     Hủy
                 </button>
