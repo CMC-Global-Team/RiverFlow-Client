@@ -75,14 +75,15 @@ export default function UserFilterBar({
 }: UserFilterBarProps) {
     const roles = [
         { value: "all", label: "Tất cả vai trò" },
-        { value: "ADMIN", label: "Admin" },
-        { value: "USER", label: "User" },
+        { value: "admin", label: "Admin" },
+        { value: "user", label: "User" },
     ]
 
     const statuses = [
         { value: "all", label: "Tất cả trạng thái" },
-        { value: "ACTIVE", label: "Đang hoạt động" },
-        { value: "INACTIVE", label: "Không hoạt động" },
+        { value: "active", label: "Đang hoạt động" },
+        { value: "suspended", label: "Tạm khóa" },
+        { value: "deleted", label: "Đã xóa" },
     ]
 
     const sortOptions = [
