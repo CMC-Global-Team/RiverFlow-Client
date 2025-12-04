@@ -481,7 +481,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                         {m.text}
                       </div>
                       {m.role === "user" && m.mode ? (
-                        <div className="text-[11px] text-muted-foreground">{m.mode === "max" ? "Max Mode" : m.mode === "thinking" ? "Thinking Mode" : "Normal Mode"}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          {m.mode === "max" && "AI tối ưu với độ chi tiết cao (-2 credits)"}
+                          {m.mode === "thinking" && "Phân tích sâu và tối ưu hóa (-3 credits)"}
+                          {m.mode === "normal" && "Tạo nhanh với cấu trúc chuẩn (-1 credit)"}
+                        </div>
                       ) : null}
                     </div>
                   </div>
