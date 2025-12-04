@@ -1,12 +1,13 @@
 "use client"
 
-import { Suspense, useEffect, useState } from "react"
+import { Suspense, useEffect, useState, useRef } from "react"
 import { useSearchParams } from "next/navigation"
 import { ReactFlowProvider } from "reactflow"
-import { EmbedMindmapProvider, useEmbedMindmapContext } from "@/contexts/mindmap/EmbedMindmapContext"
-import EmbedCanvas from "@/components/editor/embed-canvas"
+import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
+import Canvas from "@/components/editor/canvas"
 import { getEmbedMindmap } from "@/services/mindmap/mindmap.service"
 import { Loader2, AlertCircle, Code } from "lucide-react"
+import { MindmapResponse } from "@/types/mindmap.types"
 
 function EmbedInner() {
     const searchParams = useSearchParams()
@@ -15,10 +16,19 @@ function EmbedInner() {
     const [isLoading, setIsLoading] = useState(true)
     const [mindmapTitle, setMindmapTitle] = useState<string>('')
     const [ownerName, setOwnerName] = useState<string>('')
+    const dataLoadedRef = useRef(false)
 
-    const { setFullMindmapState } = useEmbedMindmapContext()
+    const { setAutoSaveEnabled, setFullMindmapState } = useMindmapContext()
+
+    // Disable auto-save immediately - embed is read-only
+    useEffect(() => {
+        setAutoSaveEnabled(false)
+    }, [setAutoSaveEnabled])
 
     useEffect(() => {
+        // Prevent double loading
+        if (dataLoadedRef.current) return
+
         const loadEmbedMindmap = async () => {
             if (!embedToken) {
                 setError('Token không hợp lệ')
@@ -28,9 +38,20 @@ function EmbedInner() {
 
             try {
                 const mindmapData = await getEmbedMindmap(embedToken)
-                setFullMindmapState(mindmapData)
+
+                // Set title and owner for display
                 setMindmapTitle(mindmapData.title || 'Untitled Mindmap')
                 setOwnerName(mindmapData.ownerName || '')
+
+                // Create a modified mindmap without id to prevent socket connection
+                // The MindmapContext only joins socket when mindmap.id exists
+                const embedData: MindmapResponse = {
+                    ...mindmapData,
+                    id: '', // Empty id prevents socket connection
+                }
+
+                setFullMindmapState(embedData)
+                dataLoadedRef.current = true
                 setError(null)
             } catch (err: any) {
                 console.error('Error loading embed mindmap:', err)
@@ -93,9 +114,9 @@ function EmbedInner() {
                 )}
             </div>
 
-            {/* Canvas - Read-only, no realtime */}
+            {/* Canvas - Read-only */}
             <div className="flex-1 overflow-hidden">
-                <EmbedCanvas />
+                <Canvas readOnly={true} />
             </div>
 
             {/* Powered by footer */}
@@ -116,9 +137,9 @@ function EmbedInner() {
 function EmbedContent() {
     return (
         <ReactFlowProvider>
-            <EmbedMindmapProvider>
+            <MindmapProvider>
                 <EmbedInner />
-            </EmbedMindmapProvider>
+            </MindmapProvider>
         </ReactFlowProvider>
     )
 }
@@ -134,4 +155,5 @@ export default function EmbedPage() {
         </Suspense>
     )
 }
+
 
