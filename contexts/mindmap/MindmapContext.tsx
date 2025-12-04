@@ -313,8 +313,11 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         animated: e.animated !== undefined ? e.animated : true,
         type: e.type || 'smoothstep',
         markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+        // Remove handle references that may not exist on nodes
+        sourceHandle: null,
+        targetHandle: null,
       }
-      const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
+      const sig = `${String(base.source || '')}|${String(base.target || '')}`
       if (edgeSigs.has(sig)) continue
       let id = String(base.id || '')
       if (!id || edgeIds.has(id)) {
@@ -342,6 +345,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!mindmap) return
+    // Skip socket connection for embed mode (empty id)
+    if (!mindmap.id) return
     const s = getSocket()
     socketRef.current = s
     const payload: any = mindmap.isPublic === true && mindmap.shareToken
@@ -643,7 +648,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const run = async () => {
       const m = latestMindmapRef.current
-      if (!m) return
+      if (!m || !m.id) return // Skip if no mindmap or empty id (embed mode)
       try {
         const list = await fetchHistory(m.id, { limit: 50 })
         const hasSnap = Array.isArray(list) && list.some((it: any) => {
