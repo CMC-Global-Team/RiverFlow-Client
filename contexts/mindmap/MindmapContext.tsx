@@ -313,11 +313,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         animated: e.animated !== undefined ? e.animated : true,
         type: e.type || 'smoothstep',
         markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
-        // Remove handle references that may not exist on nodes
-        sourceHandle: null,
-        targetHandle: null,
       }
-      const sig = `${String(base.source || '')}|${String(base.target || '')}`
+      const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
       if (edgeSigs.has(sig)) continue
       let id = String(base.id || '')
       if (!id || edgeIds.has(id)) {
