@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState, useCallback } from "react"
+import { flushSync } from "react-dom"
 import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
@@ -170,14 +171,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Stream chunk received:', data.chunk.substring(0, 50) + '...')
-      setStreamingText((prev: string) => prev + data.chunk)
-      setMessages((m: typeof messages) => {
-        const newMsgs = [...m]
-        const lastMsg = newMsgs[newMsgs.length - 1]
-        if (lastMsg && lastMsg.streaming) {
-          lastMsg.text = lastMsg.text + data.chunk
-        }
-        return newMsgs
+
+      // Use flushSync to prevent React from batching state updates
+      // This ensures each chunk renders immediately for smooth streaming
+      flushSync(() => {
+        setStreamingText((prev: string) => prev + data.chunk)
+        setMessages((m: typeof messages) => {
+          const newMsgs = [...m]
+          const lastMsg = newMsgs[newMsgs.length - 1]
+          if (lastMsg && lastMsg.streaming) {
+            lastMsg.text = lastMsg.text + data.chunk
+          }
+          return newMsgs
+        })
       })
     }
 
@@ -209,14 +215,18 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Thinking Mode chunk received:', data.chunk.substring(0, 50) + '...')
-      setStreamingText((prev: string) => prev + data.chunk)
-      setMessages((m: typeof messages) => {
-        const newMsgs = [...m]
-        const lastMsg = newMsgs[newMsgs.length - 1]
-        if (lastMsg && lastMsg.streaming) {
-          lastMsg.text = lastMsg.text + data.chunk
-        }
-        return newMsgs
+
+      // Use flushSync to prevent React from batching state updates
+      flushSync(() => {
+        setStreamingText((prev: string) => prev + data.chunk)
+        setMessages((m: typeof messages) => {
+          const newMsgs = [...m]
+          const lastMsg = newMsgs[newMsgs.length - 1]
+          if (lastMsg && lastMsg.streaming) {
+            lastMsg.text = lastMsg.text + data.chunk
+          }
+          return newMsgs
+        })
       })
     }
 
