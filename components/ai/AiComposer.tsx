@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
-import { createThinkingOtmz, getThinkingActions, generateMindmapFromActions, type ThinkingModeRequest, type Otmz, type ActionList } from "@/services/ai/ai.service"
+import { type ThinkingModeRequest } from "@/services/ai/ai.service"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
@@ -150,14 +150,16 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     if (!mindmap?.id) return
 
     const socket = getSocket()
+
+    // Normal/Max mode streaming
     const handleStreamStart = () => {
       setStreamingText("")
-      setMessages((m) => [...m, { role: 'assistant', text: '', streaming: true }])
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
     }
 
     const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
-      setStreamingText((prev) => prev + data.chunk)
-      setMessages((m) => {
+      setStreamingText((prev: string) => prev + data.chunk)
+      setMessages((m: typeof messages) => {
         const newMsgs = [...m]
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
@@ -168,7 +170,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleStreamDone = () => {
-      setMessages((m) => {
+      setMessages((m: typeof messages) => {
         const newMsgs = [...m]
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
@@ -180,20 +182,64 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleStreamError = (data: { error: string }) => {
-      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
       setStreamingText("")
     }
 
+    // Thinking mode streaming
+    const handleThinkingStart = () => {
+      setStreamingText("")
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+    }
+
+    const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
+      setStreamingText((prev: string) => prev + data.chunk)
+      setMessages((m: typeof messages) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          lastMsg.text = lastMsg.text + data.chunk
+        }
+        return newMsgs
+      })
+    }
+
+    const handleThinkingDone = (data: { fullText: string }) => {
+      setMessages((m: typeof messages) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          delete lastMsg.streaming
+        }
+        return newMsgs
+      })
+      setStreamingText("")
+    }
+
+    const handleThinkingError = (data: { error: string }) => {
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
+      setStreamingText("")
+    }
+
+    // Register all listeners
     socket.on('ai:stream:start', handleStreamStart)
     socket.on('ai:stream:chunk', handleStreamChunk)
     socket.on('ai:stream:done', handleStreamDone)
     socket.on('ai:stream:error', handleStreamError)
+    socket.on('ai:thinking:start', handleThinkingStart)
+    socket.on('ai:thinking:chunk', handleThinkingChunk)
+    socket.on('ai:thinking:done', handleThinkingDone)
+    socket.on('ai:thinking:error', handleThinkingError)
 
     return () => {
       socket.off('ai:stream:start', handleStreamStart)
       socket.off('ai:stream:chunk', handleStreamChunk)
       socket.off('ai:stream:done', handleStreamDone)
       socket.off('ai:stream:error', handleStreamError)
+      socket.off('ai:thinking:start', handleThinkingStart)
+      socket.off('ai:thinking:chunk', handleThinkingChunk)
+      socket.off('ai:thinking:done', handleThinkingDone)
+      socket.off('ai:thinking:error', handleThinkingError)
     }
   }, [mindmap?.id])
 
@@ -215,71 +261,31 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
         const effectiveLang = (langPref === 'auto' ? lang : langPref) || 'vi'
 
-        if (mode === 'thinking') {
-          // === Thinking Mode: 3-step flow ===
-          // Step 1: Thinking (OTMZ) → Step 2: Agent (ActionList) → Step 3: Generator (Execute)
-          try {
-            const thinkingReq: ThinkingModeRequest = {
-              topic: text || mindmap.title || 'Untitled',
-              language: effectiveLang,
-              structureType,
-              levels,
-              firstLevelCount,
-              tags: [],
-              mode: 'thinking',
-            }
+        // All modes now use the same backend API
+        // Thinking Mode is handled server-side automatically
+        const payload: any = {
+          mindmapId: mindmap.id,
+          targetType: 'auto', // Let backend AI decide dynamically
+          nodeId: selectedNode ? selectedNode.id : undefined,
+          language: effectiveLang,
+          mode: mode, // Pass mode to backend (thinking/normal/max)
+          hints: text ? [text, buildContextHint()] : undefined,
+          levels,
+          firstLevelCount,
+          structureType,
+        }
+        const result = await optimizeMindmapByAI(payload)
+        setLastResult(result)
+        // Streaming responses are handled by WebSocket listeners above
+        // AI natural language is streamed directly to modal - no processing needed here
 
-            console.log('[AI Composer] Step 1: Calling Thinking (OTMZ)')
-            // Step 1: Thinking - optimize prompt to OTMZ
-            const otmz: Otmz = await createThinkingOtmz(thinkingReq, mindmap.id)
-
-            console.log('[AI Composer] Step 2: Calling Agent (ActionList)')
-            // Step 2: Agent - convert OTMZ to ActionList
-            const actionsRes: ActionList = await getThinkingActions(otmz, effectiveLang, mindmap.id)
-
-            console.log('[AI Composer] Step 3: Calling Generator (Execute)')
-            // Step 3: Generator - execute ActionList to create mindmap (with authentication)
-            const structType = otmz?.meta?.structureType || structureType || 'mindmap'
-            const generatedMindmap = await generateMindmapFromActions(actionsRes, mindmap.id, structType)
-            console.log('[AI Composer] Mindmap generated:', generatedMindmap)
-
-            // Reload mindmap to show new nodes (same as Normal mode)
-            console.log('[AI Composer] Reloading mindmap after Thinking mode to sync state')
-            if (mindmap?.id) {
-              await loadMindmap(mindmap.id)
-            }
-
-            console.log('[AI Composer] Thinking mode completed successfully!')
-          } catch (err) {
-            console.error('[AI Composer] Thinking mode error', err)
-            throw err
-          }
-        } else {
-          // === Normal / Max Mode: giữ nguyên flow optimizeMindmapByAI cũ ===
-          const payload: any = {
-            mindmapId: mindmap.id,
-            targetType: 'auto', // Let backend AI decide dynamically
-            nodeId: selectedNode ? selectedNode.id : undefined,
-            language: effectiveLang,
-            mode: mode, // Pass mode to backend for credit deduction
-            hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
-            levels,
-            firstLevelCount,
-            structureType,
-          }
-          const result = await optimizeMindmapByAI(payload)
-          setLastResult(result)
-          // Streaming responses are handled by WebSocket listeners above
-          // AI natural language is streamed directly to modal - no processing needed here
-
-          // CRITICAL FIX: Always reload mindmap after AI operations to prevent race condition
-          // Problem: Client's auto-save (1.5s after changes) was overwriting AI changes
-          // because client had stale state. This affected update_node, delete_node, add_node.
-          // Solution: Always reload from DB to sync state before auto-save triggers.
-          console.log('[AI Composer] Reloading mindmap after AI operation to sync state')
-          if (mindmap?.id) {
-            await loadMindmap(mindmap.id)
-          }
+        // CRITICAL FIX: Always reload mindmap after AI operations to prevent race condition
+        // Problem: Client's auto-save (1.5s after changes) was overwriting AI changes
+        // because client had stale state. This affected update_node, delete_node, add_node.
+        // Solution: Always reload from DB to sync state before auto-save triggers.
+        console.log('[AI Composer] Reloading mindmap after AI operation to sync state')
+        if (mindmap?.id) {
+          await loadMindmap(mindmap.id)
         }
       } else {
         const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
@@ -404,7 +410,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                 <DropdownMenuItem onClick={() => setMode("thinking")}>
                   <span className="flex-1">Thinking Mode</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    -3
+                    -4
                     <Coins className="size-4" />
                   </span>
                 </DropdownMenuItem>
