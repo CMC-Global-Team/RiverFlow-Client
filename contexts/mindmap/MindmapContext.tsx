@@ -46,6 +46,9 @@ interface MindmapContextType {
   // Access control state - triggers redirect when access is revoked
   accessRevoked: { revoked: boolean; reason?: string; message?: string } | null
   clearAccessRevoked: () => void
+  // Permission changed state - triggers page refresh when permissions change
+  permissionChanged: { changed: boolean; type?: 'public' | 'collaborator'; oldValue?: string; newValue?: string } | null
+  clearPermissionChanged: () => void
 }
 
 const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
@@ -227,6 +230,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   // Access control state - set when owner revokes access or removes collaborator
   const [accessRevoked, setAccessRevoked] = useState<{ revoked: boolean; reason?: string; message?: string } | null>(null)
   const currentUserIdRef = useRef<number | string | null>(null)
+
+  // Permission changed state - triggers page refresh when permissions change
+  const [permissionChanged, setPermissionChanged] = useState<{ changed: boolean; type?: 'public' | 'collaborator'; oldValue?: string; newValue?: string } | null>(null)
 
   const getSnapshot = useCallback(() => {
     return {
@@ -572,6 +578,43 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
     s.on('mindmap:collaborator:removed', onCollaboratorRemoved)
 
+    // Handle public permission change - when owner changes view/edit permission
+    const onPublicPermissionChanged = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m || data?.mindmapId !== m.id) return
+
+      // Don't refresh the owner's page
+      if (m.mysqlUserId === currentUserIdRef.current) return
+
+      console.log('[MindmapContext] Public permission changed:', data)
+      setPermissionChanged({
+        changed: true,
+        type: 'public',
+        oldValue: data?.oldAccessLevel,
+        newValue: data?.newAccessLevel
+      })
+    }
+    s.on('mindmap:public:permission:changed', onPublicPermissionChanged)
+
+    // Handle collaborator role change - when owner changes a collaborator's role
+    const onCollaboratorRoleChanged = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m || data?.mindmapId !== m.id) return
+
+      // Only trigger for the affected collaborator
+      const currentUserId = currentUserIdRef.current
+      if (data?.userId !== currentUserId) return
+
+      console.log('[MindmapContext] Collaborator role changed:', data)
+      setPermissionChanged({
+        changed: true,
+        type: 'collaborator',
+        oldValue: data?.oldRole,
+        newValue: data?.newRole
+      })
+    }
+    s.on('mindmap:collaborator:role:changed', onCollaboratorRoleChanged)
+
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -592,6 +635,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:ai:updated', onAiUpdated)
       s.off('mindmap:access:revoked', onAccessRevoked)
       s.off('mindmap:collaborator:removed', onCollaboratorRemoved)
+      s.off('mindmap:public:permission:changed', onPublicPermissionChanged)
+      s.off('mindmap:collaborator:role:changed', onCollaboratorRoleChanged)
     }
   }, [mindmap])
 
@@ -1126,6 +1171,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     },
     accessRevoked,
     clearAccessRevoked: () => setAccessRevoked(null),
+    permissionChanged,
+    clearPermissionChanged: () => setPermissionChanged(null),
   }
 
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>

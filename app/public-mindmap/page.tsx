@@ -34,6 +34,8 @@ function PublicMindmapInner() {
     saveMindmap,
     accessRevoked,
     clearAccessRevoked,
+    permissionChanged,
+    clearPermissionChanged,
   } = useMindmapContext()
 
   const { toast } = useToast()
@@ -102,6 +104,20 @@ function PublicMindmapInner() {
       router.push('/')
     }
   }, [accessRevoked, clearAccessRevoked, router, toast])
+
+  // Handle permission change - refresh page when permissions change
+  useEffect(() => {
+    if (permissionChanged?.changed) {
+      console.log('[PublicMindmap] Permission changed, refreshing page:', permissionChanged)
+      toast({
+        title: 'Permission Changed',
+        description: `Your access level has been updated. Refreshing page...`,
+      })
+      clearPermissionChanged()
+      // Refresh the page to get updated permissions
+      window.location.reload()
+    }
+  }, [permissionChanged, clearPermissionChanged, toast])
 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
