@@ -16,7 +16,12 @@ function EmbedInner() {
     const [mindmapTitle, setMindmapTitle] = useState<string>('')
     const [ownerName, setOwnerName] = useState<string>('')
 
-    const { setFullMindmapState } = useMindmapContext()
+    const { setFullMindmapState, setAutoSaveEnabled } = useMindmapContext()
+
+    // Disable auto-save for embed view - it's read-only
+    useEffect(() => {
+        setAutoSaveEnabled(false)
+    }, [setAutoSaveEnabled])
 
     useEffect(() => {
         const loadEmbedMindmap = async () => {
