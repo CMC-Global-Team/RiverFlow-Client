@@ -153,6 +153,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const lastFrameTimeRef = useRef(0)
   const streamTimeoutRef = useRef<NodeJS.Timeout>()
   const isActionListAnimatingRef = useRef(false) // Prevent handleThinkingDone from interrupting Action Plan
+  const isThinkingModeRef = useRef(false) // Track if we're in Thinking Mode
+  const finalResponseBufferRef = useRef("") // Separate buffer for final response in thinking mode
+  const thinkingAnalysisTextRef = useRef("") // Save thinking analysis text
 
   // Animation loop for smooth typewriter effect
   const animateTypewriter = useCallback((time: number) => {
@@ -221,6 +224,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     // Normal/Max mode streaming
     const handleStreamStart = () => {
       console.log('[AIComposer] Stream start event received')
+
+      // In Thinking Mode, DON'T create a new message yet - wait for actionlist to handle it
+      if (isThinkingModeRef.current) {
+        console.log('[AIComposer] In Thinking Mode - deferring stream message creation to actionlist handler')
+        finalResponseBufferRef.current = "" // Reset buffer for final response
+        return
+      }
+
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
       startTypewriter()
@@ -228,13 +239,50 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Stream chunk received:', data.chunk.substring(0, 50) + '...')
-      // Append to buffer, let animation loop handle display
+
+      // In Thinking Mode, append to separate final response buffer
+      if (isThinkingModeRef.current) {
+        finalResponseBufferRef.current += data.chunk
+        // Also append to streaming buffer if we're animating the final response
+        if (!isActionListAnimatingRef.current) {
+          streamingBufferRef.current += data.chunk
+        }
+        return
+      }
+
+      // Normal mode - append to main buffer
       streamingBufferRef.current += data.chunk
     }
 
     const handleStreamDone = () => {
       console.log('[AIComposer] Stream done event received')
-      // Don't stop animation immediately, let it finish displaying buffer
+
+      // In Thinking Mode, finalize the final response message
+      if (isThinkingModeRef.current) {
+        console.log('[AIComposer] Thinking Mode final response done')
+        isThinkingModeRef.current = false // Reset thinking mode flag
+
+        if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+        streamTimeoutRef.current = setTimeout(() => {
+          // Force completion
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = streamingBufferRef.current || finalResponseBufferRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+          isStreamingRef.current = false
+          isActionListAnimatingRef.current = false
+          setStreamingText("")
+        }, 1000)
+        return
+      }
+
+      // Normal mode
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
       streamTimeoutRef.current = setTimeout(() => {
@@ -268,6 +316,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleStreamError = (data: { error: string }) => {
       console.error('[AIComposer] Stream error:', data.error)
       isStreamingRef.current = false
+      isThinkingModeRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
       setStreamingText("")
@@ -276,6 +325,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     // Thinking mode streaming
     const handleThinkingStart = () => {
       console.log('[AIComposer] Thinking Mode stream start event received')
+      isThinkingModeRef.current = true // Mark that we're in Thinking Mode
+      thinkingAnalysisTextRef.current = "" // Reset
+      finalResponseBufferRef.current = "" // Reset
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
       startTypewriter()
@@ -284,6 +336,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
       console.log('[AIComposer] Thinking Mode chunk received:', data.chunk.substring(0, 50) + '...')
       streamingBufferRef.current += data.chunk
+      thinkingAnalysisTextRef.current += data.chunk // Save thinking analysis
     }
 
     const handleThinkingDone = (data: { fullText: string }) => {
@@ -296,7 +349,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         return
       }
 
-      // Similar to normal mode, let animation finish
+      // If we haven't received actionlist yet, just finalize thinking analysis
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
       streamTimeoutRef.current = setTimeout(() => {
@@ -329,6 +382,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleThinkingError = (data: { error: string }) => {
       console.error('[AIComposer] Thinking Mode stream error:', data.error)
       isStreamingRef.current = false
+      isThinkingModeRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
       setStreamingText("")
@@ -337,61 +391,38 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
       console.log('[AIComposer] Thinking Mode action list received:', data)
 
-      // Mark that we're now animating the action list - prevents handleThinkingDone from interrupting
+      // Mark that we're now animating the action list
       isActionListAnimatingRef.current = true
 
       // Clear any pending timeout
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
-      // Finalize previous message (the thinking analysis)
+      // Step 1: Finalize the thinking analysis message (message 1)
+      const savedThinkingText = thinkingAnalysisTextRef.current || streamingBufferRef.current
       setMessages((m) => {
         const newMsgs = [...m]
+        // Find the last streaming message (should be thinking analysis)
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
-          // Set full text for the thinking message before moving on
-          lastMsg.text = streamingBufferRef.current
+          lastMsg.text = savedThinkingText
           delete lastMsg.streaming
         }
         return newMsgs
       })
 
-      // Start new streaming message for Action Plan
+      // Step 2: Add Action Plan message (message 2) - show instantly for now
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
+
+      // Step 3: Add Final Response message (message 3) - streaming
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
 
-      // Reset typewriter for this new message
+      // Reset typewriter for final response
       isStreamingRef.current = true
-      streamingBufferRef.current = data.text
+      streamingBufferRef.current = finalResponseBufferRef.current // Use accumulated final response
       displayedTextRef.current = ""
       lastFrameTimeRef.current = 0
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = requestAnimationFrame(animateTypewriter)
-
-      // Set timeout to finish Action Plan animation
-      streamTimeoutRef.current = setTimeout(() => {
-        if (displayedTextRef.current !== streamingBufferRef.current) {
-          displayedTextRef.current = streamingBufferRef.current
-          setMessages((m) => {
-            const newMsgs = [...m]
-            const lastMsg = newMsgs[newMsgs.length - 1]
-            if (lastMsg && lastMsg.streaming) {
-              lastMsg.text = displayedTextRef.current
-              delete lastMsg.streaming
-            }
-            return newMsgs
-          })
-        } else {
-          setMessages((m) => {
-            const newMsgs = [...m]
-            const lastMsg = newMsgs[newMsgs.length - 1]
-            if (lastMsg && lastMsg.streaming) {
-              delete lastMsg.streaming
-            }
-            return newMsgs
-          })
-        }
-        isStreamingRef.current = false
-        isActionListAnimatingRef.current = false // Reset flag
-      }, Math.max(2000, data.text.length * 25)) // Give enough time for long action plans
     }
 
     // Register all listeners
@@ -407,6 +438,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     return () => {
       isStreamingRef.current = false
+      isThinkingModeRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
