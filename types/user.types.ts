@@ -32,3 +32,33 @@ export interface ApiErrorResponse {
   errors?: Record<string, string[]>;
 }
 
+// Admin User Management Types
+export interface AdminUserResponse {
+  userId: number;
+  email: string;
+  fullName: string;
+  avatar?: string | null;
+  role: string;
+  credit?: number;
+  preferredLanguage?: string | null;
+  timezone?: string | null;
+  theme?: string;
+  emailVerified?: boolean;
+  status?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string;
+}
+
+export interface AdminUpdateUserRequest {
+  fullName: string;
+  email?: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  size: number;
+  number: number;
+}
