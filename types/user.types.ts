@@ -38,21 +38,25 @@ export interface AdminUserResponse {
   email: string;
   fullName: string;
   avatar?: string | null;
-  role: string;
-  credit?: number;
+  role: 'admin' | 'user'; // Lowercase matches backend
+  credit: number;
   preferredLanguage?: string | null;
   timezone?: string | null;
-  theme?: string;
+  theme?: 'light' | 'dark' | 'auto';
   emailVerified?: boolean;
-  status?: string;
+  status: 'active' | 'suspended' | 'deleted'; // Lowercase matches backend
   createdAt?: string;
   updatedAt?: string;
   lastLoginAt?: string;
 }
 
 export interface AdminUpdateUserRequest {
-  fullName: string;
+  fullName?: string;
   email?: string;
+  password?: string; // Optional for password update
+  credit?: number;
+  role?: 'admin' | 'user';
+  status?: 'active' | 'suspended' | 'deleted';
 }
 
 export interface PageResponse<T> {
