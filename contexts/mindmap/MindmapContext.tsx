@@ -456,89 +456,80 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
     s.on('history:restore', onHistoryRestore)
 
-    // Permission change event listeners
-    const onPermissionCollaboratorChanged = async (data: any) => {
+    // Handle AI updates from other users - sync the entire mindmap state
+    const onAiUpdated = (data: any) => {
       const m = latestMindmapRef.current
       if (!m) return
 
-      toast({
-        title: "Permission Updated",
-        description: `Your access level has been changed to ${data.newRole === 'EDITOR' ? 'Editor' : 'Viewer'}`,
-      })
-
-      // Reload mindmap to get updated permissions
-      try {
-        const updated = await getMindmapById(m.id)
-        setFullMindmapState(updated)
-      } catch (e) {
-        console.error('Failed to reload mindmap after permission change:', e)
+      // Check if this update is from another user
+      const currentSocket = socketRef.current
+      if (currentSocket && data?.userId === currentSocket.userId) {
+        // This is our own update, skip (we already have the changes)
+        return
       }
-    }
 
-    const onPermissionCollaboratorRemoved = (data: any) => {
-      const m = latestMindmapRef.current
-      if (!m) return
+      console.log('[MindmapContext] Received AI update from another user:', data?.action)
 
-      toast({
-        title: "Access Removed",
-        description: "You have been removed from this mindmap",
-        variant: "destructive",
-      })
-
-      // Redirect to dashboard
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.href = '/'
-        }
-      }, 2000)
-    }
-
-    const onPermissionPublicChanged = async (data: any) => {
-      const m = latestMindmapRef.current
-      if (!m) return
-
-      const { isPublic, accessLevel } = data
-
-      // Show notification based on change
-      if (isPublic === false || accessLevel === 'private') {
-        toast({
-          title: "Mindmap is now Private",
-          description: "This mindmap is no longer publicly accessible",
-          variant: "destructive",
-        })
-        setTimeout(() => {
-          if (typeof window !== 'undefined') {
-            window.location.href = '/'
+      // Apply the new nodes and edges from AI
+      if (data?.nodes && Array.isArray(data.nodes)) {
+        isApplyingHistoryRef.current = true
+        setNodes(data.nodes.map((node: any) => {
+          const nodeType = node.type === 'default' ? 'rectangle' : node.type
+          return {
+            ...node,
+            type: nodeType,
+            data: {
+              label: 'Node',
+              description: '',
+              color: '#3b82f6',
+              ...node.data,
+              shape: node.data?.shape || nodeType || 'rectangle',
+            }
           }
-        }, 2000)
-      } else if (accessLevel === 'view') {
-        toast({
-          title: "Mindmap is now View-Only",
-          description: "You can only view this mindmap now",
-        })
-        try {
-          const updated = await getMindmapById(m.id)
-          setFullMindmapState(updated)
-        } catch (e) {
-          console.error('Failed to reload after permission change:', e)
-        }
-      } else if (accessLevel === 'edit') {
-        toast({
-          title: "Mindmap is now Editable",
-          description: "You can now edit this mindmap",
-        })
-        try {
-          const updated = await getMindmapById(m.id)
-          setFullMindmapState(updated)
-        } catch (e) {
-          console.error('Failed to reload after permission change:', e)
-        }
+        }))
       }
-    }
 
-    s.on('permission:collaborator:changed', onPermissionCollaboratorChanged)
-    s.on('permission:collaborator:removed', onPermissionCollaboratorRemoved)
-    s.on('permission:public:changed', onPermissionPublicChanged)
+      if (data?.edges && Array.isArray(data.edges)) {
+        const incomingEdges = data.edges
+        const edgeIds = new Set<string>()
+        const edgeSigs = new Set<string>()
+        const normalizedEdges: any[] = []
+        for (let i = 0; i < incomingEdges.length; i++) {
+          const e: any = incomingEdges[i] || {}
+          const base = {
+            ...e,
+            animated: e.animated !== undefined ? e.animated : true,
+            type: e.type || 'smoothstep',
+            markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+          }
+          const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
+          if (edgeSigs.has(sig)) continue
+          let id = String(base.id || '')
+          if (!id || edgeIds.has(id)) {
+            let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+            while (edgeIds.has(uid)) {
+              uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+            }
+            base.id = uid
+            id = uid
+          }
+          edgeIds.add(id)
+          edgeSigs.add(sig)
+          normalizedEdges.push(base)
+        }
+        setEdges(normalizedEdges)
+      }
+
+      isApplyingHistoryRef.current = false
+
+      // Show notification about AI update
+      toast({
+        title: 'AI Update',
+        description: 'Mindmap has been updated by AI',
+      })
+    }
+    s.on('mindmap:ai:updated', onAiUpdated)
+
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -556,9 +547,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:nodes:update', onNodeUpdate)
       s.off('mindmap:edges:update', onEdgeUpdate)
       s.off('history:restore', onHistoryRestore)
-      s.off('permission:collaborator:changed', onPermissionCollaboratorChanged)
-      s.off('permission:collaborator:removed', onPermissionCollaboratorRemoved)
-      s.off('permission:public:changed', onPermissionPublicChanged)
+      s.off('mindmap:ai:updated', onAiUpdated)
     }
   }, [mindmap])
 
