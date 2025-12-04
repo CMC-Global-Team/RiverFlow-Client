@@ -116,7 +116,7 @@ function EmbedInner() {
 
             {/* Canvas - Read-only */}
             <div className="flex-1 overflow-hidden">
-                <Canvas readOnly={true} />
+                <Canvas readOnly={true} hidePresence={true} />
             </div>
 
             {/* Powered by footer */}
