@@ -153,19 +153,23 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     // Join both mindmap room (if exists) and user room for AI events
     if (mindmap?.id) {
+      console.log('[AIComposer] Joining mindmap room:', mindmap.id)
       socket.emit('mindmap:join', { mindmapId: mindmap.id })
     }
     if (user?.userId) {
+      console.log('[AIComposer] Joining user room:', `user:${user.userId}`)
       socket.emit('mindmap:join', { mindmapId: `user:${user.userId}` })
     }
 
     // Normal/Max mode streaming
     const handleStreamStart = () => {
+      console.log('[AIComposer] Stream start event received')
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
     }
 
     const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
+      console.log('[AIComposer] Stream chunk received:', data.chunk.substring(0, 50) + '...')
       setStreamingText((prev: string) => prev + data.chunk)
       setMessages((m: typeof messages) => {
         const newMsgs = [...m]
@@ -178,6 +182,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleStreamDone = () => {
+      console.log('[AIComposer] Stream done event received')
       setMessages((m: typeof messages) => {
         const newMsgs = [...m]
         const lastMsg = newMsgs[newMsgs.length - 1]
@@ -190,17 +195,20 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleStreamError = (data: { error: string }) => {
+      console.error('[AIComposer] Stream error:', data.error)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
       setStreamingText("")
     }
 
     // Thinking mode streaming
     const handleThinkingStart = () => {
+      console.log('[AIComposer] Thinking Mode stream start event received')
       setStreamingText("")
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
     }
 
     const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
+      console.log('[AIComposer] Thinking Mode chunk received:', data.chunk.substring(0, 50) + '...')
       setStreamingText((prev: string) => prev + data.chunk)
       setMessages((m: typeof messages) => {
         const newMsgs = [...m]
@@ -213,6 +221,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleThinkingDone = (data: { fullText: string }) => {
+      console.log('[AIComposer] Thinking Mode stream done event received')
       setMessages((m: typeof messages) => {
         const newMsgs = [...m]
         const lastMsg = newMsgs[newMsgs.length - 1]
@@ -225,12 +234,13 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
 
     const handleThinkingError = (data: { error: string }) => {
+      console.error('[AIComposer] Thinking Mode stream error:', data.error)
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
       setStreamingText("")
     }
 
     const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
-      console.log('[AIComposer] Received action list:', data)
+      console.log('[AIComposer] Thinking Mode action list received:', data)
       // Add action list as a separate message
       setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
     }
