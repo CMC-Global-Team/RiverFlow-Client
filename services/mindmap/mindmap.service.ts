@@ -291,15 +291,15 @@ export const searchMindmaps = async (keyword: string): Promise<MindmapSummary[]>
 };
 
 export const undoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
-    // Gọi API /api/mindmaps/{id}/undo
-    const response = await apiClient.post(`/mindmaps/${mindmapId}/undo`);
-    return response.data;
+  // Gọi API /api/mindmaps/{id}/undo
+  const response = await apiClient.post(`/mindmaps/${mindmapId}/undo`);
+  return response.data;
 };
 
 export const redoMindmap = async (mindmapId: string): Promise<MindmapResponse> => {
-    // Gọi API /api/mindmaps/{id}/redo
-    const response = await apiClient.post(`/mindmaps/${mindmapId}/redo`);
-    return response.data;
+  // Gọi API /api/mindmaps/{id}/redo
+  const response = await apiClient.post(`/mindmaps/${mindmapId}/redo`);
+  return response.data;
 };
 
 /**
@@ -315,7 +315,7 @@ export const duplicateMindmap = async (mindmapId: string): Promise<MindmapRespon
     if (error instanceof AxiosError) {
       console.error('Lỗi khi nhân bản mindmap:', error.response?.data || error.message);
     }
-    throw error; 
+    throw error;
   }
 };
 
@@ -324,8 +324,8 @@ export const duplicateMindmap = async (mindmapId: string): Promise<MindmapRespon
  * POST /api/mindmaps/{id}/collaborators/invite
  */
 export const inviteCollaborator = async (
-  mindmapId: string, 
-  email: string, 
+  mindmapId: string,
+  email: string,
   role: "EDITOR" | "VIEWER"
 ) => {
   const response = await apiClient.post(`/mindmaps/${mindmapId}/collaborators/invite`, {
@@ -405,3 +405,29 @@ export const updatePublicAccess = async (
   return response.data;
 };
 
+/**
+ * Update embed settings for a mindmap (owner only)
+ * PUT /api/mindmaps/{id}/embed
+ */
+export const updateEmbedSettings = async (
+  mindmapId: string,
+  isEmbedEnabled: boolean
+): Promise<MindmapResponse> => {
+  const response = await apiClient.put<MindmapResponse>(`/mindmaps/${mindmapId}/embed`, {
+    isEmbedEnabled
+  });
+  return response.data;
+};
+
+/**
+ * Get mindmap for embed view (NO AUTH REQUIRED)
+ * GET /api/mindmaps/embed/{embedToken}
+ */
+export const getEmbedMindmap = async (
+  embedToken: string
+): Promise<MindmapResponse> => {
+  const response = await apiClient.get<MindmapResponse>(`/mindmaps/embed/${embedToken}`, {
+    headers: { 'X-Allow-Public-Auth': '1' }
+  });
+  return response.data;
+};
