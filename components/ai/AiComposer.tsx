@@ -229,6 +229,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       setStreamingText("")
     }
 
+    const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
+      // Add action list as a separate message
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
+    }
+
     // Register all listeners
     socket.on('ai:stream:start', handleStreamStart)
     socket.on('ai:stream:chunk', handleStreamChunk)
@@ -238,6 +243,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     socket.on('ai:thinking:chunk', handleThinkingChunk)
     socket.on('ai:thinking:done', handleThinkingDone)
     socket.on('ai:thinking:error', handleThinkingError)
+    socket.on('ai:thinking:actionlist', handleThinkingActionList)
 
     return () => {
       socket.off('ai:stream:start', handleStreamStart)
@@ -248,6 +254,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       socket.off('ai:thinking:chunk', handleThinkingChunk)
       socket.off('ai:thinking:done', handleThinkingDone)
       socket.off('ai:thinking:error', handleThinkingError)
+      socket.off('ai:thinking:actionlist', handleThinkingActionList)
     }
   }, [mindmap?.id, user?.userId])
 
