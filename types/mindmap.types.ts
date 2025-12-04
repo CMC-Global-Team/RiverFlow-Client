@@ -76,6 +76,8 @@ export interface MindmapResponse {
   canRedo: boolean;
   ownerName?: string;
   ownerAvatar?: string;
+  isEmbedEnabled?: boolean;
+  embedToken?: string;
 }
 
 // Mindmap summary (for list views)

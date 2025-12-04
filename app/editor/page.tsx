@@ -18,6 +18,7 @@ import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
 import PublicShareModal from "@/components/mindmap/PublicShareModal"
+import EmbedModal from "@/components/mindmap/EmbedModal"
 import {
   inviteCollaborator,
   updateCollaboratorRole,
@@ -26,7 +27,8 @@ import {
   getCollaborators,
   getPendingInvitations,
   getPublicMindmap,
-  getMindmapById
+  getMindmapById,
+  updateEmbedSettings
 } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
@@ -59,6 +61,7 @@ function EditorInner() {
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isEmbedOpen, setIsEmbedOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
@@ -525,6 +528,29 @@ function EditorInner() {
     }
   }
 
+  const handleToggleEmbed = async (isEmbedEnabled: boolean) => {
+    if (!mindmapId) return;
+
+    try {
+      const updated = await updateEmbedSettings(mindmapId, isEmbedEnabled)
+      setFullMindmapState(updated)
+
+      toast({
+        description: isEmbedEnabled
+          ? "Đã bật tính năng nhúng mindmap"
+          : "Đã tắt tính năng nhúng mindmap",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật cài đặt nhúng",
+      })
+      throw error;
+    }
+  }
+
   if (!mindmap && mindmapId) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -561,6 +587,7 @@ function EditorInner() {
               saveStatus={saveStatus}
               handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
+              onEmbedClick={() => setIsEmbedOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
               onChatClick={() => setIsChatOpen(true)}
@@ -600,11 +627,24 @@ function EditorInner() {
         <PublicShareModal
           isOpen={isShareOpen}
           onClose={() => setIsShareOpen(false)}
-          mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+          mindmapTitle={mindmap?.title || 'Untitled Mindmap'}
           shareToken={mindmap?.shareToken}
           ownerName={mindmap?.ownerName}
           ownerAvatar={mindmap?.ownerAvatar}
-          publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+          publicAccessLevel={mindmap?.publicAccessLevel || 'private'}
+        />
+      )}
+
+      {/* Embed Modal - Only for owners */}
+      {user?.userId === mindmap?.mysqlUserId && (
+        <EmbedModal
+          isOpen={isEmbedOpen}
+          onClose={() => setIsEmbedOpen(false)}
+          mindmapId={mindmapId || ''}
+          mindmapTitle={mindmap?.title || 'Untitled Mindmap'}
+          embedToken={mindmap?.embedToken}
+          isEmbedEnabled={mindmap?.isEmbedEnabled || false}
+          onToggleEmbed={handleToggleEmbed}
         />
       )}
     </div>
