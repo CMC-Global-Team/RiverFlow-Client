@@ -71,17 +71,19 @@ const UserTable: React.FC<UserTableProps> = ({ users, loading, onEdit, onDelete 
                                     {user.fullName}
                                 </td>
                                 <td className="border border-border p-3 text-sm">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'ADMIN'
-                                            ? 'bg-yellow-500 text-white'
-                                            : 'bg-blue-500 text-white'
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'admin'
+                                        ? 'bg-yellow-500 text-white'
+                                        : 'bg-blue-500 text-white'
                                         }`}>
                                         {user.role}
                                     </span>
                                 </td>
                                 <td className="border border-border p-3 text-sm">
-                                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'ACTIVE'
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${String(user.status).toLowerCase() === 'active'
                                             ? 'bg-green-500 text-white'
-                                            : 'bg-red-500 text-white'
+                                            : String(user.status).toLowerCase() === 'suspended'
+                                                ? 'bg-orange-500 text-white'
+                                                : 'bg-red-500 text-white'
                                         }`}>
                                         {user.status || 'N/A'}
                                     </span>
