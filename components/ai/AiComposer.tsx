@@ -426,7 +426,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                 <DropdownMenuItem onClick={() => setMode("thinking")}>
                   <span className="flex-1">Thinking Mode</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
-                    -4
+                    -3
                     <Coins className="size-4" />
                   </span>
                 </DropdownMenuItem>
