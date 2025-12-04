@@ -43,6 +43,9 @@ interface MindmapContextType {
   emitCursor: (cursor: { x: number; y: number }) => void
   emitActive: (active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => void
   clearActive: () => void
+  // Access control state - triggers redirect when access is revoked
+  accessRevoked: { revoked: boolean; reason?: string; message?: string } | null
+  clearAccessRevoked: () => void
 }
 
 const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
@@ -220,6 +223,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
   const serverHistoryCursorRef = useRef<number | null>(null)
   const isApplyingHistoryRef = useRef(false)
+
+  // Access control state - set when owner revokes access or removes collaborator
+  const [accessRevoked, setAccessRevoked] = useState<{ revoked: boolean; reason?: string; message?: string } | null>(null)
+  const currentUserIdRef = useRef<number | string | null>(null)
 
   const getSnapshot = useCallback(() => {
     return {
@@ -530,6 +537,41 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
     s.on('mindmap:ai:updated', onAiUpdated)
 
+    // Handle access revocation - when owner turns off public access or changes to private
+    const onAccessRevoked = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m || data?.mindmapId !== m.id) return
+
+      // Don't redirect the owner
+      if (m.mysqlUserId === currentUserIdRef.current) return
+
+      console.log('[MindmapContext] Access revoked:', data)
+      setAccessRevoked({
+        revoked: true,
+        reason: data?.reason || 'public_access_disabled',
+        message: 'This mindmap is no longer publicly accessible.'
+      })
+    }
+    s.on('mindmap:access:revoked', onAccessRevoked)
+
+    // Handle collaborator removal - when owner removes a collaborator
+    const onCollaboratorRemoved = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m || data?.mindmapId !== m.id) return
+
+      // Only redirect the removed user
+      const currentUserId = currentUserIdRef.current
+      if (data?.removedUserId !== currentUserId) return
+
+      console.log('[MindmapContext] Collaborator removed:', data)
+      setAccessRevoked({
+        revoked: true,
+        reason: 'collaborator_removed',
+        message: 'You have been removed from this mindmap.'
+      })
+    }
+    s.on('mindmap:collaborator:removed', onCollaboratorRemoved)
+
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -548,6 +590,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:edges:update', onEdgeUpdate)
       s.off('history:restore', onHistoryRestore)
       s.off('mindmap:ai:updated', onAiUpdated)
+      s.off('mindmap:access:revoked', onAccessRevoked)
+      s.off('mindmap:collaborator:removed', onCollaboratorRemoved)
     }
   }, [mindmap])
 
@@ -1049,6 +1093,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const room = roomRef.current
       if (s && room) {
         lastPresenceInfoRef.current = info
+        currentUserIdRef.current = info?.userId || null
         emitPresenceAnnounce(s, room, info)
         setParticipants((prev) => ({
           ...prev,
@@ -1079,6 +1124,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const room = roomRef.current
       if (s && room) emitPresenceClear(s, room)
     },
+    accessRevoked,
+    clearAccessRevoked: () => setAccessRevoked(null),
   }
 
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>

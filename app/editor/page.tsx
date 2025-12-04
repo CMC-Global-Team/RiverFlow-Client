@@ -50,6 +50,8 @@ function EditorInner() {
     setAutoSaveEnabled,
     saveStatus,
     setFullMindmapState,
+    accessRevoked,
+    clearAccessRevoked,
   } = useMindmapContext()
 
   const { toast } = useToast()
@@ -107,6 +109,20 @@ function EditorInner() {
       setAutoSaveEnabled(false)
     }
   }, [userRole, setAutoSaveEnabled])
+
+  // Handle access revocation - redirect to home page when access is revoked
+  useEffect(() => {
+    if (accessRevoked?.revoked) {
+      console.log('[Editor] Access revoked, redirecting to home:', accessRevoked)
+      toast({
+        title: 'Access Revoked',
+        description: accessRevoked.message || 'You no longer have access to this mindmap.',
+        variant: 'destructive',
+      })
+      clearAccessRevoked()
+      router.push('/')
+    }
+  }, [accessRevoked, clearAccessRevoked, router, toast])
 
   // Load collaborators when mindmap is loaded
   useEffect(() => {
