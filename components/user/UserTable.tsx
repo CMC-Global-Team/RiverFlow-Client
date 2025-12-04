@@ -59,51 +59,49 @@ const UserTable: React.FC<UserTableProps> = ({ users, loading, onEdit, onDelete 
                             </td>
                         </tr>
                     ) : (
-                        users
-                            .filter(user => !user.status || user.status === 'ACTIVE')
-                            .map(user => (
-                                <tr key={user.userId} className="border-b border-border hover:bg-muted/30 transition-colors">
-                                    <td className="border border-border p-3 text-sm">
-                                        {user.userId}
-                                    </td>
-                                    <td className="border border-border p-3 text-sm">
-                                        {user.email}
-                                    </td>
-                                    <td className="border border-border p-3 text-sm">
-                                        {user.fullName}
-                                    </td>
-                                    <td className="border border-border p-3 text-sm">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'ADMIN'
-                                                ? 'bg-yellow-500 text-white'
-                                                : 'bg-blue-500 text-white'
-                                            }`}>
-                                            {user.role}
-                                        </span>
-                                    </td>
-                                    <td className="border border-border p-3 text-sm">
-                                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'ACTIVE'
-                                                ? 'bg-green-500 text-white'
-                                                : 'bg-red-500 text-white'
-                                            }`}>
-                                            {user.status || 'N/A'}
-                                        </span>
-                                    </td>
-                                    <td className="border border-border p-3 text-center">
-                                        <button
-                                            onClick={() => onEdit(user)}
-                                            className="mr-2 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
-                                        >
-                                            Sửa
-                                        </button>
-                                        <button
-                                            onClick={() => onDelete(user.userId)}
-                                            className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
-                                        >
-                                            Xóa
-                                        </button>
-                                    </td>
-                                </tr>
-                            ))
+                        users.map(user => (
+                            <tr key={user.userId} className="border-b border-border hover:bg-muted/30 transition-colors">
+                                <td className="border border-border p-3 text-sm">
+                                    {user.userId}
+                                </td>
+                                <td className="border border-border p-3 text-sm">
+                                    {user.email}
+                                </td>
+                                <td className="border border-border p-3 text-sm">
+                                    {user.fullName}
+                                </td>
+                                <td className="border border-border p-3 text-sm">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'ADMIN'
+                                            ? 'bg-yellow-500 text-white'
+                                            : 'bg-blue-500 text-white'
+                                        }`}>
+                                        {user.role}
+                                    </span>
+                                </td>
+                                <td className="border border-border p-3 text-sm">
+                                    <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'ACTIVE'
+                                            ? 'bg-green-500 text-white'
+                                            : 'bg-red-500 text-white'
+                                        }`}>
+                                        {user.status || 'N/A'}
+                                    </span>
+                                </td>
+                                <td className="border border-border p-3 text-center">
+                                    <button
+                                        onClick={() => onEdit(user)}
+                                        className="mr-2 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
+                                    >
+                                        Sửa
+                                    </button>
+                                    <button
+                                        onClick={() => onDelete(user.userId)}
+                                        className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
+                                    >
+                                        Xóa
+                                    </button>
+                                </td>
+                            </tr>
+                        ))
                     )}
                 </tbody>
             </table>
