@@ -3,8 +3,8 @@
 import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { ReactFlowProvider } from "reactflow"
-import { MindmapProvider, useMindmapContext } from "@/contexts/mindmap/MindmapContext"
-import Canvas from "@/components/editor/canvas"
+import { EmbedMindmapProvider, useEmbedMindmapContext } from "@/contexts/mindmap/EmbedMindmapContext"
+import EmbedCanvas from "@/components/editor/embed-canvas"
 import { getEmbedMindmap } from "@/services/mindmap/mindmap.service"
 import { Loader2, AlertCircle, Code } from "lucide-react"
 
@@ -16,12 +16,7 @@ function EmbedInner() {
     const [mindmapTitle, setMindmapTitle] = useState<string>('')
     const [ownerName, setOwnerName] = useState<string>('')
 
-    const { setFullMindmapState, setAutoSaveEnabled } = useMindmapContext()
-
-    // Disable auto-save for embed view - it's read-only
-    useEffect(() => {
-        setAutoSaveEnabled(false)
-    }, [setAutoSaveEnabled])
+    const { setFullMindmapState } = useEmbedMindmapContext()
 
     useEffect(() => {
         const loadEmbedMindmap = async () => {
@@ -98,9 +93,9 @@ function EmbedInner() {
                 )}
             </div>
 
-            {/* Canvas - Read-only */}
+            {/* Canvas - Read-only, no realtime */}
             <div className="flex-1 overflow-hidden">
-                <Canvas readOnly={true} />
+                <EmbedCanvas />
             </div>
 
             {/* Powered by footer */}
@@ -121,9 +116,9 @@ function EmbedInner() {
 function EmbedContent() {
     return (
         <ReactFlowProvider>
-            <MindmapProvider>
+            <EmbedMindmapProvider>
                 <EmbedInner />
-            </MindmapProvider>
+            </EmbedMindmapProvider>
         </ReactFlowProvider>
     )
 }
@@ -139,3 +134,4 @@ export default function EmbedPage() {
         </Suspense>
     )
 }
+

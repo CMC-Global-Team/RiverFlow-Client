@@ -157,12 +157,11 @@ export default function EmbedModal({
                                     />
                                     <Button
                                         size="icon"
-                                        variant="secondary"
-                                        className="shrink-0 border shadow-sm"
+                                        className="shrink-0 bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
                                         onClick={() => handleCopy('link')}
                                     >
                                         {copiedType === 'link'
-                                            ? <Check className="h-4 w-4 text-green-600" />
+                                            ? <Check className="h-4 w-4" />
                                             : <Copy className="h-4 w-4" />
                                         }
                                     </Button>
@@ -181,25 +180,15 @@ export default function EmbedModal({
                                     </pre>
                                     <Button
                                         size="icon"
-                                        variant="secondary"
-                                        className="absolute top-2 right-2 h-7 w-7 border shadow-sm"
+                                        className="absolute top-2 right-2 h-7 w-7 bg-blue-500 hover:bg-blue-600 text-white shadow-sm"
                                         onClick={() => handleCopy('iframe')}
                                     >
                                         {copiedType === 'iframe'
-                                            ? <Check className="h-3 w-3 text-green-600" />
+                                            ? <Check className="h-3 w-3" />
                                             : <Copy className="h-3 w-3" />
                                         }
                                     </Button>
                                 </div>
-                            </div>
-
-                            {/* Preview info */}
-                            <div className="rounded-lg bg-blue-50 dark:bg-blue-950/50 p-3 text-sm text-blue-700 dark:text-blue-300">
-                                <p className="font-medium mb-1">💡 Lưu ý</p>
-                                <p className="text-xs">
-                                    Mindmap được nhúng sẽ ở chế độ chỉ xem. Người dùng có thể phóng to, thu nhỏ và di chuyển
-                                    nhưng không thể chỉnh sửa nội dung.
-                                </p>
                             </div>
                         </>
                     )}
