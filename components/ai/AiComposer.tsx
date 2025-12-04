@@ -151,6 +151,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const isStreamingRef = useRef(false)
   const animationFrameRef = useRef<number>()
   const lastFrameTimeRef = useRef(0)
+  const streamTimeoutRef = useRef<NodeJS.Timeout>()
 
   // Animation loop for smooth typewriter effect
   const animateTypewriter = useCallback((time: number) => {
@@ -207,6 +208,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     // Start typewriter animation
     const startTypewriter = () => {
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
       isStreamingRef.current = true
       streamingBufferRef.current = ""
       displayedTextRef.current = ""
@@ -232,21 +234,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleStreamDone = () => {
       console.log('[AIComposer] Stream done event received')
       // Don't stop animation immediately, let it finish displaying buffer
-      // We just mark streaming as done, but loop continues until displayed == buffer
-      // However, we need to eventually clean up the 'streaming' flag in messages
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
-      // We can't easily know when animation finishes inside this callback
-      // So we'll set a timeout or check in the animation loop
-
-      // For simplicity, let's just ensure we catch up quickly if needed
-      // But to keep it smooth, we let the loop finish naturally
-
-      // We need a way to remove the 'streaming' flag from message when done
-      // Let's do it in the animation loop when it finishes?
-      // Or just leave it for now, the 'streaming' flag is mostly for UI styling if any
-
-      // Let's update the final state after a delay to ensure completion
-      setTimeout(() => {
+      streamTimeoutRef.current = setTimeout(() => {
         // Force completion if stuck
         if (displayedTextRef.current !== streamingBufferRef.current) {
           displayedTextRef.current = streamingBufferRef.current
@@ -271,7 +261,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         }
         isStreamingRef.current = false
         setStreamingText("")
-      }, 1000) // Give it 1s to finish animating, or force it
+      }, 1000) // Give it 1s to finish animating
     }
 
     const handleStreamError = (data: { error: string }) => {
@@ -298,7 +288,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleThinkingDone = (data: { fullText: string }) => {
       console.log('[AIComposer] Thinking Mode stream done event received')
       // Similar to normal mode, let animation finish
-      setTimeout(() => {
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+      streamTimeoutRef.current = setTimeout(() => {
         if (displayedTextRef.current !== streamingBufferRef.current) {
           displayedTextRef.current = streamingBufferRef.current
           setMessages((m) => {
@@ -335,8 +327,58 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
       console.log('[AIComposer] Thinking Mode action list received:', data)
-      // Add action list as a separate message
-      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
+
+      // Clear any pending timeout from thinking done
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+      // Finalize previous message if needed
+      setMessages((m) => {
+        const newMsgs = [...m]
+        const lastMsg = newMsgs[newMsgs.length - 1]
+        if (lastMsg && lastMsg.streaming) {
+          // Ensure it has full text if we cut it short
+          // But actually, for Action List, we want to start a NEW message
+          delete lastMsg.streaming
+        }
+        return newMsgs
+      })
+
+      // Start new streaming message for Action Plan
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+
+      // Reset typewriter for this new message
+      isStreamingRef.current = true
+      streamingBufferRef.current = data.text
+      displayedTextRef.current = ""
+      lastFrameTimeRef.current = 0
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = requestAnimationFrame(animateTypewriter)
+
+      // Set timeout to finish this one too
+      streamTimeoutRef.current = setTimeout(() => {
+        if (displayedTextRef.current !== streamingBufferRef.current) {
+          displayedTextRef.current = streamingBufferRef.current
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = displayedTextRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        } else {
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        }
+        isStreamingRef.current = false
+      }, Math.max(1000, data.text.length * 20)) // Give enough time for long action plans
     }
 
     // Register all listeners
@@ -353,6 +395,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return () => {
       isStreamingRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
       socket.off('ai:stream:start', handleStreamStart)
       socket.off('ai:stream:chunk', handleStreamChunk)
@@ -366,7 +409,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     }
   }, [mindmap?.id, user?.userId, animateTypewriter])
 
-  // Removed composeAgentPlan - backend AI handles all planning now
+  // Removed composeAgentPlan - backend AI handles all planning
 
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
@@ -580,14 +623,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             <ScrollArea className="h-[360px] p-3">
               <div className="space-y-4">
                 {messages.map((m, i) => (
-                  <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                  <div key={i} className={m.role === "user" ? "flex justify-end animate-in fade-in slide-in-from-bottom-2 duration-300" : "flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300"}>
                     <div className="flex flex-col items-start gap-1">
                       {m.role !== "user" ? (
                         <div className="text-[11px] text-muted-foreground">RiverFlow Agent</div>
                       ) : null}
                       <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
                         <div className="whitespace-pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>
-                          {m.text.split('\n').map((line, idx) => (
+                          {m.text ? m.text.split('\n').map((line, idx) => (
                             <div key={idx}>
                               {line.startsWith('**') && line.endsWith('**') ? (
                                 <strong>{line.slice(2, -2)}</strong>
@@ -597,7 +640,9 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                                 line || <br />
                               )}
                             </div>
-                          ))}
+                          )) : (
+                            m.streaming ? <span className="animate-pulse">...</span> : null
+                          )}
                         </div>
                       </div>
                       {m.role === "user" && m.mode ? (
