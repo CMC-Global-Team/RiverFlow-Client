@@ -11,8 +11,8 @@ interface UserTableProps {
 const UserTable: React.FC<UserTableProps> = ({ users, loading, onEdit, onDelete }) => {
     if (loading) {
         return (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <p>Đang tải dữ liệu...</p>
+            <div className="p-8 text-center">
+                <p className="text-muted-foreground">Đang tải dữ liệu...</p>
             </div>
         );
     }
@@ -20,40 +20,33 @@ const UserTable: React.FC<UserTableProps> = ({ users, loading, onEdit, onDelete 
     // Safety check for users array
     if (!users || !Array.isArray(users)) {
         return (
-            <div style={{ padding: '2rem', textAlign: 'center' }}>
-                <p>Không có dữ liệu</p>
+            <div className="p-8 text-center">
+                <p className="text-muted-foreground">Không có dữ liệu</p>
             </div>
         );
     }
 
     return (
-        <div style={{ overflowX: 'auto' }}>
-            <table style={{
-                width: '100%',
-                borderCollapse: 'collapse',
-                backgroundColor: 'white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-                borderRadius: '8px',
-                overflow: 'hidden'
-            }}>
+        <div className="overflow-x-auto">
+            <table className="w-full border-collapse bg-card shadow-sm rounded-lg overflow-hidden">
                 <thead>
-                    <tr style={{ backgroundColor: '#f8f9fa' }}>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: '600' }}>
+                    <tr className="bg-muted/50">
+                        <th className="border border-border p-3 text-left font-semibold text-sm">
                             ID
                         </th>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: '600' }}>
+                        <th className="border border-border p-3 text-left font-semibold text-sm">
                             Email
                         </th>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: '600' }}>
+                        <th className="border border-border p-3 text-left font-semibold text-sm">
                             Tên
                         </th>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: '600' }}>
+                        <th className="border border-border p-3 text-left font-semibold text-sm">
                             Vai Trò
                         </th>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'left', fontWeight: '600' }}>
+                        <th className="border border-border p-3 text-left font-semibold text-sm">
                             Trạng Thái
                         </th>
-                        <th style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center', fontWeight: '600' }}>
+                        <th className="border border-border p-3 text-center font-semibold text-sm">
                             Thao Tác
                         </th>
                     </tr>
@@ -61,90 +54,56 @@ const UserTable: React.FC<UserTableProps> = ({ users, loading, onEdit, onDelete 
                 <tbody>
                     {users.length === 0 ? (
                         <tr>
-                            <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>
+                            <td colSpan={6} className="p-8 text-center text-muted-foreground">
                                 Không có người dùng nào
                             </td>
                         </tr>
                     ) : (
-                        users.map(user => {
-                            console.log('Rendering user:', user.userId, 'Status:', user.status); // Debug log
-                            return (
-                                <tr key={user.userId} style={{ borderBottom: '1px solid #ddd' }}>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>
+                        users
+                            .filter(user => !user.status || user.status === 'ACTIVE')
+                            .map(user => (
+                                <tr key={user.userId} className="border-b border-border hover:bg-muted/30 transition-colors">
+                                    <td className="border border-border p-3 text-sm">
                                         {user.userId}
                                     </td>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>
+                                    <td className="border border-border p-3 text-sm">
                                         {user.email}
                                     </td>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>
+                                    <td className="border border-border p-3 text-sm">
                                         {user.fullName}
                                     </td>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>
-                                        <span style={{
-                                            padding: '0.25rem 0.5rem',
-                                            borderRadius: '4px',
-                                            backgroundColor: user.role === 'ADMIN' ? '#ffc107' : '#17a2b8',
-                                            color: 'white',
-                                            fontSize: '0.875rem',
-                                            fontWeight: '500'
-                                        }}>
+                                    <td className="border border-border p-3 text-sm">
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.role === 'ADMIN'
+                                                ? 'bg-yellow-500 text-white'
+                                                : 'bg-blue-500 text-white'
+                                            }`}>
                                             {user.role}
                                         </span>
                                     </td>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px' }}>
-                                        <span style={{
-                                            padding: '0.25rem 0.5rem',
-                                            borderRadius: '4px',
-                                            backgroundColor: user.status === 'ACTIVE' ? '#28a745' : '#dc3545',
-                                            color: 'white',
-                                            fontSize: '0.875rem',
-                                            fontWeight: '500'
-                                        }}>
+                                    <td className="border border-border p-3 text-sm">
+                                        <span className={`px-2 py-1 rounded text-xs font-medium ${user.status === 'ACTIVE'
+                                                ? 'bg-green-500 text-white'
+                                                : 'bg-red-500 text-white'
+                                            }`}>
                                             {user.status || 'N/A'}
                                         </span>
                                     </td>
-                                    <td style={{ border: '1px solid #ddd', padding: '12px', textAlign: 'center' }}>
+                                    <td className="border border-border p-3 text-center">
                                         <button
                                             onClick={() => onEdit(user)}
-                                            style={{
-                                                marginRight: '0.5rem',
-                                                padding: '0.375rem 0.75rem',
-                                                backgroundColor: '#007bff',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontSize: '0.875rem',
-                                                fontWeight: '500',
-                                                transition: 'background-color 0.2s'
-                                            }}
-                                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#0056b3'}
-                                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#007bff'}
+                                            className="mr-2 px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors text-sm font-medium"
                                         >
                                             Sửa
                                         </button>
                                         <button
                                             onClick={() => onDelete(user.userId)}
-                                            style={{
-                                                padding: '0.375rem 0.75rem',
-                                                backgroundColor: '#dc3545',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '4px',
-                                                cursor: 'pointer',
-                                                fontSize: '0.875rem',
-                                                fontWeight: '500',
-                                                transition: 'background-color 0.2s'
-                                            }}
-                                            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#c82333'}
-                                            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#dc3545'}
+                                            className="px-3 py-1.5 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
                                         >
                                             Xóa
                                         </button>
                                     </td>
                                 </tr>
-                            );
-                        })
+                            ))
                     )}
                 </tbody>
             </table>
