@@ -479,7 +479,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                         <div className="text-[11px] text-muted-foreground">RiverFlow Agent</div>
                       ) : null}
                       <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
-                        {m.text}
+                        <div className="whitespace-pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>
+                          {m.text.split('\n').map((line, idx) => (
+                            <div key={idx}>
+                              {line.startsWith('**') && line.endsWith('**') ? (
+                                <strong>{line.slice(2, -2)}</strong>
+                              ) : line.startsWith('- ') ? (
+                                <div className="ml-2">• {line.slice(2)}</div>
+                              ) : (
+                                line || <br />
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                       {m.role === "user" && m.mode ? (
                         <div className="text-[11px] text-muted-foreground">
