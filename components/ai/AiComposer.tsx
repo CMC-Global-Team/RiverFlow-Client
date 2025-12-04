@@ -152,6 +152,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const animationFrameRef = useRef<number>()
   const lastFrameTimeRef = useRef(0)
   const streamTimeoutRef = useRef<NodeJS.Timeout>()
+  const isActionListAnimatingRef = useRef(false) // Prevent handleThinkingDone from interrupting Action Plan
 
   // Animation loop for smooth typewriter effect
   const animateTypewriter = useCallback((time: number) => {
@@ -287,6 +288,14 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
     const handleThinkingDone = (data: { fullText: string }) => {
       console.log('[AIComposer] Thinking Mode stream done event received')
+
+      // IMPORTANT: If Action Plan is animating, don't interrupt it!
+      // The actionlist event will handle its own completion
+      if (isActionListAnimatingRef.current) {
+        console.log('[AIComposer] Skipping handleThinkingDone - Action Plan is animating')
+        return
+      }
+
       // Similar to normal mode, let animation finish
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
@@ -328,16 +337,19 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
       console.log('[AIComposer] Thinking Mode action list received:', data)
 
-      // Clear any pending timeout from thinking done
+      // Mark that we're now animating the action list - prevents handleThinkingDone from interrupting
+      isActionListAnimatingRef.current = true
+
+      // Clear any pending timeout
       if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
 
-      // Finalize previous message if needed
+      // Finalize previous message (the thinking analysis)
       setMessages((m) => {
         const newMsgs = [...m]
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
-          // Ensure it has full text if we cut it short
-          // But actually, for Action List, we want to start a NEW message
+          // Set full text for the thinking message before moving on
+          lastMsg.text = streamingBufferRef.current
           delete lastMsg.streaming
         }
         return newMsgs
@@ -354,7 +366,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
       animationFrameRef.current = requestAnimationFrame(animateTypewriter)
 
-      // Set timeout to finish this one too
+      // Set timeout to finish Action Plan animation
       streamTimeoutRef.current = setTimeout(() => {
         if (displayedTextRef.current !== streamingBufferRef.current) {
           displayedTextRef.current = streamingBufferRef.current
@@ -378,7 +390,8 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           })
         }
         isStreamingRef.current = false
-      }, Math.max(1000, data.text.length * 20)) // Give enough time for long action plans
+        isActionListAnimatingRef.current = false // Reset flag
+      }, Math.max(2000, data.text.length * 25)) // Give enough time for long action plans
     }
 
     // Register all listeners
@@ -641,7 +654,13 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                               )}
                             </div>
                           )) : (
-                            m.streaming ? <span className="animate-pulse">...</span> : null
+                            m.streaming ? (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms', animationDuration: '600ms' }}></span>
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms', animationDuration: '600ms' }}></span>
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms', animationDuration: '600ms' }}></span>
+                              </span>
+                            ) : null
                           )}
                         </div>
                       </div>
