@@ -1,14 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
 import { AdminUserResponse, AdminUpdateUserRequest } from '@/types/user.types';
 import { getAllUsers, updateUser, deleteUser } from '@/services/user/user.service';
 import UserTable from '@/components/user/UserTable';
-import UserForm from '@/components/user/UserForm';
+import UserFormModal from '@/components/user/UserFormModal';
+import UserFilterBar from '@/components/user/UserFilterBar';
 import { useTranslation } from 'react-i18next';
+import { Plus } from 'lucide-react';
 
 function UserManagementContent() {
     const { t } = useTranslation("userManagement");
@@ -17,6 +19,11 @@ function UserManagementContent() {
     const [error, setError] = useState<string>('');
     const [showForm, setShowForm] = useState<boolean>(false);
     const [editingUser, setEditingUser] = useState<AdminUserResponse | null>(null);
+
+    // Filter and Sort state
+    const [selectedRole, setSelectedRole] = useState<string>('all');
+    const [selectedStatus, setSelectedStatus] = useState<string>('all');
+    const [sortBy, setSortBy] = useState<string>('createdAt');
 
     // Pagination state
     const [currentPage, setCurrentPage] = useState<number>(0);
@@ -50,6 +57,39 @@ function UserManagementContent() {
     useEffect(() => {
         fetchUsers(currentPage, pageSize);
     }, []);
+
+    // Filter and Sort users
+    const filteredAndSortedUsers = useMemo(() => {
+        let result = [...users];
+
+        // Filter by role
+        if (selectedRole !== 'all') {
+            result = result.filter(user => user.role === selectedRole);
+        }
+
+        // Filter by status
+        if (selectedStatus !== 'all') {
+            result = result.filter(user => user.status === selectedStatus);
+        }
+
+        // Sort
+        result.sort((a, b) => {
+            switch (sortBy) {
+                case 'createdAt':
+                    return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+                case 'updatedAt':
+                    return new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime();
+                case 'fullName':
+                    return a.fullName.localeCompare(b.fullName);
+                case 'email':
+                    return a.email.localeCompare(b.email);
+                default:
+                    return 0;
+            }
+        });
+
+        return result;
+    }, [users, selectedRole, selectedStatus, sortBy]);
 
     const openCreateForm = () => {
         setEditingUser(null);
@@ -109,10 +149,26 @@ function UserManagementContent() {
 
                 <main className="flex-1 overflow-auto">
                     <div className="p-6 md:p-8">
-                        {/* Header */}
-                        <div className="mb-8">
-                            <h1 className="text-3xl font-bold text-foreground">Quản Lý Người Dùng</h1>
-                            <p className="mt-2 text-muted-foreground">Quản lý thông tin người dùng trong hệ thống</p>
+                        {/* Header with Title and Create Button */}
+                        <div className="mb-6">
+                            <div className="flex items-center justify-between mb-2">
+                                <div>
+                                    <h1 className="text-3xl font-bold text-foreground">Quản Lý Người Dùng</h1>
+                                    <p className="mt-2 text-muted-foreground">
+                                        {filteredAndSortedUsers.length} người dùng
+                                        {filteredAndSortedUsers.length !== users.length &&
+                                            ` (${users.length} tổng)`
+                                        }
+                                    </p>
+                                </div>
+                                <button
+                                    onClick={openCreateForm}
+                                    className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
+                                >
+                                    <Plus className="h-5 w-5" />
+                                    Tạo Người Dùng Mới
+                                </button>
+                            </div>
                         </div>
 
                         {/* Error Alert */}
@@ -125,28 +181,21 @@ function UserManagementContent() {
                             </div>
                         )}
 
-                        {/* Create Button */}
+                        {/* Filter Bar */}
                         <div className="mb-6">
-                            <button
-                                onClick={openCreateForm}
-                                className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
-                            >
-                                + Tạo Người Dùng Mới
-                            </button>
-                        </div>
-
-                        {/* User Form */}
-                        {showForm && (
-                            <UserForm
-                                user={editingUser}
-                                onSubmit={handleSubmit}
-                                onCancel={() => setShowForm(false)}
+                            <UserFilterBar
+                                selectedRole={selectedRole}
+                                onRoleChange={setSelectedRole}
+                                selectedStatus={selectedStatus}
+                                onStatusChange={setSelectedStatus}
+                                sortBy={sortBy}
+                                onSortChange={setSortBy}
                             />
-                        )}
+                        </div>
 
                         {/* User Table */}
                         <UserTable
-                            users={users}
+                            users={filteredAndSortedUsers}
                             loading={loading}
                             onEdit={openEditForm}
                             onDelete={handleDelete}
@@ -179,6 +228,14 @@ function UserManagementContent() {
                     </div>
                 </main>
             </div>
+
+            {/* User Form Modal */}
+            <UserFormModal
+                isOpen={showForm}
+                user={editingUser}
+                onSubmit={handleSubmit}
+                onClose={() => setShowForm(false)}
+            />
         </div>
     );
 }
