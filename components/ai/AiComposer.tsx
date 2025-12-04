@@ -147,9 +147,17 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
   // Setup WebSocket listeners for AI streaming
   useEffect(() => {
-    if (!mindmap?.id) return
+    if (!mindmap?.id && !user?.userId) return
 
     const socket = getSocket()
+
+    // Join both mindmap room (if exists) and user room for AI events
+    if (mindmap?.id) {
+      socket.emit('mindmap:join', { mindmapId: mindmap.id })
+    }
+    if (user?.userId) {
+      socket.emit('mindmap:join', { mindmapId: `user:${user.userId}` })
+    }
 
     // Normal/Max mode streaming
     const handleStreamStart = () => {
@@ -241,7 +249,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       socket.off('ai:thinking:done', handleThinkingDone)
       socket.off('ai:thinking:error', handleThinkingError)
     }
-  }, [mindmap?.id])
+  }, [mindmap?.id, user?.userId])
 
   // Removed composeAgentPlan - backend AI handles all planning now
 
