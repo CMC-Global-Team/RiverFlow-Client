@@ -617,6 +617,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
     s.on('mindmap:collaborator:role:changed', onCollaboratorRoleChanged)
 
+    // Handle mindmap deletion - when owner permanently deletes the mindmap
+    const onMindmapDeleted = (data: any) => {
+      const m = latestMindmapRef.current
+      if (!m || data?.mindmapId !== m.id) return
+
+      // Don't redirect the owner (they initiated the delete)
+      if (m.mysqlUserId === currentUserIdRef.current) return
+
+      console.log('[MindmapContext] Mindmap deleted by owner:', data)
+      setAccessRevoked({
+        revoked: true,
+        reason: 'mindmap_deleted',
+        message: 'This mindmap has been deleted by the owner.'
+      })
+    }
+    s.on('mindmap:deleted', onMindmapDeleted)
+
     return () => {
       s.off('mindmap:joined', onJoined)
       s.off('connect', onConnect)
@@ -639,6 +656,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       s.off('mindmap:collaborator:removed', onCollaboratorRemoved)
       s.off('mindmap:public:permission:changed', onPublicPermissionChanged)
       s.off('mindmap:collaborator:role:changed', onCollaboratorRoleChanged)
+      s.off('mindmap:deleted', onMindmapDeleted)
     }
   }, [mindmap])
 
