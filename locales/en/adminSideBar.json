@@ -1,0 +1,11 @@
+{
+    "dashboard": "Dashboard",
+    "userManage": "User Management",
+    "paymentManage": "Payment Management",
+    "reports": "Reports & Statistics",
+    "settings": "Settings",
+    "generalSettings": "General Settings",
+    "systemSettings": "System Settings",
+    "logout": "Log out",
+    "loggingOut": "Logging out..."
+}
