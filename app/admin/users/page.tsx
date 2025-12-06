@@ -288,23 +288,23 @@ export default function UsersManagePage() {
                         className="pl-10"
                     />
                 </div>
-                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
+                <Select value={statusFilter || "all"} onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder={t("allStatus")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">{t("allStatus")}</SelectItem>
+                        <SelectItem value="all">{t("allStatus")}</SelectItem>
                         <SelectItem value="active">{t("active")}</SelectItem>
                         <SelectItem value="suspended">{t("suspended")}</SelectItem>
                         <SelectItem value="deleted">{t("deleted")}</SelectItem>
                     </SelectContent>
                 </Select>
-                <Select value={roleFilter} onValueChange={(v) => { setRoleFilter(v); setPage(0); }}>
+                <Select value={roleFilter || "all"} onValueChange={(v) => { setRoleFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder={t("allRoles")} />
                     </SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="">{t("allRoles")}</SelectItem>
+                        <SelectItem value="all">{t("allRoles")}</SelectItem>
                         <SelectItem value="admin">{t("admin")}</SelectItem>
                         <SelectItem value="user">{t("user")}</SelectItem>
                     </SelectContent>
