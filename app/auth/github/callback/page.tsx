@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useGitHubSignIn } from "@/hooks/auth/useGitHubSignIn";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 
-export default function GitHubCallbackPage() {
+function GitHubCallbackContent() {
     const { t } = useTranslation("other");
     const router = useRouter();
     const searchParams = useSearchParams();
@@ -83,37 +83,54 @@ export default function GitHubCallbackPage() {
     }, [error, toast, t]);
 
     return (
+        <div className="text-center space-y-4">
+            {status === "loading" && (
+                <>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+                    <p className="text-muted-foreground">
+                        {isLoading ? "Signing in with GitHub..." : "Processing GitHub authentication..."}
+                    </p>
+                </>
+            )}
+            {status === "success" && (
+                <>
+                    <div className="h-12 w-12 rounded-full bg-green-100 mx-auto flex items-center justify-center">
+                        <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                    </div>
+                    <p className="text-muted-foreground">Login successful! Redirecting...</p>
+                </>
+            )}
+            {status === "error" && (
+                <>
+                    <div className="h-12 w-12 rounded-full bg-red-100 mx-auto flex items-center justify-center">
+                        <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </div>
+                    <p className="text-muted-foreground">Authentication failed. Redirecting...</p>
+                </>
+            )}
+        </div>
+    );
+}
+
+function LoadingFallback() {
+    return (
+        <div className="text-center space-y-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
+            <p className="text-muted-foreground">Loading...</p>
+        </div>
+    );
+}
+
+export default function GitHubCallbackPage() {
+    return (
         <div className="min-h-screen flex items-center justify-center bg-background">
-            <div className="text-center space-y-4">
-                {status === "loading" && (
-                    <>
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto" />
-                        <p className="text-muted-foreground">
-                            {isLoading ? "Signing in with GitHub..." : "Processing GitHub authentication..."}
-                        </p>
-                    </>
-                )}
-                {status === "success" && (
-                    <>
-                        <div className="h-12 w-12 rounded-full bg-green-100 mx-auto flex items-center justify-center">
-                            <svg className="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                            </svg>
-                        </div>
-                        <p className="text-muted-foreground">Login successful! Redirecting...</p>
-                    </>
-                )}
-                {status === "error" && (
-                    <>
-                        <div className="h-12 w-12 rounded-full bg-red-100 mx-auto flex items-center justify-center">
-                            <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </div>
-                        <p className="text-muted-foreground">Authentication failed. Redirecting...</p>
-                    </>
-                )}
-            </div>
+            <Suspense fallback={<LoadingFallback />}>
+                <GitHubCallbackContent />
+            </Suspense>
         </div>
     );
 }
