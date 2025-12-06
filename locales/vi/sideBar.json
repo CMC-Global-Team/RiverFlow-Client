@@ -5,7 +5,8 @@
   "settings": "Cài đặt",
   "changePassword": "Đổi mật khẩu",
   "paymentHistory": "Lịch sử thanh toán",
-  "Language & Display":"Ngôn ngữ & Hiển thị"    ,
+  "Language & Display": "Ngôn ngữ & Hiển thị",
   "logout": "Đăng xuất",
-  "loggingOut": "Đang đăng xuất..."
+  "loggingOut": "Đang đăng xuất...",
+  "userManagement": "Quản lý người dùng"
 }
