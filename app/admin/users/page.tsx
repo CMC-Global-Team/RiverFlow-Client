@@ -73,9 +73,9 @@ export default function UsersManagePage() {
     const [totalPages, setTotalPages] = useState(0)
     const [totalElements, setTotalElements] = useState(0)
 
-    // Search and filter state - exclude deleted users by default
+    // Search and filter state - deleted users excluded on server side by default
     const [search, setSearch] = useState("")
-    const [statusFilter, setStatusFilter] = useState<string>("active")
+    const [statusFilter, setStatusFilter] = useState<string>("")
     const [roleFilter, setRoleFilter] = useState<string>("")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
@@ -289,7 +289,6 @@ export default function UsersManagePage() {
                         <SelectItem value="all">{t("allStatus")}</SelectItem>
                         <SelectItem value="active">{t("active")}</SelectItem>
                         <SelectItem value="suspended">{t("suspended")}</SelectItem>
-                        <SelectItem value="deleted">{t("deleted")}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select value={roleFilter || "all"} onValueChange={(v) => { setRoleFilter(v === "all" ? "" : v); setPage(0); }}>
