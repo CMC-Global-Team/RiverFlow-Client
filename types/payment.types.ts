@@ -2,8 +2,8 @@ export interface TransactionHistory {
   id: number;
   transactionCode: string;
   amount: number;
-  status: 'pending' | 'processed' | 'invalid' | 'ignored' | string; 
-  date: string; 
+  status: 'pending' | 'processed' | 'invalid' | 'ignored' | string;
+  date: string;
   gateway: string;
   content: string;
 }
@@ -18,3 +18,6 @@ export interface PageResponse<T> {
   last: boolean;
   empty: boolean;
 }
+
+// Admin payment history type (same structure as TransactionHistory)
+export type AdminPaymentHistoryResponse = TransactionHistory;
