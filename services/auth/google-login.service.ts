@@ -13,8 +13,8 @@ import { AxiosError } from "axios";
  */
 export const googleLogin = async (data: GoogleLoginRequest): Promise<GoogleLoginResponse> => {
   try {
-    // Note: Endpoint follows user specification. Backend should implement /api/auth/google
-    const response = await apiClient.post<GoogleLoginResponse>("/api/auth/google", data);
+    // Note: Base URL already includes /api, so endpoint should not have /api prefix
+    const response = await apiClient.post<GoogleLoginResponse>("/auth/google", data);
     return response.data;
   } catch (error: unknown) {
     if (error instanceof AxiosError) {
