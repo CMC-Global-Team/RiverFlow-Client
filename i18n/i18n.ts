@@ -31,6 +31,8 @@ import VIEW_TOGGLE_EN from "@/locales/en/viewToggle.json";
 import VIEW_TOGGLE_VI from "@/locales/vi/viewToggle.json";
 import DELETE_CONFIRM_DIALOG_EN from "@/locales/en/deleteConfirmDialog.json";
 import DELETE_CONFIRM_DIALOG_VI from "@/locales/vi/deleteConfirmDialog.json";
+import ADMIN_SIDEBAR_EN from "@/locales/en/adminSideBar.json";
+import ADMIN_SIDEBAR_VI from "@/locales/vi/adminSideBar.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -54,6 +56,7 @@ const resource = {
         filterBar: FILTER_BAR_EN,
         viewToggle: VIEW_TOGGLE_EN,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_EN,
+        adminSideBar: ADMIN_SIDEBAR_EN,
     },
     vi: {
         home: HOME_VI,
@@ -71,27 +74,29 @@ const resource = {
         filterBar: FILTER_BAR_VI,
         viewToggle: VIEW_TOGGLE_VI,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_VI,
+        adminSideBar: ADMIN_SIDEBAR_VI,
     }
 } as const
 const defaultNS = 'home'
 i18n.use(initReactI18next).init({
     resources: resource,
     lng: "vi",
-    ns: ["home", 
-        "about", 
-        "pricing", 
-        "other", 
-        "dashboard", 
-        "dashboardHeader", 
-        "change-password", 
-        "mindmaps", 
+    ns: ["home",
+        "about",
+        "pricing",
+        "other",
+        "dashboard",
+        "dashboardHeader",
+        "change-password",
+        "mindmaps",
         "settings",
-        "mindmapsCard", 
-        "sideBar", 
-        "templateModal", 
+        "mindmapsCard",
+        "sideBar",
+        "templateModal",
         "filterBar",
         "viewToggle",
-        "deleteConfirmDialog"
+        "deleteConfirmDialog",
+        "adminSideBar"
     ],
     defaultNS,
     fallbackLng: "vi",
