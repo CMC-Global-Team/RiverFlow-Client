@@ -37,19 +37,12 @@ import {
     AlertDialogHeader,
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
 import { toast } from "sonner"
 import {
     Search,
-    MoreHorizontal,
     ChevronLeft,
     ChevronRight,
     Pencil,
@@ -80,14 +73,14 @@ export default function UsersManagePage() {
     const [totalPages, setTotalPages] = useState(0)
     const [totalElements, setTotalElements] = useState(0)
 
-    // Search and filter state
+    // Search and filter state - exclude deleted users by default
     const [search, setSearch] = useState("")
-    const [statusFilter, setStatusFilter] = useState<string>("")
+    const [statusFilter, setStatusFilter] = useState<string>("active")
     const [roleFilter, setRoleFilter] = useState<string>("")
     const [sortBy, setSortBy] = useState("createdAt")
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
     const [page, setPage] = useState(0)
-    const [size] = useState(10)
+    const [size, setSize] = useState(10)
 
     // Dialog states
     const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -262,9 +255,9 @@ export default function UsersManagePage() {
         }
     }
 
-    // Role badge color
+    // Role badge color - admin is red, user is blue
     const getRoleColor = (role: string) => {
-        return role === "admin" ? "bg-purple-500" : "bg-blue-500"
+        return role === "admin" ? "bg-red-400" : "bg-blue-500"
     }
 
     return (
@@ -362,38 +355,49 @@ export default function UsersManagePage() {
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
                                     </TableCell>
                                     <TableCell className="text-right">
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="ghost" size="icon">
-                                                    <MoreHorizontal className="h-4 w-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent align="end">
-                                                <DropdownMenuItem onClick={() => handleEditClick(user)}>
-                                                    <Pencil className="mr-2 h-4 w-4" />
-                                                    {t("edit")}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleCreditClick(user)}>
-                                                    <CreditCard className="mr-2 h-4 w-4" />
-                                                    {t("updateCredit")}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handlePasswordClick(user)}>
-                                                    <Key className="mr-2 h-4 w-4" />
-                                                    {t("changePassword")}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handlePaymentClick(user)}>
-                                                    <History className="mr-2 h-4 w-4" />
-                                                    {t("viewPayments")}
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onClick={() => handleDeleteClick(user)}
-                                                    className="text-red-600"
-                                                >
-                                                    <Trash2 className="mr-2 h-4 w-4" />
-                                                    {t("delete")}
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
+                                        <div className="flex items-center justify-end gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleEditClick(user)}
+                                                title={t("edit")}
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleCreditClick(user)}
+                                                title={t("updateCredit")}
+                                            >
+                                                <CreditCard className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handlePasswordClick(user)}
+                                                title={t("changePassword")}
+                                            >
+                                                <Key className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handlePaymentClick(user)}
+                                                title={t("viewPayments")}
+                                            >
+                                                <History className="h-4 w-4" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                onClick={() => handleDeleteClick(user)}
+                                                title={t("delete")}
+                                                className="text-red-600 hover:text-red-700"
+                                            >
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
                             ))
@@ -404,9 +408,23 @@ export default function UsersManagePage() {
 
             {/* Pagination */}
             <div className="flex items-center justify-between mt-4">
-                <p className="text-sm text-muted-foreground">
-                    {t("page")} {page + 1} {t("of")} {totalPages || 1}
-                </p>
+                <div className="flex items-center gap-4">
+                    <p className="text-sm text-muted-foreground">
+                        {t("page")} {page + 1} {t("of")} {totalPages || 1}
+                    </p>
+                    <Select value={size.toString()} onValueChange={(v) => { setSize(parseInt(v)); setPage(0); }}>
+                        <SelectTrigger className="w-[100px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="10">10</SelectItem>
+                            <SelectItem value="20">20</SelectItem>
+                            <SelectItem value="50">50</SelectItem>
+                            <SelectItem value="100">100</SelectItem>
+                            <SelectItem value="1000">1000</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
                 <div className="flex gap-2">
                     <Button
                         variant="outline"
