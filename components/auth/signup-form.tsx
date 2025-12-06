@@ -196,12 +196,16 @@ export default function SignupForm() {
 
             {/* SOCIAL */}
             <div className="space-y-3">
-                <button className="w-full flex items-center justify-center gap-2 rounded-lg border py-2.5" disabled>
-                    <Github className="h-5 w-5" />
-                    <span>{t("signup.github")}</span>
-                </button>
-
                 <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} text="signup_with" />
+
+                <button
+                    type="button"
+                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
+                    disabled
+                >
+                    <Github className="h-5 w-5" />
+                    <span className="text-sm font-medium">{t("signup.github")}</span>
+                </button>
             </div>
         </form>
     )
