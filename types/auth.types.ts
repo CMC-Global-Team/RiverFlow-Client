@@ -44,6 +44,15 @@ export interface GoogleLoginResponse extends SignInResponse {
   provider: "google";
 }
 
+// GitHub Login API Types
+export interface GitHubLoginRequest {
+  code: string; // GitHub OAuth authorization code
+}
+
+export interface GitHubLoginResponse extends SignInResponse {
+  provider: "github";
+}
+
 // ForgotPassword API Types
 export interface ForgotPasswordRequest {
   email: string;
