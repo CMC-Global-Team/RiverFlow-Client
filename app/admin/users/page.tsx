@@ -315,7 +315,7 @@ export default function UsersManagePage() {
                             <TableHead>{t("status")}</TableHead>
                             <TableHead>{t("credit")}</TableHead>
                             <TableHead>{t("createdAt")}</TableHead>
-                            <TableHead className="text-right">{t("actions")}</TableHead>
+                            <TableHead className="text-center">{t("actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -354,8 +354,8 @@ export default function UsersManagePage() {
                                     <TableCell>
                                         {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}
                                     </TableCell>
-                                    <TableCell className="text-right">
-                                        <div className="flex items-center justify-end gap-1">
+                                    <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-1">
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
@@ -567,6 +567,7 @@ export default function UsersManagePage() {
                             <Label>{t("newPassword")}</Label>
                             <Input
                                 type="password"
+                                autoComplete="new-password"
                                 value={newPassword}
                                 onChange={(e) => setNewPassword(e.target.value)}
                             />
