@@ -1,0 +1,11 @@
+{
+    "dashboard": "Bảng điều khiển",
+    "userManage": "Quản lý người dùng",
+    "paymentManage": "Quản lý thanh toán",
+    "reports": "Báo cáo & Thống kê",
+    "settings": "Cài đặt",
+    "generalSettings": "Cài đặt chung",
+    "systemSettings": "Cài đặt hệ thống",
+    "logout": "Đăng xuất",
+    "loggingOut": "Đang đăng xuất..."
+}

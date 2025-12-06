@@ -48,7 +48,8 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                         title: t("login.successTitle"),
                         description: t("login.successDesc", { name: response.fullName }),
                     })
-                    setTimeout(() => router.push("/dashboard"), 1000)
+                    const redirectPath = response.role === "ADMIN" ? "/admin" : "/dashboard"
+                    setTimeout(() => router.push(redirectPath), 1000)
                 }
             } else {
                 toast({
@@ -91,7 +92,8 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                 description: t("login.successDesc", { name: data.fullName }),
             })
 
-            setTimeout(() => router.push("/dashboard"), 1000)
+            const redirectPath = data.role === "ADMIN" ? "/admin" : "/dashboard"
+            setTimeout(() => router.push(redirectPath), 1000)
         }
     }, [data, toast, router, t])
 
@@ -169,9 +171,9 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                     <div className="w-full border-t"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-          <span className="bg-card px-2 text-muted-foreground">
-            {t("login.divider")}
-          </span>
+                    <span className="bg-card px-2 text-muted-foreground">
+                        {t("login.divider")}
+                    </span>
                 </div>
             </div>
 

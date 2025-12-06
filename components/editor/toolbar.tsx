@@ -20,6 +20,7 @@ import {
   Users,
   Loader2,
   Check,
+  Code,
   AlertCircle,
   ArrowLeft,
   HandHelping,
@@ -68,6 +69,7 @@ interface ToolbarProps {
   saveStatus?: string
   handleSave?: () => void
   onShareClick?: () => void
+  onEmbedClick?: () => void
   userRole?: 'owner' | 'editor' | 'viewer' | null
   onHistoryClick?: () => void
   onChatClick?: () => void
@@ -89,6 +91,7 @@ export default function Toolbar({
   saveStatus,
   handleSave,
   onShareClick,
+  onEmbedClick,
   userRole,
   onHistoryClick,
   onChatClick,
@@ -594,6 +597,19 @@ export default function Toolbar({
               Auto
             </Label>
           </div>
+        )}
+
+        {/* Embed Button - Only for owners */}
+        {userRole === 'owner' && (
+          <Button
+            onClick={onEmbedClick}
+            variant="ghost"
+            size="icon"
+            title="Nhúng Mindmap"
+            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+          >
+            <Code className="h-4 w-4" />
+          </Button>
         )}
 
         {/* Share Button - Always enabled */}

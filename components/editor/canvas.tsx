@@ -69,7 +69,7 @@ function AddChildButton({ screenPosition, onAddChild, onClose, onStayVisible, on
   )
 }
 
-export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
+export default function Canvas({ readOnly = false, hidePresence = false }: { readOnly?: boolean; hidePresence?: boolean }) {
   const {
     nodes,
     edges,
@@ -104,10 +104,10 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
-  
+
   // Ref to track pending sibling node ID to select after creation
   const pendingSiblingNodeId = useRef<string | null>(null)
-  
+
   // Ref to store ReactFlow instance
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   const myClientIdRef = useRef<string | null>(null)
@@ -125,7 +125,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
     return palette[h % palette.length]
   }, [anonymousName])
-  
+
   // State for long press detection
   const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number }; dimensions: { width?: number; height?: number } } | null>(null)
   const [buttonScreenPosition, setButtonScreenPosition] = useState<{ x: number; y: number } | null>(null)
@@ -224,7 +224,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           }
           // ReactFlow có thể không cung cấp width/height trong props
           // Sử dụng giá trị mặc định an toàn
-          const nodeDimensions = { 
+          const nodeDimensions = {
             width: (props as any).width || (props as any).measured?.width || 150,
             height: (props as any).height || (props as any).measured?.height || 80
           }
@@ -312,7 +312,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
     // Create child node and get its ID
     const childNodeId = addNode(childPosition, childShape)
-    
+
     // Store the child node ID to select it after it's added to the nodes array
     pendingChildNodeId.current = childNodeId
 
@@ -338,9 +338,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     // Position it to the right of the current node, or below if it's a root node
     const siblingOffset = 200 // Horizontal distance between siblings
     const verticalOffset = 150 // Vertical distance for root nodes
-    
+
     let siblingPosition: { x: number; y: number }
-    
+
     if (parentNode) {
       // Has parent: position to the right
       siblingPosition = {
@@ -360,7 +360,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
     // Create sibling node and get its ID
     const siblingNodeId = addNode(siblingPosition, siblingShape)
-    
+
     // Store the sibling node ID to select it after it's added to the nodes array
     pendingSiblingNodeId.current = siblingNodeId
 
@@ -414,7 +414,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   // Effect to select newly created child or sibling node and enable editing
   // Use a ref to track the previous nodes length to detect when new nodes are added
   const prevNodesLengthRef = useRef(nodes.length)
-  
+
   useEffect(() => {
     // Only run if nodes length increased (new node added)
     if (nodes.length > prevNodesLengthRef.current) {
@@ -479,7 +479,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
         if (event.key === 'Backspace') {
           event.preventDefault()
         }
-        
+
         if (selectedNode) {
           deleteNode(selectedNode.id)
         } else if (selectedEdge) {
@@ -490,17 +490,17 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
       if (isCtrlOrCmd && event.key === 'z') {
         event.preventDefault();
         if (canUndo) {
-            undo();
+          undo();
         }
       }
 
       if (
-          (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
-          (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
-         ) {
+        (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
+        (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
+      ) {
         event.preventDefault();
         if (canRedo) {
-            redo();
+          redo();
         }
       }
     }
@@ -740,7 +740,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           className="bg-background border"
         />
       </ReactFlow>
-      
+
       {/* Add child button overlay */}
       {longPressedNode && buttonScreenPosition && (
         <AddChildButton
@@ -751,7 +751,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           onScheduleHide={handleScheduleHide}
         />
       )}
-      {renderPresence}
+      {!hidePresence && renderPresence}
     </div>
   )
 }
