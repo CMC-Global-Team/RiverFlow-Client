@@ -13,6 +13,7 @@
     "submitting": "Creating account...",
     "divider": "Or sign up with",
     "github": "GitHub",
+    "google": "Google",
     "successTitle": "Registration successful!",
     "successDesc": "Welcome {{name}}! Please check your email to verify your account.",
     "failedTitle": "Registration failed",
@@ -21,7 +22,6 @@
     "googleFailed": "Google login failed",
     "googleMissing": "No Google credential received"
   },
-
   "login": {
     "title": "Sign In",
     "email": "Email",
@@ -31,13 +31,13 @@
     "submitting": "Signing in...",
     "divider": "Or continue with",
     "github": "GitHub",
+    "google": "Google",
     "successTitle": "Successfully signed in!",
     "successDesc": "Welcome back, {{name}}!",
     "failedTitle": "Sign-in failed",
     "unverifiedEmail": "Email not verified",
     "missingFields": "Please enter email and password!"
   },
-
   "forgot": {
     "back": "Back to login",
     "description": "Enter your email address and we'll send you a reset link.",

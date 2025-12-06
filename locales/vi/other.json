@@ -13,6 +13,7 @@
     "submitting": "Đang tạo tài khoản...",
     "divider": "Hoặc đăng ký với",
     "github": "GitHub",
+    "google": "Google",
     "successTitle": "Đăng ký thành công!",
     "successDesc": "Chào mừng {{name}}! Vui lòng kiểm tra email để xác thực tài khoản.",
     "failedTitle": "Đăng ký thất bại",
@@ -21,7 +22,6 @@
     "googleFailed": "Đăng nhập Google thất bại",
     "googleMissing": "Không nhận được credential từ Google"
   },
-
   "login": {
     "title": "Đăng nhập",
     "email": "Email",
@@ -31,13 +31,13 @@
     "submitting": "Đang đăng nhập...",
     "divider": "Hoặc tiếp tục với",
     "github": "GitHub",
+    "google": "Google",
     "successTitle": "Đăng nhập thành công!",
     "successDesc": "Chào mừng trở lại, {{name}}!",
     "failedTitle": "Đăng nhập thất bại",
     "unverifiedEmail": "Email chưa được xác thực",
     "missingFields": "Vui lòng nhập đầy đủ email và mật khẩu!"
   },
-
   "forgot": {
     "back": "Quay lại đăng nhập",
     "description": "Nhập email của bạn và chúng tôi sẽ gửi liên kết đặt lại mật khẩu.",
