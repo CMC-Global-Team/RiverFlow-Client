@@ -5,7 +5,8 @@
   "settings": "Settings",
   "changePassword": "Change Password",
   "paymentHistory": "Payment History",
-  "Language & Display":"Language & Display" ,
+  "Language & Display": "Language & Display",
   "logout": "Log out",
-  "loggingOut": "Logging out..."
+  "loggingOut": "Logging out...",
+  "userManagement": "User Management"
 }

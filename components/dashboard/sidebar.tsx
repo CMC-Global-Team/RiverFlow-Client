@@ -41,21 +41,21 @@ export default function Sidebar() {
   }
 
 
-//handle select template
-const handleSelectTemplate = async (template: any) => {
-  if (template?.id === 'ai') {
-    return
-  }
-  const newMindmap = await create({
-    title: "Untitled Mindmap",
-    nodes: template.initialNodes,
-    edges: template.initialEdges,
-  })
-  if (newMindmap) {
-    router.push(`/editor?id=${newMindmap.id}`)
-  }
+  //handle select template
+  const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      return
+    }
+    const newMindmap = await create({
+      title: "Untitled Mindmap",
+      nodes: template.initialNodes,
+      edges: template.initialEdges,
+    })
+    if (newMindmap) {
+      router.push(`/editor?id=${newMindmap.id}`)
+    }
 
-}
+  }
 
 
   const toggleSettings = () => {
@@ -107,6 +107,13 @@ const handleSelectTemplate = async (template: any) => {
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="text-sm font-medium">{t("myMindmaps")}</span>}
           </Link>
+          <Link
+            href="/dashboard/user_management"
+            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+          >
+            <FileText className="h-5 w-5" />
+            {!isCollapsed && <span className="text-sm font-medium">{t("userManagement")}</span>}
+          </Link>
 
           <div className="space-y-1">
             <button
@@ -140,12 +147,13 @@ const handleSelectTemplate = async (template: any) => {
                 >
                   <History className="h-4 w-4" /> {t("paymentHistory")}
                 </Link>
-               <Link
+                <Link
                   href="/dashboard/language_display"
                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                 >
-                 <Lock className="h-4 w-4" /> {t("Language & Display")}
+                  <Lock className="h-4 w-4" /> {t("Language & Display")}
                 </Link>
+
               </div>
             )}
           </div>
