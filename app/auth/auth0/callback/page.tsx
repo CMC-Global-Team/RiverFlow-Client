@@ -40,7 +40,7 @@ export default function Auth0CallbackPage() {
                 description: auth0Error.message || "Authentication failed",
             })
             // Use replace to prevent back button issues
-            window.location.href = "/login"
+            window.location.href = "/"
             return
         }
 
@@ -73,7 +73,7 @@ export default function Auth0CallbackPage() {
                         title: t("login.failedTitle"),
                         description: "Failed to complete authentication",
                     })
-                    window.location.href = "/login"
+                    window.location.href = "/"
                 }
             }
 
