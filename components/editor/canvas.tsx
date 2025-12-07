@@ -24,7 +24,18 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
-import { Plus } from 'lucide-react'
+import { Plus, GitBranch, Trash2, Edit3, Square, Circle, Diamond, Hexagon } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuShortcut,
+} from '@/components/ui/dropdown-menu'
 
 const LONG_PRESS_DELAY = 1000 // ms
 const BUTTON_HIDE_DELAY = 500 // ms
@@ -132,6 +143,9 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressNodeRef = useRef<string | null>(null)
   const hideButtonTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // State for context menu
+  const [contextMenuNode, setContextMenuNode] = useState<any | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -395,6 +409,72 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
     },
     [updateNodeData, readOnly, emitActive]
   )
+
+  // Handle right-click context menu on nodes
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: any) => {
+      // Prevent default browser context menu
+      event.preventDefault()
+      if (!readOnly) {
+        setContextMenuNode(node)
+        setSelectedNode(node)
+        setSelectedEdge(null)
+      }
+    },
+    [readOnly, setSelectedNode, setSelectedEdge]
+  )
+
+  // Context menu action handlers
+  const handleContextAddChild = useCallback(() => {
+    if (contextMenuNode) {
+      createChildNode(contextMenuNode)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, createChildNode])
+
+  const handleContextAddSibling = useCallback(() => {
+    if (contextMenuNode) {
+      createSiblingNode(contextMenuNode)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, createSiblingNode])
+
+  const handleContextEdit = useCallback(() => {
+    if (contextMenuNode) {
+      updateNodeData(contextMenuNode.id, { isEditing: true })
+      emitActive({ type: 'label', id: contextMenuNode.id })
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, updateNodeData, emitActive])
+
+  const handleContextDelete = useCallback(() => {
+    if (contextMenuNode) {
+      deleteNode(contextMenuNode.id)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, deleteNode])
+
+  const handleContextAddNodeWithShape = useCallback((shape: string) => {
+    if (contextMenuNode) {
+      // Create child node with specific shape
+      const childOffset = 150
+      const childPosition = {
+        x: contextMenuNode.position.x,
+        y: contextMenuNode.position.y + childOffset,
+      }
+      const childNodeId = addNode(childPosition, shape)
+      pendingChildNodeId.current = childNodeId
+      setTimeout(() => {
+        onConnect({
+          source: contextMenuNode.id,
+          target: childNodeId,
+          sourceHandle: null,
+          targetHandle: null,
+        })
+      }, 10)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, addNode, onConnect])
 
   const onEdgeClick = useCallback(
     (_event: any, edge: any) => {
@@ -721,6 +801,7 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
         }}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
+        onNodeContextMenu={onNodeContextMenu}
         onEdgeClick={onEdgeClick}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
@@ -740,6 +821,68 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
           className="bg-background border"
         />
       </ReactFlow>
+
+      {/* Context Menu for nodes */}
+      {contextMenuNode && !readOnly && (
+        <DropdownMenu open={!!contextMenuNode} onOpenChange={(open: boolean) => !open && setContextMenuNode(null)}>
+          <DropdownMenuTrigger asChild>
+            <div style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0 }} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" forceMount>
+            <DropdownMenuItem onClick={handleContextAddChild}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Child Node
+              <DropdownMenuShortcut>Tab</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleContextAddSibling}>
+              <GitBranch className="mr-2 h-4 w-4" />
+              Add Sibling Node
+              <DropdownMenuShortcut>Enter</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Node with Shape
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48">
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('rectangle')}>
+                  <Square className="mr-2 h-4 w-4" />
+                  Rectangle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('circle')}>
+                  <Circle className="mr-2 h-4 w-4" />
+                  Circle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('diamond')}>
+                  <Diamond className="mr-2 h-4 w-4" />
+                  Diamond
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('hexagon')}>
+                  <Hexagon className="mr-2 h-4 w-4" />
+                  Hexagon
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('roundedRectangle')}>
+                  <Square className="mr-2 h-4 w-4" />
+                  Rounded Rectangle
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleContextEdit}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Edit Label
+              <DropdownMenuShortcut>Double-click</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleContextDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Node
+              <DropdownMenuShortcut>Delete</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
 
       {/* Add child button overlay */}
       {longPressedNode && buttonScreenPosition && (
