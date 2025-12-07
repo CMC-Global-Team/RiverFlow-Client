@@ -13,23 +13,46 @@ import { useTranslation } from "react-i18next"
  */
 export default function Auth0CallbackPage() {
     const { t } = useTranslation("other")
-    const { isAuthenticated, isLoading: isAuth0Loading, getIdTokenClaims } = useAuth0()
+    const { isAuthenticated, isLoading: isAuth0Loading, getIdTokenClaims, error: auth0Error } = useAuth0()
     const { signInWithAuth0, isLoading: isSigningIn } = useAuth0SignIn()
     const { toast } = useToast()
     const router = useRouter()
     const [hasProcessed, setHasProcessed] = useState(false)
+    const [status, setStatus] = useState("Processing login...")
 
     useEffect(() => {
         const handleCallback = async () => {
-            if (hasProcessed || isAuth0Loading) {
+            // Prevent multiple executions
+            if (hasProcessed) {
                 return
             }
 
+            // Wait for Auth0 to finish loading
+            if (isAuth0Loading) {
+                setStatus("Verifying authentication...")
+                return
+            }
+
+            // Handle Auth0 error
+            if (auth0Error) {
+                console.error("Auth0 error:", auth0Error)
+                toast({
+                    variant: "destructive",
+                    title: t("login.failedTitle"),
+                    description: auth0Error.message || "Authentication failed",
+                })
+                router.push("/auth")
+                return
+            }
+
+            // If authenticated, get ID token and authenticate with backend
             if (isAuthenticated) {
+                setHasProcessed(true)
+                setStatus("Completing authentication...")
+
                 try {
                     const claims = await getIdTokenClaims()
                     if (claims?.__raw) {
-                        setHasProcessed(true)
                         const response = await signInWithAuth0(claims.__raw)
                         if (response) {
                             toast({
@@ -41,6 +64,8 @@ export default function Auth0CallbackPage() {
                         } else {
                             throw new Error("Failed to authenticate with backend")
                         }
+                    } else {
+                        throw new Error("Failed to get ID token")
                     }
                 } catch (error) {
                     console.error("Auth0 callback error:", error)
@@ -58,14 +83,14 @@ export default function Auth0CallbackPage() {
         }
 
         handleCallback()
-    }, [isAuthenticated, isAuth0Loading, hasProcessed, getIdTokenClaims, signInWithAuth0, toast, router, t])
+    }, [isAuthenticated, isAuth0Loading, auth0Error, hasProcessed, getIdTokenClaims, signInWithAuth0, toast, router, t])
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="text-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                 <p className="text-muted-foreground">
-                    {isSigningIn ? "Completing authentication..." : "Processing login..."}
+                    {status}
                 </p>
             </div>
         </div>
