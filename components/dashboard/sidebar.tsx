@@ -107,13 +107,7 @@ export default function Sidebar() {
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="text-sm font-medium">{t("myMindmaps")}</span>}
           </Link>
-          <Link
-            href="/dashboard/user_management"
-            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-          >
-            <FileText className="h-5 w-5" />
-            {!isCollapsed && <span className="text-sm font-medium">{t("userManagement")}</span>}
-          </Link>
+
 
           <div className="space-y-1">
             <button
