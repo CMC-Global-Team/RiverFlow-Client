@@ -199,22 +199,27 @@ export default function SignupForm() {
 
             {/* SOCIAL */}
             <div className="space-y-3">
-                <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} text="signup_with" />
+                {/* Row 1: Google and GitHub side by side */}
+                <div className="flex gap-3">
+                    <div className="flex-1">
+                        <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} text="signup_with" />
+                    </div>
+                    <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
+                        onClick={() => {
+                            const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "Ov23livoL9OuzQzaET79";
+                            const redirectUri = encodeURIComponent("https://river-flow-client.vercel.app/auth/github/callback");
+                            const scope = encodeURIComponent("user:email");
+                            window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+                        }}
+                    >
+                        <Github className="h-5 w-5" />
+                        <span className="text-sm font-medium">{t("signup.github")}</span>
+                    </button>
+                </div>
 
-                <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
-                    onClick={() => {
-                        const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "Ov23livoL9OuzQzaET79";
-                        const redirectUri = encodeURIComponent("https://river-flow-client.vercel.app/auth/github/callback");
-                        const scope = encodeURIComponent("user:email");
-                        window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
-                    }}
-                >
-                    <Github className="h-5 w-5" />
-                    <span className="text-sm font-medium">{t("signup.github")}</span>
-                </button>
-
+                {/* Row 2: SSO full width */}
                 <Auth0LoginButton
                     onSuccess={async (idToken) => {
                         try {
