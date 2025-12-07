@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -589,19 +589,21 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
-            <Input
+            <Textarea
               placeholder="Nhập nội dung của bạn"
-              className="flex-1 h-10 rounded-xl bg-background/40 border-muted/50"
+              className="flex-1 min-h-10 max-h-24 rounded-xl bg-background/40 border-muted/50 resize-none overflow-y-auto"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
                   const t = inputValue.trim()
                   if (!t || loading) return
                   setInputValue("")
                   void sendPrompt(t)
                 }
               }}
+              rows={1}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -655,7 +657,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           initialPos={{ x: Math.max(16, window.innerWidth - 420 - 16), y: Math.max(16, Math.round(window.innerHeight / 6)) }}
           handle=".draggable-handle"
         >
-          <div className="w-[420px] rounded-2xl border bg-popover text-popover-foreground shadow-xl ring-1 ring-border">
+          <div className="w-[420px] rounded-2xl border bg-card dark:bg-card text-card-foreground shadow-xl ring-1 ring-border">
             <div className="draggable-handle flex items-center justify-between gap-2 px-3 py-2 border-b cursor-move">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Cuộc hội thoại</span>

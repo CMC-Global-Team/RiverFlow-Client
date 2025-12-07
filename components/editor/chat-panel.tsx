@@ -279,7 +279,7 @@ export default function ChatPanel({ isOpen = false, onClose }: { isOpen?: boolea
                         <span>{isMine ? 'You' : m.name || 'Anonymous'}</span>
                       </div>
                     ) : null}
-                    <div className="text-sm break-words whitespace-pre-wrap">{m.message}</div>
+                    <div className="text-sm break-words whitespace-pre-wrap overflow-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>{m.message}</div>
                   </div>
                 </div>
                 {isMine && (
