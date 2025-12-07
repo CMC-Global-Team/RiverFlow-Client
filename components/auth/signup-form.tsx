@@ -5,9 +5,11 @@ import { useState, useEffect } from "react"
 import { Mail, Lock, User, Github } from "lucide-react"
 import { useRegister } from "@/hooks/auth/useRegister"
 import { useGoogleSignIn } from "@/hooks/auth/useGoogleSignIn"
+import { useAuth0SignIn } from "@/hooks/auth/useAuth0SignIn"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton"
+import { Auth0LoginButton } from "@/components/auth/Auth0LoginButton"
 import { useTranslation } from "react-i18next"
 import type { CredentialResponse } from "@react-oauth/google"
 
@@ -20,6 +22,7 @@ export default function SignupForm() {
 
     const { register, isLoading, error, data } = useRegister()
     const { signInWithGoogle, isLoading: isGoogleLoading, error: googleError } = useGoogleSignIn()
+    const { signInWithAuth0, isLoading: isAuth0Loading, error: auth0Error } = useAuth0SignIn()
     const { toast } = useToast()
     const router = useRouter()
 
@@ -211,6 +214,33 @@ export default function SignupForm() {
                     <Github className="h-5 w-5" />
                     <span className="text-sm font-medium">{t("signup.github")}</span>
                 </button>
+
+                <Auth0LoginButton
+                    onSuccess={async (idToken) => {
+                        try {
+                            const response = await signInWithAuth0(idToken)
+                            if (response) {
+                                toast({
+                                    title: t("login.successTitle"),
+                                    description: t("login.successDesc", { name: response.fullName }),
+                                })
+                                const redirectPath = response.role === "ADMIN" ? "/admin" : "/dashboard"
+                                setTimeout(() => router.push(redirectPath), 1000)
+                            }
+                        } catch (err) {
+                            console.error("Auth0 login error:", err)
+                        }
+                    }}
+                    onError={(error) => {
+                        toast({
+                            variant: "destructive",
+                            title: t("signup.failedTitle"),
+                            description: error.message || t("signup.failedTitle"),
+                        })
+                    }}
+                    text="signup_with"
+                    disabled={isAuth0Loading}
+                />
             </div>
         </form>
     )
