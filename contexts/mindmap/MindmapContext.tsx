@@ -1130,8 +1130,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     await saveMindmap()
     isApplyingHistoryRef.current = false
     serverHistoryCursorRef.current = idx
-    // Enable redo since we just undid something
-    setCanRedo(idx > 0)
+    // Enable redo since we just undid something - redo is always possible after undo
+    setCanRedo(true)
     // Check if more undos are possible
     const hasMoreUndo = list.slice(idx + 1).some((it: any) => {
       const s = it?.snapshot
