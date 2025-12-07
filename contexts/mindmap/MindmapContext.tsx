@@ -1103,92 +1103,86 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [scheduleAutoSave, recordSnapshot]);
 
   const undo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m) return
-    const list = await fetchHistory(m.id, { limit: 200 })
-    if (!list || list.length === 0) return
-    // Undo goes to older snapshots (higher index in history)
-    const start = serverHistoryCursorRef.current == null ? 0 : serverHistoryCursorRef.current + 1
-    let idx = -1
-    for (let i = start; i < list.length; i++) {
-      const s: any = list[i]?.snapshot
-      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
-    }
-    if (idx < 0) return
-    const snap: any = list[idx].snapshot
-    const nextState: any = {
-      ...m,
-      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
-      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
-      viewport: snap.viewport || latestViewportRef.current,
-    }
+    // Check if there's anything to undo
+    if (historyRef.current.past.length === 0) return
+
+    // Get the current state before undoing (to push to future for redo)
+    const currentState = getSnapshot()
+
+    // Pop the last state from past
+    const previousState = historyRef.current.past.pop()!
+
+    // Push current state to future (for redo)
+    historyRef.current.future.push(currentState)
+
+    // Apply the previous state
     isApplyingHistoryRef.current = true
-    latestNodesRef.current = nextState.nodes
-    latestEdgesRef.current = nextState.edges
-    latestViewportRef.current = nextState.viewport || null
-    setFullMindmapState(nextState)
-    await saveMindmap()
+    latestNodesRef.current = previousState.nodes
+    latestEdgesRef.current = previousState.edges
+    latestViewportRef.current = previousState.viewport
+    setNodes(previousState.nodes)
+    setEdges(previousState.edges)
+    if (previousState.viewport) setViewport(previousState.viewport)
     isApplyingHistoryRef.current = false
-    serverHistoryCursorRef.current = idx
-    // Enable redo since we just undid something - redo is always possible after undo
-    setCanRedo(true)
-    // Check if more undos are possible
-    const hasMoreUndo = list.slice(idx + 1).some((it: any) => {
-      const s = it?.snapshot
-      return s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)
-    })
-    setCanUndo(hasMoreUndo)
+
+    // Update can undo/redo states
+    setCanUndo(historyRef.current.past.length > 0)
+    setCanRedo(historyRef.current.future.length > 0)
+
+    // Schedule save
+    scheduleAutoSave()
+
+    // Emit to other users
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) {
-      s.emit('undo:performed', room, { historyId: list[idx].id, cursor: idx })
-      s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+      s.emit('undo:performed', room, { snapshot: previousState })
+      s.emit('history:restore', room, { snapshot: previousState })
     }
-    markSynced('idle')
-  }, [setFullMindmapState, saveMindmap, markSynced])
+
+    console.log('[MindmapContext] Undo performed, past:', historyRef.current.past.length, 'future:', historyRef.current.future.length)
+  }, [getSnapshot, scheduleAutoSave])
 
   const redo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m) return
-    // Need a cursor position to redo from
-    if (serverHistoryCursorRef.current == null || serverHistoryCursorRef.current <= 0) return
-    const list = await fetchHistory(m.id, { limit: 200 })
-    if (!list || list.length === 0) return
-    // Redo goes to newer snapshots (lower index in history)
-    const start = serverHistoryCursorRef.current - 1
-    let idx = -1
-    for (let i = start; i >= 0; i--) {
-      const s: any = list[i]?.snapshot
-      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
-    }
-    if (idx < 0) return
-    const snap: any = list[idx].snapshot
-    const nextState: any = {
-      ...m,
-      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
-      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
-      viewport: snap.viewport || latestViewportRef.current,
-    }
+    // Check if there's anything to redo
+    if (historyRef.current.future.length === 0) return
+
+    // Get the current state before redoing (to push to past for undo)
+    const currentState = getSnapshot()
+
+    // Pop the last state from future
+    const nextState = historyRef.current.future.pop()!
+
+    // Push current state to past (for undo)
+    historyRef.current.past.push(currentState)
+
+    // Apply the next state
     isApplyingHistoryRef.current = true
     latestNodesRef.current = nextState.nodes
     latestEdgesRef.current = nextState.edges
-    latestViewportRef.current = nextState.viewport || null
-    setFullMindmapState(nextState)
-    await saveMindmap()
+    latestViewportRef.current = nextState.viewport
+    setNodes(nextState.nodes)
+    setEdges(nextState.edges)
+    if (nextState.viewport) setViewport(nextState.viewport)
     isApplyingHistoryRef.current = false
-    serverHistoryCursorRef.current = idx
-    // Can redo more if not at the beginning
-    setCanRedo(idx > 0)
-    // Enable undo since we're moving forward in history
-    setCanUndo(true)
+
+    // Update can undo/redo states
+    setCanUndo(historyRef.current.past.length > 0)
+    setCanRedo(historyRef.current.future.length > 0)
+
+    // Schedule save
+    scheduleAutoSave()
+
+    // Emit to other users
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) {
-      s.emit('redo:performed', room, { historyId: list[idx].id, cursor: idx })
-      s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+      s.emit('redo:performed', room, { snapshot: nextState })
+      s.emit('history:restore', room, { snapshot: nextState })
     }
-    markSynced('idle')
-  }, [setFullMindmapState, saveMindmap, markSynced])
+
+    console.log('[MindmapContext] Redo performed, past:', historyRef.current.past.length, 'future:', historyRef.current.future.length)
+  }, [getSnapshot, scheduleAutoSave])
 
   const value: MindmapContextType = {
     mindmap,
