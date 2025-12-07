@@ -53,18 +53,34 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   // Permission changed state
   const [permissionChanged, setPermissionChanged] = useState<PermissionChangedState | null>(null)
 
-  // Record snapshot to server for undo/redo
-  const recordSnapshot = useCallback(() => {
-    const s = socketRef.current
-    const room = roomRef.current
-    if (!s || !room) return
+  // Debounce ref for snapshot recording
+  const lastSnapshotAtRef = useRef<number>(0)
+  const MIN_SNAPSHOT_INTERVAL = 500 // ms
 
-    const snapshot = {
-      nodes: latestNodesRef.current.map(n => ({ ...n, data: { ...(n.data || {}) } })),
-      edges: latestEdgesRef.current.map(e => ({ ...e })),
-      viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+  // Record snapshot to server for undo/redo
+  // Use setTimeout to ensure React has updated the refs with new state
+  const recordSnapshot = useCallback(() => {
+    // Debounce: skip if too soon after last snapshot
+    const now = Date.now()
+    if (now - lastSnapshotAtRef.current < MIN_SNAPSHOT_INTERVAL) {
+      return
     }
-    s.emit('mindmap:snapshot', room, { snapshot })
+    lastSnapshotAtRef.current = now
+
+    // Use setTimeout to ensure refs are updated after React state changes
+    setTimeout(() => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (!s || !room) return
+
+      const snapshot = {
+        nodes: latestNodesRef.current.map(n => ({ ...n, data: { ...(n.data || {}) } })),
+        edges: latestEdgesRef.current.map(e => ({ ...e })),
+        viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+      }
+      console.log('[MindmapContext] Recording snapshot with', snapshot.nodes.length, 'nodes')
+      s.emit('mindmap:snapshot', room, { snapshot })
+    }, 50)
   }, [])
 
   // Sync refs with state
@@ -91,6 +107,11 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setNodes(normalizedNodes)
     setEdges(normalizedEdges)
     setViewport(data.viewport || { x: 0, y: 0, zoom: 1 })
+
+    // Update refs immediately for initial snapshot
+    latestNodesRef.current = normalizedNodes
+    latestEdgesRef.current = normalizedEdges
+    latestViewportRef.current = data.viewport || { x: 0, y: 0, zoom: 1 }
 
     // Use server-provided flags
     setCanUndo(data.canUndo ?? false)
