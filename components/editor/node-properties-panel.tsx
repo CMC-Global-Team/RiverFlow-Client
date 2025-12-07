@@ -2,9 +2,10 @@
 
 import {
   X, Trash2, Bold, Italic, Underline,
-  Highlighter, Palette, Plus, Minus
+  Highlighter, Palette, Plus, Minus, Link
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
@@ -20,6 +21,7 @@ export default function NodePropertiesPanel() {
 
   const [showHighlight, setShowHighlight] = useState(false)
   const [showTextColor, setShowTextColor] = useState(false)
+  const [linkValue, setLinkValue] = useState(selectedNode?.data?.link || '')
 
   const highlightRef = useRef<HTMLDivElement>(null)
   const textColorRef = useRef<HTMLDivElement>(null)
@@ -49,11 +51,13 @@ export default function NodePropertiesPanel() {
   useEffect(() => {
     // Only update innerHTML when node ID changes (switching nodes), not while editing
     if (labelRef.current && labelRef.current !== document.activeElement) {
-      labelRef.current.innerHTML = selectedNode.data.label || ""
+      labelRef.current.innerHTML = selectedNode?.data?.label || ""
     }
     if (descRef.current && descRef.current !== document.activeElement) {
-      descRef.current.innerHTML = selectedNode.data.description || ""
+      descRef.current.innerHTML = selectedNode?.data?.description || ""
     }
+    // Update link value when switching nodes
+    setLinkValue(selectedNode?.data?.link || '')
   }, [selectedNode?.id])
 
 
@@ -66,7 +70,7 @@ export default function NodePropertiesPanel() {
   const format = (cmd: string, value?: string) => {
     try {
       document.execCommand('styleWithCSS', false, 'true')
-    } catch {}
+    } catch { }
     document.execCommand(cmd, false, value)
     if (focusedField) saveField(focusedField)
   }
@@ -74,10 +78,10 @@ export default function NodePropertiesPanel() {
   const ensureSelection = (field?: "label" | "description" | null) => {
     const sel = window.getSelection()
     const targetField = field || focusedField
-    
+
     // Check if there's already a selection with content
     const hasSelection = sel && sel.toString().length > 0
-    
+
     if (!hasSelection) {
       // No selection, select all text in focused field
       if (targetField === 'label' && labelRef.current) {
@@ -98,47 +102,47 @@ export default function NodePropertiesPanel() {
     return false // Had existing selection
   }
 
-  const toggleBold = (field?: "label" | "description") => { 
+  const toggleBold = (field?: "label" | "description") => {
     const target = field || focusedField
     if (target === 'label') labelRef.current?.focus()
     if (target === 'description') descRef.current?.focus()
     ensureSelection(target)
-    format("bold") 
+    format("bold")
   }
-  const toggleItalic = (field?: "label" | "description") => { 
+  const toggleItalic = (field?: "label" | "description") => {
     const target = field || focusedField
     if (target === 'label') labelRef.current?.focus()
     if (target === 'description') descRef.current?.focus()
     ensureSelection(target)
-    format("italic") 
+    format("italic")
   }
-  const toggleUnderline = (field?: "label" | "description") => { 
+  const toggleUnderline = (field?: "label" | "description") => {
     const target = field || focusedField
     if (target === 'label') labelRef.current?.focus()
     if (target === 'description') descRef.current?.focus()
     ensureSelection(target)
-    format("underline") 
+    format("underline")
   }
 
   const applyStyle = (type: "highlight" | "color", color: string, field?: "label" | "description") => {
     const targetField = field || focusedField
-    
+
     // Focus the target field
     if (targetField === 'label') labelRef.current?.focus();
     if (targetField === 'description') descRef.current?.focus();
-    
+
     // Ensure selection exists (select all if no selection)
     ensureSelection(targetField)
-    
+
     if (type === "highlight") {
       // For highlight, try multiple methods
-      try { document.execCommand('hiliteColor', false, color) } catch {}
-      try { document.execCommand('backColor', false, color) } catch {}
+      try { document.execCommand('hiliteColor', false, color) } catch { }
+      try { document.execCommand('backColor', false, color) } catch { }
     } else {
       // For text color
       format("foreColor", color)
     }
-    
+
     // Close popups after applying
     setShowHighlight(false)
     setShowTextColor(false)
@@ -148,7 +152,7 @@ export default function NodePropertiesPanel() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
-      
+
       // Check if click is outside the popups
       if (highlightRef.current && !highlightRef.current.contains(target)) {
         // Check if it's not the highlight button itself
@@ -156,7 +160,7 @@ export default function NodePropertiesPanel() {
           setShowHighlight(false)
         }
       }
-      
+
       // Check if click is outside the popups for text color
       if (textColorRef.current && !textColorRef.current.contains(target)) {
         if (!target.closest('.text-color-btn')) {
@@ -223,9 +227,9 @@ export default function NodePropertiesPanel() {
 
         {/* TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               if (!focusedField) labelRef.current?.focus()
               toggleBold()
@@ -234,9 +238,9 @@ export default function NodePropertiesPanel() {
           >
             <Bold />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               if (!focusedField) labelRef.current?.focus()
               toggleItalic()
@@ -245,9 +249,9 @@ export default function NodePropertiesPanel() {
           >
             <Italic />
           </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => {
               if (!focusedField) labelRef.current?.focus()
               toggleUnderline()
@@ -262,11 +266,11 @@ export default function NodePropertiesPanel() {
             className="highlight-container relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button 
+            <Button
               className="highlight-btn"
-              variant="ghost" 
-              size="icon" 
-              onMouseDown={(e) => { 
+              variant="ghost"
+              size="icon"
+              onMouseDown={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 if (!focusedField) labelRef.current?.focus()
@@ -280,8 +284,8 @@ export default function NodePropertiesPanel() {
             </Button>
 
             {showHighlight && (
-              <div 
-                ref={highlightRef} 
+              <div
+                ref={highlightRef}
                 className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
                 style={{ pointerEvents: 'auto' }}
@@ -290,7 +294,7 @@ export default function NodePropertiesPanel() {
                   <button
                     key={c}
                     className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
-                    style={{ 
+                    style={{
                       backgroundColor: c,
                       borderColor: 'rgba(0,0,0,0.3)',
                       cursor: 'pointer'
@@ -312,10 +316,10 @@ export default function NodePropertiesPanel() {
             className="text-color-container relative"
             onClick={(e) => e.stopPropagation()}
           >
-            <Button 
+            <Button
               className="text-color-btn"
-              variant="ghost" 
-              size="icon" 
+              variant="ghost"
+              size="icon"
               onMouseDown={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -330,8 +334,8 @@ export default function NodePropertiesPanel() {
             </Button>
 
             {showTextColor && (
-              <div 
-                ref={textColorRef} 
+              <div
+                ref={textColorRef}
                 className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
                 style={{ pointerEvents: 'auto' }}
@@ -340,7 +344,7 @@ export default function NodePropertiesPanel() {
                   <button
                     key={c}
                     className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
-                    style={{ 
+                    style={{
                       backgroundColor: c,
                       borderColor: 'rgba(0,0,0,0.3)',
                       cursor: 'pointer'
@@ -382,6 +386,33 @@ export default function NodePropertiesPanel() {
           onBlur={() => { saveField("description"); setFocusedField(null) }}
         />
 
+        {/* LINK */}
+        <div className="space-y-2">
+          <Label className="flex items-center gap-1">
+            <Link className="w-4 h-4" />
+            Link (URL)
+          </Label>
+          <Input
+            type="url"
+            placeholder="https://example.com"
+            value={linkValue}
+            onChange={(e) => setLinkValue(e.target.value)}
+            onBlur={() => {
+              const trimmed = linkValue.trim()
+              if (trimmed && !trimmed.match(/^https?:\/\//)) {
+                setLinkValue('https://' + trimmed)
+                updateNodeData(selectedNode.id, { link: 'https://' + trimmed })
+              } else {
+                updateNodeData(selectedNode.id, { link: trimmed || undefined })
+              }
+            }}
+            className="bg-background"
+          />
+          <p className="text-xs text-muted-foreground">
+            In view mode, clicking this node will preview the link
+          </p>
+        </div>
+
         {/* SHAPE */}
         <div className="space-y-2">
           <Label>Shape</Label>
@@ -390,9 +421,8 @@ export default function NodePropertiesPanel() {
               <button
                 key={s.value}
                 onClick={() => handleShape(s.value)}
-                className={`p-3 border rounded-lg hover:bg-muted transition flex flex-col items-center gap-1 ${
-                  selectedNode.data.shape === s.value ? "border-primary bg-primary/10" : ""
-                }`}
+                className={`p-3 border rounded-lg hover:bg-muted transition flex flex-col items-center gap-1 ${selectedNode.data.shape === s.value ? "border-primary bg-primary/10" : ""
+                  }`}
               >
                 <span className="text-2xl">{s.icon}</span>
                 <span className="text-xs">{s.label}</span>
