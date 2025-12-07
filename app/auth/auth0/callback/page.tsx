@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useRef } from "react"
 import { useAuth0 } from "@auth0/auth0-react"
 import { useRouter } from "next/navigation"
 import { useAuth0SignIn } from "@/hooks/auth/useAuth0SignIn"
@@ -17,39 +17,38 @@ export default function Auth0CallbackPage() {
     const { signInWithAuth0, isLoading: isSigningIn } = useAuth0SignIn()
     const { toast } = useToast()
     const router = useRouter()
-    const [hasProcessed, setHasProcessed] = useState(false)
-    const [status, setStatus] = useState("Processing login...")
+    const processedRef = useRef(false)
 
     useEffect(() => {
-        const handleCallback = async () => {
-            // Prevent multiple executions
-            if (hasProcessed) {
-                return
-            }
+        // Only run once
+        if (processedRef.current) {
+            return
+        }
 
-            // Wait for Auth0 to finish loading
-            if (isAuth0Loading) {
-                setStatus("Verifying authentication...")
-                return
-            }
+        // Wait for Auth0 to finish loading
+        if (isAuth0Loading) {
+            return
+        }
 
-            // Handle Auth0 error
-            if (auth0Error) {
-                console.error("Auth0 error:", auth0Error)
-                toast({
-                    variant: "destructive",
-                    title: t("login.failedTitle"),
-                    description: auth0Error.message || "Authentication failed",
-                })
-                router.push("/auth")
-                return
-            }
+        // Handle Auth0 error - only show once and redirect
+        if (auth0Error) {
+            processedRef.current = true
+            console.error("Auth0 error:", auth0Error)
+            toast({
+                variant: "destructive",
+                title: t("login.failedTitle"),
+                description: auth0Error.message || "Authentication failed",
+            })
+            // Use replace to prevent back button issues
+            window.location.href = "/login"
+            return
+        }
 
-            // If authenticated, get ID token and authenticate with backend
-            if (isAuthenticated) {
-                setHasProcessed(true)
-                setStatus("Completing authentication...")
+        // If authenticated, get ID token and authenticate with backend
+        if (isAuthenticated) {
+            processedRef.current = true
 
+            const processAuth = async () => {
                 try {
                     const claims = await getIdTokenClaims()
                     if (claims?.__raw) {
@@ -60,7 +59,7 @@ export default function Auth0CallbackPage() {
                                 description: t("login.successDesc", { name: response.fullName }),
                             })
                             const redirectPath = response.role === "ADMIN" ? "/admin" : "/dashboard"
-                            router.push(redirectPath)
+                            window.location.href = redirectPath
                         } else {
                             throw new Error("Failed to authenticate with backend")
                         }
@@ -74,23 +73,27 @@ export default function Auth0CallbackPage() {
                         title: t("login.failedTitle"),
                         description: "Failed to complete authentication",
                     })
-                    router.push("/auth")
+                    window.location.href = "/login"
                 }
-            } else if (!isAuth0Loading) {
-                // Not authenticated and not loading, redirect to auth page
-                router.push("/auth")
             }
+
+            processAuth()
+            return
         }
 
-        handleCallback()
-    }, [isAuthenticated, isAuth0Loading, auth0Error, hasProcessed, getIdTokenClaims, signInWithAuth0, toast, router, t])
+        // Not authenticated and not loading - something went wrong
+        if (!isAuthenticated && !isAuth0Loading) {
+            processedRef.current = true
+            window.location.href = "/login"
+        }
+    }, [isAuthenticated, isAuth0Loading, auth0Error, getIdTokenClaims, signInWithAuth0, toast, router, t])
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="text-center space-y-4">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
                 <p className="text-muted-foreground">
-                    {status}
+                    {isSigningIn ? "Completing authentication..." : "Processing login..."}
                 </p>
             </div>
         </div>
