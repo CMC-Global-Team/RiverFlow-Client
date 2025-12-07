@@ -2,6 +2,7 @@
 
 import { ThemeProvider } from "@/components/theme-provider"
 import { GoogleOAuthProviderWrapper } from "@/components/auth/GoogleOAuthProvider"
+import { Auth0ProviderWrapper } from "@/components/auth/Auth0ProviderWrapper"
 import { AuthProvider } from "@/contexts/auth/AuthContext"
 import "@/i18n/i18n"
 
@@ -13,9 +14,11 @@ export function Providers({ children }: ProvidersProps) {
   return (
     <ThemeProvider attribute="class" defaultTheme="light">
       <GoogleOAuthProviderWrapper>
-        <AuthProvider>
-          {children}
-        </AuthProvider>
+        <Auth0ProviderWrapper>
+          <AuthProvider>
+            {children}
+          </AuthProvider>
+        </Auth0ProviderWrapper>
       </GoogleOAuthProviderWrapper>
     </ThemeProvider>
   )
