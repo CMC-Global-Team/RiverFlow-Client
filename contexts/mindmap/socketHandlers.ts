@@ -24,6 +24,8 @@ export interface SocketHandlerSetters {
     setParticipants: React.Dispatch<React.SetStateAction<Record<string, ParticipantInfo>>>
     setAccessRevoked: React.Dispatch<React.SetStateAction<any>>
     setPermissionChanged: React.Dispatch<React.SetStateAction<any>>
+    setCanUndo: React.Dispatch<React.SetStateAction<boolean>>
+    setCanRedo: React.Dispatch<React.SetStateAction<boolean>>
     setFullMindmapState: (data: any) => void
     markSynced: (status?: 'idle' | 'saving' | 'saved' | 'error') => void
     toast: (options: { title?: string; description?: string; variant?: string }) => void
@@ -53,6 +55,9 @@ export interface SocketHandlers {
     onPublicPermissionChanged: (data: any) => void
     onCollaboratorRoleChanged: (data: any) => void
     onMindmapDeleted: (data: any) => void
+    onUndoResult: (data: any) => void
+    onRedoResult: (data: any) => void
+    onHistoryState: (data: any) => void
 }
 
 export function createSocketHandlers(
@@ -82,6 +87,8 @@ export function createSocketHandlers(
         setParticipants,
         setAccessRevoked,
         setPermissionChanged,
+        setCanUndo,
+        setCanRedo,
         setFullMindmapState,
         markSynced,
         toast,
@@ -360,6 +367,65 @@ export function createSocketHandlers(
                 message: 'This mindmap has been deleted by the owner.'
             })
         },
+
+        onUndoResult: (data: any) => {
+            if (!data?.success) {
+                console.log('[MindmapContext] Undo failed:', data?.reason)
+                return
+            }
+            const snap = data?.snapshot
+            if (snap) {
+                isApplyingHistoryRef.current = true
+                if (Array.isArray(snap.nodes)) {
+                    setNodes(snap.nodes)
+                    latestNodesRef.current = snap.nodes
+                }
+                if (Array.isArray(snap.edges)) {
+                    setEdges(normalizeEdges(snap.edges))
+                    latestEdgesRef.current = snap.edges
+                }
+                if (snap.viewport) {
+                    setViewport(snap.viewport)
+                    latestViewportRef.current = snap.viewport
+                }
+                isApplyingHistoryRef.current = false
+            }
+            setCanUndo(data?.canUndo ?? false)
+            setCanRedo(data?.canRedo ?? false)
+            console.log('[MindmapContext] Undo applied, canUndo:', data?.canUndo, 'canRedo:', data?.canRedo)
+        },
+
+        onRedoResult: (data: any) => {
+            if (!data?.success) {
+                console.log('[MindmapContext] Redo failed:', data?.reason)
+                return
+            }
+            const snap = data?.snapshot
+            if (snap) {
+                isApplyingHistoryRef.current = true
+                if (Array.isArray(snap.nodes)) {
+                    setNodes(snap.nodes)
+                    latestNodesRef.current = snap.nodes
+                }
+                if (Array.isArray(snap.edges)) {
+                    setEdges(normalizeEdges(snap.edges))
+                    latestEdgesRef.current = snap.edges
+                }
+                if (snap.viewport) {
+                    setViewport(snap.viewport)
+                    latestViewportRef.current = snap.viewport
+                }
+                isApplyingHistoryRef.current = false
+            }
+            setCanUndo(data?.canUndo ?? false)
+            setCanRedo(data?.canRedo ?? false)
+            console.log('[MindmapContext] Redo applied, canUndo:', data?.canUndo, 'canRedo:', data?.canRedo)
+        },
+
+        onHistoryState: (data: any) => {
+            setCanUndo(data?.canUndo ?? false)
+            setCanRedo(data?.canRedo ?? false)
+        },
     }
 }
 
@@ -389,6 +455,9 @@ export function attachSocketListeners(socket: any, handlers: SocketHandlers): vo
     socket.on('mindmap:public:permission:changed', handlers.onPublicPermissionChanged)
     socket.on('mindmap:collaborator:role:changed', handlers.onCollaboratorRoleChanged)
     socket.on('mindmap:deleted', handlers.onMindmapDeleted)
+    socket.on('undo:result', handlers.onUndoResult)
+    socket.on('redo:result', handlers.onRedoResult)
+    socket.on('history:state', handlers.onHistoryState)
 }
 
 /**
@@ -417,4 +486,7 @@ export function detachSocketListeners(socket: any, handlers: SocketHandlers): vo
     socket.off('mindmap:public:permission:changed', handlers.onPublicPermissionChanged)
     socket.off('mindmap:collaborator:role:changed', handlers.onCollaboratorRoleChanged)
     socket.off('mindmap:deleted', handlers.onMindmapDeleted)
+    socket.off('undo:result', handlers.onUndoResult)
+    socket.off('redo:result', handlers.onRedoResult)
+    socket.off('history:state', handlers.onHistoryState)
 }
