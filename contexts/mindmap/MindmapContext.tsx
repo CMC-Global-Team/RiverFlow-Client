@@ -37,6 +37,7 @@ interface MindmapContextType {
   undo: () => Promise<void>
   redo: () => Promise<void>
   setFullMindmapState: (data: MindmapResponse | null) => void
+  applyStreamingAdditions: (addNodes?: any[], addEdges?: any[]) => void
   restoreFromHistory: (snapshot: { nodes?: any[]; edges?: any[]; viewport?: any }, historyId?: string | number | null) => Promise<void>
   participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
   announcePresence: (info: { name: string; color: string; userId?: number | string | null; avatar?: string | null }) => void
@@ -66,6 +67,7 @@ interface AutoSaveOptions {
 interface UseMindmapAutoSaveResult {
   autoSaveEnabled: boolean
   setAutoSaveEnabled: (enabled: boolean) => void
+  setAutoSaveEnabledExternal: (enabled: boolean) => void  // For socket sync without triggering emit
   saveStatus: SaveStatus
   scheduleAutoSave: (debounceMsOverride?: number) => void
   saveImmediately: () => Promise<void>
@@ -190,9 +192,23 @@ function useMindmapAutoSave(
     [cancelScheduledSave, clearStatusTimer]
   )
 
+  // External setter for socket sync - only updates state, doesn't trigger side effects for cancel
+  const setAutoSaveEnabledExternal = useCallback(
+    (enabled: boolean) => {
+      setAutoSaveEnabledState(enabled)
+      if (!enabled) {
+        cancelScheduledSave()
+        clearStatusTimer()
+        setSaveStatus('idle')
+      }
+    },
+    [cancelScheduledSave, clearStatusTimer]
+  )
+
   return {
     autoSaveEnabled,
     setAutoSaveEnabled: handleToggleAutoSave,
+    setAutoSaveEnabledExternal,
     saveStatus,
     scheduleAutoSave,
     saveImmediately,
@@ -712,6 +728,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const {
     autoSaveEnabled,
     setAutoSaveEnabled,
+    setAutoSaveEnabledExternal,
     saveStatus,
     scheduleAutoSave,
     saveImmediately,
@@ -728,6 +745,56 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       })
     },
   })
+
+  // Socket listeners for auto-save and undo/redo sync
+  useEffect(() => {
+    const s = socketRef.current
+    if (!s) return
+
+    // Handle auto-save sync from other users
+    const onAutoSaveSync = (data: any) => {
+      if (data?.enabled !== undefined) {
+        console.log('[MindmapContext] Auto-save synced:', data.enabled, 'from clientId:', data.clientId)
+        setAutoSaveEnabledExternal(data.enabled)
+      }
+    }
+
+    // Handle undo sync from other users
+    const onUndoPerformed = (data: any) => {
+      if (data?.cursor !== undefined) {
+        console.log('[MindmapContext] Undo synced, cursor:', data.cursor, 'from clientId:', data.clientId)
+        serverHistoryCursorRef.current = data.cursor
+      }
+    }
+
+    // Handle redo sync from other users
+    const onRedoPerformed = (data: any) => {
+      if (data?.cursor !== undefined) {
+        console.log('[MindmapContext] Redo synced, cursor:', data.cursor, 'from clientId:', data.clientId)
+        serverHistoryCursorRef.current = data.cursor
+      }
+    }
+
+    s.on('autosave:sync', onAutoSaveSync)
+    s.on('undo:performed', onUndoPerformed)
+    s.on('redo:performed', onRedoPerformed)
+
+    return () => {
+      s.off('autosave:sync', onAutoSaveSync)
+      s.off('undo:performed', onUndoPerformed)
+      s.off('redo:performed', onRedoPerformed)
+    }
+  }, [setAutoSaveEnabledExternal])
+
+  // Synced auto-save toggle - emits socket event to sync with other users
+  const handleSyncedAutoSaveToggle = useCallback((enabled: boolean) => {
+    setAutoSaveEnabled(enabled)
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) {
+      s.emit('autosave:toggle', room, { enabled })
+    }
+  }, [setAutoSaveEnabled])
 
   const loadMindmap = useCallback(async (id: string) => {
     try {
@@ -1064,7 +1131,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     serverHistoryCursorRef.current = idx
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+    if (s && room) {
+      s.emit('undo:performed', room, { historyId: list[idx].id, cursor: idx })
+      s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+    }
     markSynced('idle')
   }, [setFullMindmapState, saveMindmap, markSynced])
 
@@ -1097,7 +1167,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     serverHistoryCursorRef.current = idx
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+    if (s && room) {
+      s.emit('redo:performed', room, { historyId: list[idx].id, cursor: idx })
+      s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+    }
     markSynced('idle')
   }, [setFullMindmapState, saveMindmap, markSynced])
 
@@ -1123,7 +1196,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setTitle,
     onViewportChange,
     autoSaveEnabled,
-    setAutoSaveEnabled,
+    setAutoSaveEnabled: handleSyncedAutoSaveToggle,
     saveStatus,
     canUndo,
     canRedo,
