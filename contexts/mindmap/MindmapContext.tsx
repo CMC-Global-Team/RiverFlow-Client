@@ -954,8 +954,17 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (s && room) emitEdgesChange(s, room, [{ type: 'remove', id: edgeId }])
   }, [scheduleAutoSave, recordSnapshot])
 
-  const updateNodeData = useCallback((nodeId: string, newData: any) => {
-    recordSnapshot()
+  const updateNodeData = useCallback((nodeId: string, newData: any, skipSnapshot = false) => {
+    // Check if we should snapshot based on keys
+    const transientKeys = ['isEditing', 'isHovered', 'isResizing']
+    const hasSignificantChanges = Object.keys(newData).some(k => !transientKeys.includes(k))
+
+    if (!skipSnapshot && hasSignificantChanges) {
+      recordSnapshot()
+    } else {
+      console.log('[MindmapContext] updateNodeData skipping snapshot', { skipSnapshot, hasSignificantChanges, keys: Object.keys(newData) })
+    }
+
     let updatedNodeRef: any = null
     setNodes((nds) =>
       nds.map((node) => {
@@ -978,15 +987,21 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           if (newData.scale !== undefined) {
             updatedNode.position = {
               x: node.position.x + 0.001,
-              y: node.position.y + 0.001,
+              y: node.position.y + 0.001
             }
+            requestAnimationFrame(() => {
+              setNodes((n) => n.map(x => x.id === nodeId ? { ...x, position: { x: x.position.x - 0.001, y: x.position.y - 0.001 } } : x))
+            })
           }
+
           updatedNodeRef = updatedNode
           return updatedNode
         }
         return node
       })
     )
+
+    // Also update selected node state if applicable
     setSelectedNode((prev) => {
       if (prev && prev.id === nodeId) {
         const updatedData = { ...prev.data }
@@ -1004,23 +1019,15 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         if (newData.shape) {
           updatedNode.type = newData.shape
         }
-        if (newData.scale !== undefined) {
-          updatedNode.position = {
-            x: prev.position.x + 0.001,
-            y: prev.position.y + 0.001,
-          }
-        }
-        updatedNodeRef = updatedNode
         return updatedNode
       }
       return prev
     })
+
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room && updatedNodeRef) {
-      emitNodeUpdate(s, room, updatedNodeRef)
-    }
+    if (s && room && updatedNodeRef) emitNodeUpdate(s, room, updatedNodeRef)
   }, [scheduleAutoSave, recordSnapshot])
 
   const applyStreamingAdditions = useCallback((addNodes: any[] = [], addEdges: any[] = []) => {
@@ -1071,8 +1078,15 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
-  const updateEdgeData = useCallback((edgeId: string, updates: any) => {
-    recordSnapshot()
+  const updateEdgeData = useCallback((edgeId: string, updates: any, skipSnapshot = false) => {
+    // Check if we should snapshot based on keys
+    const transientKeys = ['isEditing', 'isHovered', 'isResizing', 'selected']
+    const hasSignificantChanges = Object.keys(updates).some(k => !transientKeys.includes(k))
+
+    if (!skipSnapshot && hasSignificantChanges) {
+      recordSnapshot()
+    }
+
     let updated: any = null
     setEdges((eds) =>
       eds.map((edge) => {
@@ -1083,14 +1097,16 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         return edge
       })
     )
+
     setSelectedEdge((prev) => {
       if (prev && prev.id === edgeId) {
         const next = { ...prev, ...updates }
-        updated = next
+        updated = next // Ensure updated is set if selected edge is updated
         return next
       }
       return prev
     })
+
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
