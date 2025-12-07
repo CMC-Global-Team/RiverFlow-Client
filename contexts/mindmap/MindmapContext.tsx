@@ -239,8 +239,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
   const lastPresenceInfoRef = useRef<{ name: string; color: string; userId?: number | string | null; avatar?: string | null } | null>(null)
   const lastReannounceAtRef = useRef<number>(0)
-  const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
-  const serverHistoryCursorRef = useRef<number | null>(null)
+  // Remove local history ref
+  // const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
+  // const serverHistoryCursorRef = useRef<number | null>(null)
   const isApplyingHistoryRef = useRef(false)
 
   // Access control state - set when owner revokes access or removes collaborator
@@ -258,18 +259,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
+  // recordSnapshot removed as we rely on server history
   const recordSnapshot = useCallback((force = false) => {
-    if (isApplyingHistoryRef.current) {
-      console.log('[MindmapContext] recordSnapshot skipped (isApplyingHistory)')
-      return
-    }
-    const snap = getSnapshot()
-    historyRef.current.past.push(snap)
-    historyRef.current.future = []
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
-    console.log('[MindmapContext] recordSnapshot recorded. Past:', historyRef.current.past.length)
-  }, [getSnapshot])
+    // No-op
+  }, [])
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
   useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
@@ -353,10 +346,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setNodes(normalizedNodes);
     setEdges(normalizedEdges);
     setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
-    historyRef.current = { past: [], future: [] }
+    setNodes(normalizedNodes);
+    setEdges(normalizedEdges);
+    setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
 
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
+    // Use server-provided flags
+    setCanUndo(data.canUndo ?? false)
+    setCanRedo(data.canRedo ?? false)
 
   }, []);
 
@@ -680,21 +676,13 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [mindmap])
 
+  // No need to fetch history to determine canUndo/canRedo initially as it comes from mindmap response
+  // but if we want to be sure on load:
   useEffect(() => {
-    const run = async () => {
-      const m = latestMindmapRef.current
-      if (!m || !m.id) return // Skip if no mindmap or empty id (embed mode)
-      try {
-        const list = await fetchHistory(m.id, { limit: 50 })
-        const hasSnap = Array.isArray(list) && list.some((it: any) => {
-          const s = it?.snapshot
-          return s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)
-        })
-        setCanUndo(!!hasSnap)
-        setCanRedo(false)
-      } catch { }
+    if (mindmap) {
+      setCanUndo(mindmap.canUndo ?? false)
+      setCanRedo(mindmap.canRedo ?? false)
     }
-    run()
   }, [mindmap])
 
   const performSave = useCallback(async () => {
@@ -765,17 +753,52 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
     // Handle undo sync from other users
     const onUndoPerformed = (data: any) => {
-      if (data?.cursor !== undefined) {
-        console.log('[MindmapContext] Undo synced, cursor:', data.cursor, 'from clientId:', data.clientId)
-        serverHistoryCursorRef.current = data.cursor
+      if (data?.snapshot) {
+        console.log('[MindmapContext] Undo synced with snapshot', 'from clientId:', data.clientId)
+        // Apply snapshot
+        const snap = data.snapshot
+        const nextState: any = {
+          ...latestMindmapRef.current,
+          nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+          edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+          viewport: snap.viewport || latestViewportRef.current,
+          canUndo: snap.canUndo ?? latestMindmapRef.current?.canUndo,
+          canRedo: snap.canRedo ?? latestMindmapRef.current?.canRedo,
+        }
+
+        // If server sent canUndo/canRedo in snapshot/payload, usage would be better, but snapshot usually just has content
+        // We might want to re-fetch to get correct history flags, or trust the snapshot
+
+        isApplyingHistoryRef.current = true
+        latestNodesRef.current = nextState.nodes
+        latestEdgesRef.current = nextState.edges
+        latestViewportRef.current = nextState.viewport || null
+        setFullMindmapState(nextState)
+        isApplyingHistoryRef.current = false
       }
     }
 
     // Handle redo sync from other users
     const onRedoPerformed = (data: any) => {
-      if (data?.cursor !== undefined) {
-        console.log('[MindmapContext] Redo synced, cursor:', data.cursor, 'from clientId:', data.clientId)
-        serverHistoryCursorRef.current = data.cursor
+      if (data?.snapshot) {
+        console.log('[MindmapContext] Redo synced with snapshot', 'from clientId:', data.clientId)
+        // Apply snapshot
+        const snap = data.snapshot
+        const nextState: any = {
+          ...latestMindmapRef.current,
+          nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+          edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+          viewport: snap.viewport || latestViewportRef.current,
+          canUndo: snap.canUndo ?? latestMindmapRef.current?.canUndo,
+          canRedo: snap.canRedo ?? latestMindmapRef.current?.canRedo,
+        }
+
+        isApplyingHistoryRef.current = true
+        latestNodesRef.current = nextState.nodes
+        latestEdgesRef.current = nextState.edges
+        latestViewportRef.current = nextState.viewport || null
+        setFullMindmapState(nextState)
+        isApplyingHistoryRef.current = false
       }
     }
 
@@ -1133,96 +1156,75 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [scheduleAutoSave, recordSnapshot]);
 
   const undo = useCallback(async () => {
-    // Check if there's anything to undo
-    if (historyRef.current.past.length === 0) return
+    const m = latestMindmapRef.current
+    if (!m || !m.id) return
 
-    // Set flag to prevent recordSnapshot during undo
     isApplyingHistoryRef.current = true
+    try {
+      const updatedMindmap = await undoMindmap(m.id)
+      setFullMindmapState(updatedMindmap)
 
-    // Get the current state before undoing (to push to future for redo)
-    const currentState = getSnapshot()
-
-    // Pop the last state from past
-    const previousState = historyRef.current.past.pop()!
-
-    // Push current state to future (for redo)
-    historyRef.current.future.push(currentState)
-
-    // Apply the previous state
-    latestNodesRef.current = previousState.nodes
-    latestEdgesRef.current = previousState.edges
-    latestViewportRef.current = previousState.viewport
-    setNodes(previousState.nodes)
-    setEdges(previousState.edges)
-    if (previousState.viewport) setViewport(previousState.viewport)
-
-    // Update can undo/redo states
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
-
-    // Keep flag true for a moment to let React process state updates
-    setTimeout(() => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) {
+        // Broadcast the new state as a snapshot restoration
+        const snapshot = {
+          nodes: updatedMindmap.nodes,
+          edges: updatedMindmap.edges,
+          viewport: updatedMindmap.viewport,
+          canUndo: updatedMindmap.canUndo,
+          canRedo: updatedMindmap.canRedo,
+        }
+        // Emit undo:performed which now carries the snapshot and broadcasts to others
+        // We do NOT emit history:restore to avoid double-logging on server
+        s.emit('undo:performed', room, { snapshot })
+      }
+    } catch (error) {
+      console.error('Undo failed:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Undo failed',
+        description: 'Could not undo action.'
+      })
+    } finally {
       isApplyingHistoryRef.current = false
-      // Save immediately without triggering snapshots
-      saveImmediately().catch(console.error)
-    }, 100)
-
-    // Emit to other users
-    const s = socketRef.current
-    const room = roomRef.current
-    if (s && room) {
-      s.emit('undo:performed', room, { snapshot: previousState })
-      s.emit('history:restore', room, { snapshot: previousState })
     }
-
-    console.log('[MindmapContext] Undo performed, past:', historyRef.current.past.length, 'future:', historyRef.current.future.length)
-  }, [getSnapshot, saveImmediately])
+  }, [setFullMindmapState, toast])
 
   const redo = useCallback(async () => {
-    // Check if there's anything to redo
-    if (historyRef.current.future.length === 0) return
+    const m = latestMindmapRef.current
+    if (!m || !m.id) return
 
-    // Set flag to prevent recordSnapshot during redo
     isApplyingHistoryRef.current = true
+    try {
+      const updatedMindmap = await redoMindmap(m.id)
+      setFullMindmapState(updatedMindmap)
 
-    // Get the current state before redoing (to push to past for undo)
-    const currentState = getSnapshot()
-
-    // Pop the last state from future
-    const nextState = historyRef.current.future.pop()!
-
-    // Push current state to past (for undo)
-    historyRef.current.past.push(currentState)
-
-    // Apply the next state
-    latestNodesRef.current = nextState.nodes
-    latestEdgesRef.current = nextState.edges
-    latestViewportRef.current = nextState.viewport
-    setNodes(nextState.nodes)
-    setEdges(nextState.edges)
-    if (nextState.viewport) setViewport(nextState.viewport)
-
-    // Update can undo/redo states
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
-
-    // Keep flag true for a moment to let React process state updates
-    setTimeout(() => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (s && room) {
+        // Broadcast the new state
+        const snapshot = {
+          nodes: updatedMindmap.nodes,
+          edges: updatedMindmap.edges,
+          viewport: updatedMindmap.viewport,
+          canUndo: updatedMindmap.canUndo,
+          canRedo: updatedMindmap.canRedo,
+        }
+        // Emit redo:performed which now carries the snapshot and broadcasts to others
+        s.emit('redo:performed', room, { snapshot })
+      }
+    } catch (error) {
+      console.error('Redo failed:', error)
+      toast({
+        variant: 'destructive',
+        title: 'Redo failed',
+        description: 'Could not redo action.'
+      })
+    } finally {
       isApplyingHistoryRef.current = false
-      // Save immediately without triggering snapshots
-      saveImmediately().catch(console.error)
-    }, 100)
-
-    // Emit to other users
-    const s = socketRef.current
-    const room = roomRef.current
-    if (s && room) {
-      s.emit('redo:performed', room, { snapshot: nextState })
-      s.emit('history:restore', room, { snapshot: nextState })
     }
-
-    console.log('[MindmapContext] Redo performed, past:', historyRef.current.past.length, 'future:', historyRef.current.future.length)
-  }, [getSnapshot, scheduleAutoSave])
+  }, [setFullMindmapState, toast])
 
   const value: MindmapContextType = {
     mindmap,
