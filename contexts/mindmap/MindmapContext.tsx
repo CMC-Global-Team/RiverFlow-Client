@@ -258,13 +258,17 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  const recordSnapshot = useCallback(() => {
-    if (isApplyingHistoryRef.current) return
+  const recordSnapshot = useCallback((force = false) => {
+    if (isApplyingHistoryRef.current) {
+      console.log('[MindmapContext] recordSnapshot skipped (isApplyingHistory)')
+      return
+    }
     const snap = getSnapshot()
     historyRef.current.past.push(snap)
     historyRef.current.future = []
     setCanUndo(historyRef.current.past.length > 0)
     setCanRedo(historyRef.current.future.length > 0)
+    console.log('[MindmapContext] recordSnapshot recorded. Past:', historyRef.current.past.length)
   }, [getSnapshot])
 
   useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
@@ -816,7 +820,11 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      recordSnapshot()
+      // Only record snapshot if there are changes other than 'select'
+      const hasSignificantChanges = changes.some(c => c.type !== 'select')
+      if (hasSignificantChanges) {
+        recordSnapshot()
+      }
       setNodes((nds) => applyNodeChanges(changes, nds))
       scheduleAutoSave()
       const s = socketRef.current
@@ -831,7 +839,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const now = Date.now()
       const suppressRemove = now - lastConnectedAtRef.current < 400
       const filtered = suppressRemove ? changes.filter((ch: any) => ch?.type !== 'remove') : changes
-      recordSnapshot()
+
+      const hasSignificantChanges = filtered.some(c => c.type !== 'select')
+      if (hasSignificantChanges) {
+        recordSnapshot()
+      }
+
       setEdges((eds) => applyEdgeChanges(filtered, eds))
       scheduleAutoSave()
       const s = socketRef.current
@@ -1094,7 +1107,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [mindmap, scheduleAutoSave])
 
   const onViewportChange = useCallback((viewport: Viewport) => {
-    recordSnapshot()
+    // Only update viewport state without snapshotting history
+    // History should track content changes, not view changes
     setViewport(viewport);
     scheduleAutoSave()
     const s = socketRef.current
