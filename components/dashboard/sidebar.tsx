@@ -18,7 +18,9 @@ import {
   ChevronRight,
   Shield,
   Lock,
-  History
+  History,
+  Users,
+  CreditCard
 } from "lucide-react"
 
 
@@ -107,6 +109,7 @@ export default function Sidebar() {
             <FileText className="h-5 w-5" />
             {!isCollapsed && <span className="text-sm font-medium">{t("myMindmaps")}</span>}
           </Link>
+
 
 
           <div className="space-y-1">
