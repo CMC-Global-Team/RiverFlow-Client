@@ -1,22 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-    SheetFooter,
-} from "@/components/ui/sheet"
+import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, Loader2, AlertCircle } from "lucide-react"
+import { ExternalLink, X, GripHorizontal, AlertCircle, Globe } from "lucide-react"
 
 interface LinkPreviewModalProps {
     isOpen: boolean
     onClose: () => void
     url: string
     nodeLabel?: string
+    position?: { x: number; y: number }
 }
 
 export default function LinkPreviewModal({
@@ -24,94 +17,187 @@ export default function LinkPreviewModal({
     onClose,
     url,
     nodeLabel,
+    position = { x: 100, y: 100 },
 }: LinkPreviewModalProps) {
-    const [isLoading, setIsLoading] = useState(true)
     const [hasError, setHasError] = useState(false)
+    const [isDragging, setIsDragging] = useState(false)
+    const [modalPosition, setModalPosition] = useState({ x: position.x, y: position.y })
+    const dragStartRef = useRef({ x: 0, y: 0 })
+    const modalRef = useRef<HTMLDivElement>(null)
+
+    // Reset position when modal opens
+    useEffect(() => {
+        if (isOpen) {
+            // Center the modal near the click position but ensure it's visible
+            const modalWidth = 450
+            const modalHeight = 350
+            const padding = 20
+
+            let x = position.x - modalWidth / 2
+            let y = position.y - modalHeight / 2
+
+            // Ensure modal stays within viewport
+            x = Math.max(padding, Math.min(x, window.innerWidth - modalWidth - padding))
+            y = Math.max(padding, Math.min(y, window.innerHeight - modalHeight - padding))
+
+            setModalPosition({ x, y })
+            setHasError(false)
+        }
+    }, [isOpen, position])
 
     const handleOpenInNewTab = () => {
         window.open(url, '_blank', 'noopener,noreferrer')
     }
 
-    const handleIframeLoad = () => {
-        setIsLoading(false)
-    }
-
     const handleIframeError = () => {
-        setIsLoading(false)
         setHasError(true)
     }
 
-    // Reset state when modal opens
-    const handleOpenChange = (open: boolean) => {
-        if (open) {
-            setIsLoading(true)
-            setHasError(false)
-        } else {
-            onClose()
+    // Drag handlers
+    const handleDragStart = useCallback((e: React.MouseEvent) => {
+        e.preventDefault()
+        setIsDragging(true)
+        dragStartRef.current = {
+            x: e.clientX - modalPosition.x,
+            y: e.clientY - modalPosition.y,
+        }
+    }, [modalPosition])
+
+    useEffect(() => {
+        if (!isDragging) return
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const newX = e.clientX - dragStartRef.current.x
+            const newY = e.clientY - dragStartRef.current.y
+
+            // Keep modal within viewport
+            const padding = 20
+            const modalWidth = modalRef.current?.offsetWidth || 450
+            const modalHeight = modalRef.current?.offsetHeight || 350
+
+            setModalPosition({
+                x: Math.max(padding, Math.min(newX, window.innerWidth - modalWidth - padding)),
+                y: Math.max(padding, Math.min(newY, window.innerHeight - modalHeight - padding)),
+            })
+        }
+
+        const handleMouseUp = () => {
+            setIsDragging(false)
+        }
+
+        document.addEventListener('mousemove', handleMouseMove)
+        document.addEventListener('mouseup', handleMouseUp)
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMove)
+            document.removeEventListener('mouseup', handleMouseUp)
+        }
+    }, [isDragging])
+
+    if (!isOpen) return null
+
+    // Extract domain name for display
+    const getDomain = (urlString: string) => {
+        try {
+            const urlObj = new URL(urlString)
+            return urlObj.hostname
+        } catch {
+            return urlString
         }
     }
 
     return (
-        <Sheet open={isOpen} onOpenChange={handleOpenChange}>
-            <SheetContent side="right" className="w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
-                <SheetHeader>
-                    <SheetTitle className="flex items-center gap-2">
-                        {nodeLabel || "Link Preview"}
-                    </SheetTitle>
-                    <SheetDescription className="truncate">
-                        {url}
-                    </SheetDescription>
-                </SheetHeader>
+        <>
+            {/* Backdrop */}
+            <div
+                className="fixed inset-0 z-40 bg-black/20"
+                onClick={onClose}
+            />
 
-                <div className="flex-1 relative min-h-[400px] border rounded-lg overflow-hidden bg-muted/30">
-                    {isLoading && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background/80 z-10">
-                            <div className="flex flex-col items-center gap-2">
-                                <Loader2 className="w-8 h-8 animate-spin text-primary" />
-                                <span className="text-sm text-muted-foreground">Loading preview...</span>
-                            </div>
-                        </div>
-                    )}
+            {/* Modal */}
+            <div
+                ref={modalRef}
+                className="fixed z-50 bg-background border border-border rounded-xl shadow-2xl overflow-hidden"
+                style={{
+                    left: modalPosition.x,
+                    top: modalPosition.y,
+                    width: '450px',
+                    maxWidth: 'calc(100vw - 40px)',
+                }}
+            >
+                {/* Header - Draggable */}
+                <div
+                    className="flex items-center justify-between px-3 py-2 bg-muted/50 border-b border-border cursor-move select-none"
+                    onMouseDown={handleDragStart}
+                >
+                    <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <GripHorizontal className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                        <Globe className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span className="text-sm font-medium truncate">
+                            {nodeLabel || getDomain(url)}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={handleOpenInNewTab}
+                            title="Open in new tab"
+                        >
+                            <ExternalLink className="w-4 h-4" />
+                        </Button>
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={onClose}
+                            title="Close"
+                        >
+                            <X className="w-4 h-4" />
+                        </Button>
+                    </div>
+                </div>
 
+                {/* Content */}
+                <div className="relative bg-muted/20" style={{ height: '300px' }}>
                     {hasError ? (
-                        <div className="absolute inset-0 flex items-center justify-center bg-background">
-                            <div className="flex flex-col items-center gap-4 text-center p-8">
-                                <AlertCircle className="w-12 h-12 text-destructive" />
+                        <div className="absolute inset-0 flex items-center justify-center p-6">
+                            <div className="flex flex-col items-center gap-4 text-center">
+                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
+                                    <AlertCircle className="w-8 h-8 text-orange-500" />
+                                </div>
                                 <div>
-                                    <p className="font-medium text-foreground">Unable to preview this website</p>
-                                    <p className="text-sm text-muted-foreground mt-1">
-                                        Some websites block embedding. Click below to open in a new tab.
+                                    <p className="font-medium text-foreground text-sm">Cannot preview this website</p>
+                                    <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
+                                        This website blocks embedding. Click below to open it directly.
                                     </p>
                                 </div>
-                                <Button onClick={handleOpenInNewTab}>
-                                    <ExternalLink className="w-4 h-4 mr-2" />
-                                    Open in New Tab
+                                <Button size="sm" onClick={handleOpenInNewTab} className="gap-2">
+                                    <ExternalLink className="w-4 h-4" />
+                                    Open Website
                                 </Button>
                             </div>
                         </div>
                     ) : (
                         <iframe
                             src={url}
-                            className="w-full h-full min-h-[400px] border-0"
-                            onLoad={handleIframeLoad}
+                            className="w-full h-full border-0"
                             onError={handleIframeError}
                             title="Link Preview"
-                            sandbox="allow-scripts allow-same-origin allow-popups"
+                            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
                             referrerPolicy="no-referrer"
                         />
                     )}
                 </div>
 
-                <SheetFooter className="flex-row gap-2 sm:justify-between">
-                    <Button variant="outline" onClick={onClose}>
-                        Close
-                    </Button>
-                    <Button onClick={handleOpenInNewTab}>
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        Open in New Tab
-                    </Button>
-                </SheetFooter>
-            </SheetContent>
-        </Sheet>
+                {/* Footer */}
+                <div className="px-3 py-2 bg-muted/30 border-t border-border">
+                    <p className="text-xs text-muted-foreground truncate" title={url}>
+                        {url}
+                    </p>
+                </div>
+            </div>
+        </>
     )
 }
