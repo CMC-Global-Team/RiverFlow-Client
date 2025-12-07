@@ -151,7 +151,7 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null)
 
   // State for link preview modal
-  const [linkPreview, setLinkPreview] = useState<{ isOpen: boolean; url: string; nodeLabel: string } | null>(null)
+  const [linkPreview, setLinkPreview] = useState<{ isOpen: boolean; url: string; nodeLabel: string; position: { x: number; y: number } } | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -398,13 +398,19 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
   }, [nodes, edges, addNode, onConnect])
 
   const onNodeClick = useCallback(
-    (_event: any, node: any) => {
+    (event: any, node: any) => {
       // In read-only mode, check if node has a link and show preview
       if (readOnly && node?.data?.link) {
+        // Get click position for floating modal
+        const clickPosition = {
+          x: event.clientX || 200,
+          y: event.clientY || 200,
+        }
         setLinkPreview({
           isOpen: true,
           url: node.data.link,
           nodeLabel: node.data.label?.replace(/<[^>]*>/g, '') || 'Link Preview', // Strip HTML tags
+          position: clickPosition,
         })
         return
       }
@@ -978,6 +984,7 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
           onClose={() => setLinkPreview(null)}
           url={linkPreview.url}
           nodeLabel={linkPreview.nodeLabel}
+          position={linkPreview.position}
         />
       )}
     </div>
