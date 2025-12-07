@@ -2,7 +2,17 @@
 
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
-import { ExternalLink, X, GripHorizontal, AlertCircle, Globe } from "lucide-react"
+import { ExternalLink, X, GripHorizontal, Globe, Loader2, Image as ImageIcon } from "lucide-react"
+
+interface OGMetadata {
+    title: string
+    description: string
+    image: string
+    siteName: string
+    favicon: string
+    url: string
+    error?: string
+}
 
 interface LinkPreviewModalProps {
     isOpen: boolean
@@ -19,38 +29,59 @@ export default function LinkPreviewModal({
     nodeLabel,
     position = { x: 100, y: 100 },
 }: LinkPreviewModalProps) {
-    const [hasError, setHasError] = useState(false)
+    const [metadata, setMetadata] = useState<OGMetadata | null>(null)
+    const [isLoading, setIsLoading] = useState(true)
     const [isDragging, setIsDragging] = useState(false)
     const [modalPosition, setModalPosition] = useState({ x: position.x, y: position.y })
+    const [imageError, setImageError] = useState(false)
     const dragStartRef = useRef({ x: 0, y: 0 })
     const modalRef = useRef<HTMLDivElement>(null)
 
-    // Reset position when modal opens
+    // Fetch OG metadata when modal opens
     useEffect(() => {
-        if (isOpen) {
-            // Center the modal near the click position but ensure it's visible
-            const modalWidth = 450
-            const modalHeight = 350
+        if (isOpen && url) {
+            setIsLoading(true)
+            setMetadata(null)
+            setImageError(false)
+
+            // Calculate modal position
+            const modalWidth = 400
+            const modalHeight = 300
             const padding = 20
 
             let x = position.x - modalWidth / 2
             let y = position.y - modalHeight / 2
 
-            // Ensure modal stays within viewport
             x = Math.max(padding, Math.min(x, window.innerWidth - modalWidth - padding))
             y = Math.max(padding, Math.min(y, window.innerHeight - modalHeight - padding))
 
             setModalPosition({ x, y })
-            setHasError(false)
+
+            // Fetch metadata
+            fetch(`/api/og-metadata?url=${encodeURIComponent(url)}`)
+                .then(res => res.json())
+                .then((data: OGMetadata) => {
+                    setMetadata(data)
+                    setIsLoading(false)
+                })
+                .catch(err => {
+                    console.error('Failed to fetch metadata:', err)
+                    setMetadata({
+                        title: getDomain(url),
+                        description: '',
+                        image: '',
+                        siteName: getDomain(url),
+                        favicon: '',
+                        url: url,
+                        error: 'Failed to load preview',
+                    })
+                    setIsLoading(false)
+                })
         }
-    }, [isOpen, position])
+    }, [isOpen, url, position])
 
     const handleOpenInNewTab = () => {
         window.open(url, '_blank', 'noopener,noreferrer')
-    }
-
-    const handleIframeError = () => {
-        setHasError(true)
     }
 
     // Drag handlers
@@ -70,10 +101,9 @@ export default function LinkPreviewModal({
             const newX = e.clientX - dragStartRef.current.x
             const newY = e.clientY - dragStartRef.current.y
 
-            // Keep modal within viewport
             const padding = 20
-            const modalWidth = modalRef.current?.offsetWidth || 450
-            const modalHeight = modalRef.current?.offsetHeight || 350
+            const modalWidth = modalRef.current?.offsetWidth || 400
+            const modalHeight = modalRef.current?.offsetHeight || 300
 
             setModalPosition({
                 x: Math.max(padding, Math.min(newX, window.innerWidth - modalWidth - padding)),
@@ -96,11 +126,9 @@ export default function LinkPreviewModal({
 
     if (!isOpen) return null
 
-    // Extract domain name for display
     const getDomain = (urlString: string) => {
         try {
-            const urlObj = new URL(urlString)
-            return urlObj.hostname
+            return new URL(urlString).hostname
         } catch {
             return urlString
         }
@@ -121,7 +149,7 @@ export default function LinkPreviewModal({
                 style={{
                     left: modalPosition.x,
                     top: modalPosition.y,
-                    width: '450px',
+                    width: '400px',
                     maxWidth: 'calc(100vw - 40px)',
                 }}
             >
@@ -132,9 +160,18 @@ export default function LinkPreviewModal({
                 >
                     <div className="flex items-center gap-2 flex-1 min-w-0">
                         <GripHorizontal className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                        <Globe className="w-4 h-4 text-primary flex-shrink-0" />
+                        {metadata?.favicon && !imageError ? (
+                            <img
+                                src={metadata.favicon}
+                                alt=""
+                                className="w-4 h-4 flex-shrink-0"
+                                onError={() => setImageError(true)}
+                            />
+                        ) : (
+                            <Globe className="w-4 h-4 text-primary flex-shrink-0" />
+                        )}
                         <span className="text-sm font-medium truncate">
-                            {nodeLabel || getDomain(url)}
+                            {metadata?.siteName || nodeLabel || getDomain(url)}
                         </span>
                     </div>
                     <div className="flex items-center gap-1 flex-shrink-0">
@@ -160,35 +197,55 @@ export default function LinkPreviewModal({
                 </div>
 
                 {/* Content */}
-                <div className="relative bg-muted/20" style={{ height: '300px' }}>
-                    {hasError ? (
-                        <div className="absolute inset-0 flex items-center justify-center p-6">
-                            <div className="flex flex-col items-center gap-4 text-center">
-                                <div className="p-3 rounded-full bg-orange-100 dark:bg-orange-900/30">
-                                    <AlertCircle className="w-8 h-8 text-orange-500" />
-                                </div>
-                                <div>
-                                    <p className="font-medium text-foreground text-sm">Cannot preview this website</p>
-                                    <p className="text-xs text-muted-foreground mt-1 max-w-[280px]">
-                                        This website blocks embedding. Click below to open it directly.
-                                    </p>
-                                </div>
-                                <Button size="sm" onClick={handleOpenInNewTab} className="gap-2">
-                                    <ExternalLink className="w-4 h-4" />
-                                    Open Website
-                                </Button>
-                            </div>
+                <div className="p-4">
+                    {isLoading ? (
+                        <div className="flex flex-col items-center justify-center py-8">
+                            <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
+                            <span className="text-sm text-muted-foreground">Loading preview...</span>
                         </div>
-                    ) : (
-                        <iframe
-                            src={url}
-                            className="w-full h-full border-0"
-                            onError={handleIframeError}
-                            title="Link Preview"
-                            sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
-                            referrerPolicy="no-referrer"
-                        />
-                    )}
+                    ) : metadata ? (
+                        <div className="space-y-3">
+                            {/* Preview Image */}
+                            {metadata.image && !imageError ? (
+                                <div className="relative rounded-lg overflow-hidden bg-muted aspect-video">
+                                    <img
+                                        src={metadata.image}
+                                        alt={metadata.title}
+                                        className="w-full h-full object-cover"
+                                        onError={() => setImageError(true)}
+                                    />
+                                </div>
+                            ) : (
+                                <div className="flex items-center justify-center rounded-lg bg-muted/50 aspect-video">
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <ImageIcon className="w-10 h-10" />
+                                        <span className="text-xs">No preview available</span>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Title */}
+                            <h3 className="font-semibold text-foreground line-clamp-2">
+                                {metadata.title}
+                            </h3>
+
+                            {/* Description */}
+                            {metadata.description && (
+                                <p className="text-sm text-muted-foreground line-clamp-3">
+                                    {metadata.description}
+                                </p>
+                            )}
+
+                            {/* Open Button */}
+                            <Button
+                                className="w-full gap-2"
+                                onClick={handleOpenInNewTab}
+                            >
+                                <ExternalLink className="w-4 h-4" />
+                                Open Website
+                            </Button>
+                        </div>
+                    ) : null}
                 </div>
 
                 {/* Footer */}
