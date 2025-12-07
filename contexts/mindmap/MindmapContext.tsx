@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport, MarkerType } from 'reactflow'
-import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service'
+import { getMindmapById, updateMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service'
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
 import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear, emitNodeUpdate, emitEdgeUpdate } from '@/lib/realtime'
@@ -53,9 +53,18 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   // Permission changed state
   const [permissionChanged, setPermissionChanged] = useState<PermissionChangedState | null>(null)
 
-  // No-op recordSnapshot (server-side history)
-  const recordSnapshot = useCallback((force = false) => {
-    // No-op
+  // Record snapshot to server for undo/redo
+  const recordSnapshot = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (!s || !room) return
+
+    const snapshot = {
+      nodes: latestNodesRef.current.map(n => ({ ...n, data: { ...(n.data || {}) } })),
+      edges: latestEdgesRef.current.map(e => ({ ...e })),
+      viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+    }
+    s.emit('mindmap:snapshot', room, { snapshot })
   }, [])
 
   // Sync refs with state
@@ -124,6 +133,8 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       setParticipants,
       setAccessRevoked,
       setPermissionChanged,
+      setCanUndo,
+      setCanRedo,
       setFullMindmapState,
       markSynced,
       toast: (opts) => toast(opts as any),
@@ -602,71 +613,33 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (s && room) emitViewport(s, room, viewport as any)
   }, [scheduleAutoSave])
 
-  const undo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m || !m.id) return
-
-    isApplyingHistoryRef.current = true
-    try {
-      const updatedMindmap = await undoMindmap(m.id)
-      setFullMindmapState(updatedMindmap)
-
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) {
-        const snapshot = {
-          nodes: updatedMindmap.nodes,
-          edges: updatedMindmap.edges,
-          viewport: updatedMindmap.viewport,
-          canUndo: updatedMindmap.canUndo,
-          canRedo: updatedMindmap.canRedo,
-        }
-        s.emit('undo:performed', room, { snapshot })
-      }
-    } catch (error) {
-      console.error('Undo failed:', error)
+  const undo = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (!s || !room) {
       toast({
         variant: 'destructive',
         title: 'Undo failed',
-        description: 'Could not undo action.'
+        description: 'Not connected to realtime server.'
       })
-    } finally {
-      isApplyingHistoryRef.current = false
+      return
     }
-  }, [setFullMindmapState, toast])
+    s.emit('undo:request', room)
+  }, [toast])
 
-  const redo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m || !m.id) return
-
-    isApplyingHistoryRef.current = true
-    try {
-      const updatedMindmap = await redoMindmap(m.id)
-      setFullMindmapState(updatedMindmap)
-
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) {
-        const snapshot = {
-          nodes: updatedMindmap.nodes,
-          edges: updatedMindmap.edges,
-          viewport: updatedMindmap.viewport,
-          canUndo: updatedMindmap.canUndo,
-          canRedo: updatedMindmap.canRedo,
-        }
-        s.emit('redo:performed', room, { snapshot })
-      }
-    } catch (error) {
-      console.error('Redo failed:', error)
+  const redo = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (!s || !room) {
       toast({
         variant: 'destructive',
         title: 'Redo failed',
-        description: 'Could not redo action.'
+        description: 'Not connected to realtime server.'
       })
-    } finally {
-      isApplyingHistoryRef.current = false
+      return
     }
-  }, [setFullMindmapState, toast])
+    s.emit('redo:request', room)
+  }, [toast])
 
   const restoreFromHistory = useCallback(async (snapshot: any, historyId?: string | number | null) => {
     const m = latestMindmapRef.current
