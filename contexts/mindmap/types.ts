@@ -92,8 +92,8 @@ export interface MindmapContextType {
     saveStatus: SaveStatus
     canUndo: boolean
     canRedo: boolean
-    undo: () => Promise<void>
-    redo: () => Promise<void>
+    undo: () => void
+    redo: () => void
     setFullMindmapState: (data: MindmapResponse | null) => void
     applyStreamingAdditions: (addNodes?: any[], addEdges?: any[]) => void
     restoreFromHistory: (snapshot: { nodes?: any[]; edges?: any[]; viewport?: any }, historyId?: string | number | null) => Promise<void>
