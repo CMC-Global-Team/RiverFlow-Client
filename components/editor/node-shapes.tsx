@@ -5,6 +5,7 @@ import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
 import { Handle, Position, NodeProps } from "reactflow"
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
+import { Link } from 'lucide-react'
 
 interface NodeData {
   label: string
@@ -14,6 +15,7 @@ interface NodeData {
   shape?: string
   isEditing?: boolean
   scale?: number
+  link?: string
 }
 
 // Resize Handle Component
@@ -137,6 +139,23 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
 })
 
 ResizeHandle.displayName = "ResizeHandle"
+
+// Link Indicator Component - shows when node has a link
+const LinkIndicator = memo(({ hasLink, color }: { hasLink: boolean; color: string }) => {
+  if (!hasLink) return null
+
+  return (
+    <div
+      className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border-2 flex items-center justify-center shadow-sm z-10"
+      style={{ borderColor: color }}
+      title="This node has a link - click to preview"
+    >
+      <Link className="w-3 h-3" style={{ color }} />
+    </div>
+  )
+})
+
+LinkIndicator.displayName = "LinkIndicator"
 
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
@@ -298,6 +317,7 @@ export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodePr
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -354,6 +374,7 @@ export const CircleNode = memo(({ data, selected, id, isConnectable }: NodeProps
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -417,6 +438,7 @@ export const DiamondNode = memo(({ data, selected, id, isConnectable }: NodeProp
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -480,6 +502,7 @@ export const HexagonNode = memo(({ data, selected, id, isConnectable }: NodeProp
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%", bottom: "3%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%", left: "3%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -536,6 +559,7 @@ export const EllipseNode = memo(({ data, selected, id, isConnectable }: NodeProp
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (
@@ -592,6 +616,7 @@ export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }:
             <Handle type="source" id="source-bottom" position={Position.Bottom} className="w-3 h-3" style={{ ...handleStyle, left: "50%" }} isConnectable={!!isConnectable} />
             <Handle type="source" id="source-left" position={Position.Left} className="w-3 h-3" style={{ ...handleStyle, top: "50%" }} isConnectable={!!isConnectable} />
             <ResizeHandle nodeId={id} currentScale={scale} canEdit={!!isConnectable} />
+            <LinkIndicator hasLink={!!data.link} color={color} />
           </div>
         </TooltipTrigger>
         {data.description && (

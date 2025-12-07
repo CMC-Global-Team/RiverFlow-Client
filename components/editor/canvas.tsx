@@ -24,6 +24,7 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
+import LinkPreviewModal from './link-preview-modal'
 import { Plus, GitBranch, Trash2, Edit3, Square, Circle, Diamond, Hexagon } from 'lucide-react'
 import {
   DropdownMenu,
@@ -148,6 +149,9 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
   const [contextMenuNode, setContextMenuNode] = useState<any | null>(null)
   const [contextMenuEdge, setContextMenuEdge] = useState<any | null>(null)
   const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null)
+
+  // State for link preview modal
+  const [linkPreview, setLinkPreview] = useState<{ isOpen: boolean; url: string; nodeLabel: string; position: { x: number; y: number } } | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -394,12 +398,27 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
   }, [nodes, edges, addNode, onConnect])
 
   const onNodeClick = useCallback(
-    (_event: any, node: any) => {
+    (event: any, node: any) => {
+      // In read-only mode, check if node has a link and show preview
+      if (readOnly && node?.data?.link) {
+        // Get click position for floating modal
+        const clickPosition = {
+          x: event.clientX || 200,
+          y: event.clientY || 200,
+        }
+        setLinkPreview({
+          isOpen: true,
+          url: node.data.link,
+          nodeLabel: node.data.label?.replace(/<[^>]*>/g, '') || 'Link Preview', // Strip HTML tags
+          position: clickPosition,
+        })
+        return
+      }
       setSelectedNode(node)
       setSelectedEdge(null)
       emitActive({ type: 'node', id: node?.id })
     },
-    [setSelectedNode, setSelectedEdge, emitActive]
+    [readOnly, setSelectedNode, setSelectedEdge, emitActive]
   )
 
   const onNodeDoubleClick = useCallback(
@@ -957,6 +976,17 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
         />
       )}
       {!hidePresence && renderPresence}
+
+      {/* Link Preview Modal for view mode */}
+      {linkPreview && (
+        <LinkPreviewModal
+          isOpen={linkPreview.isOpen}
+          onClose={() => setLinkPreview(null)}
+          url={linkPreview.url}
+          nodeLabel={linkPreview.nodeLabel}
+          position={linkPreview.position}
+        />
+      )}
     </div>
   )
 }
