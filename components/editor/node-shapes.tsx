@@ -249,7 +249,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
           contentEditable
           suppressContentEditableWarning
           className="w-full outline-none font-semibold text-sm bg-transparent border-b-2 border-primary px-1 -mx-1 py-0.5 rounded transition-all pointer-events-auto whitespace-pre-wrap break-words"
-          style={{ color: data.color || "#3b82f6", wordWrap: 'break-word', overflowWrap: 'break-word' }}
+          style={{ color: data.color || "#3b82f6", wordWrap: 'break-word', overflowWrap: 'break-word', maxWidth: '100%' }}
           onBlur={finishLabel}
           onKeyDown={handleLabelKeyDown}
           onMouseDown={(e) => e.stopPropagation()}
@@ -297,7 +297,7 @@ export const RectangleNode = memo(({ data, selected, id, isConnectable }: NodePr
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+            className={`px-4 py-3 rounded-lg border-2 bg-background shadow-md transition-all min-w-[150px] max-w-md cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
               }`}
             style={{
               borderColor: color,
@@ -596,7 +596,7 @@ export const RoundedRectangleNode = memo(({ data, selected, id, isConnectable }:
       <Tooltip>
         <TooltipTrigger asChild>
           <div
-            className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
+            className={`px-6 py-4 rounded-3xl border-2 bg-background shadow-md transition-all min-w-[150px] max-w-md cursor-pointer relative ${selected ? "ring-2 ring-primary ring-offset-2" : ""
               }`}
             style={{
               borderColor: color,

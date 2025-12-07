@@ -280,7 +280,7 @@ export default function EdgePropertiesPanel() {
           <p>From: {selectedEdge.source}</p>
           <p>To: {selectedEdge.target}</p>
           <p>Type: {selectedEdge.type || "default"}</p>
-          {selectedEdge.label && <p>Label: {selectedEdge.label}</p>}
+          {selectedEdge.label && <p className="whitespace-pre-wrap break-words">Label: {selectedEdge.label}</p>}
         </div>
 
         {/* Delete Connection Button */}
