@@ -1107,6 +1107,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     if (!m) return
     const list = await fetchHistory(m.id, { limit: 200 })
     if (!list || list.length === 0) return
+    // Undo goes to older snapshots (higher index in history)
     const start = serverHistoryCursorRef.current == null ? 0 : serverHistoryCursorRef.current + 1
     let idx = -1
     for (let i = start; i < list.length; i++) {
@@ -1129,6 +1130,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     await saveMindmap()
     isApplyingHistoryRef.current = false
     serverHistoryCursorRef.current = idx
+    // Enable redo since we just undid something
+    setCanRedo(idx > 0)
+    // Check if more undos are possible
+    const hasMoreUndo = list.slice(idx + 1).some((it: any) => {
+      const s = it?.snapshot
+      return s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)
+    })
+    setCanUndo(hasMoreUndo)
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) {
@@ -1141,9 +1150,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const redo = useCallback(async () => {
     const m = latestMindmapRef.current
     if (!m) return
+    // Need a cursor position to redo from
+    if (serverHistoryCursorRef.current == null || serverHistoryCursorRef.current <= 0) return
     const list = await fetchHistory(m.id, { limit: 200 })
     if (!list || list.length === 0) return
-    const start = serverHistoryCursorRef.current == null ? 0 : Math.max(0, serverHistoryCursorRef.current - 1)
+    // Redo goes to newer snapshots (lower index in history)
+    const start = serverHistoryCursorRef.current - 1
     let idx = -1
     for (let i = start; i >= 0; i--) {
       const s: any = list[i]?.snapshot
@@ -1165,6 +1177,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     await saveMindmap()
     isApplyingHistoryRef.current = false
     serverHistoryCursorRef.current = idx
+    // Can redo more if not at the beginning
+    setCanRedo(idx > 0)
+    // Enable undo since we're moving forward in history
+    setCanUndo(true)
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) {
