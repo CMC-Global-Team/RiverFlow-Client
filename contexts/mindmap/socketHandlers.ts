@@ -105,7 +105,24 @@ export function createSocketHandlers(
     return {
         onConnect: () => { joinMindmapFn() },
         onReconnect: () => { joinMindmapFn() },
-        onJoined: (res: any) => { roomRef.current = res?.room || null },
+        onJoined: (res: any) => {
+            roomRef.current = res?.room || null
+            // Record initial snapshot after joining so first action can be undone
+            if (res?.room) {
+                setTimeout(() => {
+                    const s = socketRef.current
+                    const room = roomRef.current
+                    if (!s || !room) return
+                    const snapshot = {
+                        nodes: latestNodesRef.current.map((n: any) => ({ ...n, data: { ...(n.data || {}) } })),
+                        edges: latestEdgesRef.current.map((e: any) => ({ ...e })),
+                        viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+                    }
+                    console.log('[MindmapContext] Recording initial snapshot with', snapshot.nodes.length, 'nodes')
+                    s.emit('mindmap:snapshot', room, { snapshot, isInitial: true })
+                }, 500)
+            }
+        },
 
         onNodes: (changes: any[]) => {
             setNodes((nds) => applyNodeChanges(changes, nds))
