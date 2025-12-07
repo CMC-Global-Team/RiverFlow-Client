@@ -5,24 +5,20 @@ import { useTranslation } from "react-i18next"
 import { Shield } from "lucide-react"
 
 interface Auth0LoginButtonProps {
-    onSuccess?: (idToken: string) => void
-    onError?: (error: Error) => void
     text?: "signin_with" | "signup_with"
     disabled?: boolean
 }
 
 /**
  * Auth0 Login Button component.
- * Uses Auth0 SDK to trigger login flow.
+ * Uses Auth0 SDK to trigger redirect-based login flow.
  */
 export function Auth0LoginButton({
-    onSuccess,
-    onError,
     text = "signin_with",
     disabled = false
 }: Auth0LoginButtonProps) {
     const { t } = useTranslation("other")
-    const { loginWithPopup, isLoading, getIdTokenClaims } = useAuth0()
+    const { loginWithRedirect, isLoading } = useAuth0()
 
     const domain = process.env.NEXT_PUBLIC_AUTH0_DOMAIN || ""
     const clientId = process.env.NEXT_PUBLIC_AUTH0_CLIENT_ID || ""
@@ -46,23 +42,17 @@ export function Auth0LoginButton({
 
     const handleClick = async () => {
         try {
-            // Login with popup to get tokens
-            await loginWithPopup({
+            // Use redirect-based login (more reliable than popup)
+            await loginWithRedirect({
                 authorizationParams: {
                     scope: "openid profile email",
                 },
+                appState: {
+                    returnTo: "/dashboard",
+                },
             })
-
-            // Get the ID token after successful login
-            const claims = await getIdTokenClaims()
-            if (claims?.__raw) {
-                onSuccess?.(claims.__raw)
-            } else {
-                throw new Error("Failed to get ID token from Auth0")
-            }
         } catch (error) {
             console.error("Auth0 login error:", error)
-            onError?.(error as Error)
         }
     }
 
