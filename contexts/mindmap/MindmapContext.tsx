@@ -1106,6 +1106,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     // Check if there's anything to undo
     if (historyRef.current.past.length === 0) return
 
+    // Set flag to prevent recordSnapshot during undo
+    isApplyingHistoryRef.current = true
+
     // Get the current state before undoing (to push to future for redo)
     const currentState = getSnapshot()
 
@@ -1116,21 +1119,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     historyRef.current.future.push(currentState)
 
     // Apply the previous state
-    isApplyingHistoryRef.current = true
     latestNodesRef.current = previousState.nodes
     latestEdgesRef.current = previousState.edges
     latestViewportRef.current = previousState.viewport
     setNodes(previousState.nodes)
     setEdges(previousState.edges)
     if (previousState.viewport) setViewport(previousState.viewport)
-    isApplyingHistoryRef.current = false
 
     // Update can undo/redo states
     setCanUndo(historyRef.current.past.length > 0)
     setCanRedo(historyRef.current.future.length > 0)
 
-    // Schedule save
-    scheduleAutoSave()
+    // Keep flag true for a moment to let React process state updates
+    setTimeout(() => {
+      isApplyingHistoryRef.current = false
+      // Save immediately without triggering snapshots
+      saveImmediately().catch(console.error)
+    }, 100)
 
     // Emit to other users
     const s = socketRef.current
@@ -1141,11 +1146,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
 
     console.log('[MindmapContext] Undo performed, past:', historyRef.current.past.length, 'future:', historyRef.current.future.length)
-  }, [getSnapshot, scheduleAutoSave])
+  }, [getSnapshot, saveImmediately])
 
   const redo = useCallback(async () => {
     // Check if there's anything to redo
     if (historyRef.current.future.length === 0) return
+
+    // Set flag to prevent recordSnapshot during redo
+    isApplyingHistoryRef.current = true
 
     // Get the current state before redoing (to push to past for undo)
     const currentState = getSnapshot()
@@ -1157,21 +1165,23 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     historyRef.current.past.push(currentState)
 
     // Apply the next state
-    isApplyingHistoryRef.current = true
     latestNodesRef.current = nextState.nodes
     latestEdgesRef.current = nextState.edges
     latestViewportRef.current = nextState.viewport
     setNodes(nextState.nodes)
     setEdges(nextState.edges)
     if (nextState.viewport) setViewport(nextState.viewport)
-    isApplyingHistoryRef.current = false
 
     // Update can undo/redo states
     setCanUndo(historyRef.current.past.length > 0)
     setCanRedo(historyRef.current.future.length > 0)
 
-    // Schedule save
-    scheduleAutoSave()
+    // Keep flag true for a moment to let React process state updates
+    setTimeout(() => {
+      isApplyingHistoryRef.current = false
+      // Save immediately without triggering snapshots
+      saveImmediately().catch(console.error)
+    }, 100)
 
     // Emit to other users
     const s = socketRef.current
