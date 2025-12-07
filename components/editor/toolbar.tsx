@@ -338,320 +338,295 @@ export default function Toolbar({
 
 
   return (
-    <div className={`flex items-center gap-2 rounded-lg border border-border bg-card p-3 shadow-lg backdrop-blur-sm bg-card/95 max-w-full overflow-x-auto transition-all duration-300 ${isCollapsed ? 'w-auto' : ''}`}>
-      {/* Collapse Toggle Button */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsCollapsed(!isCollapsed)}
-        title={isCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
-        className="h-8 w-8 flex-shrink-0"
-      >
-        {isCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </Button>
+    <div className={`flex items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-lg backdrop-blur-sm bg-card/95 overflow-x-auto transition-all duration-300 ${isCollapsed ? 'w-fit' : 'max-w-full'}`}>
+      {/* Back Button - Always visible */}
+      <BackButton />
 
       {/* Divider */}
       <div className="w-px h-6 bg-border"></div>
 
-      {/* Back Button */}
-      <BackButton />
-
-      {/* Divider */}
-      {!isCollapsed && <div className="w-px h-6 bg-border"></div>}
-
-      {/* Title & Editing */}
-      {!isCollapsed && mindmap && (
-        <div
-          onClick={() => userRole !== 'viewer' && setIsEditing?.(true)}
-          className={`flex-shrink-0 ${userRole !== 'viewer' ? 'cursor-pointer' : 'cursor-default'}`}
-        >
-          {isEditing && userRole !== 'viewer' ? (
-            <input
-              type="text"
-              value={mindmap?.title || "Untitled Mindmap"}
-              onChange={(e) => handleTitleChange?.(e.target.value)}
-              onBlur={() => setIsEditing?.(false)}
-              autoFocus
-              className="text-sm font-bold text-foreground bg-input border-2 border-primary rounded px-2 py-1 w-48"
-            />
-          ) : (
-            <h1
-              ref={titleRef}
-              className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${userRole !== 'viewer'
-                ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors'
-                : 'border-transparent'
-                }`}
-              onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
-              onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
+      {/* Collapsible Content */}
+      {!isCollapsed && (
+        <>
+          {/* Title & Editing */}
+          {mindmap && (
+            <div
+              onClick={() => userRole !== 'viewer' && setIsEditing?.(true)}
+              className={`flex-shrink-0 ${userRole !== 'viewer' ? 'cursor-pointer' : 'cursor-default'}`}
             >
-              {mindmap?.title || "Untitled Mindmap"}
-            </h1>
+              {isEditing && userRole !== 'viewer' ? (
+                <input
+                  type="text"
+                  value={mindmap?.title || "Untitled Mindmap"}
+                  onChange={(e) => handleTitleChange?.(e.target.value)}
+                  onBlur={() => setIsEditing?.(false)}
+                  autoFocus
+                  className="text-sm font-bold text-foreground bg-input border-2 border-primary rounded px-2 py-1 w-48"
+                />
+              ) : (
+                <h1
+                  ref={titleRef}
+                  className={`text-sm font-bold text-foreground px-2 py-1 border-2 border-dashed rounded min-w-48 truncate ${userRole !== 'viewer'
+                    ? 'border-muted-foreground/30 hover:border-primary hover:text-primary transition-colors'
+                    : 'border-transparent'
+                    }`}
+                  onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
+                  onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
+                >
+                  {mindmap?.title || "Untitled Mindmap"}
+                </h1>
+              )}
+            </div>
           )}
-        </div>
-      )}
 
-      {/* Permission Label */}
-      {!isCollapsed && userRole && (
-        <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-muted/50 flex-shrink-0">
-          {userRole === 'viewer' ? (
-            <Eye className="h-3 w-3 text-muted-foreground" />
-          ) : (
-            <Edit2 className="h-3 w-3 text-primary" />
-          )}
-          <span className={`text-xs font-medium ${userRole === 'viewer' ? 'text-muted-foreground' : 'text-primary'}`}>
-            {getPermissionLabel()}
-          </span>
-        </div>
-      )}
+          {/* Divider */}
+          <div className="w-px h-6 bg-border"></div>
 
-      {/* Divider */}
-      {!isCollapsed && <div className="w-px h-6 bg-border"></div>}
+          {/* Add Node Tools - Disabled for viewers */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Add Node"
+                  disabled={userRole === 'viewer'}
+                  className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => handleAddNode("rectangle")} disabled={userRole === 'viewer'}>
+                  <Square className="h-4 w-4 mr-2" />
+                  Rectangle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddNode("circle")} disabled={userRole === 'viewer'}>
+                  <Circle className="h-4 w-4 mr-2" />
+                  Circle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddNode("ellipse")} disabled={userRole === 'viewer'}>
+                  <Circle className="h-4 w-4 mr-2" />
+                  Ellipse
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddNode("diamond")} disabled={userRole === 'viewer'}>
+                  <Diamond className="h-4 w-4 mr-2" />
+                  Diamond
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddNode("hexagon")} disabled={userRole === 'viewer'}>
+                  <Hexagon className="h-4 w-4 mr-2" />
+                  Hexagon
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")} disabled={userRole === 'viewer'}>
+                  <Square className="h-4 w-4 mr-2" />
+                  Rounded Rectangle
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
-      {/* Add Node Tools - Disabled for viewers */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                title="Add Node"
-                disabled={userRole === 'viewer'}
-                className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
-              >
-                <Plus className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => handleAddNode("rectangle")} disabled={userRole === 'viewer'}>
-                <Square className="h-4 w-4 mr-2" />
-                Rectangle
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddNode("circle")} disabled={userRole === 'viewer'}>
-                <Circle className="h-4 w-4 mr-2" />
-                Circle
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddNode("ellipse")} disabled={userRole === 'viewer'}>
-                <Circle className="h-4 w-4 mr-2" />
-                Ellipse
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddNode("diamond")} disabled={userRole === 'viewer'}>
-                <Diamond className="h-4 w-4 mr-2" />
-                Diamond
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddNode("hexagon")} disabled={userRole === 'viewer'}>
-                <Hexagon className="h-4 w-4 mr-2" />
-                Hexagon
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")} disabled={userRole === 'viewer'}>
-                <Square className="h-4 w-4 mr-2" />
-                Rounded Rectangle
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
+            {/* Add Sibling */}
+            <Button
+              onClick={handleAddSiblingNode}
+              variant="ghost"
+              size="icon"
+              title="Add Sibling Node (Enter)"
+              disabled={!selectedNode || userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <GitBranch className="h-4 w-4" />
+            </Button>
 
-      {/* Edit Tools - Disabled for viewers */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleAddSiblingNode}
-            title="Thêm node anh em (Enter)"
-            disabled={!selectedNode || userRole === 'viewer'}
-            className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
-          >
-            <GitBranch className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleDeleteSelected}
-            title="Delete Selected"
-            disabled={userRole === 'viewer'}
-            className="hover:bg-destructive/10 hover:text-destructive disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
-          >
-            <Trash2 className="h-4 w-4" />
-          </Button>
+            {/* Delete */}
+            <Button
+              onClick={handleDeleteSelected}
+              variant="ghost"
+              size="icon"
+              title="Delete Selected"
+              disabled={(!selectedNode && !selectedEdge) || userRole === 'viewer'}
+              className="hover:bg-destructive/10 hover:text-destructive h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Edit Tools - History */}
           <Button
             variant="ghost"
             size="icon"
             onClick={onHistoryClick}
-            title="Lịch sử thay đổi"
+            title="Change History"
             disabled={userRole === 'viewer'}
             className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <History className="h-4 w-4" />
           </Button>
-        </div>
-      )}
 
-      {/* Undo/Redo - Disabled for viewers */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={undo}
-            disabled={!canUndo || userRole === 'viewer'}
-            title="Undo (Ctrl+Z)"
-            className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Undo2 className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={redo}
-            disabled={!canRedo || userRole === 'viewer'}
-            title="Redo (Ctrl+Y)"
-            className="h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Redo2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+          {/* Divider */}
+          <div className="w-px h-6 bg-border"></div>
 
-      {/* Zoom Tools */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleZoomIn}
-            title="Zoom In"
-            className="h-8 w-8"
-          >
-            <ZoomIn className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleZoomOut}
-            title="Zoom Out"
-            className="h-8 w-8"
-          >
-            <ZoomOut className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleFitView}
-            title="Fit View"
-            className="h-8 w-8"
-          >
-            <Maximize2 className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
+          {/* Undo/Redo */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              onClick={undo}
+              variant="ghost"
+              size="icon"
+              title="Undo (Ctrl+Z)"
+              disabled={!canUndo || userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Undo2 className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={redo}
+              variant="ghost"
+              size="icon"
+              title="Redo (Ctrl+Y)"
+              disabled={!canRedo || userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Redo2 className="h-4 w-4" />
+            </Button>
+          </div>
 
-      {/* Export */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
+          {/* Divider */}
+          <div className="w-px h-6 bg-border"></div>
+
+          {/* Zoom Controls */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              onClick={handleZoomIn}
+              variant="ghost"
+              size="icon"
+              title="Zoom In"
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={handleZoomOut}
+              variant="ghost"
+              size="icon"
+              title="Zoom Out"
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={handleFitView}
+              variant="ghost"
+              size="icon"
+              title="Fit View"
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <Maximize2 className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Divider */}
+          <div className="w-px h-6 bg-border"></div>
+
+          {/* Export/Import */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  title="Download Options"
+                  className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+                >
+                  <Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleDownloadImage('png')}>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  PNG Image
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleDownloadImage('jpeg')}>
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  JPG Image
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadPDF}>
+                  <File className="h-4 w-4 mr-2" />
+                  PDF Document
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadText}>
+                  <FileText className="h-4 w-4 mr-2" />
+                  Text File
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleDownloadJSON}>
+                  <FileJson className="h-4 w-4 mr-2" />
+                  JSON Data
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
+          {/* Tutorial guide and Embed Button */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Tutorial"
+              disabled={userRole === 'viewer'}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <HandHelping className="h-4 w-4" />
+            </Button>
+            {/* Embed Button - Only for owners (moved next to Tutorial) */}
+            {userRole === 'owner' && (
+              <Button
+                onClick={onEmbedClick}
+                variant="ghost"
+                size="icon"
+                title="Embed Mindmap"
+                className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+              >
+                <Code className="h-4 w-4" />
+              </Button>
+            )}
+          </div>
+
+          {/* Chat and AI */}
+          <div className="flex items-center gap-1 flex-shrink-0">
+            {/* Hide AI button for viewers */}
+            {userRole !== 'viewer' && (
               <Button
                 variant="ghost"
                 size="icon"
-                title="Download Options"
-                disabled={userRole === 'viewer'}
-                className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="AI Composer"
+                className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
+                onClick={onAiToggle}
               >
-                <Download className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleDownloadImage('png')}>
-                <ImageIcon className="h-4 w-4 mr-2" />
-                PNG Image
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDownloadImage('jpeg')}>
-                <ImageIcon className="h-4 w-4 mr-2" />
-                JPG Image
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownloadPDF}>
-                <File className="h-4 w-4 mr-2" />
-                PDF Document
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownloadText}>
-                <FileText className="h-4 w-4 mr-2" />
-                Text File
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={handleDownloadJSON}>
-                <FileJson className="h-4 w-4 mr-2" />
-                JSON Data
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
-
-      {/* Tutorial guide and Embed Button */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Tutorial"
-            disabled={userRole === 'viewer'}
-            className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <HandHelping className="h-4 w-4" />
-          </Button>
-          {/* Embed Button - Only for owners (moved next to Tutorial) */}
-          {userRole === 'owner' && (
+            )}
             <Button
-              onClick={onEmbedClick}
               variant="ghost"
               size="icon"
-              title="Nhúng Mindmap"
+              title="Chat"
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+              onClick={onChatClick}
             >
-              <Code className="h-4 w-4" />
+              <MessageSquare className="h-4 w-4" />
             </Button>
-          )}
-        </div>
+          </div>
+
+          {/* Divider before right side */}
+          <div className="w-px h-6 bg-border"></div>
+
+          {/* Spacer to push right side actions to the end - only when expanded */}
+          <div className="flex-1"></div>
+        </>
       )}
 
-      {/* Chat */}
-      {!isCollapsed && (
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {/* Hide AI button for viewers */}
-          {userRole !== 'viewer' && (
-            <Button
-              variant="ghost"
-              size="icon"
-              title="AI Composer"
-              className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
-              onClick={onAiToggle}
-            >
-              <Sparkles className="h-4 w-4" />
-            </Button>
-          )}
-          <Button
-            variant="ghost"
-            size="icon"
-            title="Chat"
-            className="hover:bg-primary/10 hover:text-primary h-8 w-8"
-            onClick={onChatClick}
-          >
-            <MessageSquare className="h-4 w-4" />
-          </Button>
-        </div>
-      )}
-
-
-      {/* Divider */}
-      <div className="w-px h-6 bg-border ml-auto flex-shrink-0"></div>
-
-      {/* Right Side Actions */}
+      {/* Right Side Actions - Always visible */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <PresenceAvatars />
         <ThemeSwitcher />
 
-        {/* Auto-save Toggle - Hidden for viewers */}
+        {/* Auto-save Toggle - Hidden for viewers and when collapsed */}
         {!isCollapsed && userRole !== 'viewer' && (
           <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
             <Switch
@@ -663,6 +638,20 @@ export default function Toolbar({
             <Label htmlFor="auto-save" className="text-xs font-medium cursor-pointer hidden sm:inline">
               Auto
             </Label>
+          </div>
+        )}
+
+        {/* Permission Label - Right side next to share */}
+        {userRole && (
+          <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-muted/50 flex-shrink-0">
+            {userRole === 'viewer' ? (
+              <Eye className="h-3 w-3 text-muted-foreground" />
+            ) : (
+              <Edit2 className="h-3 w-3 text-primary" />
+            )}
+            <span className={`text-xs font-medium ${userRole === 'viewer' ? 'text-muted-foreground' : 'text-primary'}`}>
+              {getPermissionLabel()}
+            </span>
           </div>
         )}
 
@@ -678,7 +667,7 @@ export default function Toolbar({
         </Button>
 
         {/* Save Button - Hidden for viewers */}
-        {userRole !== 'viewer' && !autoSaveEnabled && (
+        {!isCollapsed && userRole !== 'viewer' && !autoSaveEnabled && (
           <Button
             onClick={handleSave}
             disabled={isSaving || saveStatus === 'saved'}
@@ -700,7 +689,7 @@ export default function Toolbar({
         )}
 
         {/* Auto-save Status - Hidden for viewers */}
-        {userRole !== 'viewer' && autoSaveEnabled && (
+        {!isCollapsed && userRole !== 'viewer' && autoSaveEnabled && (
           <div className="flex items-center gap-1 text-xs text-muted-foreground px-2">
             {saveStatus === 'saving' && (
               <>
@@ -715,7 +704,22 @@ export default function Toolbar({
             )}
           </div>
         )}
+
+        {/* Divider before collapse */}
+        <div className="w-px h-6 bg-border"></div>
+
+        {/* Collapse Toggle Button - Inside toolbar at far right */}
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsCollapsed(!isCollapsed)}
+          title={isCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
+          className="h-8 w-8 flex-shrink-0 hover:bg-primary/10"
+        >
+          {isCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+        </Button>
       </div>
     </div>
   )
 }
+

@@ -146,6 +146,8 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
 
   // State for context menu
   const [contextMenuNode, setContextMenuNode] = useState<any | null>(null)
+  const [contextMenuEdge, setContextMenuEdge] = useState<any | null>(null)
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -415,13 +417,31 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
     (event: React.MouseEvent, node: any) => {
       // Prevent default browser context menu
       event.preventDefault()
+      event.stopPropagation()
       if (!readOnly) {
+        setContextMenuPosition({ x: event.clientX, y: event.clientY })
         setContextMenuNode(node)
-        setSelectedNode(node)
-        setSelectedEdge(null)
+        setContextMenuEdge(null)
+        // Don't set selectedNode/selectedEdge to avoid opening properties panel
       }
     },
-    [readOnly, setSelectedNode, setSelectedEdge]
+    [readOnly]
+  )
+
+  // Handle right-click context menu on edges
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: any) => {
+      // Prevent default browser context menu
+      event.preventDefault()
+      event.stopPropagation()
+      if (!readOnly) {
+        setContextMenuPosition({ x: event.clientX, y: event.clientY })
+        setContextMenuEdge(edge)
+        setContextMenuNode(null)
+        // Don't set selectedNode/selectedEdge to avoid opening properties panel
+      }
+    },
+    [readOnly]
   )
 
   // Context menu action handlers
@@ -451,8 +471,17 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
     if (contextMenuNode) {
       deleteNode(contextMenuNode.id)
       setContextMenuNode(null)
+      setContextMenuPosition(null)
     }
   }, [contextMenuNode, deleteNode])
+
+  const handleContextDeleteEdge = useCallback(() => {
+    if (contextMenuEdge) {
+      deleteEdge(contextMenuEdge.id)
+      setContextMenuEdge(null)
+      setContextMenuPosition(null)
+    }
+  }, [contextMenuEdge, deleteEdge])
 
   const handleContextAddNodeWithShape = useCallback((shape: string) => {
     if (contextMenuNode) {
@@ -803,6 +832,7 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
         onNodeDoubleClick={onNodeDoubleClick}
         onNodeContextMenu={onNodeContextMenu}
         onEdgeClick={onEdgeClick}
+        onEdgeContextMenu={onEdgeContextMenu}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
@@ -823,12 +853,20 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
       </ReactFlow>
 
       {/* Context Menu for nodes */}
-      {contextMenuNode && !readOnly && (
-        <DropdownMenu open={!!contextMenuNode} onOpenChange={(open: boolean) => !open && setContextMenuNode(null)}>
+      {contextMenuNode && contextMenuPosition && !readOnly && (
+        <DropdownMenu
+          open={!!contextMenuNode}
+          onOpenChange={(open: boolean) => {
+            if (!open) {
+              setContextMenuNode(null)
+              setContextMenuPosition(null)
+            }
+          }}
+        >
           <DropdownMenuTrigger asChild>
-            <div style={{ position: 'fixed', left: 0, top: 0, width: 0, height: 0 }} />
+            <div style={{ position: 'fixed', left: contextMenuPosition.x, top: contextMenuPosition.y, width: 0, height: 0 }} />
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" forceMount>
+          <DropdownMenuContent className="w-56" forceMount align="start" side="bottom">
             <DropdownMenuItem onClick={handleContextAddChild}>
               <Plus className="mr-2 h-4 w-4" />
               Add Child Node
@@ -878,6 +916,30 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
             <DropdownMenuItem onClick={handleContextDelete} className="text-destructive focus:text-destructive">
               <Trash2 className="mr-2 h-4 w-4" />
               Delete Node
+              <DropdownMenuShortcut>Delete</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Context Menu for edges/connections */}
+      {contextMenuEdge && contextMenuPosition && !readOnly && (
+        <DropdownMenu
+          open={!!contextMenuEdge}
+          onOpenChange={(open: boolean) => {
+            if (!open) {
+              setContextMenuEdge(null)
+              setContextMenuPosition(null)
+            }
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <div style={{ position: 'fixed', left: contextMenuPosition.x, top: contextMenuPosition.y, width: 0, height: 0 }} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-48" forceMount align="start" side="bottom">
+            <DropdownMenuItem onClick={handleContextDeleteEdge} className="text-destructive focus:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Connection
               <DropdownMenuShortcut>Delete</DropdownMenuShortcut>
             </DropdownMenuItem>
           </DropdownMenuContent>
