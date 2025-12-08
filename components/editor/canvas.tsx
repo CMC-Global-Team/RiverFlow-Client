@@ -24,6 +24,7 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
+import CustomEdge from './custom-edge'
 import LinkPreviewModal from './link-preview-modal'
 import { Plus, GitBranch, Trash2, Edit3, Square, Circle, Diamond, Hexagon } from 'lucide-react'
 import {
@@ -79,6 +80,16 @@ function AddChildButton({ screenPosition, onAddChild, onClose, onStayVisible, on
       </button>
     </div>
   )
+}
+
+
+
+const edgeTypes = {
+  default: (props: any) => <CustomEdge {...props} pathType="bezier" />,
+  straight: (props: any) => <CustomEdge {...props} pathType="straight" />,
+  step: (props: any) => <CustomEdge {...props} pathType="step" />,
+  smoothstep: (props: any) => <CustomEdge {...props} pathType="smoothstep" />,
+  bezier: (props: any) => <CustomEdge {...props} pathType="bezier" />,
 }
 
 export default function Canvas({ readOnly = false, hidePresence = false }: { readOnly?: boolean; hidePresence?: boolean }) {
