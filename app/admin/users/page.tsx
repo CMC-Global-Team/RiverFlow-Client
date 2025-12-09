@@ -60,6 +60,7 @@ import {
     updateUserCredit,
     changeUserPassword,
     getUserPaymentHistory,
+    hardDeleteUser,
     AdminSearchParams,
 } from "@/services/admin/admin-user.service"
 import { AdminUserResponse, PageResponse } from "@/types/user.types"
@@ -186,11 +187,23 @@ export default function UsersManagePage() {
         if (!selectedUser) return
         try {
             await deleteUser(selectedUser.userId)
-            toast.success("User deleted successfully")
+            toast.success("User soft deleted successfully")
             setDeleteDialogOpen(false)
             fetchUsers()
         } catch (error) {
             toast.error("Failed to delete user")
+        }
+    }
+
+    const handleHardDeleteConfirm = async () => {
+        if (!selectedUser) return
+        try {
+            await hardDeleteUser(selectedUser.userId)
+            toast.success("User permanently deleted")
+            setDeleteDialogOpen(false)
+            fetchUsers()
+        } catch (error) {
+            toast.error("Failed to permanently delete user")
         }
     }
 
@@ -531,14 +544,27 @@ export default function UsersManagePage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            {t("deleteWarning")}
+                            {isSuperAdmin
+                                ? t("deleteWarningPermanent")
+                                : t("deleteWarning")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                         <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
-                            {t("delete")}
-                        </AlertDialogAction>
+                        {isSuperAdmin ? (
+                            <>
+                                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
+                                    {t("softDelete")}
+                                </AlertDialogAction>
+                                <AlertDialogAction onClick={handleHardDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                                    {t("permanentDelete")}
+                                </AlertDialogAction>
+                            </>
+                        ) : (
+                            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                                {t("delete")}
+                            </AlertDialogAction>
+                        )}
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

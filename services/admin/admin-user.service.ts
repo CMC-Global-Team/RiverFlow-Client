@@ -108,6 +108,20 @@ export const deleteUser = async (userId: number): Promise<{ message: string }> =
 };
 
 /**
+ * Hard delete user - permanently remove from database (Super Admin only)
+ * DELETE /api/admin/users/{id}/permanent
+ */
+export const hardDeleteUser = async (userId: number): Promise<{ message: string }> => {
+    try {
+        const response = await apiClient.delete<{ message: string }>(`/admin/users/${userId}/permanent`);
+        return response.data;
+    } catch (error) {
+        console.error(`Error permanently deleting user ${userId}:`, error);
+        throw error;
+    }
+};
+
+/**
  * Update user credit (Admin only)
  * PUT /api/admin/users/{id}/credit
  */
