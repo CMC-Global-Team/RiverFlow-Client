@@ -51,7 +51,7 @@ export const getAllUsers = async (
                 sortDir,
                 page,
                 size,
-                includeSoftDeleted,
+                includeSoftDeleted: includeSoftDeleted ? 'true' : 'false',
             },
         });
 
