@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react"
 import { useTranslation } from "react-i18next"
+import { useAuth } from "@/hooks/auth/useAuth"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import {
@@ -66,6 +67,8 @@ import { AdminPaymentHistoryResponse } from "@/types/payment.types"
 
 export default function UsersManagePage() {
     const { t } = useTranslation("adminSideBar")
+    const { user: currentUser } = useAuth()
+    const isSuperAdmin = currentUser?.role === "SUPER_ADMIN"
 
     // State for users list
     const [users, setUsers] = useState<AdminUserResponse[]>([])
@@ -255,9 +258,16 @@ export default function UsersManagePage() {
         }
     }
 
-    // Role badge color - admin is red, user is blue
+    // Role badge color - admin is red, super_admin is purple, user is blue
     const getRoleColor = (role: string) => {
-        return role === "admin" ? "bg-red-400" : "bg-blue-500"
+        switch (role) {
+            case "admin":
+                return "bg-red-400"
+            case "super_admin":
+                return "bg-purple-500"
+            default:
+                return "bg-blue-500"
+        }
     }
 
     return (
@@ -472,15 +482,22 @@ export default function UsersManagePage() {
                         </div>
                         <div className="space-y-2">
                             <Label>{t("role")}</Label>
-                            <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="admin">{t("admin")}</SelectItem>
-                                    <SelectItem value="user">{t("user")}</SelectItem>
-                                </SelectContent>
-                            </Select>
+                            {isSuperAdmin ? (
+                                <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
+                                    <SelectTrigger>
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="admin">{t("admin")}</SelectItem>
+                                        <SelectItem value="user">{t("user")}</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            ) : (
+                                <div className="flex flex-col gap-1">
+                                    <Input value={t(editForm.role)} disabled className="bg-muted" />
+                                    <span className="text-xs text-muted-foreground">{t("roleChangeRestricted")}</span>
+                                </div>
+                            )}
                         </div>
                         <div className="space-y-2">
                             <Label>{t("status")}</Label>
