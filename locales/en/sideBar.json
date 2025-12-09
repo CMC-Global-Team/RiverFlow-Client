@@ -8,5 +8,6 @@
   "Language & Display": "Language & Display",
   "logout": "Log out",
   "loggingOut": "Logging out...",
-  "userManagement": "User Management"
+  "userManagement": "User Management",
+  "transactionManagement": "Transaction Management"
 }
