@@ -56,5 +56,6 @@
     "roleChangeRestricted": "Only Super Admin can change user roles",
     "softDelete": "Soft Delete",
     "permanentDelete": "Permanent Delete",
-    "deleteWarningPermanent": "As Super Admin, you can choose to soft delete (user can be restored) or permanently delete (cannot be undone)."
+    "deleteWarningPermanent": "As Super Admin, you can choose to soft delete (user can be restored) or permanently delete (cannot be undone).",
+    "deleteWarningAlreadyDeleted": "This user is already soft-deleted. You can permanently delete them from the database."
 }

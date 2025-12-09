@@ -56,5 +56,6 @@
     "roleChangeRestricted": "Chỉ Siêu quản trị viên mới có thể thay đổi vai trò",
     "softDelete": "Xóa mềm",
     "permanentDelete": "Xóa vĩnh viễn",
-    "deleteWarningPermanent": "Với tư cách Siêu quản trị viên, bạn có thể chọn xóa mềm (có thể khôi phục) hoặc xóa vĩnh viễn (không thể hoàn tác)."
+    "deleteWarningPermanent": "Với tư cách Siêu quản trị viên, bạn có thể chọn xóa mềm (có thể khôi phục) hoặc xóa vĩnh viễn (không thể hoàn tác).",
+    "deleteWarningAlreadyDeleted": "Người dùng này đã bị xóa mềm. Bạn có thể xóa vĩnh viễn họ khỏi cơ sở dữ liệu."
 }

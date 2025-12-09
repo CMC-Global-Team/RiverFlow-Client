@@ -545,7 +545,9 @@ export default function UsersManagePage() {
                         <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
                         <AlertDialogDescription>
                             {isSuperAdmin
-                                ? t("deleteWarningPermanent")
+                                ? (selectedUser?.status === "deleted"
+                                    ? t("deleteWarningAlreadyDeleted")
+                                    : t("deleteWarningPermanent"))
                                 : t("deleteWarning")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
@@ -553,9 +555,12 @@ export default function UsersManagePage() {
                         <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
                         {isSuperAdmin ? (
                             <>
-                                <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
-                                    {t("softDelete")}
-                                </AlertDialogAction>
+                                {/* Only show soft delete if user is NOT already deleted */}
+                                {selectedUser?.status !== "deleted" && (
+                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
+                                        {t("softDelete")}
+                                    </AlertDialogAction>
+                                )}
                                 <AlertDialogAction onClick={handleHardDeleteConfirm} className="bg-red-600 hover:bg-red-700">
                                     {t("permanentDelete")}
                                 </AlertDialogAction>
