@@ -383,6 +383,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           animated: true,
           type: "smoothstep",
           markerEnd: { type: MarkerType.ArrowClosed },
+          zIndex: 1000, // Elevate edges above nodes
         } as any
         return addEdge(newEdge, eds)
       })
