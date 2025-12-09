@@ -1,11 +1,18 @@
 "use client";
 
-
-import React, { useEffect, useState } from 'react';
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { PaymentTransaction, PageResponse } from '@/types/payment.types';
-import { getAllTransactions } from '@/services/admin/admin-payment.service';
-import { Eye, X, CheckCircle, AlertCircle, Clock, Ban, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { PaymentTransaction } from '@/types/payment.types';
+import { getAllTransactions, AdminPaymentSearchParams } from '@/services/admin/admin-payment.service';
+import { Eye, X, CheckCircle, AlertCircle, Clock, Ban, ArrowRight, ArrowLeft, Search, Filter } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 
 // --- Badge Components ---
 const StatusBadge = ({ status }: { status: string }) => {
@@ -111,12 +118,26 @@ const TransactionDetailsModal = ({ transaction, onClose }: { transaction: Paymen
                             )}
                         </div>
 
+                        {/* Additional Info */}
+                        <div className="space-y-2">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label className="text-sm text-muted-foreground">Nội dung chuyển khoản</label>
+                                    <p className="font-mono text-sm">{transaction.content || '-'}</p>
+                                </div>
+                                <div>
+                                    <label className="text-sm text-muted-foreground">Số tài khoản</label>
+                                    <p className="font-mono text-sm">{transaction.accountNumber || '-'}</p>
+                                </div>
+                            </div>
+                        </div>
+
                         {/* Webhook Content */}
                         <div className="space-y-2">
-                            <h3 className="font-semibold text-sm text-foreground">Nội Dung Webhook (Raw)</h3>
+                            <h3 className="font-semibold text-sm text-foreground">Dữ liệu thô (Raw Description)</h3>
                             <div className="p-3 bg-muted rounded-md border border-border overflow-x-auto">
                                 <pre className="text-xs text-muted-foreground whitespace-pre-wrap font-mono">
-                                    {transaction.content || transaction.description || 'Không có nội dung'}
+                                    {transaction.description || 'Không có mô tả'}
                                 </pre>
                             </div>
                         </div>
@@ -134,21 +155,39 @@ function PaymentManagementContent() {
     const [error, setError] = useState('');
     const [selectedTransaction, setSelectedTransaction] = useState<PaymentTransaction | null>(null);
 
-    // Pagination
-    const [currentPage, setCurrentPage] = useState(0);
-    const [totalPages, setTotalPages] = useState(0);
-    const pageSize = 10;
+    // Filters
+    const [search, setSearch] = useState("");
+    const [statusFilter, setStatusFilter] = useState<string>("all");
+    const [typeFilter, setTypeFilter] = useState<string>("all");
 
-    const fetchTransactions = async (page: number) => {
+    // Pagination
+    const [page, setPage] = useState(0);
+    const [totalPages, setTotalPages] = useState(0);
+    const [totalElements, setTotalElements] = useState(0);
+    const [size, setSize] = useState(10);
+
+    const fetchTransactions = useCallback(async () => {
         setLoading(true);
         try {
-            const data = await getAllTransactions(page, pageSize);
+            const params: AdminPaymentSearchParams = {
+                page,
+                size,
+                search: search || undefined,
+                status: statusFilter === "all" ? undefined : statusFilter,
+                transferType: typeFilter === "all" ? undefined : typeFilter,
+                sort: 'id,desc'
+            };
+
+            const data = await getAllTransactions(params);
             if (data && Array.isArray(data.content)) {
                 setTransactions(data.content);
                 setTotalPages(data.totalPages);
-                setCurrentPage(data.number);
+                setTotalElements(data.totalElements);
+                setPage(data.number);
             } else {
                 setTransactions([]);
+                setTotalPages(0);
+                setTotalElements(0);
             }
         } catch (err) {
             console.error("Failed to fetch transactions", err);
@@ -156,17 +195,80 @@ function PaymentManagementContent() {
         } finally {
             setLoading(false);
         }
-    };
+    }, [page, size, search, statusFilter, typeFilter]);
 
+    // Debounce search
     useEffect(() => {
-        fetchTransactions(currentPage);
-    }, [currentPage]);
+        const timer = setTimeout(() => {
+            if (page !== 0) {
+                setPage(0); // Reset to first page on search change will trigger fetch via page dependency
+            } else {
+                fetchTransactions();
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [search]);
+
+    // Fetch on filter/pagination change (except search which is handled above)
+    useEffect(() => {
+        fetchTransactions();
+    }, [page, size, statusFilter, typeFilter]); // Removed fetchTransactions from dependency to avoid loop if not memoized, but useCallback handles it. Added it back for correctness.
+
 
     return (
         <div className="p-6 md:p-8">
             <div className="mb-6">
                 <h1 className="text-3xl font-bold text-foreground">Quản Lý Giao Dịch</h1>
-                <p className="text-muted-foreground mt-1">Xem và kiểm tra lịch sử thanh toán từ cổng thanh toán.</p>
+                <p className="text-muted-foreground mt-1">
+                    Xem và kiểm tra lịch sử thanh toán từ cổng thanh toán. Tổng số: {totalElements} giao dịch.
+                </p>
+            </div>
+
+            {/* Filters */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                        placeholder="Tìm kiếm theo mã giao dịch, nội dung..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-10"
+                    />
+                </div>
+                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(0); }}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Trạng thái" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tất cả trạng thái</SelectItem>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="processed">Processed</SelectItem>
+                        <SelectItem value="matched">Matched</SelectItem>
+                        <SelectItem value="ignored">Ignored</SelectItem>
+                        <SelectItem value="invalid">Invalid</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setPage(0); }}>
+                    <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder="Loại giao dịch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="all">Tất cả loại</SelectItem>
+                        <SelectItem value="in">Nạp tiền (IN)</SelectItem>
+                        <SelectItem value="out">Rút tiền (OUT)</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Select value={size.toString()} onValueChange={(v) => { setSize(Number(v)); setPage(0); }}>
+                    <SelectTrigger className="w-[100px]">
+                        <SelectValue placeholder="Kích thước" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="10">10 / trang</SelectItem>
+                        <SelectItem value="20">20 / trang</SelectItem>
+                        <SelectItem value="50">50 / trang</SelectItem>
+                        <SelectItem value="100">100 / trang</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
 
             {error && (
@@ -184,6 +286,7 @@ function PaymentManagementContent() {
                                 <th className="px-6 py-4">ID</th>
                                 <th className="px-6 py-4">Người Dùng</th>
                                 <th className="px-6 py-4">Số Tiền</th>
+                                <th className="px-6 py-4">Loại</th>
                                 <th className="px-6 py-4">Trạng Thái</th>
                                 <th className="px-6 py-4">Cổng TT</th>
                                 <th className="px-6 py-4">Thời Gian</th>
@@ -192,12 +295,18 @@ function PaymentManagementContent() {
                         </thead>
                         <tbody className="divide-y divide-border">
                             {loading ? (
-                                <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">Đang tải dữ liệu...</td>
-                                </tr>
+                                Array.from({ length: 5 }).map((_, i) => (
+                                    <tr key={i}>
+                                        <td colSpan={8} className="px-6 py-4 text-center text-muted-foreground animate-pulse">
+                                            <div className="h-4 bg-muted rounded w-3/4 mx-auto"></div>
+                                        </td>
+                                    </tr>
+                                ))
                             ) : transactions.length === 0 ? (
                                 <tr>
-                                    <td colSpan={7} className="px-6 py-8 text-center text-muted-foreground">Không có giao dịch nào.</td>
+                                    <td colSpan={8} className="px-6 py-8 text-center text-muted-foreground">
+                                        Không tìm thấy giao dịch nào phù hợp.
+                                    </td>
                                 </tr>
                             ) : (
                                 transactions.map((tx) => (
@@ -215,6 +324,11 @@ function PaymentManagementContent() {
                                         </td>
                                         <td className="px-6 py-4 font-medium text-primary">
                                             {new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(tx.transferAmount)}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <span className={`text-xs font-bold uppercase px-2 py-1 rounded ${tx.transferType === 'in' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                                                {tx.transferType}
+                                            </span>
                                         </td>
                                         <td className="px-6 py-4">
                                             <StatusBadge status={tx.status} />
@@ -245,29 +359,31 @@ function PaymentManagementContent() {
                 </div>
 
                 {/* Pagination */}
-                {!loading && totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
-                        <div className="text-sm text-muted-foreground">
-                            Trang {currentPage + 1} / {totalPages}
-                        </div>
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
-                                disabled={currentPage === 0}
-                                className="p-2 border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                            </button>
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
-                                disabled={currentPage >= totalPages - 1}
-                                className="p-2 border border-border rounded hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                <ArrowRight className="h-4 w-4" />
-                            </button>
-                        </div>
+                <div className="flex items-center justify-between px-6 py-4 border-t border-border bg-muted/20">
+                    <div className="text-sm text-muted-foreground">
+                        Trang {page + 1} / {totalPages || 1}
                     </div>
-                )}
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.max(0, p - 1))}
+                            disabled={page === 0}
+                        >
+                            <ArrowLeft className="h-4 w-4 mr-1" />
+                            Trước
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                            disabled={page >= totalPages - 1}
+                        >
+                            Sau
+                            <ArrowRight className="h-4 w-4 ml-1" />
+                        </Button>
+                    </div>
+                </div>
             </div>
 
             <TransactionDetailsModal
