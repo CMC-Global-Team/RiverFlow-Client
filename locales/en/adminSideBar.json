@@ -3,6 +3,7 @@
     "userManage": "User Management",
     "paymentManage": "Payment Management",
     "reports": "Reports & Statistics",
+    "loggingSystem": "Logging System",
     "settings": "Settings",
     "generalSettings": "General Settings",
     "systemSettings": "System Settings",
@@ -15,6 +16,7 @@
     "suspended": "Suspended",
     "deleted": "Deleted",
     "admin": "Admin",
+    "super_admin": "Super Admin",
     "user": "User",
     "email": "Email",
     "fullName": "Full Name",
@@ -49,5 +51,7 @@
     "amount": "Amount",
     "date": "Date",
     "gateway": "Gateway",
-    "content": "Content"
+    "content": "Content",
+    "includeSoftDeleted": "Include deleted users",
+    "roleChangeRestricted": "Only Super Admin can change user roles"
 }

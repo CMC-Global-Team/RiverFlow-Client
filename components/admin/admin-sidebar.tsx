@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useLogout } from "@/hooks/auth/useLogout"
+import { useAuth } from "@/hooks/auth/useAuth"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import {
@@ -14,14 +15,18 @@ import {
     LogOut,
     ChevronDown,
     ChevronRight,
+    FileText,
 } from "lucide-react"
 
 export default function AdminSidebar() {
     const { t } = useTranslation("adminSideBar")
     const [isCollapsed, setIsCollapsed] = useState(false)
     const { logout, isLoading } = useLogout()
+    const { user } = useAuth()
     const router = useRouter()
     const [settingsOpen, setSettingsOpen] = useState(false)
+
+    const isSuperAdmin = user?.role === "SUPER_ADMIN"
 
     const toggleSettings = () => {
         if (isCollapsed) return
@@ -81,6 +86,17 @@ export default function AdminSidebar() {
                         <BarChart3 className="h-5 w-5" />
                         {!isCollapsed && <span className="text-sm font-medium">{t("reports")}</span>}
                     </Link>
+
+                    {/* Logging System - Only visible for Super Admin */}
+                    {isSuperAdmin && (
+                        <Link
+                            href="/admin/logging"
+                            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        >
+                            <FileText className="h-5 w-5" />
+                            {!isCollapsed && <span className="text-sm font-medium">{t("loggingSystem")}</span>}
+                        </Link>
+                    )}
 
                     <div className="space-y-1">
                         <button

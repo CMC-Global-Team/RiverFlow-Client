@@ -49,7 +49,7 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                         title: t("login.successTitle"),
                         description: t("login.successDesc", { name: response.fullName }),
                     })
-                    const redirectPath = response.role === "ADMIN" ? "/admin" : "/dashboard"
+                    const redirectPath = (response.role === "ADMIN" || response.role === "SUPER_ADMIN") ? "/admin" : "/dashboard"
                     setTimeout(() => router.push(redirectPath), 1000)
                 }
             } else {
@@ -93,7 +93,7 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                 description: t("login.successDesc", { name: data.fullName }),
             })
 
-            const redirectPath = data.role === "ADMIN" ? "/admin" : "/dashboard"
+            const redirectPath = (data.role === "ADMIN" || data.role === "SUPER_ADMIN") ? "/admin" : "/dashboard"
             setTimeout(() => router.push(redirectPath), 1000)
         }
     }, [data, toast, router, t])
