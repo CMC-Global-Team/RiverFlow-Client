@@ -327,6 +327,7 @@ export default function Canvas({ readOnly = false, hidePresence = false }: { rea
     markerEnd: {
       type: MarkerType.ArrowClosed,
     },
+    zIndex: 1000, // Elevate edges above nodes to ensure arrow markers are visible when nodes are scaled
   }
 
   // Helper function to create child node
