@@ -41,7 +41,7 @@ export default function AdminSidebar() {
             <div className="flex h-16 items-center justify-between px-4 border-b border-border">
                 {!isCollapsed && (
                     <span className="text-lg font-bold text-foreground">
-                        <Link href="/admin">RiverFlow Admin</Link>
+                        <Link href="/admin">{isSuperAdmin ? "RiverFlow Super Admin" : "RiverFlow Admin"}</Link>
                     </span>
                 )}
                 <button
