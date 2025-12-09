@@ -173,7 +173,9 @@
     "transactions": "Transactions",
     "exportReports": "Export Reports",
     "exportDescription": "Download reports in various formats",
+    "exportReport": "Export Report",
     "userReport": "User Report",
+    "mindmapReport": "Mindmap Report",
     "revenueReport": "Revenue Report",
     "fullReport": "Full Report"
 }

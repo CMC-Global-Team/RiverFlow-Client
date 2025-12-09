@@ -173,7 +173,9 @@
     "transactions": "Giao dịch",
     "exportReports": "Xuất báo cáo",
     "exportDescription": "Tải báo cáo theo các định dạng khác nhau",
+    "exportReport": "Xuất báo cáo",
     "userReport": "Báo cáo người dùng",
+    "mindmapReport": "Báo cáo mindmap",
     "revenueReport": "Báo cáo doanh thu",
     "fullReport": "Báo cáo đầy đủ"
 }

@@ -27,7 +27,18 @@ import {
     BarChart3,
     LineChart as LineChartIcon,
     PieChart as PieChartIcon,
+    ChevronDown,
 } from "lucide-react"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import {
     LineChart,
     Line,
@@ -233,6 +244,86 @@ export default function ReportsPage() {
                         <RefreshCw className="h-4 w-4 mr-2" />
                         {t("refresh")}
                     </Button>
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="outline" size="sm" disabled={exportLoading}>
+                                <Download className="h-4 w-4 mr-2" />
+                                {t("exportReport")}
+                                <ChevronDown className="h-4 w-4 ml-2" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <Users className="h-4 w-4 mr-2" />
+                                    {t("userReport")}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleExport('USERS', 'CSV')}>
+                                        CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('USERS', 'JSON')}>
+                                        JSON
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('USERS', 'XLSX')}>
+                                        XLSX
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <Brain className="h-4 w-4 mr-2" />
+                                    {t("mindmapReport")}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleExport('MINDMAPS', 'CSV')}>
+                                        CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('MINDMAPS', 'JSON')}>
+                                        JSON
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('MINDMAPS', 'XLSX')}>
+                                        XLSX
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <DollarSign className="h-4 w-4 mr-2" />
+                                    {t("revenueReport")}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleExport('REVENUE', 'CSV')}>
+                                        CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('REVENUE', 'JSON')}>
+                                        JSON
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('REVENUE', 'XLSX')}>
+                                        XLSX
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuSub>
+                                <DropdownMenuSubTrigger>
+                                    <BarChart3 className="h-4 w-4 mr-2" />
+                                    {t("fullReport")}
+                                </DropdownMenuSubTrigger>
+                                <DropdownMenuSubContent>
+                                    <DropdownMenuItem onClick={() => handleExport('ALL', 'CSV')}>
+                                        CSV
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('ALL', 'JSON')}>
+                                        JSON
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => handleExport('ALL', 'XLSX')}>
+                                        XLSX
+                                    </DropdownMenuItem>
+                                </DropdownMenuSubContent>
+                            </DropdownMenuSub>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
 
@@ -699,108 +790,6 @@ export default function ReportsPage() {
                     </TabsContent>
                 </Tabs>
             </div>
-
-            {/* Export Section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Download className="h-5 w-5" />
-                        {t("exportReports")}
-                    </CardTitle>
-                    <CardDescription>{t("exportDescription")}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="space-y-2">
-                            <h4 className="font-medium">{t("userReport")}</h4>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('USERS', 'CSV')}
-                                    disabled={exportLoading}
-                                >
-                                    CSV
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('USERS', 'JSON')}
-                                    disabled={exportLoading}
-                                >
-                                    JSON
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('USERS', 'XLSX')}
-                                    disabled={exportLoading}
-                                >
-                                    XLSX
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <h4 className="font-medium">{t("revenueReport")}</h4>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('REVENUE', 'CSV')}
-                                    disabled={exportLoading}
-                                >
-                                    CSV
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('REVENUE', 'JSON')}
-                                    disabled={exportLoading}
-                                >
-                                    JSON
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('REVENUE', 'XLSX')}
-                                    disabled={exportLoading}
-                                >
-                                    XLSX
-                                </Button>
-                            </div>
-                        </div>
-                        <div className="space-y-2">
-                            <h4 className="font-medium">{t("fullReport")}</h4>
-                            <div className="flex gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('ALL', 'CSV')}
-                                    disabled={exportLoading}
-                                >
-                                    CSV
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('ALL', 'JSON')}
-                                    disabled={exportLoading}
-                                >
-                                    JSON
-                                </Button>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleExport('ALL', 'XLSX')}
-                                    disabled={exportLoading}
-                                >
-                                    XLSX
-                                </Button>
-                            </div>
-                        </div>
-                    </div>
-                </CardContent>
-            </Card>
         </div>
     )
 }
