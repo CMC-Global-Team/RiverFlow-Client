@@ -32,25 +32,25 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-                {t("features")}
+              {t("features")}
             </Link>
             <Link
               href="/pricing"
-               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-                {t("pricing")}
+              {t("pricing")}
             </Link>
             <Link
               href="/about"
-            className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-                {t("about")}
+              {t("about")}
             </Link>
             <Link
               href="#"
-               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-                {t("docs")}
+              {t("docs")}
             </Link>
           </nav>
 
@@ -59,7 +59,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
             {isAuthenticated ? (
               <>
                 <Link
-                  href="/dashboard"
+                  href={user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard'}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted hover:bg-muted/80 transition-colors cursor-pointer"
                 >
                   <User className="h-4 w-4" />
@@ -80,21 +80,21 @@ export default function Header({ onAuthClick }: HeaderProps) {
                   onClick={() => onAuthClick("login")}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                    {t("login")}
+                  {t("login")}
                 </button>
                 <button
                   onClick={() => onAuthClick("signup")}
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                 >
-                    {t( "GetStarted")}
+                  {t("GetStarted")}
                 </button>
               </>
             )}
-            
+
             {/* Language Switcher */}
-          
+
           </div>
-              
+
           {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -107,15 +107,15 @@ export default function Header({ onAuthClick }: HeaderProps) {
         {/* Mobile Menu */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t border-border py-4 space-y-3">
-              <Link
+            <Link
               href="#features"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-                {t("features")}
+              {t("features")}
             </Link>
             <Link
               href="/pricing"
-               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
+              className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
               {t("pricing")}
             </Link>
@@ -125,21 +125,21 @@ export default function Header({ onAuthClick }: HeaderProps) {
             >
               {t("about")}
             </Link>
-            <Link href="#" 
-            className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all">
+            <Link href="#"
+              className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all">
               {t("docs")}
             </Link>
-            
+
             {/* Language Switcher - Mobile */}
             <div className="px-4">
-              
+
             </div>
 
             <div className="px-4 pt-2 space-y-2">
               {isAuthenticated ? (
                 <>
                   <Link
-                    href="/dashboard"
+                    href={user?.role === 'ADMIN' || user?.role === 'SUPER_ADMIN' ? '/admin' : '/dashboard'}
                     className="flex items-center justify-center gap-2 w-full px-4 py-2 rounded-lg bg-muted text-foreground text-sm font-medium hover:bg-muted/80 transition-all"
                     onClick={() => setMobileMenuOpen(false)}
                   >
@@ -175,7 +175,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                   >
-                      {t("GetStarted")}
+                    {t("GetStarted")}
                   </button>
                 </div>
               )}
