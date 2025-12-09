@@ -3,6 +3,7 @@
     "userManage": "Quản lý người dùng",
     "paymentManage": "Quản lý thanh toán",
     "reports": "Báo cáo & Thống kê",
+    "loggingSystem": "Nhật ký hệ thống",
     "settings": "Cài đặt",
     "generalSettings": "Cài đặt chung",
     "systemSettings": "Cài đặt hệ thống",
@@ -15,6 +16,7 @@
     "suspended": "Tạm khóa",
     "deleted": "Đã xóa",
     "admin": "Quản trị viên",
+    "super_admin": "Siêu quản trị viên",
     "user": "Người dùng",
     "email": "Email",
     "fullName": "Họ tên",
@@ -49,5 +51,7 @@
     "amount": "Số tiền",
     "date": "Ngày",
     "gateway": "Cổng thanh toán",
-    "content": "Nội dung"
+    "content": "Nội dung",
+    "includeSoftDeleted": "Bao gồm người dùng đã xóa",
+    "roleChangeRestricted": "Chỉ Siêu quản trị viên mới có thể thay đổi vai trò"
 }
