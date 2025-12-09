@@ -45,6 +45,7 @@ export default function EmbedCanvas() {
         markerEnd: {
             type: MarkerType.ArrowClosed,
         },
+        zIndex: 1000, // Elevate edges above nodes to ensure arrow markers are visible when nodes are scaled
     }
 
     return (

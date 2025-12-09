@@ -57,6 +57,7 @@ export function normalizeEdges(incomingEdges: any[]): Edge[] {
             animated: e.animated !== undefined ? e.animated : true,
             type: e.type || 'smoothstep',
             markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
+            zIndex: e.zIndex !== undefined ? e.zIndex : 1000, // Elevate edges above nodes
         }
 
         const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
