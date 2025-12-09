@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from "react"
 import { linkify } from '@/components/ui/linkify'
 import { useMindmapContext } from '@/contexts/mindmap/MindmapContext'
 import { memo } from "react"
-import { Handle, Position, NodeProps } from "reactflow"
+import { Handle, Position, NodeProps, useUpdateNodeInternals } from "reactflow"
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Link } from 'lucide-react'
 
@@ -21,6 +21,7 @@ interface NodeData {
 // Resize Handle Component
 const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: string; currentScale: number; canEdit?: boolean }) => {
   const { updateNodeData } = useMindmapContext()
+  const updateNodeInternals = useUpdateNodeInternals()
 
   const [isResizing, setIsResizing] = useState(false)
   const [hovering, setHovering] = useState(false)
@@ -70,6 +71,8 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       newScale = Math.max(0.6, Math.min(2.0, newScale))
 
       updateNodeData(nodeId, { scale: Math.round(newScale * 10) / 10 })
+      // Update node internals to recalculate edge connection positions
+      updateNodeInternals(nodeId)
     }
 
     const handleMouseUp = () => {
@@ -83,7 +86,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [isResizing, nodeId, currentScale, updateNodeData])
+  }, [isResizing, nodeId, currentScale, updateNodeData, updateNodeInternals])
 
   const VISIBLE_SIZE = 12
   const HIT_AREA = 24

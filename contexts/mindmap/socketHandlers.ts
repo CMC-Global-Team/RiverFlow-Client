@@ -151,6 +151,7 @@ export function createSocketHandlers(
                     animated: true,
                     type: 'smoothstep',
                     markerEnd: { type: MarkerType.ArrowClosed },
+                    zIndex: 1000, // Elevate edges above nodes
                 }
                 return addEdge(newEdge as any, eds)
             })
