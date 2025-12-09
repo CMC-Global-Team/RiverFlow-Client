@@ -41,6 +41,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Checkbox } from "@/components/ui/checkbox"
 import { toast } from "sonner"
 import {
     Search,
@@ -84,6 +85,7 @@ export default function UsersManagePage() {
     const [sortDir, setSortDir] = useState<"asc" | "desc">("desc")
     const [page, setPage] = useState(0)
     const [size, setSize] = useState(10)
+    const [includeSoftDeleted, setIncludeSoftDeleted] = useState(false)
 
     // Dialog states
     const [editDialogOpen, setEditDialogOpen] = useState(false)
@@ -119,6 +121,7 @@ export default function UsersManagePage() {
                 sortDir,
                 page,
                 size,
+                includeSoftDeleted: isSuperAdmin ? includeSoftDeleted : false,
             }
             const response = await getAllUsers(params)
             setUsers(response.content)
@@ -130,7 +133,7 @@ export default function UsersManagePage() {
         } finally {
             setLoading(false)
         }
-    }, [search, statusFilter, roleFilter, sortBy, sortDir, page, size])
+    }, [search, statusFilter, roleFilter, sortBy, sortDir, page, size, includeSoftDeleted, isSuperAdmin])
 
     useEffect(() => {
         fetchUsers()
@@ -312,6 +315,26 @@ export default function UsersManagePage() {
                     </SelectContent>
                 </Select>
             </div>
+
+            {/* Include Deleted Toggle - Only for Super Admin */}
+            {isSuperAdmin && (
+                <div className="flex items-center gap-2 mb-4">
+                    <Checkbox
+                        id="includeSoftDeleted"
+                        checked={includeSoftDeleted}
+                        onCheckedChange={(checked) => {
+                            setIncludeSoftDeleted(checked === true)
+                            setPage(0)
+                        }}
+                    />
+                    <label
+                        htmlFor="includeSoftDeleted"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                    >
+                        {t("includeSoftDeleted")}
+                    </label>
+                </div>
+            )}
 
             {/* Table */}
             <div className="rounded-lg border bg-card">

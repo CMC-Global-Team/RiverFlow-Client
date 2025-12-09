@@ -20,6 +20,7 @@ export interface AdminSearchParams {
     sortDir?: 'asc' | 'desc';
     page?: number;
     size?: number;
+    includeSoftDeleted?: boolean;
 }
 
 /**
@@ -38,6 +39,7 @@ export const getAllUsers = async (
             sortDir = 'desc',
             page = 0,
             size = 10,
+            includeSoftDeleted = false,
         } = params;
 
         const response = await apiClient.get<PageResponse<AdminUserResponse>>('/admin/users', {
@@ -49,6 +51,7 @@ export const getAllUsers = async (
                 sortDir,
                 page,
                 size,
+                includeSoftDeleted,
             },
         });
 
