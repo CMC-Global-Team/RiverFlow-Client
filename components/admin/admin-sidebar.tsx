@@ -79,13 +79,16 @@ export default function AdminSidebar() {
                         {!isCollapsed && <span className="text-sm font-medium">{t("paymentManage")}</span>}
                     </Link>
 
-                    <Link
-                        href="/admin/reports"
-                        className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
-                    >
-                        <BarChart3 className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">{t("reports")}</span>}
-                    </Link>
+                    {/* Reports & Statistics - Only visible for Super Admin */}
+                    {isSuperAdmin && (
+                        <Link
+                            href="/admin/reports"
+                            className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                        >
+                            <BarChart3 className="h-5 w-5" />
+                            {!isCollapsed && <span className="text-sm font-medium">{t("reports")}</span>}
+                        </Link>
+                    )}
 
                     {/* Logging System - Only visible for Super Admin */}
                     {isSuperAdmin && (
