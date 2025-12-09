@@ -1,23 +1,62 @@
-export interface TransactionHistory {
+import { AdminUserResponse } from "./user.types";
+
+export enum TransferType {
+  IN = 'in',
+  OUT = 'out'
+}
+
+export enum TransactionStatus {
+  PENDING = 'pending',
+  MATCHED = 'matched',
+  PROCESSED = 'processed',
+  IGNORED = 'ignored',
+  INVALID = 'invalid'
+}
+
+export enum TopupStatus {
+  PENDING = 'pending',
+  PAID = 'paid',
+  EXPIRED = 'expired',
+  CANCELLED = 'cancelled'
+}
+
+export interface CreditTopupRequest {
   id: number;
-  transactionCode: string;
+  user: AdminUserResponse;
+  code: string;
   amount: number;
-  status: 'pending' | 'processed' | 'invalid' | 'ignored' | string;
-  date: string;
+  status: TopupStatus;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export interface PaymentTransaction {
+  id: number;
+  externalId?: number;
   gateway: string;
-  content: string;
+  transactionDate?: string;
+  accountNumber?: string;
+  code?: string;
+  content?: string;
+  transferType: TransferType;
+  transferAmount: number;
+  accumulated?: number;
+  subAccount?: string;
+  referenceCode?: string;
+  description?: string;
+  user?: AdminUserResponse;
+  matchedRequest?: CreditTopupRequest;
+  status: TransactionStatus;
+  createdAt: string;
 }
 
 export interface PageResponse<T> {
-  content: T[];          // Danh sách dữ liệu chính
-  totalPages: number;    // Tổng số trang
-  totalElements: number; // Tổng số bản ghi
-  size: number;          // Kích thước trang
-  number: number;        // Trang hiện tại (bắt đầu từ 0)
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  size: number;
+  number: number;
   first: boolean;
   last: boolean;
   empty: boolean;
 }
-
-// Admin payment history type (same structure as TransactionHistory)
-export type AdminPaymentHistoryResponse = TransactionHistory;
