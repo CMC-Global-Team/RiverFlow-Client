@@ -8,5 +8,6 @@
   "Language & Display": "Ngôn ngữ & Hiển thị",
   "logout": "Đăng xuất",
   "loggingOut": "Đang đăng xuất...",
-  "userManagement": "Quản lý người dùng"
+  "userManagement": "Quản lý người dùng",
+  "transactionManagement": "Quản lý giao dịch"
 }
