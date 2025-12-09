@@ -9,6 +9,7 @@ import { useGoogleSignIn } from "@/hooks/auth/useGoogleSignIn"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton"
+import { Auth0LoginButton } from "@/components/auth/Auth0LoginButton"
 import { useTranslation } from "react-i18next"
 import type { CredentialResponse } from "@react-oauth/google"
 
@@ -48,7 +49,8 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                         title: t("login.successTitle"),
                         description: t("login.successDesc", { name: response.fullName }),
                     })
-                    setTimeout(() => router.push("/dashboard"), 1000)
+                    const redirectPath = (response.role === "ADMIN" || response.role === "SUPER_ADMIN") ? "/admin" : "/dashboard"
+                    setTimeout(() => router.push(redirectPath), 1000)
                 }
             } else {
                 toast({
@@ -91,7 +93,8 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                 description: t("login.successDesc", { name: data.fullName }),
             })
 
-            setTimeout(() => router.push("/dashboard"), 1000)
+            const redirectPath = (data.role === "ADMIN" || data.role === "SUPER_ADMIN") ? "/admin" : "/dashboard"
+            setTimeout(() => router.push(redirectPath), 1000)
         }
     }, [data, toast, router, t])
 
@@ -158,7 +161,7 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
             <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
+                className="text-white w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 disabled:opacity-50 transition-all"
             >
                 {isLoading ? t("login.submitting") : t("login.submit")}
             </button>
@@ -169,28 +172,40 @@ export default function LoginForm({ onForgotClick }: LoginFormProps) {
                     <div className="w-full border-t"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-          <span className="bg-card px-2 text-muted-foreground">
-            {t("login.divider")}
-          </span>
+                    <span className="bg-card px-2 text-muted-foreground">
+                        {t("login.divider")}
+                    </span>
                 </div>
             </div>
 
             {/* Social login */}
             <div className="space-y-3">
-                <button
-                    type="button"
-                    className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
-                    disabled
-                >
-                    <Github className="h-5 w-5" />
-                    <span className="text-sm font-medium">{t("login.github")}</span>
-                </button>
+                {/* Row 1: Google and GitHub side by side */}
+                <div className="flex gap-3">
+                    <div className="flex-1">
+                        <GoogleLoginButton
+                            onSuccess={handleGoogleSuccess}
+                            onError={handleGoogleError}
+                            text="signin_with"
+                        />
+                    </div>
+                    <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
+                        onClick={() => {
+                            const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "Ov23livoL9OuzQzaET79";
+                            const redirectUri = encodeURIComponent("https://river-flow-client.vercel.app/auth/github/callback");
+                            const scope = encodeURIComponent("user:email");
+                            window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+                        }}
+                    >
+                        <Github className="h-5 w-5" />
+                        <span className="text-sm font-medium">{t("login.github")}</span>
+                    </button>
+                </div>
 
-                <GoogleLoginButton
-                    onSuccess={handleGoogleSuccess}
-                    onError={handleGoogleError}
-                    text="signin_with"
-                />
+                {/* Row 2: SSO full width */}
+                <Auth0LoginButton text="signin_with" />
             </div>
         </form>
     )

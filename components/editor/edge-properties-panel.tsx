@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
 import { useState, useEffect, useRef } from "react"
@@ -18,7 +19,7 @@ export default function EdgePropertiesPanel() {
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement
-      
+
       if (textColorRef.current && !textColorRef.current.contains(target)) {
         if (!target.closest('.text-color-btn')) {
           setShowTextColor(false)
@@ -44,7 +45,7 @@ export default function EdgePropertiesPanel() {
 
   const handleLabelChange = (label: string) => {
     const updates: any = { label }
-    
+
     // If adding label for first time, set default styles
     if (label && !selectedEdge.label) {
       updates.labelStyle = { fill: '#000000', fontWeight: 500, fontSize: 12 }
@@ -54,13 +55,13 @@ export default function EdgePropertiesPanel() {
       updates.labelShowBg = true
       updates.interactionWidth = 20
     }
-    
+
     updateEdgeData(selectedEdge.id, updates)
   }
 
   const handleLabelTextColorChange = (color: string) => {
     updateEdgeData(selectedEdge.id, {
-      labelStyle: { 
+      labelStyle: {
         ...selectedEdge.labelStyle,
         fill: color,
         fontWeight: 500,
@@ -71,7 +72,7 @@ export default function EdgePropertiesPanel() {
 
   const handleLabelBgColorChange = (color: string) => {
     updateEdgeData(selectedEdge.id, {
-      labelBgStyle: { 
+      labelBgStyle: {
         fill: color,
         fillOpacity: 0.9,
       },
@@ -81,7 +82,7 @@ export default function EdgePropertiesPanel() {
   }
 
   const handleTypeChange = (type: string) => {
-    updateEdgeData(selectedEdge.id, { 
+    updateEdgeData(selectedEdge.id, {
       type,
       // Ensure label properties are preserved and label shows correctly on different edge types
       ...(selectedEdge.label && {
@@ -100,7 +101,7 @@ export default function EdgePropertiesPanel() {
   const handleColorChange = (color: string) => {
     const currentStyle = selectedEdge.style || {}
     const currentMarkerEnd = selectedEdge.markerEnd || {}
-    
+
     const updates: any = {
       style: { ...currentStyle, stroke: color },
       markerEnd: {
@@ -108,7 +109,7 @@ export default function EdgePropertiesPanel() {
         color: color,
       }
     }
-    
+
     updateEdgeData(selectedEdge.id, updates)
   }
 
@@ -158,10 +159,10 @@ export default function EdgePropertiesPanel() {
 
           {/* Text Color */}
           <div className="text-color-container relative" onClick={(e) => e.stopPropagation()}>
-            <Button 
+            <Button
               className="text-color-btn"
-              variant="ghost" 
-              size="icon" 
+              variant="ghost"
+              size="icon"
               onMouseDown={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -171,7 +172,7 @@ export default function EdgePropertiesPanel() {
               <Palette />
             </Button>
             {showTextColor && (
-              <div 
+              <div
                 ref={textColorRef}
                 className="absolute top-full left-0 mt-1 bg-white dark:bg-slate-950 border border-border rounded shadow-xl p-3 grid grid-cols-5 gap-2 z-50 w-48"
                 onMouseDown={(e) => e.stopPropagation()}
@@ -181,7 +182,7 @@ export default function EdgePropertiesPanel() {
                   <button
                     key={c}
                     className="w-8 h-8 rounded-full border-2 hover:scale-110 transition-all hover:shadow-md"
-                    style={{ 
+                    style={{
                       backgroundColor: c,
                       borderColor: 'rgba(0,0,0,0.3)',
                       cursor: 'pointer'
@@ -201,11 +202,12 @@ export default function EdgePropertiesPanel() {
 
         <div className="space-y-2">
           <Label htmlFor="edge-label">Connection Label</Label>
-          <Input
+          <Textarea
             id="edge-label"
             value={(selectedEdge.label as string) || ""}
             onChange={(e) => handleLabelChange(e.target.value)}
-            placeholder="Add label to connection"
+            placeholder="Add label to connection (supports multi-line)"
+            className="min-h-[60px]"
           />
         </div>
 
@@ -237,9 +239,8 @@ export default function EdgePropertiesPanel() {
               <button
                 key={type.value}
                 onClick={() => handleTypeChange(type.value)}
-                className={`w-full p-3 border rounded-lg text-left transition-all hover:bg-muted ${
-                  selectedEdge.type === type.value ? "border-primary bg-primary/10" : ""
-                }`}
+                className={`w-full p-3 border rounded-lg text-left transition-all hover:bg-muted ${selectedEdge.type === type.value ? "border-primary bg-primary/10" : ""
+                  }`}
               >
                 <div className="font-medium text-sm">{type.label}</div>
                 <div className="text-xs text-muted-foreground">{type.description}</div>
@@ -279,7 +280,7 @@ export default function EdgePropertiesPanel() {
           <p>From: {selectedEdge.source}</p>
           <p>To: {selectedEdge.target}</p>
           <p>Type: {selectedEdge.type || "default"}</p>
-          {selectedEdge.label && <p>Label: {selectedEdge.label}</p>}
+          {selectedEdge.label && <p className="whitespace-pre-wrap break-words">Label: {selectedEdge.label}</p>}
         </div>
 
         {/* Delete Connection Button */}

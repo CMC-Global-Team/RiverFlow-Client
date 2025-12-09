@@ -8,6 +8,7 @@ import { useGoogleSignIn } from "@/hooks/auth/useGoogleSignIn"
 import { useToast } from "@/hooks/use-toast"
 import { useRouter } from "next/navigation"
 import { GoogleLoginButton } from "@/components/auth/GoogleLoginButton"
+import { Auth0LoginButton } from "@/components/auth/Auth0LoginButton"
 import { useTranslation } from "react-i18next"
 import type { CredentialResponse } from "@react-oauth/google"
 
@@ -180,7 +181,7 @@ export default function SignupForm() {
             </div>
 
             {/* BUTTON */}
-            <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-primary py-2.5 font-semibold">
+            <button type="submit" disabled={isLoading} className="w-full rounded-lg bg-primary py-2.5 font-semibold text-white">
                 {isLoading ? t("signup.submitting") : t("signup.submit")}
             </button>
 
@@ -196,12 +197,28 @@ export default function SignupForm() {
 
             {/* SOCIAL */}
             <div className="space-y-3">
-                <button className="w-full flex items-center justify-center gap-2 rounded-lg border py-2.5" disabled>
-                    <Github className="h-5 w-5" />
-                    <span>{t("signup.github")}</span>
-                </button>
+                {/* Row 1: Google and GitHub side by side */}
+                <div className="flex gap-3">
+                    <div className="flex-1">
+                        <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} text="signup_with" />
+                    </div>
+                    <button
+                        type="button"
+                        className="flex-1 flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors"
+                        onClick={() => {
+                            const clientId = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "Ov23livoL9OuzQzaET79";
+                            const redirectUri = encodeURIComponent("https://river-flow-client.vercel.app/auth/github/callback");
+                            const scope = encodeURIComponent("user:email");
+                            window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&scope=${scope}`;
+                        }}
+                    >
+                        <Github className="h-5 w-5" />
+                        <span className="text-sm font-medium">{t("signup.github")}</span>
+                    </button>
+                </div>
 
-                <GoogleLoginButton onSuccess={handleGoogleSuccess} onError={handleGoogleError} text="signup_with" />
+                {/* Row 2: SSO full width */}
+                <Auth0LoginButton text="signup_with" />
             </div>
         </form>
     )

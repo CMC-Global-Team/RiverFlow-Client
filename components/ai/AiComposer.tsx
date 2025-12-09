@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react"
 import { ArrowUp, ChevronDown, Coins, Plus, Sliders, MessageSquare, Upload, X } from "lucide-react"
-import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuRadioGroup, DropdownMenuRadioItem } from "@/components/ui/dropdown-menu"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { optimizeMindmapByAI } from "@/services/mindmap/mindmap.service"
+import { type ThinkingModeRequest } from "@/services/ai/ai.service"
 import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
@@ -144,59 +145,316 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
     return `context: root=${rootLabel}; top-level=${children.join(', ')}; nodeCount=${ns.length};`
   }
 
-  // Setup WebSocket listeners for AI streaming
-  useEffect(() => {
-    if (!mindmap?.id) return
+  // Typewriter effect refs
+  const streamingBufferRef = useRef("")
+  const displayedTextRef = useRef("")
+  const isStreamingRef = useRef(false)
+  const animationFrameRef = useRef<number>()
+  const lastFrameTimeRef = useRef(0)
+  const streamTimeoutRef = useRef<NodeJS.Timeout>()
+  const isActionListAnimatingRef = useRef(false) // Prevent handleThinkingDone from interrupting Action Plan
+  const isThinkingModeRef = useRef(false) // Track if we're in Thinking Mode
+  const finalResponseBufferRef = useRef("") // Separate buffer for final response in thinking mode
+  const thinkingAnalysisTextRef = useRef("") // Save thinking analysis text
 
-    const socket = getSocket()
-    const handleStreamStart = () => {
-      setStreamingText("")
-      setMessages((m) => [...m, { role: 'assistant', text: '', streaming: true }])
+  // Animation loop for smooth typewriter effect
+  const animateTypewriter = useCallback((time: number) => {
+    if (!isStreamingRef.current && displayedTextRef.current.length === streamingBufferRef.current.length) {
+      return // Stop if done and fully displayed
     }
 
-    const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
-      setStreamingText((prev) => prev + data.chunk)
-      setMessages((m) => {
-        const newMsgs = [...m]
+    const delta = time - lastFrameTimeRef.current
+    // Target ~30-50ms per character for natural reading speed, or faster if buffer is large
+    // If buffer is huge (>50 chars ahead), speed up to catch up
+    const bufferDiff = streamingBufferRef.current.length - displayedTextRef.current.length
+    const speed = bufferDiff > 50 ? 5 : bufferDiff > 20 ? 15 : 30
+
+    if (delta >= speed && bufferDiff > 0) {
+      // Add next character(s)
+      const charsToAdd = bufferDiff > 100 ? 5 : bufferDiff > 50 ? 3 : 1
+      const nextChars = streamingBufferRef.current.substring(
+        displayedTextRef.current.length,
+        displayedTextRef.current.length + charsToAdd
+      )
+
+      displayedTextRef.current += nextChars
+      lastFrameTimeRef.current = time
+
+      // Update UI
+      setMessages((prev) => {
+        const newMsgs = [...prev]
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
-          lastMsg.text = lastMsg.text + data.chunk
+          lastMsg.text = displayedTextRef.current
         }
         return newMsgs
       })
     }
 
+    animationFrameRef.current = requestAnimationFrame(animateTypewriter)
+  }, [])
+
+  // Setup WebSocket listeners for AI streaming
+  useEffect(() => {
+    if (!mindmap?.id && !user?.userId) return
+
+    const socket = getSocket()
+
+    // Join both mindmap room (if exists) and user room for AI events
+    if (mindmap?.id) {
+      console.log('[AIComposer] Joining mindmap room:', mindmap.id)
+      socket.emit('mindmap:join', { mindmapId: mindmap.id })
+    }
+    if (user?.userId) {
+      console.log('[AIComposer] Joining user room:', `user:${user.userId}`)
+      socket.emit('mindmap:join', { mindmapId: `user:${user.userId}` })
+    }
+
+    // Start typewriter animation
+    const startTypewriter = () => {
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+      isStreamingRef.current = true
+      streamingBufferRef.current = ""
+      displayedTextRef.current = ""
+      lastFrameTimeRef.current = 0
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = requestAnimationFrame(animateTypewriter)
+    }
+
+    // Normal/Max mode streaming
+    const handleStreamStart = () => {
+      console.log('[AIComposer] Stream start event received')
+
+      // In Thinking Mode, DON'T create a new message yet - wait for actionlist to handle it
+      if (isThinkingModeRef.current) {
+        console.log('[AIComposer] In Thinking Mode - deferring stream message creation to actionlist handler')
+        finalResponseBufferRef.current = "" // Reset buffer for final response
+        return
+      }
+
+      setStreamingText("")
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+      startTypewriter()
+    }
+
+    const handleStreamChunk = (data: { chunk: string; done: boolean }) => {
+      console.log('[AIComposer] Stream chunk received:', data.chunk.substring(0, 50) + '...')
+
+      // In Thinking Mode, append to separate final response buffer
+      if (isThinkingModeRef.current) {
+        finalResponseBufferRef.current += data.chunk
+        // Also append to streaming buffer if we're animating the final response
+        if (!isActionListAnimatingRef.current) {
+          streamingBufferRef.current += data.chunk
+        }
+        return
+      }
+
+      // Normal mode - append to main buffer
+      streamingBufferRef.current += data.chunk
+    }
+
     const handleStreamDone = () => {
+      console.log('[AIComposer] Stream done event received')
+
+      // In Thinking Mode, finalize the final response message
+      if (isThinkingModeRef.current) {
+        console.log('[AIComposer] Thinking Mode final response done')
+        isThinkingModeRef.current = false // Reset thinking mode flag
+
+        if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+        streamTimeoutRef.current = setTimeout(() => {
+          // Force completion
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = streamingBufferRef.current || finalResponseBufferRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+          isStreamingRef.current = false
+          isActionListAnimatingRef.current = false
+          setStreamingText("")
+        }, 1000)
+        return
+      }
+
+      // Normal mode
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+      streamTimeoutRef.current = setTimeout(() => {
+        // Force completion if stuck
+        if (displayedTextRef.current !== streamingBufferRef.current) {
+          displayedTextRef.current = streamingBufferRef.current
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = displayedTextRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        } else {
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        }
+        isStreamingRef.current = false
+        setStreamingText("")
+      }, 1000) // Give it 1s to finish animating
+    }
+
+    const handleStreamError = (data: { error: string }) => {
+      console.error('[AIComposer] Stream error:', data.error)
+      isStreamingRef.current = false
+      isThinkingModeRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
+      setStreamingText("")
+    }
+
+    // Thinking mode streaming
+    const handleThinkingStart = () => {
+      console.log('[AIComposer] Thinking Mode stream start event received')
+      isThinkingModeRef.current = true // Mark that we're in Thinking Mode
+      thinkingAnalysisTextRef.current = "" // Reset
+      finalResponseBufferRef.current = "" // Reset
+      setStreamingText("")
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+      startTypewriter()
+    }
+
+    const handleThinkingChunk = (data: { chunk: string; done: boolean }) => {
+      console.log('[AIComposer] Thinking Mode chunk received:', data.chunk.substring(0, 50) + '...')
+      streamingBufferRef.current += data.chunk
+      thinkingAnalysisTextRef.current += data.chunk // Save thinking analysis
+    }
+
+    const handleThinkingDone = (data: { fullText: string }) => {
+      console.log('[AIComposer] Thinking Mode stream done event received')
+
+      // IMPORTANT: If Action Plan is animating, don't interrupt it!
+      // The actionlist event will handle its own completion
+      if (isActionListAnimatingRef.current) {
+        console.log('[AIComposer] Skipping handleThinkingDone - Action Plan is animating')
+        return
+      }
+
+      // If we haven't received actionlist yet, just finalize thinking analysis
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+      streamTimeoutRef.current = setTimeout(() => {
+        if (displayedTextRef.current !== streamingBufferRef.current) {
+          displayedTextRef.current = streamingBufferRef.current
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              lastMsg.text = displayedTextRef.current
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        } else {
+          setMessages((m) => {
+            const newMsgs = [...m]
+            const lastMsg = newMsgs[newMsgs.length - 1]
+            if (lastMsg && lastMsg.streaming) {
+              delete lastMsg.streaming
+            }
+            return newMsgs
+          })
+        }
+        isStreamingRef.current = false
+        setStreamingText("")
+      }, 1000)
+    }
+
+    const handleThinkingError = (data: { error: string }) => {
+      console.error('[AIComposer] Thinking Mode stream error:', data.error)
+      isStreamingRef.current = false
+      isThinkingModeRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
+      setStreamingText("")
+    }
+
+    const handleThinkingActionList = (data: { text: string; actions: string[] }) => {
+      console.log('[AIComposer] Thinking Mode action list received:', data)
+
+      // Mark that we're now animating the action list
+      isActionListAnimatingRef.current = true
+
+      // Clear any pending timeout
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
+      // Step 1: Finalize the thinking analysis message (message 1)
+      const savedThinkingText = thinkingAnalysisTextRef.current || streamingBufferRef.current
       setMessages((m) => {
         const newMsgs = [...m]
+        // Find the last streaming message (should be thinking analysis)
         const lastMsg = newMsgs[newMsgs.length - 1]
         if (lastMsg && lastMsg.streaming) {
+          lastMsg.text = savedThinkingText
           delete lastMsg.streaming
         }
         return newMsgs
       })
-      setStreamingText("")
+
+      // Step 2: Add Action Plan message (message 2) - show instantly for now
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: data.text }])
+
+      // Step 3: Add Final Response message (message 3) - streaming
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: '', streaming: true }])
+
+      // Reset typewriter for final response
+      isStreamingRef.current = true
+      streamingBufferRef.current = finalResponseBufferRef.current // Use accumulated final response
+      displayedTextRef.current = ""
+      lastFrameTimeRef.current = 0
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      animationFrameRef.current = requestAnimationFrame(animateTypewriter)
     }
 
-    const handleStreamError = (data: { error: string }) => {
-      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
-      setStreamingText("")
-    }
-
+    // Register all listeners
     socket.on('ai:stream:start', handleStreamStart)
     socket.on('ai:stream:chunk', handleStreamChunk)
     socket.on('ai:stream:done', handleStreamDone)
     socket.on('ai:stream:error', handleStreamError)
+    socket.on('ai:thinking:start', handleThinkingStart)
+    socket.on('ai:thinking:chunk', handleThinkingChunk)
+    socket.on('ai:thinking:done', handleThinkingDone)
+    socket.on('ai:thinking:error', handleThinkingError)
+    socket.on('ai:thinking:actionlist', handleThinkingActionList)
 
     return () => {
+      isStreamingRef.current = false
+      isThinkingModeRef.current = false
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
+      if (streamTimeoutRef.current) clearTimeout(streamTimeoutRef.current)
+
       socket.off('ai:stream:start', handleStreamStart)
       socket.off('ai:stream:chunk', handleStreamChunk)
       socket.off('ai:stream:done', handleStreamDone)
       socket.off('ai:stream:error', handleStreamError)
+      socket.off('ai:thinking:start', handleThinkingStart)
+      socket.off('ai:thinking:chunk', handleThinkingChunk)
+      socket.off('ai:thinking:done', handleThinkingDone)
+      socket.off('ai:thinking:error', handleThinkingError)
+      socket.off('ai:thinking:actionlist', handleThinkingActionList)
     }
-  }, [mindmap?.id])
+  }, [mindmap?.id, user?.userId, animateTypewriter])
 
-  // Removed composeAgentPlan - backend AI handles all planning now
+  // Removed composeAgentPlan - backend AI handles all planning
 
   const sendPrompt = async (text: string) => {
     setChatOpen(true)
@@ -212,14 +470,17 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
         const firstLevelCount = modeLabel === 'max' ? 6 : modeLabel === 'thinking' ? 5 : 4
         // Removed client-side agentPlan - backend AI handles all planning
 
+        const effectiveLang = (langPref === 'auto' ? lang : langPref) || 'vi'
 
+        // All modes now use the same backend API
+        // Thinking Mode is handled server-side automatically
         const payload: any = {
           mindmapId: mindmap.id,
           targetType: 'auto', // Let backend AI decide dynamically
           nodeId: selectedNode ? selectedNode.id : undefined,
-          language: langPref === 'auto' ? lang : langPref,
-          mode: mode, // Pass mode to backend for credit deduction
-          hints: text ? [text, buildContextHint()] : undefined, // Removed AGENT_PLAN - let backend AI decide
+          language: effectiveLang,
+          mode: mode, // Pass mode to backend (thinking/normal/max)
+          hints: text ? [text, buildContextHint()] : undefined,
           levels,
           firstLevelCount,
           structureType,
@@ -328,19 +589,21 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
 
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
-            <Input
+            <Textarea
               placeholder="Nhập nội dung của bạn"
-              className="flex-1 h-10 rounded-xl bg-background/40 border-muted/50"
+              className="flex-1 min-h-10 max-h-24 rounded-xl bg-background/40 border-muted/50 resize-none overflow-y-auto"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
                   const t = inputValue.trim()
                   if (!t || loading) return
                   setInputValue("")
                   void sendPrompt(t)
                 }
               }}
+              rows={1}
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -394,7 +657,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           initialPos={{ x: Math.max(16, window.innerWidth - 420 - 16), y: Math.max(16, Math.round(window.innerHeight / 6)) }}
           handle=".draggable-handle"
         >
-          <div className="w-[420px] rounded-2xl border bg-popover text-popover-foreground shadow-xl ring-1 ring-border">
+          <div className="w-[420px] rounded-2xl border bg-card dark:bg-card text-card-foreground shadow-xl ring-1 ring-border">
             <div className="draggable-handle flex items-center justify-between gap-2 px-3 py-2 border-b cursor-move">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium">Cuộc hội thoại</span>
@@ -407,16 +670,40 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
             <ScrollArea className="h-[360px] p-3">
               <div className="space-y-4">
                 {messages.map((m, i) => (
-                  <div key={i} className={m.role === "user" ? "flex justify-end" : "flex justify-start"}>
+                  <div key={i} className={m.role === "user" ? "flex justify-end animate-in fade-in slide-in-from-bottom-2 duration-300" : "flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300"}>
                     <div className="flex flex-col items-start gap-1">
                       {m.role !== "user" ? (
                         <div className="text-[11px] text-muted-foreground">RiverFlow Agent</div>
                       ) : null}
                       <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
-                        {m.text}
+                        <div className="whitespace-pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>
+                          {m.text ? m.text.split('\n').map((line, idx) => (
+                            <div key={idx}>
+                              {line.startsWith('**') && line.endsWith('**') ? (
+                                <strong>{line.slice(2, -2)}</strong>
+                              ) : line.startsWith('- ') ? (
+                                <div className="ml-2">• {line.slice(2)}</div>
+                              ) : (
+                                line || <br />
+                              )}
+                            </div>
+                          )) : (
+                            m.streaming ? (
+                              <span className="inline-flex items-center gap-1">
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '0ms', animationDuration: '600ms' }}></span>
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '150ms', animationDuration: '600ms' }}></span>
+                                <span className="size-2 rounded-full bg-current animate-bounce" style={{ animationDelay: '300ms', animationDuration: '600ms' }}></span>
+                              </span>
+                            ) : null
+                          )}
+                        </div>
                       </div>
                       {m.role === "user" && m.mode ? (
-                        <div className="text-[11px] text-muted-foreground">{m.mode === "max" ? "Max Mode" : m.mode === "thinking" ? "Thinking Mode" : "Normal Mode"}</div>
+                        <div className="text-[11px] text-muted-foreground">
+                          {m.mode === "max" && "Max Mode"}
+                          {m.mode === "thinking" && "Thinking Mode"}
+                          {m.mode === "normal" && "Normal Mode"}
+                        </div>
                       ) : null}
                     </div>
                   </div>

@@ -5,7 +5,7 @@ import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
 import { useAuth } from "@/hooks/auth/useAuth"
-import { ThemeSwitcher } from "@/components/theme-switcher"
+
 import ProfileModal from "@/components/profile/ProfileModal"
 import CreditTopupSheet from "@/components/payment/CreditTopupSheet"
 import { getAvatarUrl } from "@/lib/avatar-utils"
@@ -47,7 +47,7 @@ export default function DashboardHeader({
             <Bell className="h-5 w-5 text-muted-foreground" />
             <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
           </button>
-          <ThemeSwitcher/>
+         
           <Tooltip>
             <TooltipTrigger asChild>
               <div 

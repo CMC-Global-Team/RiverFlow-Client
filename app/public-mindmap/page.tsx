@@ -8,7 +8,7 @@ import Toolbar from "@/components/editor/toolbar"
 import ChatPanel from "@/components/editor/chat-panel"
 import Canvas from "@/components/editor/canvas"
 import PropertiesPanel from "@/components/editor/properties-panel"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams, useRouter } from "next/navigation"
 import gsap from "gsap"
 import PublicShareModal from "@/components/mindmap/PublicShareModal"
 import { getPublicMindmap } from "@/services/mindmap/mindmap.service"
@@ -18,10 +18,11 @@ import HistorySheet from "@/components/editor/history-sheet"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const shareToken = searchParams.get('token')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
-  
+
   const {
     mindmap,
     isSaving,
@@ -31,8 +32,12 @@ function PublicMindmapInner() {
     autoSaveEnabled,
     setAutoSaveEnabled,
     saveMindmap,
+    accessRevoked,
+    clearAccessRevoked,
+    permissionChanged,
+    clearPermissionChanged,
   } = useMindmapContext()
-  
+
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
@@ -81,10 +86,38 @@ function PublicMindmapInner() {
           setIsLoading(false)
         }
       }
-      
+
       loadPublicMindmap()
     }
   }, [shareToken, loadedToken, setFullMindmapState, toast])
+
+  // Handle access revocation - redirect to home page when access is revoked
+  useEffect(() => {
+    if (accessRevoked?.revoked) {
+      console.log('[PublicMindmap] Access revoked, redirecting to home:', accessRevoked)
+      toast({
+        title: 'Access Revoked',
+        description: accessRevoked.message || 'This mindmap is no longer accessible.',
+        variant: 'destructive',
+      })
+      clearAccessRevoked()
+      router.push('/')
+    }
+  }, [accessRevoked, clearAccessRevoked, router, toast])
+
+  // Handle permission change - refresh page when permissions change
+  useEffect(() => {
+    if (permissionChanged?.changed) {
+      console.log('[PublicMindmap] Permission changed, refreshing page:', permissionChanged)
+      toast({
+        title: 'Permission Changed',
+        description: `Your access level has been updated. Refreshing page...`,
+      })
+      clearPermissionChanged()
+      // Refresh the page to get updated permissions
+      window.location.reload()
+    }
+  }, [permissionChanged, clearPermissionChanged, toast])
 
   const handleTitleChange = (newTitle: string) => {
     setTitle(newTitle)
@@ -115,7 +148,7 @@ function PublicMindmapInner() {
   useEffect(() => {
     if (mindmap) {
       let role: 'owner' | 'editor' | 'viewer' | null = null
-      
+
       if (user && mindmap.mysqlUserId === user.userId) {
         // User is the owner
         role = 'owner'
@@ -142,7 +175,7 @@ function PublicMindmapInner() {
           }
         }
       }
-      
+
       console.log('PublicMindmap - Setting userRole:', {
         role,
         isPublic: mindmap.isPublic,
@@ -151,7 +184,7 @@ function PublicMindmapInner() {
         mindmapOwnerId: mindmap.mysqlUserId,
         isOwner: user && mindmap.mysqlUserId === user.userId
       })
-      
+
       setUserRole(role)
     } else {
       // Reset role when mindmap is not available
@@ -218,7 +251,7 @@ function PublicMindmapInner() {
         {/* Floating Toolbar with Header Items */}
         <div className="absolute top-4 left-4 right-4 z-50 pointer-events-none">
           <div className="pointer-events-auto">
-            <Toolbar 
+            <Toolbar
               mindmap={mindmap}
               isEditing={isEditing}
               setIsEditing={setIsEditing}

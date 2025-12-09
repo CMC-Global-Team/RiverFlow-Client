@@ -24,7 +24,20 @@ import {
   EllipseNode,
   RoundedRectangleNode,
 } from './node-shapes'
-import { Plus } from 'lucide-react'
+import CustomEdge from './custom-edge'
+import LinkPreviewModal from './link-preview-modal'
+import { Plus, GitBranch, Trash2, Edit3, Square, Circle, Diamond, Hexagon } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuShortcut,
+} from '@/components/ui/dropdown-menu'
 
 const LONG_PRESS_DELAY = 1000 // ms
 const BUTTON_HIDE_DELAY = 500 // ms
@@ -69,7 +82,17 @@ function AddChildButton({ screenPosition, onAddChild, onClose, onStayVisible, on
   )
 }
 
-export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
+
+
+const edgeTypes = {
+  default: (props: any) => <CustomEdge {...props} pathType="bezier" />,
+  straight: (props: any) => <CustomEdge {...props} pathType="straight" />,
+  step: (props: any) => <CustomEdge {...props} pathType="step" />,
+  smoothstep: (props: any) => <CustomEdge {...props} pathType="smoothstep" />,
+  bezier: (props: any) => <CustomEdge {...props} pathType="bezier" />,
+}
+
+export default function Canvas({ readOnly = false, hidePresence = false }: { readOnly?: boolean; hidePresence?: boolean }) {
   const {
     nodes,
     edges,
@@ -104,10 +127,10 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
   // Ref to track pending child node ID to select after creation
   const pendingChildNodeId = useRef<string | null>(null)
-  
+
   // Ref to track pending sibling node ID to select after creation
   const pendingSiblingNodeId = useRef<string | null>(null)
-  
+
   // Ref to store ReactFlow instance
   const reactFlowInstance = useRef<ReactFlowInstance | null>(null)
   const myClientIdRef = useRef<string | null>(null)
@@ -125,13 +148,21 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0
     return palette[h % palette.length]
   }, [anonymousName])
-  
+
   // State for long press detection
   const [longPressedNode, setLongPressedNode] = useState<{ id: string; position: { x: number; y: number }; dimensions: { width?: number; height?: number } } | null>(null)
   const [buttonScreenPosition, setButtonScreenPosition] = useState<{ x: number; y: number } | null>(null)
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const longPressNodeRef = useRef<string | null>(null)
   const hideButtonTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // State for context menu
+  const [contextMenuNode, setContextMenuNode] = useState<any | null>(null)
+  const [contextMenuEdge, setContextMenuEdge] = useState<any | null>(null)
+  const [contextMenuPosition, setContextMenuPosition] = useState<{ x: number; y: number } | null>(null)
+
+  // State for link preview modal
+  const [linkPreview, setLinkPreview] = useState<{ isOpen: boolean; url: string; nodeLabel: string; position: { x: number; y: number } } | null>(null)
 
   // Calculate screen position from flow position
   const calculateScreenPosition = useCallback(
@@ -224,7 +255,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           }
           // ReactFlow có thể không cung cấp width/height trong props
           // Sử dụng giá trị mặc định an toàn
-          const nodeDimensions = { 
+          const nodeDimensions = {
             width: (props as any).width || (props as any).measured?.width || 150,
             height: (props as any).height || (props as any).measured?.height || 80
           }
@@ -312,7 +343,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
     // Create child node and get its ID
     const childNodeId = addNode(childPosition, childShape)
-    
+
     // Store the child node ID to select it after it's added to the nodes array
     pendingChildNodeId.current = childNodeId
 
@@ -338,9 +369,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     // Position it to the right of the current node, or below if it's a root node
     const siblingOffset = 200 // Horizontal distance between siblings
     const verticalOffset = 150 // Vertical distance for root nodes
-    
+
     let siblingPosition: { x: number; y: number }
-    
+
     if (parentNode) {
       // Has parent: position to the right
       siblingPosition = {
@@ -360,7 +391,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
 
     // Create sibling node and get its ID
     const siblingNodeId = addNode(siblingPosition, siblingShape)
-    
+
     // Store the sibling node ID to select it after it's added to the nodes array
     pendingSiblingNodeId.current = siblingNodeId
 
@@ -378,12 +409,27 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   }, [nodes, edges, addNode, onConnect])
 
   const onNodeClick = useCallback(
-    (_event: any, node: any) => {
+    (event: any, node: any) => {
+      // In read-only mode, check if node has a link and show preview
+      if (readOnly && node?.data?.link) {
+        // Get click position for floating modal
+        const clickPosition = {
+          x: event.clientX || 200,
+          y: event.clientY || 200,
+        }
+        setLinkPreview({
+          isOpen: true,
+          url: node.data.link,
+          nodeLabel: node.data.label?.replace(/<[^>]*>/g, '') || 'Link Preview', // Strip HTML tags
+          position: clickPosition,
+        })
+        return
+      }
       setSelectedNode(node)
       setSelectedEdge(null)
       emitActive({ type: 'node', id: node?.id })
     },
-    [setSelectedNode, setSelectedEdge, emitActive]
+    [readOnly, setSelectedNode, setSelectedEdge, emitActive]
   )
 
   const onNodeDoubleClick = useCallback(
@@ -395,6 +441,99 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
     },
     [updateNodeData, readOnly, emitActive]
   )
+
+  // Handle right-click context menu on nodes
+  const onNodeContextMenu = useCallback(
+    (event: React.MouseEvent, node: any) => {
+      // Prevent default browser context menu
+      event.preventDefault()
+      event.stopPropagation()
+      if (!readOnly) {
+        setContextMenuPosition({ x: event.clientX, y: event.clientY })
+        setContextMenuNode(node)
+        setContextMenuEdge(null)
+        // Don't set selectedNode/selectedEdge to avoid opening properties panel
+      }
+    },
+    [readOnly]
+  )
+
+  // Handle right-click context menu on edges
+  const onEdgeContextMenu = useCallback(
+    (event: React.MouseEvent, edge: any) => {
+      // Prevent default browser context menu
+      event.preventDefault()
+      event.stopPropagation()
+      if (!readOnly) {
+        setContextMenuPosition({ x: event.clientX, y: event.clientY })
+        setContextMenuEdge(edge)
+        setContextMenuNode(null)
+        // Don't set selectedNode/selectedEdge to avoid opening properties panel
+      }
+    },
+    [readOnly]
+  )
+
+  // Context menu action handlers
+  const handleContextAddChild = useCallback(() => {
+    if (contextMenuNode) {
+      createChildNode(contextMenuNode)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, createChildNode])
+
+  const handleContextAddSibling = useCallback(() => {
+    if (contextMenuNode) {
+      createSiblingNode(contextMenuNode)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, createSiblingNode])
+
+  const handleContextEdit = useCallback(() => {
+    if (contextMenuNode) {
+      updateNodeData(contextMenuNode.id, { isEditing: true })
+      emitActive({ type: 'label', id: contextMenuNode.id })
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, updateNodeData, emitActive])
+
+  const handleContextDelete = useCallback(() => {
+    if (contextMenuNode) {
+      deleteNode(contextMenuNode.id)
+      setContextMenuNode(null)
+      setContextMenuPosition(null)
+    }
+  }, [contextMenuNode, deleteNode])
+
+  const handleContextDeleteEdge = useCallback(() => {
+    if (contextMenuEdge) {
+      deleteEdge(contextMenuEdge.id)
+      setContextMenuEdge(null)
+      setContextMenuPosition(null)
+    }
+  }, [contextMenuEdge, deleteEdge])
+
+  const handleContextAddNodeWithShape = useCallback((shape: string) => {
+    if (contextMenuNode) {
+      // Create child node with specific shape
+      const childOffset = 150
+      const childPosition = {
+        x: contextMenuNode.position.x,
+        y: contextMenuNode.position.y + childOffset,
+      }
+      const childNodeId = addNode(childPosition, shape)
+      pendingChildNodeId.current = childNodeId
+      setTimeout(() => {
+        onConnect({
+          source: contextMenuNode.id,
+          target: childNodeId,
+          sourceHandle: null,
+          targetHandle: null,
+        })
+      }, 10)
+      setContextMenuNode(null)
+    }
+  }, [contextMenuNode, addNode, onConnect])
 
   const onEdgeClick = useCallback(
     (_event: any, edge: any) => {
@@ -414,7 +553,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
   // Effect to select newly created child or sibling node and enable editing
   // Use a ref to track the previous nodes length to detect when new nodes are added
   const prevNodesLengthRef = useRef(nodes.length)
-  
+
   useEffect(() => {
     // Only run if nodes length increased (new node added)
     if (nodes.length > prevNodesLengthRef.current) {
@@ -479,7 +618,7 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
         if (event.key === 'Backspace') {
           event.preventDefault()
         }
-        
+
         if (selectedNode) {
           deleteNode(selectedNode.id)
         } else if (selectedEdge) {
@@ -490,17 +629,17 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
       if (isCtrlOrCmd && event.key === 'z') {
         event.preventDefault();
         if (canUndo) {
-            undo();
+          undo();
         }
       }
 
       if (
-          (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
-          (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
-         ) {
+        (isCtrlOrCmd && event.key === 'y') || // Ctrl+Y
+        (isCtrlOrCmd && event.shiftKey && event.key === 'z') // Ctrl+Shift+Z
+      ) {
         event.preventDefault();
         if (canRedo) {
-            redo();
+          redo();
         }
       }
     }
@@ -721,7 +860,9 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
         }}
         onNodeClick={onNodeClick}
         onNodeDoubleClick={onNodeDoubleClick}
+        onNodeContextMenu={onNodeContextMenu}
         onEdgeClick={onEdgeClick}
+        onEdgeContextMenu={onEdgeContextMenu}
         onPaneClick={onPaneClick}
         nodeTypes={nodeTypes}
         defaultEdgeOptions={defaultEdgeOptions}
@@ -740,7 +881,101 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           className="bg-background border"
         />
       </ReactFlow>
-      
+
+      {/* Context Menu for nodes */}
+      {contextMenuNode && contextMenuPosition && !readOnly && (
+        <DropdownMenu
+          open={!!contextMenuNode}
+          onOpenChange={(open: boolean) => {
+            if (!open) {
+              setContextMenuNode(null)
+              setContextMenuPosition(null)
+            }
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <div style={{ position: 'fixed', left: contextMenuPosition.x, top: contextMenuPosition.y, width: 0, height: 0 }} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" forceMount align="start" side="bottom">
+            <DropdownMenuItem onClick={handleContextAddChild}>
+              <Plus className="mr-2 h-4 w-4" />
+              Add Child Node
+              <DropdownMenuShortcut>Tab</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleContextAddSibling}>
+              <GitBranch className="mr-2 h-4 w-4" />
+              Add Sibling Node
+              <DropdownMenuShortcut>Enter</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuSub>
+              <DropdownMenuSubTrigger>
+                <Plus className="mr-2 h-4 w-4" />
+                Add Node with Shape
+              </DropdownMenuSubTrigger>
+              <DropdownMenuSubContent className="w-48">
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('rectangle')}>
+                  <Square className="mr-2 h-4 w-4" />
+                  Rectangle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('circle')}>
+                  <Circle className="mr-2 h-4 w-4" />
+                  Circle
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('diamond')}>
+                  <Diamond className="mr-2 h-4 w-4" />
+                  Diamond
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('hexagon')}>
+                  <Hexagon className="mr-2 h-4 w-4" />
+                  Hexagon
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleContextAddNodeWithShape('roundedRectangle')}>
+                  <Square className="mr-2 h-4 w-4" />
+                  Rounded Rectangle
+                </DropdownMenuItem>
+              </DropdownMenuSubContent>
+            </DropdownMenuSub>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleContextEdit}>
+              <Edit3 className="mr-2 h-4 w-4" />
+              Edit Label
+              <DropdownMenuShortcut>Double-click</DropdownMenuShortcut>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleContextDelete} className="text-destructive focus:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Node
+              <DropdownMenuShortcut>Delete</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
+      {/* Context Menu for edges/connections */}
+      {contextMenuEdge && contextMenuPosition && !readOnly && (
+        <DropdownMenu
+          open={!!contextMenuEdge}
+          onOpenChange={(open: boolean) => {
+            if (!open) {
+              setContextMenuEdge(null)
+              setContextMenuPosition(null)
+            }
+          }}
+        >
+          <DropdownMenuTrigger asChild>
+            <div style={{ position: 'fixed', left: contextMenuPosition.x, top: contextMenuPosition.y, width: 0, height: 0 }} />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-48" forceMount align="start" side="bottom">
+            <DropdownMenuItem onClick={handleContextDeleteEdge} className="text-destructive focus:text-destructive">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete Connection
+              <DropdownMenuShortcut>Delete</DropdownMenuShortcut>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
+
       {/* Add child button overlay */}
       {longPressedNode && buttonScreenPosition && (
         <AddChildButton
@@ -751,7 +986,18 @@ export default function Canvas({ readOnly = false }: { readOnly?: boolean }) {
           onScheduleHide={handleScheduleHide}
         />
       )}
-      {renderPresence}
+      {!hidePresence && renderPresence}
+
+      {/* Link Preview Modal for view mode */}
+      {linkPreview && (
+        <LinkPreviewModal
+          isOpen={linkPreview.isOpen}
+          onClose={() => setLinkPreview(null)}
+          url={linkPreview.url}
+          nodeLabel={linkPreview.nodeLabel}
+          position={linkPreview.position}
+        />
+      )}
     </div>
   )
 }

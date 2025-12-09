@@ -2,198 +2,24 @@
 
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react'
 import { Node, Edge, Connection, addEdge, applyNodeChanges, applyEdgeChanges, NodeChange, EdgeChange, Viewport, MarkerType } from 'reactflow'
-import { getMindmapById, updateMindmap, undoMindmap, redoMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service'
-import { fetchHistory } from '@/services/mindmap/history.service'
+import { getMindmapById, updateMindmap, updatePublicMindmap, updateMindmapByTokenFallback } from '@/services/mindmap/mindmap.service'
 import { MindmapResponse, UpdateMindmapRequest } from '@/types/mindmap.types'
 import { useToast } from "@/hooks/use-toast"
 import { getSocket, joinMindmap, emitNodesChange, emitEdgesChange, emitConnect, emitViewport, emitCursorMove, emitPresenceAnnounce, emitPresenceActive, emitPresenceClear, emitNodeUpdate, emitEdgeUpdate } from '@/lib/realtime'
 
-interface MindmapContextType {
-  mindmap: MindmapResponse | null
-  nodes: Node[]
-  edges: Edge[]
-  selectedNode: Node | null
-  selectedEdge: Edge | null
-  isSaving: boolean
-  onNodesChange: (changes: NodeChange[]) => void
-  onEdgesChange: (changes: EdgeChange[]) => void
-  onConnect: (connection: Connection) => void
-  setSelectedNode: (node: Node | null) => void
-  setSelectedEdge: (edge: Edge | null) => void
-  addNode: (position: { x: number; y: number }, shape?: string) => string
-  deleteNode: (nodeId: string) => void
-  deleteEdge: (edgeId: string) => void
-  updateNodeData: (nodeId: string, data: any) => void
-  updateEdgeData: (edgeId: string, updates: any) => void
-  saveMindmap: () => Promise<void>
-  loadMindmap: (id: string) => Promise<void>
-  setTitle: (title: string) => void
-  onViewportChange: (viewport: Viewport) => void
-  autoSaveEnabled: boolean
-  setAutoSaveEnabled: (enabled: boolean) => void
-  saveStatus: 'idle' | 'saving' | 'saved' | 'error'
-  canUndo: boolean
-  canRedo: boolean
-  undo: () => Promise<void>
-  redo: () => Promise<void>
-  setFullMindmapState: (data: MindmapResponse | null) => void
-  restoreFromHistory: (snapshot: { nodes?: any[]; edges?: any[]; viewport?: any }, historyId?: string | number | null) => Promise<void>
-  participants: Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>
-  announcePresence: (info: { name: string; color: string; userId?: number | string | null; avatar?: string | null }) => void
-  emitCursor: (cursor: { x: number; y: number }) => void
-  emitActive: (active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => void
-  clearActive: () => void
-}
+// Import from modular files
+import {
+  MindmapContextType,
+  ParticipantInfo,
+  AccessRevokedState,
+  PermissionChangedState,
+  PresenceInfo,
+} from './types'
+import { useMindmapAutoSave } from './useMindmapAutoSave'
+import { normalizeNodes, normalizeEdges, generateEdgeId } from './nodeEdgeUtils'
+import { createSocketHandlers, attachSocketListeners, detachSocketListeners, SocketHandlerRefs, SocketHandlerSetters } from './socketHandlers'
 
 const MindmapContext = createContext<MindmapContextType | undefined>(undefined)
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-
-interface AutoSaveOptions {
-  defaultEnabled?: boolean
-  debounceMs?: number
-  statusResetMs?: number
-  setIsSaving?: (value: boolean) => void
-  onError?: (error: unknown) => void
-}
-
-interface UseMindmapAutoSaveResult {
-  autoSaveEnabled: boolean
-  setAutoSaveEnabled: (enabled: boolean) => void
-  saveStatus: SaveStatus
-  scheduleAutoSave: (debounceMsOverride?: number) => void
-  saveImmediately: () => Promise<void>
-  cancelScheduledSave: () => void
-  markSynced: (status?: SaveStatus) => void
-}
-
-function useMindmapAutoSave(
-  onSave: () => Promise<void>,
-  {
-    defaultEnabled = true,
-    debounceMs = 1500,
-    statusResetMs = 2000,
-    setIsSaving,
-    onError,
-  }: AutoSaveOptions = {}
-): UseMindmapAutoSaveResult {
-  const [autoSaveEnabled, setAutoSaveEnabledState] = useState(defaultEnabled)
-  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
-  const saveTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const statusTimerRef = useRef<NodeJS.Timeout | null>(null)
-  const isMountedRef = useRef(true)
-
-  useEffect(() => {
-    return () => {
-      isMountedRef.current = false
-      if (saveTimerRef.current) {
-        clearTimeout(saveTimerRef.current)
-        saveTimerRef.current = null
-      }
-      if (statusTimerRef.current) {
-        clearTimeout(statusTimerRef.current)
-        statusTimerRef.current = null
-      }
-    }
-  }, [])
-
-  const clearSaveTimer = useCallback(() => {
-    if (saveTimerRef.current) {
-      clearTimeout(saveTimerRef.current)
-      saveTimerRef.current = null
-    }
-  }, [])
-
-  const clearStatusTimer = useCallback(() => {
-    if (statusTimerRef.current) {
-      clearTimeout(statusTimerRef.current)
-      statusTimerRef.current = null
-    }
-  }, [])
-
-  const scheduleStatusReset = useCallback(() => {
-    clearStatusTimer()
-    statusTimerRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return
-      setSaveStatus('idle')
-    }, statusResetMs)
-  }, [clearStatusTimer, statusResetMs])
-
-  const runSave = useCallback(async () => {
-    clearSaveTimer()
-    clearStatusTimer()
-    setIsSaving?.(true)
-    setSaveStatus('saving')
-    try {
-      await onSave()
-      if (!isMountedRef.current) return
-      setSaveStatus('saved')
-      scheduleStatusReset()
-    } catch (error) {
-      if (isMountedRef.current) {
-        setSaveStatus('error')
-      }
-      onError?.(error)
-      throw error
-    } finally {
-      setIsSaving?.(false)
-    }
-  }, [clearSaveTimer, clearStatusTimer, onSave, onError, scheduleStatusReset, setIsSaving])
-
-  const scheduleAutoSave = useCallback(
-    (debounceMsOverride?: number) => {
-      if (!autoSaveEnabled) return
-      clearSaveTimer()
-      const delay = debounceMsOverride ?? debounceMs
-      saveTimerRef.current = setTimeout(() => {
-        runSave().catch(() => { })
-      }, delay)
-    },
-    [autoSaveEnabled, clearSaveTimer, debounceMs, runSave]
-  )
-
-  const saveImmediately = useCallback(async () => {
-    await runSave()
-  }, [runSave])
-
-  const cancelScheduledSave = useCallback(() => {
-    clearSaveTimer()
-  }, [clearSaveTimer])
-
-  const markSynced = useCallback(
-    (status: SaveStatus = 'saved') => {
-      if (!isMountedRef.current) return
-      clearStatusTimer()
-      setSaveStatus(status)
-      if (status === 'saved') {
-        scheduleStatusReset()
-      }
-    },
-    [clearStatusTimer, scheduleStatusReset]
-  )
-
-  const handleToggleAutoSave = useCallback(
-    (enabled: boolean) => {
-      setAutoSaveEnabledState(enabled)
-      if (!enabled) {
-        cancelScheduledSave()
-        clearStatusTimer()
-        setSaveStatus('idle')
-      }
-    },
-    [cancelScheduledSave, clearStatusTimer]
-  )
-
-  return {
-    autoSaveEnabled,
-    setAutoSaveEnabled: handleToggleAutoSave,
-    saveStatus,
-    scheduleAutoSave,
-    saveImmediately,
-    cancelScheduledSave,
-    markSynced,
-  }
-}
 
 export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [mindmap, setMindmap] = useState<MindmapResponse | null>(null)
@@ -207,289 +33,149 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const [canUndo, setCanUndo] = useState(false)
   const [canRedo, setCanRedo] = useState(false)
 
-  const latestMindmapRef = useRef(mindmap);
-  const latestNodesRef = useRef(nodes);
-  const latestEdgesRef = useRef(edges);
+  // Refs for latest state
+  const latestMindmapRef = useRef(mindmap)
+  const latestNodesRef = useRef(nodes)
+  const latestEdgesRef = useRef(edges)
   const lastConnectedAtRef = useRef<number>(0)
-  const latestViewportRef = useRef(viewport);
+  const latestViewportRef = useRef(viewport)
   const socketRef = useRef<any>(null)
   const roomRef = useRef<string | null>(null)
-  const [participants, setParticipants] = useState<Record<string, { clientId: string; userId?: number | string | null; name: string; color: string; avatar?: string | null; cursor?: { x: number; y: number } | null; active?: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string } | null }>>({})
-  const lastPresenceInfoRef = useRef<{ name: string; color: string; userId?: number | string | null; avatar?: string | null } | null>(null)
+  const [participants, setParticipants] = useState<Record<string, ParticipantInfo>>({})
+  const lastPresenceInfoRef = useRef<PresenceInfo | null>(null)
   const lastReannounceAtRef = useRef<number>(0)
-  const historyRef = useRef<{ past: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[]; future: { nodes: Node[]; edges: Edge[]; viewport: Viewport | null }[] }>({ past: [], future: [] })
-  const serverHistoryCursorRef = useRef<number | null>(null)
   const isApplyingHistoryRef = useRef(false)
 
-  const getSnapshot = useCallback(() => {
-    return {
-      nodes: latestNodesRef.current.map((n) => ({ ...n, data: { ...(n.data || {}) } })),
-      edges: latestEdgesRef.current.map((e) => ({ ...e })),
-      viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+  // Access control state
+  const [accessRevoked, setAccessRevoked] = useState<AccessRevokedState | null>(null)
+  const currentUserIdRef = useRef<number | string | null>(null)
+
+  // Permission changed state
+  const [permissionChanged, setPermissionChanged] = useState<PermissionChangedState | null>(null)
+
+  // Debounce ref for snapshot recording
+  const lastSnapshotAtRef = useRef<number>(0)
+  const MIN_SNAPSHOT_INTERVAL = 500 // ms
+
+  // Record snapshot to server for undo/redo
+  // Use setTimeout to ensure React has updated the refs with new state
+  const recordSnapshot = useCallback(() => {
+    // Debounce: skip if too soon after last snapshot
+    const now = Date.now()
+    if (now - lastSnapshotAtRef.current < MIN_SNAPSHOT_INTERVAL) {
+      return
     }
+    lastSnapshotAtRef.current = now
+
+    // Use setTimeout to ensure refs are updated after React state changes
+    setTimeout(() => {
+      const s = socketRef.current
+      const room = roomRef.current
+      if (!s || !room) return
+
+      const snapshot = {
+        nodes: latestNodesRef.current.map(n => ({ ...n, data: { ...(n.data || {}) } })),
+        edges: latestEdgesRef.current.map(e => ({ ...e })),
+        viewport: latestViewportRef.current ? { ...latestViewportRef.current } : null,
+      }
+      console.log('[MindmapContext] Recording snapshot with', snapshot.nodes.length, 'nodes')
+      s.emit('mindmap:snapshot', room, { snapshot })
+    }, 50)
   }, [])
 
-  const recordSnapshot = useCallback(() => {
-    if (isApplyingHistoryRef.current) return
-    const snap = getSnapshot()
-    historyRef.current.past.push(snap)
-    historyRef.current.future = []
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
-  }, [getSnapshot])
-
-  useEffect(() => { latestMindmapRef.current = mindmap; }, [mindmap]);
-  useEffect(() => { latestNodesRef.current = nodes; }, [nodes]);
-  useEffect(() => { latestEdgesRef.current = edges; }, [edges]);
-  useEffect(() => { latestViewportRef.current = viewport; }, [viewport]);
+  // Sync refs with state
+  useEffect(() => { latestMindmapRef.current = mindmap }, [mindmap])
+  useEffect(() => { latestNodesRef.current = nodes }, [nodes])
+  useEffect(() => { latestEdgesRef.current = edges }, [edges])
+  useEffect(() => { latestViewportRef.current = viewport }, [viewport])
 
   const setFullMindmapState = useCallback((data: MindmapResponse | null) => {
     if (!data) {
-      setMindmap(null);
-      setNodes([]);
-      setEdges([]);
-      setViewport(null);
-      setCanUndo(false);
-      setCanRedo(false);
-      return;
+      setMindmap(null)
+      setNodes([])
+      setEdges([])
+      setViewport(null)
+      setCanUndo(false)
+      setCanRedo(false)
+      return
     }
 
-    setMindmap(data);
+    setMindmap(data)
+    const normalizedNodes = normalizeNodes(data.nodes || [])
+    const normalizedEdges = normalizeEdges(data.edges || [])
 
-    let normalizedNodes = (data.nodes || []).map((node: any) => {
-      const nodeType = node.type === 'default' ? 'rectangle' : node.type
-      const nodeShape = node.data?.shape || nodeType || 'rectangle'
-      return {
-        ...node,
-        type: nodeType,
-        data: {
-          label: 'Node',
-          description: '',
-          color: '#3b82f6',
-          ...node.data,
-          shape: node.data?.shape || nodeShape,
-        }
-      }
-    });
+    setNodes(normalizedNodes)
+    setEdges(normalizedEdges)
+    setViewport(data.viewport || { x: 0, y: 0, zoom: 1 })
 
-    if (normalizedNodes.length === 0) {
-      let centerX = 400, centerY = 300;
-      if (typeof window !== 'undefined') {
-        const canvasWidth = window.innerWidth - 256 - 32;
-        const canvasHeight = window.innerHeight - 80 - 32;
-        centerX = canvasWidth / 2 - 100;
-        centerY = canvasHeight / 2 - 50;
-      }
-      const rootNode: Node = {
-        id: `root-node-${Date.now()}`,
-        type: 'rectangle',
-        position: { x: centerX, y: centerY },
-        data: { label: 'Root Node', description: 'Click to edit', color: '#3b82f6', shape: 'rectangle' },
-      }
-      normalizedNodes = [rootNode];
-    }
+    // Update refs immediately for initial snapshot
+    latestNodesRef.current = normalizedNodes
+    latestEdgesRef.current = normalizedEdges
+    latestViewportRef.current = data.viewport || { x: 0, y: 0, zoom: 1 }
 
-    const incomingEdges = Array.isArray(data.edges) ? data.edges : []
-    const edgeIds = new Set<string>()
-    const edgeSigs = new Set<string>()
-    const normalizedEdges: any[] = []
-    for (let i = 0; i < incomingEdges.length; i++) {
-      const e: any = incomingEdges[i] || {}
-      const base = {
-        ...e,
-        animated: e.animated !== undefined ? e.animated : true,
-        type: e.type || 'smoothstep',
-        markerEnd: e.markerEnd || { type: MarkerType.ArrowClosed },
-      }
-      const sig = `${String(base.source || '')}|${String(base.target || '')}|${String(base.sourceHandle || '')}|${String(base.targetHandle || '')}`
-      if (edgeSigs.has(sig)) continue
-      let id = String(base.id || '')
-      if (!id || edgeIds.has(id)) {
-        let uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
-        while (edgeIds.has(uid)) {
-          uid = `edge-${String(base.source || 'S')}-${String(base.target || 'T')}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
-        }
-        base.id = uid
-        id = uid
-      }
-      edgeIds.add(id)
-      edgeSigs.add(sig)
-      normalizedEdges.push(base)
-    }
+    // Use server-provided flags
+    setCanUndo(data.canUndo ?? false)
+    setCanRedo(data.canRedo ?? false)
+  }, [])
 
-    setNodes(normalizedNodes);
-    setEdges(normalizedEdges);
-    setViewport(data.viewport || { x: 0, y: 0, zoom: 1 });
-    historyRef.current = { past: [], future: [] }
-
-    setCanUndo(historyRef.current.past.length > 0)
-    setCanRedo(historyRef.current.future.length > 0)
-
-  }, []);
-
+  // Socket connection and handlers
   useEffect(() => {
     if (!mindmap) return
+    if (!mindmap.id) return // Skip for embed mode
+
     const s = getSocket()
     socketRef.current = s
+
     const payload: any = mindmap.isPublic === true && mindmap.shareToken
       ? { shareToken: mindmap.shareToken }
       : { mindmapId: mindmap.id }
-    joinMindmap(s, payload)
-    const onConnect = () => { joinMindmap(s, payload) }
-    const onReconnect = () => { joinMindmap(s, payload) }
-    const onJoined = (res: any) => { roomRef.current = res?.room || null }
-    const onNodes = (changes: any[]) => { setNodes((nds) => applyNodeChanges(changes, nds)) }
-    const onEdges = (changes: any[]) => { setEdges((eds) => applyEdgeChanges(changes, eds)) }
-    const onConnectEdge = (connection: any) => {
-      const src = connection?.source
-      const tgt = connection?.target
-      setEdges((eds) => {
-        if (!src || !tgt) return eds
-        const exists = eds.some(
-          (e) =>
-            e.source === src &&
-            e.target === tgt &&
-            ((e.sourceHandle || null) === (connection?.sourceHandle || null)) &&
-            ((e.targetHandle || null) === (connection?.targetHandle || null))
-        )
-        if (exists) return eds
-        const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}`,
-          ...connection,
-          animated: true,
-          type: 'smoothstep',
-          markerEnd: { type: MarkerType.ArrowClosed },
-        }
-        return addEdge(newEdge as any, eds)
-      })
-    }
-    const onViewportEv = (v: any) => { setViewport(v) }
-    const onNodeUpdate = (updated: any) => {
-      setNodes((nds) => nds.map((n) => (n.id === updated.id ? { ...updated } : n)))
-      setSelectedNode((prev) => (prev && prev.id === updated.id ? { ...updated } : prev))
-    }
-    const onEdgeUpdate = (updated: any) => {
-      setEdges((eds) => eds.map((e) => (e.id === updated.id ? { ...updated } : e)))
-      setSelectedEdge((prev) => (prev && prev.id === updated.id ? { ...updated } : prev))
-    }
-    const onPresenceState = (list: any[]) => {
-      const map: any = {}
-      for (const p of list || []) {
-        map[p.clientId] = { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: p.cursor || null, active: p.active || null }
-      }
-      setParticipants(map)
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room && lastPresenceInfoRef.current) {
-        const now = Date.now()
-        if (now - lastReannounceAtRef.current > 1500) {
-          lastReannounceAtRef.current = now
-          emitPresenceAnnounce(s, room, lastPresenceInfoRef.current)
-        }
-      }
-    }
-    const onPresenceAnnounce = (p: any) => {
-      setParticipants((prev) => ({ ...prev, [p.clientId]: { clientId: p.clientId, userId: p.userId || null, name: p.name || '', color: p.color || '#3b82f6', avatar: p.avatar || null, cursor: prev[p.clientId]?.cursor || null, active: prev[p.clientId]?.active || null } }))
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room && p?.clientId && p.clientId !== s.id) {
-        const now = Date.now()
-        if (lastPresenceInfoRef.current && now - lastReannounceAtRef.current > 1500) {
-          lastReannounceAtRef.current = now
-          emitPresenceAnnounce(s, room, lastPresenceInfoRef.current)
-        }
-      }
-    }
-    const onPresenceLeft = (p: any) => {
-      setParticipants((prev) => {
-        const next = { ...prev }
-        delete next[p.clientId]
-        return next
-      })
-    }
-    const onCursorMove = (data: any) => {
-      const c = data?.clientId
-      const cursor = data?.cursor
-      if (!c || !cursor) return
-      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), cursor } }))
-    }
-    const onPresenceActive = (data: any) => {
-      const c = data?.clientId
-      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), active: data?.active || null } }))
-    }
-    const onPresenceClear = (data: any) => {
-      const c = data?.clientId
-      setParticipants((prev) => ({ ...prev, [c]: { ...(prev[c] || { clientId: c, name: '', color: '#3b82f6' }), active: null } }))
-    }
-    s.on('mindmap:joined', onJoined)
-    s.on('connect', onConnect)
-    s.on('reconnect', onReconnect)
-    s.on('mindmap:nodes:change', onNodes)
-    s.on('mindmap:edges:change', onEdges)
-    s.on('mindmap:connect', onConnectEdge)
-    s.on('mindmap:viewport', onViewportEv)
-    s.on('presence:state', onPresenceState)
-    s.on('presence:announce', onPresenceAnnounce)
-    s.on('presence:left', onPresenceLeft)
-    s.on('cursor:move', onCursorMove)
-    s.on('presence:active', onPresenceActive)
-    s.on('presence:clear', onPresenceClear)
-    s.on('mindmap:nodes:update', onNodeUpdate)
-    s.on('mindmap:edges:update', onEdgeUpdate)
-    const onHistoryRestore = (payload: any) => {
-      const snap: any = payload?.snapshot || null
-      const m = latestMindmapRef.current
-      if (!m || !snap) return
-      const nextState: any = {
-        ...m,
-        nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
-        edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
-        viewport: snap.viewport || latestViewportRef.current,
-      }
-      isApplyingHistoryRef.current = true
-      latestNodesRef.current = nextState.nodes
-      latestEdgesRef.current = nextState.edges
-      latestViewportRef.current = nextState.viewport || null
-      setFullMindmapState(nextState)
-      isApplyingHistoryRef.current = false
-      markSynced('idle')
-    }
-    s.on('history:restore', onHistoryRestore)
-    return () => {
-      s.off('mindmap:joined', onJoined)
-      s.off('connect', onConnect)
-      s.off('reconnect', onReconnect)
-      s.off('mindmap:nodes:change', onNodes)
-      s.off('mindmap:edges:change', onEdges)
-      s.off('mindmap:connect', onConnectEdge)
-      s.off('mindmap:viewport', onViewportEv)
-      s.off('presence:state', onPresenceState)
-      s.off('presence:announce', onPresenceAnnounce)
-      s.off('presence:left', onPresenceLeft)
-      s.off('cursor:move', onCursorMove)
-      s.off('presence:active', onPresenceActive)
-      s.off('presence:clear', onPresenceClear)
-      s.off('mindmap:nodes:update', onNodeUpdate)
-      s.off('mindmap:edges:update', onEdgeUpdate)
-      s.off('history:restore', onHistoryRestore)
-    }
-  }, [mindmap])
 
-  useEffect(() => {
-    const run = async () => {
-      const m = latestMindmapRef.current
-      if (!m) return
-      try {
-        const list = await fetchHistory(m.id, { limit: 50 })
-        const hasSnap = Array.isArray(list) && list.some((it: any) => {
-          const s = it?.snapshot
-          return s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)
-        })
-        setCanUndo(!!hasSnap)
-        setCanRedo(false)
-      } catch { }
+    joinMindmap(s, payload)
+
+    const refs: SocketHandlerRefs = {
+      latestMindmapRef,
+      latestNodesRef,
+      latestEdgesRef,
+      latestViewportRef,
+      socketRef,
+      roomRef,
+      currentUserIdRef,
+      isApplyingHistoryRef,
+      lastPresenceInfoRef,
+      lastReannounceAtRef,
     }
-    run()
+
+    const setters: SocketHandlerSetters = {
+      setNodes,
+      setEdges,
+      setViewport,
+      setSelectedNode,
+      setSelectedEdge,
+      setParticipants,
+      setAccessRevoked,
+      setPermissionChanged,
+      setCanUndo,
+      setCanRedo,
+      setFullMindmapState,
+      markSynced,
+      toast: (opts) => toast(opts as any),
+      emitPresenceAnnounce,
+    }
+
+    const handlers = createSocketHandlers(refs, setters, payload)
+    attachSocketListeners(s, handlers)
+
+    return () => {
+      detachSocketListeners(s, handlers)
+    }
+  }, [mindmap, setFullMindmapState])
+
+  // Sync canUndo/canRedo from mindmap
+  useEffect(() => {
+    if (mindmap) {
+      setCanUndo(mindmap.canUndo ?? false)
+      setCanRedo(mindmap.canRedo ?? false)
+    }
   }, [mindmap])
 
   const performSave = useCallback(async () => {
@@ -527,6 +213,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   const {
     autoSaveEnabled,
     setAutoSaveEnabled,
+    setAutoSaveEnabledExternal,
     saveStatus,
     scheduleAutoSave,
     saveImmediately,
@@ -543,6 +230,83 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       })
     },
   })
+
+  // Socket listeners for auto-save and undo/redo sync
+  useEffect(() => {
+    const s = socketRef.current
+    if (!s) return
+
+    const onAutoSaveSync = (data: any) => {
+      if (data?.enabled !== undefined) {
+        console.log('[MindmapContext] Auto-save synced:', data.enabled, 'from clientId:', data.clientId)
+        setAutoSaveEnabledExternal(data.enabled)
+      }
+    }
+
+    const onUndoPerformed = (data: any) => {
+      if (data?.snapshot) {
+        console.log('[MindmapContext] Undo synced with snapshot', 'from clientId:', data.clientId)
+        const snap = data.snapshot
+        const nextState: any = {
+          ...latestMindmapRef.current,
+          nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+          edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+          viewport: snap.viewport || latestViewportRef.current,
+          canUndo: snap.canUndo ?? latestMindmapRef.current?.canUndo,
+          canRedo: snap.canRedo ?? latestMindmapRef.current?.canRedo,
+        }
+
+        isApplyingHistoryRef.current = true
+        latestNodesRef.current = nextState.nodes
+        latestEdgesRef.current = nextState.edges
+        latestViewportRef.current = nextState.viewport || null
+        setFullMindmapState(nextState)
+        isApplyingHistoryRef.current = false
+      }
+    }
+
+    const onRedoPerformed = (data: any) => {
+      if (data?.snapshot) {
+        console.log('[MindmapContext] Redo synced with snapshot', 'from clientId:', data.clientId)
+        const snap = data.snapshot
+        const nextState: any = {
+          ...latestMindmapRef.current,
+          nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
+          edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
+          viewport: snap.viewport || latestViewportRef.current,
+          canUndo: snap.canUndo ?? latestMindmapRef.current?.canUndo,
+          canRedo: snap.canRedo ?? latestMindmapRef.current?.canRedo,
+        }
+
+        isApplyingHistoryRef.current = true
+        latestNodesRef.current = nextState.nodes
+        latestEdgesRef.current = nextState.edges
+        latestViewportRef.current = nextState.viewport || null
+        setFullMindmapState(nextState)
+        isApplyingHistoryRef.current = false
+      }
+    }
+
+    s.on('autosave:sync', onAutoSaveSync)
+    s.on('undo:performed', onUndoPerformed)
+    s.on('redo:performed', onRedoPerformed)
+
+    return () => {
+      s.off('autosave:sync', onAutoSaveSync)
+      s.off('undo:performed', onUndoPerformed)
+      s.off('redo:performed', onRedoPerformed)
+    }
+  }, [setAutoSaveEnabledExternal, setFullMindmapState])
+
+  // Synced auto-save toggle
+  const handleSyncedAutoSaveToggle = useCallback((enabled: boolean) => {
+    setAutoSaveEnabled(enabled)
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) {
+      s.emit('autosave:toggle', room, { enabled })
+    }
+  }, [setAutoSaveEnabled])
 
   const loadMindmap = useCallback(async (id: string) => {
     try {
@@ -564,7 +328,10 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const onNodesChange = useCallback(
     (changes: NodeChange[]) => {
-      recordSnapshot()
+      const hasSignificantChanges = changes.some(c => c.type !== 'select')
+      if (hasSignificantChanges) {
+        recordSnapshot()
+      }
       setNodes((nds) => applyNodeChanges(changes, nds))
       scheduleAutoSave()
       const s = socketRef.current
@@ -579,7 +346,12 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const now = Date.now()
       const suppressRemove = now - lastConnectedAtRef.current < 400
       const filtered = suppressRemove ? changes.filter((ch: any) => ch?.type !== 'remove') : changes
-      recordSnapshot()
+
+      const hasSignificantChanges = filtered.some(c => c.type !== 'select')
+      if (hasSignificantChanges) {
+        recordSnapshot()
+      }
+
       setEdges((eds) => applyEdgeChanges(filtered, eds))
       scheduleAutoSave()
       const s = socketRef.current
@@ -606,7 +378,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         )
         if (exists) return eds
         const newEdge = {
-          id: `edge-${src}-${tgt}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`,
+          id: generateEdgeId(src, tgt),
           ...connection,
           animated: true,
           type: "smoothstep",
@@ -645,37 +417,37 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
 
   const deleteNode = useCallback((nodeId: string) => {
     recordSnapshot()
-    const edgesSnapshot = latestEdgesRef.current;
-    const toDelete = new Set<string>();
-    const queue: string[] = [nodeId];
-    toDelete.add(nodeId);
+    const edgesSnapshot = latestEdgesRef.current
+    const toDelete = new Set<string>()
+    const queue: string[] = [nodeId]
+    toDelete.add(nodeId)
 
     while (queue.length > 0) {
-      const current = queue.shift() as string;
-      const outgoing = edgesSnapshot.filter(e => e.source === current);
+      const current = queue.shift() as string
+      const outgoing = edgesSnapshot.filter(e => e.source === current)
       for (const e of outgoing) {
         if (!toDelete.has(e.target)) {
-          toDelete.add(e.target);
-          queue.push(e.target);
+          toDelete.add(e.target)
+          queue.push(e.target)
         }
       }
     }
 
-    setNodes((nds) => nds.filter((node) => !toDelete.has(node.id)));
-    setEdges((eds) => eds.filter((edge) => !(toDelete.has(edge.source) || toDelete.has(edge.target))));
+    setNodes((nds) => nds.filter((node) => !toDelete.has(node.id)))
+    setEdges((eds) => eds.filter((edge) => !(toDelete.has(edge.source) || toDelete.has(edge.target))))
 
     if (selectedNode && toDelete.has(selectedNode.id)) {
-      setSelectedNode(null);
+      setSelectedNode(null)
     }
     if (selectedEdge && (toDelete.has(selectedEdge.source) || toDelete.has(selectedEdge.target))) {
-      setSelectedEdge(null);
+      setSelectedEdge(null)
     }
 
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitNodesChange(s, room, Array.from(toDelete).map((id) => ({ type: 'remove', id })))
-  }, [scheduleAutoSave, recordSnapshot])
+  }, [scheduleAutoSave, recordSnapshot, selectedNode, selectedEdge])
 
   const deleteEdge = useCallback((edgeId: string) => {
     recordSnapshot()
@@ -687,10 +459,18 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitEdgesChange(s, room, [{ type: 'remove', id: edgeId }])
-  }, [scheduleAutoSave, recordSnapshot])
+  }, [scheduleAutoSave, recordSnapshot, selectedEdge])
 
-  const updateNodeData = useCallback((nodeId: string, newData: any) => {
-    recordSnapshot()
+  const updateNodeData = useCallback((nodeId: string, newData: any, skipSnapshot = false) => {
+    const transientKeys = ['isEditing', 'isHovered', 'isResizing']
+    const hasSignificantChanges = Object.keys(newData).some(k => !transientKeys.includes(k))
+
+    if (!skipSnapshot && hasSignificantChanges) {
+      recordSnapshot()
+    } else {
+      console.log('[MindmapContext] updateNodeData skipping snapshot', { skipSnapshot, hasSignificantChanges, keys: Object.keys(newData) })
+    }
+
     let updatedNodeRef: any = null
     setNodes((nds) =>
       nds.map((node) => {
@@ -713,15 +493,20 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
           if (newData.scale !== undefined) {
             updatedNode.position = {
               x: node.position.x + 0.001,
-              y: node.position.y + 0.001,
+              y: node.position.y + 0.001
             }
+            requestAnimationFrame(() => {
+              setNodes((n) => n.map(x => x.id === nodeId ? { ...x, position: { x: x.position.x - 0.001, y: x.position.y - 0.001 } } : x))
+            })
           }
+
           updatedNodeRef = updatedNode
           return updatedNode
         }
         return node
       })
     )
+
     setSelectedNode((prev) => {
       if (prev && prev.id === nodeId) {
         const updatedData = { ...prev.data }
@@ -739,23 +524,15 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         if (newData.shape) {
           updatedNode.type = newData.shape
         }
-        if (newData.scale !== undefined) {
-          updatedNode.position = {
-            x: prev.position.x + 0.001,
-            y: prev.position.y + 0.001,
-          }
-        }
-        updatedNodeRef = updatedNode
         return updatedNode
       }
       return prev
     })
+
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room && updatedNodeRef) {
-      emitNodeUpdate(s, room, updatedNodeRef)
-    }
+    if (s && room && updatedNodeRef) emitNodeUpdate(s, room, updatedNodeRef)
   }, [scheduleAutoSave, recordSnapshot])
 
   const applyStreamingAdditions = useCallback((addNodes: any[] = [], addEdges: any[] = []) => {
@@ -780,9 +557,9 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       const sig = `${(e as any).source}|${(e as any).target}|${(e as any).sourceHandle || ''}|${(e as any).targetHandle || ''}`
       if (edgeSigs.has(sig)) continue
       if (!id || edgeIds.has(id)) {
-        let uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+        let uid = generateEdgeId((e as any).source, (e as any).target)
         while (edgeIds.has(uid)) {
-          uid = `edge-${(e as any).source}-${(e as any).target}-${Date.now()}-${Math.random().toString(36).slice(2,8)}`
+          uid = generateEdgeId((e as any).source, (e as any).target)
         }
         (e as any).id = uid
         id = uid
@@ -806,8 +583,14 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     }
   }, [scheduleAutoSave, recordSnapshot])
 
-  const updateEdgeData = useCallback((edgeId: string, updates: any) => {
-    recordSnapshot()
+  const updateEdgeData = useCallback((edgeId: string, updates: any, skipSnapshot = false) => {
+    const transientKeys = ['isEditing', 'isHovered', 'isResizing', 'selected']
+    const hasSignificantChanges = Object.keys(updates).some(k => !transientKeys.includes(k))
+
+    if (!skipSnapshot && hasSignificantChanges) {
+      recordSnapshot()
+    }
+
     let updated: any = null
     setEdges((eds) =>
       eds.map((edge) => {
@@ -818,6 +601,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
         return edge
       })
     )
+
     setSelectedEdge((prev) => {
       if (prev && prev.id === edgeId) {
         const next = { ...prev, ...updates }
@@ -826,6 +610,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
       }
       return prev
     })
+
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
@@ -842,32 +627,49 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
   }, [mindmap, scheduleAutoSave])
 
   const onViewportChange = useCallback((viewport: Viewport) => {
-    recordSnapshot()
-    setViewport(viewport);
+    setViewport(viewport)
     scheduleAutoSave()
     const s = socketRef.current
     const room = roomRef.current
     if (s && room) emitViewport(s, room, viewport as any)
-  }, [scheduleAutoSave, recordSnapshot]);
+  }, [scheduleAutoSave])
 
-  const undo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m) return
-    const list = await fetchHistory(m.id, { limit: 200 })
-    if (!list || list.length === 0) return
-    const start = serverHistoryCursorRef.current == null ? 0 : serverHistoryCursorRef.current + 1
-    let idx = -1
-    for (let i = start; i < list.length; i++) {
-      const s: any = list[i]?.snapshot
-      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
+  const undo = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (!s || !room) {
+      toast({
+        variant: 'destructive',
+        title: 'Undo failed',
+        description: 'Not connected to realtime server.'
+      })
+      return
     }
-    if (idx < 0) return
-    const snap: any = list[idx].snapshot
+    s.emit('undo:request', room)
+  }, [toast])
+
+  const redo = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (!s || !room) {
+      toast({
+        variant: 'destructive',
+        title: 'Redo failed',
+        description: 'Not connected to realtime server.'
+      })
+      return
+    }
+    s.emit('redo:request', room)
+  }, [toast])
+
+  const restoreFromHistory = useCallback(async (snapshot: any, historyId?: string | number | null) => {
+    const m = latestMindmapRef.current
+    if (!m || !snapshot) return
     const nextState: any = {
       ...m,
-      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
-      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
-      viewport: snap.viewport || latestViewportRef.current,
+      nodes: Array.isArray(snapshot.nodes) ? snapshot.nodes : latestNodesRef.current,
+      edges: Array.isArray(snapshot.edges) ? snapshot.edges : latestEdgesRef.current,
+      viewport: snapshot.viewport || latestViewportRef.current,
     }
     isApplyingHistoryRef.current = true
     latestNodesRef.current = nextState.nodes
@@ -876,45 +678,54 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setFullMindmapState(nextState)
     await saveMindmap()
     isApplyingHistoryRef.current = false
-    serverHistoryCursorRef.current = idx
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
+    if (s && room) s.emit('history:restore', room, { historyId, snapshot })
     markSynced('idle')
   }, [setFullMindmapState, saveMindmap, markSynced])
 
-  const redo = useCallback(async () => {
-    const m = latestMindmapRef.current
-    if (!m) return
-    const list = await fetchHistory(m.id, { limit: 200 })
-    if (!list || list.length === 0) return
-    const start = serverHistoryCursorRef.current == null ? 0 : Math.max(0, serverHistoryCursorRef.current - 1)
-    let idx = -1
-    for (let i = start; i >= 0; i--) {
-      const s: any = list[i]?.snapshot
-      if (s && (Array.isArray(s.nodes) || Array.isArray(s.edges) || s.viewport)) { idx = i; break }
-    }
-    if (idx < 0) return
-    const snap: any = list[idx].snapshot
-    const nextState: any = {
-      ...m,
-      nodes: Array.isArray(snap.nodes) ? snap.nodes : latestNodesRef.current,
-      edges: Array.isArray(snap.edges) ? snap.edges : latestEdgesRef.current,
-      viewport: snap.viewport || latestViewportRef.current,
-    }
-    isApplyingHistoryRef.current = true
-    latestNodesRef.current = nextState.nodes
-    latestEdgesRef.current = nextState.edges
-    latestViewportRef.current = nextState.viewport || null
-    setFullMindmapState(nextState)
-    await saveMindmap()
-    isApplyingHistoryRef.current = false
-    serverHistoryCursorRef.current = idx
+  const announcePresence = useCallback((info: PresenceInfo) => {
     const s = socketRef.current
     const room = roomRef.current
-    if (s && room) s.emit('history:restore', room, { historyId: list[idx].id, snapshot: snap })
-    markSynced('idle')
-  }, [setFullMindmapState, saveMindmap, markSynced])
+    if (s && room) {
+      lastPresenceInfoRef.current = info
+      currentUserIdRef.current = info?.userId || null
+      emitPresenceAnnounce(s, room, info)
+      setParticipants((prev) => ({
+        ...prev,
+        [s.id]: {
+          clientId: s.id,
+          userId: info?.userId || null,
+          name: info?.name || '',
+          color: info?.color || '#3b82f6',
+          avatar: info?.avatar || null,
+          cursor: prev[s.id]?.cursor || null,
+          active: prev[s.id]?.active || null,
+        },
+      }))
+    }
+  }, [])
+
+  const emitCursor = useCallback((cursor: { x: number; y: number }) => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitCursorMove(s, room, cursor)
+  }, [])
+
+  const emitActive = useCallback((active: { type: 'node' | 'edge' | 'label' | 'pane'; id?: string }) => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitPresenceActive(s, room, active)
+  }, [])
+
+  const clearActive = useCallback(() => {
+    const s = socketRef.current
+    const room = roomRef.current
+    if (s && room) emitPresenceClear(s, room)
+  }, [])
+
+  const clearAccessRevoked = useCallback(() => setAccessRevoked(null), [])
+  const clearPermissionChanged = useCallback(() => setPermissionChanged(null), [])
 
   const value: MindmapContextType = {
     mindmap,
@@ -938,7 +749,7 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     setTitle,
     onViewportChange,
     autoSaveEnabled,
-    setAutoSaveEnabled,
+    setAutoSaveEnabled: handleSyncedAutoSaveToggle,
     saveStatus,
     canUndo,
     canRedo,
@@ -946,63 +757,16 @@ export function MindmapProvider({ children }: { children: React.ReactNode }) {
     redo,
     setFullMindmapState,
     applyStreamingAdditions,
-    restoreFromHistory: async (snapshot: any, historyId?: string | number | null) => {
-      const m = latestMindmapRef.current
-      if (!m || !snapshot) return
-      const nextState: any = {
-        ...m,
-        nodes: Array.isArray(snapshot.nodes) ? snapshot.nodes : latestNodesRef.current,
-        edges: Array.isArray(snapshot.edges) ? snapshot.edges : latestEdgesRef.current,
-        viewport: snapshot.viewport || latestViewportRef.current,
-      }
-      isApplyingHistoryRef.current = true
-      latestNodesRef.current = nextState.nodes
-      latestEdgesRef.current = nextState.edges
-      latestViewportRef.current = nextState.viewport || null
-      setFullMindmapState(nextState)
-      await saveMindmap()
-      isApplyingHistoryRef.current = false
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) s.emit('history:restore', room, { historyId, snapshot })
-      markSynced('idle')
-    },
+    restoreFromHistory,
     participants,
-    announcePresence: (info) => {
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) {
-        lastPresenceInfoRef.current = info
-        emitPresenceAnnounce(s, room, info)
-        setParticipants((prev) => ({
-          ...prev,
-          [s.id]: {
-            clientId: s.id,
-            userId: info?.userId || null,
-            name: info?.name || '',
-            color: info?.color || '#3b82f6',
-            avatar: info?.avatar || null,
-            cursor: prev[s.id]?.cursor || null,
-            active: prev[s.id]?.active || null,
-          },
-        }))
-      }
-    },
-    emitCursor: (cursor) => {
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) emitCursorMove(s, room, cursor)
-    },
-    emitActive: (active) => {
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) emitPresenceActive(s, room, active)
-    },
-    clearActive: () => {
-      const s = socketRef.current
-      const room = roomRef.current
-      if (s && room) emitPresenceClear(s, room)
-    },
+    announcePresence,
+    emitCursor,
+    emitActive,
+    clearActive,
+    accessRevoked,
+    clearAccessRevoked,
+    permissionChanged,
+    clearPermissionChanged,
   }
 
   return <MindmapContext.Provider value={value}>{children}</MindmapContext.Provider>
@@ -1015,3 +779,6 @@ export function useMindmapContext() {
   }
   return context
 }
+
+// Re-export types for convenience
+export * from './types'

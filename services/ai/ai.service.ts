@@ -65,6 +65,31 @@ export interface AIMindmapV1 {
   [k: string]: any
 }
 
+// ===== Thinking Mode Types =====
+
+export interface ThinkingModeRequest {
+  topic: string
+  language?: string
+  structureType?: 'mindmap' | 'logic' | 'brace' | 'org' | 'tree' | 'timeline' | 'fishbone' | string
+  levels?: number
+  firstLevelCount?: number
+  tags?: string[]
+  mode?: 'normal' | 'thinking' | 'max' | string
+}
+
+export interface Otmz {
+  meta?: any
+  promptAnalysis?: any
+  propertiesDesign?: any
+  optimizedContent?: any
+  [k: string]: any
+}
+
+export interface ActionList {
+  actions: any[]
+  [k: string]: any
+}
+
 function idempotencyHeader(id?: string) {
   const key = id || (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `idem_${Date.now()}_${Math.random().toString(36).slice(2)}`)
   return { 'Idempotency-Key': key }
@@ -151,7 +176,7 @@ export function openGenerateStream(onData: (chunk: any) => void, onEnd?: () => v
   }
   es.onerror = (e) => { onError?.(e); es.close() }
   es.onopen = () => { /* connected */ }
-  ;(es as any).onend = () => { onEnd?.(); es.close() }
+    ; (es as any).onend = () => { onEnd?.(); es.close() }
   return es
 }
 
@@ -160,3 +185,62 @@ export async function generateMindmapProject(payload: { topic: string; mode?: st
   return res.data
 }
 
+// ===== Thinking Mode API calls =====
+
+// POST /api/ai/thinking/otmz
+export async function createThinkingOtmz(body: ThinkingModeRequest, mindmapId?: string): Promise<Otmz> {
+  const res = await apiClient.post<Otmz>('/ai/thinking/otmz', body, {
+    headers: {
+      Accept: 'application/json',
+    },
+    params: mindmapId ? { mindmapId } : undefined,
+  })
+  return res.data
+}
+
+// GET /api/ai/thinking/otmz/prompt
+// Trả về payload prompt (systemInstruction, contents, generationConfig) để debug, không gọi AI
+export async function getThinkingPrompt(query: ThinkingModeRequest): Promise<any> {
+  const res = await apiClient.get<any>('/ai/thinking/otmz/prompt', {
+    headers: {
+      Accept: 'application/json',
+    },
+    params: query,
+  })
+  return res.data
+}
+
+// POST /api/ai/thinking/actions
+// Body: Otmz, Query: language?, mindmapId?
+export async function getThinkingActions(otmz: Otmz, language?: string, mindmapId?: string): Promise<ActionList> {
+  const params: any = {}
+  if (language) params.language = language
+  if (mindmapId) params.mindmapId = mindmapId
+
+  const res = await apiClient.post<ActionList>('/ai/thinking/actions', otmz, {
+    headers: {
+      Accept: 'application/json',
+    },
+    params: Object.keys(params).length > 0 ? params : undefined,
+  })
+  return res.data
+}
+
+// POST /api/ai/thinking/generate
+// Body: ActionList, Query: mindmapId, structureType?
+export async function generateMindmapFromActions(
+  actionList: ActionList,
+  mindmapId: string,
+  structureType?: string
+): Promise<MindmapResponse> {
+  const params: any = { mindmapId }
+  if (structureType) params.structureType = structureType
+
+  const res = await apiClient.post<MindmapResponse>('/ai/thinking/generate', actionList, {
+    headers: {
+      Accept: 'application/json',
+    },
+    params,
+  })
+  return res.data
+}

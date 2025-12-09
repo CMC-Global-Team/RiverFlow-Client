@@ -41,21 +41,21 @@ export default function Sidebar() {
   }
 
 
-//handle select template
-const handleSelectTemplate = async (template: any) => {
-  if (template?.id === 'ai') {
-    return
-  }
-  const newMindmap = await create({
-    title: "Untitled Mindmap",
-    nodes: template.initialNodes,
-    edges: template.initialEdges,
-  })
-  if (newMindmap) {
-    router.push(`/editor?id=${newMindmap.id}`)
-  }
+  //handle select template
+  const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      return
+    }
+    const newMindmap = await create({
+      title: "Untitled Mindmap",
+      nodes: template.initialNodes,
+      edges: template.initialEdges,
+    })
+    if (newMindmap) {
+      router.push(`/editor?id=${newMindmap.id}`)
+    }
 
-}
+  }
 
 
   const toggleSettings = () => {
@@ -108,6 +108,7 @@ const handleSelectTemplate = async (template: any) => {
             {!isCollapsed && <span className="text-sm font-medium">{t("myMindmaps")}</span>}
           </Link>
 
+
           <div className="space-y-1">
             <button
               onClick={toggleSettings}
@@ -140,7 +141,13 @@ const handleSelectTemplate = async (template: any) => {
                 >
                   <History className="h-4 w-4" /> {t("paymentHistory")}
                 </Link>
-                <ChangeLanguage />
+                <Link
+                  href="/dashboard/language_display"
+                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                >
+                  <Lock className="h-4 w-4" /> {t("Language & Display")}
+                </Link>
+
               </div>
             )}
           </div>

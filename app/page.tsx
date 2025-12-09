@@ -51,7 +51,7 @@ function HomeComponent() {
 export default function Home() {
   return (
     // <Suspense> là bắt buộc để 'useSearchParams' hoạt động
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense>
       <HomeComponent />
     </Suspense>
   )

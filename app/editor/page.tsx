@@ -18,6 +18,7 @@ import gsap from "gsap"
 import { ThemeSwitcher } from "@/components/theme-switcher"
 import ShareModal from "@/components/mindmap/ShareModal"
 import PublicShareModal from "@/components/mindmap/PublicShareModal"
+import EmbedModal from "@/components/mindmap/EmbedModal"
 import {
   inviteCollaborator,
   updateCollaboratorRole,
@@ -26,7 +27,8 @@ import {
   getCollaborators,
   getPendingInvitations,
   getPublicMindmap,
-  getMindmapById
+  getMindmapById,
+  updateEmbedSettings
 } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
@@ -50,11 +52,16 @@ function EditorInner() {
     setAutoSaveEnabled,
     saveStatus,
     setFullMindmapState,
+    accessRevoked,
+    clearAccessRevoked,
+    permissionChanged,
+    clearPermissionChanged,
   } = useMindmapContext()
 
   const { toast } = useToast()
   const [isEditing, setIsEditing] = useState(false)
   const [isShareOpen, setIsShareOpen] = useState(false)
+  const [isEmbedOpen, setIsEmbedOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [collaborators, setCollaborators] = useState<any[]>([])
@@ -107,6 +114,34 @@ function EditorInner() {
       setAutoSaveEnabled(false)
     }
   }, [userRole, setAutoSaveEnabled])
+
+  // Handle access revocation - redirect to home page when access is revoked
+  useEffect(() => {
+    if (accessRevoked?.revoked) {
+      console.log('[Editor] Access revoked, redirecting to home:', accessRevoked)
+      toast({
+        title: 'Access Revoked',
+        description: accessRevoked.message || 'You no longer have access to this mindmap.',
+        variant: 'destructive',
+      })
+      clearAccessRevoked()
+      router.push('/')
+    }
+  }, [accessRevoked, clearAccessRevoked, router, toast])
+
+  // Handle permission change - refresh page when permissions change
+  useEffect(() => {
+    if (permissionChanged?.changed) {
+      console.log('[Editor] Permission changed, refreshing page:', permissionChanged)
+      toast({
+        title: 'Permission Changed',
+        description: `Your access level has been updated. Refreshing page...`,
+      })
+      clearPermissionChanged()
+      // Refresh the page to get updated permissions
+      window.location.reload()
+    }
+  }, [permissionChanged, clearPermissionChanged, toast])
 
   // Load collaborators when mindmap is loaded
   useEffect(() => {
@@ -493,6 +528,29 @@ function EditorInner() {
     }
   }
 
+  const handleToggleEmbed = async (isEmbedEnabled: boolean) => {
+    if (!mindmapId) return;
+
+    try {
+      const updated = await updateEmbedSettings(mindmapId, isEmbedEnabled)
+      setFullMindmapState(updated)
+
+      toast({
+        description: isEmbedEnabled
+          ? "Đã bật tính năng nhúng mindmap"
+          : "Đã tắt tính năng nhúng mindmap",
+      })
+    } catch (error: any) {
+      console.error(error)
+      toast({
+        variant: "destructive",
+        title: "Lỗi",
+        description: "Không thể cập nhật cài đặt nhúng",
+      })
+      throw error;
+    }
+  }
+
   if (!mindmap && mindmapId) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -529,6 +587,7 @@ function EditorInner() {
               saveStatus={saveStatus}
               handleSave={handleSave}
               onShareClick={() => setIsShareOpen(true)}
+              onEmbedClick={() => setIsEmbedOpen(true)}
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
               onChatClick={() => setIsChatOpen(true)}
@@ -568,11 +627,24 @@ function EditorInner() {
         <PublicShareModal
           isOpen={isShareOpen}
           onClose={() => setIsShareOpen(false)}
-          mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+          mindmapTitle={mindmap?.title || 'Untitled Mindmap'}
           shareToken={mindmap?.shareToken}
           ownerName={mindmap?.ownerName}
           ownerAvatar={mindmap?.ownerAvatar}
-          publicAccessLevel={mindmap?.publicAccessLevel || "private"}
+          publicAccessLevel={mindmap?.publicAccessLevel || 'private'}
+        />
+      )}
+
+      {/* Embed Modal - Only for owners */}
+      {user?.userId === mindmap?.mysqlUserId && (
+        <EmbedModal
+          isOpen={isEmbedOpen}
+          onClose={() => setIsEmbedOpen(false)}
+          mindmapId={mindmapId || ''}
+          mindmapTitle={mindmap?.title || 'Untitled Mindmap'}
+          embedToken={mindmap?.embedToken}
+          isEmbedEnabled={mindmap?.isEmbedEnabled || false}
+          onToggleEmbed={handleToggleEmbed}
         />
       )}
     </div>
