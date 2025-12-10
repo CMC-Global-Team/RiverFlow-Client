@@ -310,7 +310,7 @@ export default function UsersManagePage() {
                     <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder={t("allStatus")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background">
                         <SelectItem value="all">{t("allStatus")}</SelectItem>
                         <SelectItem value="active">{t("active")}</SelectItem>
                         <SelectItem value="suspended">{t("suspended")}</SelectItem>
@@ -318,10 +318,10 @@ export default function UsersManagePage() {
                     </SelectContent>
                 </Select>
                 <Select value={roleFilter || "all"} onValueChange={(v) => { setRoleFilter(v === "all" ? "" : v); setPage(0); }}>
-                    <SelectTrigger className="w-[180px]">
+                    <SelectTrigger className="w-[180px] ">
                         <SelectValue placeholder={t("allRoles")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background">
                         <SelectItem value="all">{t("allRoles")}</SelectItem>
                         <SelectItem value="admin">{t("admin")}</SelectItem>
                         <SelectItem value="user">{t("user")}</SelectItem>
@@ -441,7 +441,7 @@ export default function UsersManagePage() {
                         <SelectTrigger className="w-[100px]">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-background">
                             <SelectItem value="10">10</SelectItem>
                             <SelectItem value="20">20</SelectItem>
                             <SelectItem value="50">50</SelectItem>
@@ -521,7 +521,7 @@ export default function UsersManagePage() {
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-background">
                                     <SelectItem value="active">{t("active")}</SelectItem>
                                     <SelectItem value="suspended">{t("suspended")}</SelectItem>
                                     <SelectItem value="deleted">{t("deleted")}</SelectItem>
