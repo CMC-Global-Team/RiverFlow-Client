@@ -363,7 +363,7 @@ export default function PaymentsManagePage() {
                     <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder={t("allStatus")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background">
                         <SelectItem value="all">{t("allStatus")}</SelectItem>
                         <SelectItem value="pending">{t("pending")}</SelectItem>
                         <SelectItem value="matched">{t("matched")}</SelectItem>
@@ -376,7 +376,7 @@ export default function PaymentsManagePage() {
                     <SelectTrigger className="w-[150px]">
                         <SelectValue placeholder={t("allTransferTypes")} />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-background">
                         <SelectItem value="all">{t("allTransferTypes")}</SelectItem>
                         <SelectItem value="in">{t("in")}</SelectItem>
                         <SelectItem value="out">{t("out")}</SelectItem>
@@ -500,7 +500,7 @@ export default function PaymentsManagePage() {
                         <SelectTrigger className="w-[100px]">
                             <SelectValue />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent className="bg-background">
                             <SelectItem value="10">10</SelectItem>
                             <SelectItem value="20">20</SelectItem>
                             <SelectItem value="50">50</SelectItem>
@@ -546,7 +546,7 @@ export default function PaymentsManagePage() {
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
-                                <SelectContent>
+                                <SelectContent className="bg-background">
                                     <SelectItem value="pending">{t("pending")}</SelectItem>
                                     <SelectItem value="matched">{t("matched")}</SelectItem>
                                     <SelectItem value="processed">{t("processed")}</SelectItem>
