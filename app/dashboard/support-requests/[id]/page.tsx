@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslation } from "react-i18next";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Sidebar from "@/components/dashboard/sidebar";
 import DashboardHeader from "@/components/dashboard/dashboard-header";
@@ -204,7 +206,7 @@ function TicketDetailContent() {
                                                         {message.attachments.map((att) => (
                                                             <a
                                                                 key={att.id}
-                                                                href={att.downloadUrl}
+                                                                href={`${API_BASE_URL}${att.downloadUrl?.replace('/api', '')}`}
                                                                 className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80"
                                                             >
                                                                 <Paperclip className="h-3 w-3" />
