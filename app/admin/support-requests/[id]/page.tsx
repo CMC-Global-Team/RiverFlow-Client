@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api';
 import { useTranslation } from "react-i18next";
 import { adminSupportTicketService } from "@/services/admin/admin-support-ticket.service";
 import {
@@ -118,7 +120,7 @@ export default function AdminTicketDetailPage() {
         if (!user) return;
         try {
             setUpdating(true);
-            await adminSupportTicketService.updateTicket(ticketId, { assignedToId: user.id });
+            await adminSupportTicketService.updateTicket(ticketId, { assignedToId: user.userId });
             fetchTicket();
         } catch (err: any) {
             setError(err.message || "Failed to assign ticket");
@@ -224,10 +226,10 @@ export default function AdminTicketDetailPage() {
                                 <div
                                     key={message.id}
                                     className={`p-3 rounded-lg ${message.isInternalNote
-                                            ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
-                                            : message.senderRole === "USER"
-                                                ? "bg-muted/50"
-                                                : "bg-primary/5 border border-primary/20"
+                                        ? "bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800"
+                                        : message.senderRole === "USER"
+                                            ? "bg-muted/50"
+                                            : "bg-primary/5 border border-primary/20"
                                         }`}
                                 >
                                     <div className="flex items-center gap-2 mb-2">
@@ -253,7 +255,7 @@ export default function AdminTicketDetailPage() {
                                             {message.attachments.map((att) => (
                                                 <a
                                                     key={att.id}
-                                                    href={att.downloadUrl}
+                                                    href={`${API_BASE_URL}${att.downloadUrl?.replace('/api', '')}`}
                                                     className="flex items-center gap-1 px-2 py-1 bg-muted rounded text-xs hover:bg-muted/80"
                                                 >
                                                     <Paperclip className="h-3 w-3" />
