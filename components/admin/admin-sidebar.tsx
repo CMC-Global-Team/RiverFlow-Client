@@ -16,6 +16,7 @@ import {
     ChevronDown,
     ChevronRight,
     FileText,
+    Headphones,
 } from "lucide-react"
 
 export default function AdminSidebar() {
@@ -100,6 +101,15 @@ export default function AdminSidebar() {
                             {!isCollapsed && <span className="text-sm font-medium">{t("loggingSystem")}</span>}
                         </Link>
                     )}
+
+                    {/* Support Requests - Visible to both Admin and Super Admin */}
+                    <Link
+                        href="/admin/support-requests"
+                        className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
+                    >
+                        <Headphones className="h-5 w-5" />
+                        {!isCollapsed && <span className="text-sm font-medium">{t("supportRequests")}</span>}
+                    </Link>
 
                     <div className="space-y-1">
                         <button
