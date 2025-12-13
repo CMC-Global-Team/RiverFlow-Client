@@ -3,5 +3,8 @@
   "creditBalance": "Your credit balance",
   "topup": "Top up",
   "topupCredit": "Top up credits",
-  "viewProfile": "View profile"
+  "viewProfile": "View profile",
+  "notifications": "Notifications",
+  "noNotifications": "No notifications",
+  "markAllAsRead": "Mark all as read"
 }

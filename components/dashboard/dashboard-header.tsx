@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Bell, Coins } from "lucide-react"
+import { Search, Coins } from "lucide-react"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { useState } from "react"
 import { useTranslation } from "react-i18next"
@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/auth/useAuth"
 
 import ProfileModal from "@/components/profile/ProfileModal"
 import CreditTopupSheet from "@/components/payment/CreditTopupSheet"
+import NotificationDropdown from "@/components/notifications/NotificationDropdown"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 
 interface DashboardHeaderProps {
@@ -43,19 +44,16 @@ export default function DashboardHeader({
 
         {/* Right Actions */}
         <div className="flex items-center gap-4 ml-6">
-          <button className="rounded-lg p-2 hover:bg-muted transition-colors relative">
-            <Bell className="h-5 w-5 text-muted-foreground" />
-            <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary"></span>
-          </button>
-         
+          <NotificationDropdown />
+
           <Tooltip>
             <TooltipTrigger asChild>
-              <div 
+              <div
                 onClick={() => setIsProfileModalOpen(true)}
                 className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-muted transition-colors cursor-pointer"
               >
                 {user?.avatar ? (
-                  <img 
+                  <img
                     src={getAvatarUrl(user.avatar) || ''}
                     alt={user.fullName}
                     className="h-8 w-8 rounded-full object-cover border border-border"
@@ -110,9 +108,9 @@ export default function DashboardHeader({
       </div>
 
       {/* Profile Modal */}
-      <ProfileModal 
-        isOpen={isProfileModalOpen} 
-        onClose={() => setIsProfileModalOpen(false)} 
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
       />
 
       <CreditTopupSheet open={isTopupOpen} onOpenChange={setIsTopupOpen} />
