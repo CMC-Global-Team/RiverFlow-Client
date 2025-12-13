@@ -65,7 +65,7 @@ function TicketDetailContent() {
 
         try {
             setSending(true);
-            await supportTicketService.addMessage(ticketId, replyMessage, attachments);
+            await supportTicketService.replyToTicket(ticketId, { message: replyMessage }, attachments);
             setReplyMessage("");
             setAttachments([]);
             fetchTicket();
@@ -182,8 +182,8 @@ function TicketDetailContent() {
                                             <div
                                                 key={message.id}
                                                 className={`p-3 rounded-lg ${message.senderRole === "USER"
-                                                        ? "bg-muted/50"
-                                                        : "bg-primary/5 border border-primary/20"
+                                                    ? "bg-muted/50"
+                                                    : "bg-primary/5 border border-primary/20"
                                                     }`}
                                             >
                                                 <div className="flex items-center gap-2 mb-2">
