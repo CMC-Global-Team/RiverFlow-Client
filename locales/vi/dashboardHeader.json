@@ -3,5 +3,8 @@
   "creditBalance": "Số dư của bạn",
   "topup": "Nạp thêm",
   "topupCredit": "Nạp thêm credit",
-  "viewProfile": "Xem hồ sơ"
+  "viewProfile": "Xem hồ sơ",
+  "notifications": "Thông báo",
+  "noNotifications": "Không có thông báo",
+  "markAllAsRead": "Đánh dấu tất cả đã đọc"
 }
