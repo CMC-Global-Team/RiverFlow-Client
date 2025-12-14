@@ -34,7 +34,8 @@ import {
   MessageSquare,
   Menu,
   Eye,
-  Edit2
+  Edit2,
+  Keyboard
 } from "lucide-react"
 import { Sparkles } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -79,6 +80,8 @@ interface ToolbarProps {
   onChatClick?: () => void
   onAiToggle?: () => void
   aiOpen?: boolean
+  onTutorialClick?: () => void
+  onCheatSheetClick?: () => void
 }
 
 export default function Toolbar({
@@ -101,6 +104,8 @@ export default function Toolbar({
   onChatClick,
   onAiToggle,
   aiOpen,
+  onTutorialClick,
+  onCheatSheetClick,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -338,7 +343,7 @@ export default function Toolbar({
 
 
   return (
-    <div className={`flex items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-lg backdrop-blur-sm bg-card/95 overflow-x-auto transition-all duration-300 ${isCollapsed ? 'w-fit' : 'max-w-full'}`}>
+    <div data-tutorial="toolbar" className={`flex items-center gap-2 rounded-lg border border-border bg-card p-2 shadow-lg backdrop-blur-sm bg-card/95 overflow-x-auto transition-all duration-300 ${isCollapsed ? 'w-fit' : 'max-w-full'}`}>
       {/* Back Button - Always visible */}
       <BackButton />
 
@@ -383,7 +388,7 @@ export default function Toolbar({
           <div className="w-px h-6 bg-border"></div>
 
           {/* Add Node Tools - Disabled for viewers */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div data-tutorial="add-node" className="flex items-center gap-1 flex-shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -426,6 +431,7 @@ export default function Toolbar({
 
             {/* Add Sibling */}
             <Button
+              data-tutorial="add-sibling"
               onClick={handleAddSiblingNode}
               variant="ghost"
               size="icon"
@@ -438,6 +444,7 @@ export default function Toolbar({
 
             {/* Delete */}
             <Button
+              data-tutorial="delete"
               onClick={handleDeleteSelected}
               variant="ghost"
               size="icon"
@@ -451,6 +458,7 @@ export default function Toolbar({
 
           {/* Edit Tools - History */}
           <Button
+            data-tutorial="history"
             variant="ghost"
             size="icon"
             onClick={onHistoryClick}
@@ -465,7 +473,7 @@ export default function Toolbar({
           <div className="w-px h-6 bg-border"></div>
 
           {/* Undo/Redo */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div data-tutorial="undo-redo" className="flex items-center gap-1 flex-shrink-0">
             <Button
               onClick={undo}
               variant="ghost"
@@ -492,7 +500,7 @@ export default function Toolbar({
           <div className="w-px h-6 bg-border"></div>
 
           {/* Zoom Controls */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div data-tutorial="zoom-controls" className="flex items-center gap-1 flex-shrink-0">
             <Button
               onClick={handleZoomIn}
               variant="ghost"
@@ -526,7 +534,7 @@ export default function Toolbar({
           <div className="w-px h-6 bg-border"></div>
 
           {/* Export/Import */}
-          <div className="flex items-center gap-1 flex-shrink-0">
+          <div data-tutorial="download" className="flex items-center gap-1 flex-shrink-0">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -566,17 +574,30 @@ export default function Toolbar({
           {/* Tutorial guide and Embed Button */}
           <div className="flex items-center gap-1 flex-shrink-0">
             <Button
+              data-tutorial="tutorial-btn"
               variant="ghost"
               size="icon"
               title="Tutorial"
-              disabled={userRole === 'viewer'}
-              className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={onTutorialClick}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
               <HandHelping className="h-4 w-4" />
+            </Button>
+            {/* Cheat Sheet Button */}
+            <Button
+              data-tutorial="cheatsheet"
+              variant="ghost"
+              size="icon"
+              title="Keyboard Shortcuts"
+              onClick={onCheatSheetClick}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <Keyboard className="h-4 w-4" />
             </Button>
             {/* Embed Button - Only for owners (moved next to Tutorial) */}
             {userRole === 'owner' && (
               <Button
+                data-tutorial="embed"
                 onClick={onEmbedClick}
                 variant="ghost"
                 size="icon"
@@ -593,6 +614,7 @@ export default function Toolbar({
             {/* Hide AI button for viewers */}
             {userRole !== 'viewer' && (
               <Button
+                data-tutorial="ai"
                 variant="ghost"
                 size="icon"
                 title="AI Composer"
@@ -603,6 +625,7 @@ export default function Toolbar({
               </Button>
             )}
             <Button
+              data-tutorial="chat"
               variant="ghost"
               size="icon"
               title="Chat"
@@ -624,11 +647,13 @@ export default function Toolbar({
       {/* Right Side Actions - Always visible */}
       <div className="flex items-center gap-2 flex-shrink-0">
         <PresenceAvatars />
-        <ThemeSwitcher />
+        <div data-tutorial="theme">
+          <ThemeSwitcher />
+        </div>
 
         {/* Auto-save Toggle - Hidden for viewers and when collapsed */}
         {!isCollapsed && userRole !== 'viewer' && (
-          <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
+          <div data-tutorial="auto-save" className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border bg-background/50">
             <Switch
               id="auto-save"
               checked={autoSaveEnabled || false}
@@ -643,7 +668,7 @@ export default function Toolbar({
 
         {/* Permission Label - Right side next to share */}
         {userRole && (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-muted/50 flex-shrink-0">
+          <div data-tutorial="permission-label" className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-muted/50 flex-shrink-0">
             {userRole === 'viewer' ? (
               <Eye className="h-3 w-3 text-muted-foreground" />
             ) : (
@@ -657,6 +682,7 @@ export default function Toolbar({
 
         {/* Share Button - Always enabled */}
         <Button
+          data-tutorial="share"
           onClick={onShareClick}
           variant="ghost"
           size="icon"
