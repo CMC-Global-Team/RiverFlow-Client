@@ -91,9 +91,9 @@ function AcceptInvitationContent() {
         if (response.data.requiresAuth) {
           setSuccess(true);
           setSuccessMessage(response.data.message || 'Invitation accepted! Please sign in to access the mindmap.');
-          // Redirect to login after 2 seconds
+          // Redirect to homepage after 2 seconds (user can sign in from there)
           setTimeout(() => {
-            router.push('/auth/signin');
+            router.push('/');
           }, 2000);
         } else {
           // Show success message and redirect to editor
