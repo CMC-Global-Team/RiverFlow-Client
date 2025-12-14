@@ -11,7 +11,7 @@ if (!API_BASE_URL) {
 //Tạo một "instance" của axios
 const apiClient = axios.create({
   //Lấy URL gốc từ biến môi trường production
-  baseURL: API_BASE_URL, 
+  baseURL: API_BASE_URL,
 
   //Cài đặt header mặc định
   headers: {
@@ -24,18 +24,22 @@ apiClient.interceptors.request.use(
   (config) => {
     const url = (config.url || '').toString();
     const isPublicMindmap = url.startsWith('/mindmaps/public/') || config.headers['X-Share-Token'];
-    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/');
+    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/') || url.startsWith('/invitations/');
     const allowPublicAuth = !!config.headers['X-Allow-Public-Auth'];
+
+    // Skip auth header for public endpoints or when explicitly allowing public access
+    if (isPublicMindmap || isInvitationEndpoint || allowPublicAuth) {
+      // Don't add auth header for public endpoints
+      delete config.headers.Authorization;
+      delete config.headers['X-Allow-Public-Auth']; // Clean up custom header
+      return config;
+    }
 
     if (typeof window !== 'undefined') {
       const accessToken = window.localStorage.getItem('accessToken');
-      if (accessToken && (!(isPublicMindmap || isInvitationEndpoint) || allowPublicAuth)) {
+      if (accessToken) {
         config.headers.Authorization = `Bearer ${accessToken}`;
       }
-    }
-
-    if ((isPublicMindmap || isInvitationEndpoint) && config.headers.Authorization && !allowPublicAuth) {
-      delete config.headers.Authorization;
     }
 
     return config;
@@ -70,27 +74,27 @@ apiClient.interceptors.response.use(
   },
   async (error) => {
     const originalRequest = error.config;
-    
+
 
     const url = (originalRequest?.url || '').toString();
     const isPublicMindmap = url.startsWith('/mindmaps/public/') || originalRequest?.headers?.['X-Share-Token'];
-    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/');
+    const isInvitationEndpoint = url.startsWith('/mindmaps/verify-invitation/') || url.startsWith('/mindmaps/accept-invitation/') || url.startsWith('/mindmaps/reject-invitation/') || url.startsWith('/invitations/');
 
     if (error.response?.status === 403 && !(isPublicMindmap || isInvitationEndpoint)) {
       // Clear tất cả dữ liệu authentication
       localStorage.clear();
       deleteCookie('accessToken');
-      
+
       // Redirect về trang login (trừ khi đang ở trang verify-email)
-      if (typeof window !== 'undefined' && 
-          window.location.pathname !== '/' && 
-          !window.location.pathname.includes('/verify-email')) {
+      if (typeof window !== 'undefined' &&
+        window.location.pathname !== '/' &&
+        !window.location.pathname.includes('/verify-email')) {
         window.location.href = '/';
       }
-      
+
       return Promise.reject(error);
     }
-    
+
     // Nếu lỗi 401 và chưa retry
     if (error.response?.status === 401 && !originalRequest._retry && !(isPublicMindmap || isInvitationEndpoint)) {
       if (isRefreshing) {
@@ -111,44 +115,44 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       const refreshToken = localStorage.getItem('refreshToken');
-      
+
       if (refreshToken) {
         try {
           // Gọi API refresh token
           const response = await refreshAccessToken(refreshToken);
-          
+
           // Lưu token mới
           localStorage.setItem('accessToken', response.accessToken);
           localStorage.setItem('refreshToken', response.refreshToken);
-          
+
           // Lưu vào cookie cho middleware
           setCookie('accessToken', response.accessToken, 7);
-          
+
           // Cập nhật header cho request ban đầu
           originalRequest.headers.Authorization = `Bearer ${response.accessToken}`;
-          
+
           // Process các request đang đợi
           processQueue(null, response.accessToken);
-          
+
           isRefreshing = false;
-          
+
           // Retry request ban đầu
           return apiClient(originalRequest);
         } catch (err) {
           // Refresh token failed, clear storage và redirect
           processQueue(err, null);
           isRefreshing = false;
-          
+
           localStorage.clear();
           deleteCookie('accessToken');
-          
+
           // Chỉ redirect nếu không phải đang ở trang login hoặc verify-email
-          if (typeof window !== 'undefined' && 
-              window.location.pathname !== '/' && 
-              !window.location.pathname.includes('/verify-email')) {
+          if (typeof window !== 'undefined' &&
+            window.location.pathname !== '/' &&
+            !window.location.pathname.includes('/verify-email')) {
             window.location.href = '/';
           }
-          
+
           return Promise.reject(err);
         }
       } else {
@@ -156,15 +160,15 @@ apiClient.interceptors.response.use(
         isRefreshing = false;
         localStorage.clear();
         deleteCookie('accessToken');
-        
-        if (typeof window !== 'undefined' && 
-            window.location.pathname !== '/' && 
-            !window.location.pathname.includes('/verify-email')) {
+
+        if (typeof window !== 'undefined' &&
+          window.location.pathname !== '/' &&
+          !window.location.pathname.includes('/verify-email')) {
           window.location.href = '/';
         }
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
