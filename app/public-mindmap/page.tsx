@@ -18,6 +18,7 @@ import HistorySheet from "@/components/editor/history-sheet"
 import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext"
 import TutorialOverlay from "@/components/editor/TutorialOverlay"
 import { mapUserRoleToAccessMode } from "@/lib/tutorial-steps"
+import CheatSheetModal from "@/components/editor/CheatSheetModal"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
@@ -46,6 +47,7 @@ function PublicMindmapInner() {
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
@@ -278,6 +280,7 @@ function PublicMindmapInner() {
                   startTutorial(accessMode)
                 }
               }}
+              onCheatSheetClick={() => setIsCheatSheetOpen(true)}
             />
           </div>
         </div>
@@ -289,6 +292,9 @@ function PublicMindmapInner() {
       {isHistoryOpen && mindmap?.id && (
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
+
+      {/* Cheat Sheet Modal */}
+      <CheatSheetModal isOpen={isCheatSheetOpen} onClose={() => setIsCheatSheetOpen(false)} />
 
       <PublicShareModal
         isOpen={isShareOpen}

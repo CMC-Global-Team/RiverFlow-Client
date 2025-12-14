@@ -34,7 +34,8 @@ import {
   MessageSquare,
   Menu,
   Eye,
-  Edit2
+  Edit2,
+  Keyboard
 } from "lucide-react"
 import { Sparkles } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
@@ -80,6 +81,7 @@ interface ToolbarProps {
   onAiToggle?: () => void
   aiOpen?: boolean
   onTutorialClick?: () => void
+  onCheatSheetClick?: () => void
 }
 
 export default function Toolbar({
@@ -103,6 +105,7 @@ export default function Toolbar({
   onAiToggle,
   aiOpen,
   onTutorialClick,
+  onCheatSheetClick,
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
@@ -579,6 +582,17 @@ export default function Toolbar({
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
               <HandHelping className="h-4 w-4" />
+            </Button>
+            {/* Cheat Sheet Button */}
+            <Button
+              data-tutorial="cheatsheet"
+              variant="ghost"
+              size="icon"
+              title="Keyboard Shortcuts"
+              onClick={onCheatSheetClick}
+              className="hover:bg-primary/10 hover:text-primary h-8 w-8"
+            >
+              <Keyboard className="h-4 w-4" />
             </Button>
             {/* Embed Button - Only for owners (moved next to Tutorial) */}
             {userRole === 'owner' && (
