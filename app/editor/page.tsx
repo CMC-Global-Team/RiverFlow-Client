@@ -33,6 +33,9 @@ import {
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 import HistorySheet from "@/components/editor/history-sheet"
+import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext"
+import TutorialOverlay from "@/components/editor/TutorialOverlay"
+import { mapUserRoleToAccessMode } from "@/lib/tutorial-steps"
 
 function EditorInner() {
   const router = useRouter()
@@ -67,6 +70,7 @@ function EditorInner() {
   const [collaborators, setCollaborators] = useState<any[]>([])
   const [isLoadingCollaborators, setIsLoadingCollaborators] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
+  const { startTutorial } = useTutorial()
   const toArray = (input: any): any[] => {
     if (Array.isArray(input)) return input
     if (input && typeof input === 'object') {
@@ -593,6 +597,13 @@ function EditorInner() {
               onChatClick={() => setIsChatOpen(true)}
               onAiToggle={() => setIsAiOpen((prev) => !prev)}
               aiOpen={isAiOpen}
+              onTutorialClick={() => {
+                if (userRole) {
+                  const isPublicAccess = !!searchParams.get('token')
+                  const accessMode = mapUserRoleToAccessMode(userRole, isPublicAccess)
+                  startTutorial(accessMode)
+                }
+              }}
             />
           </div>
         </div>
@@ -647,6 +658,9 @@ function EditorInner() {
           onToggleEmbed={handleToggleEmbed}
         />
       )}
+
+      {/* Tutorial Overlay */}
+      <TutorialOverlay />
     </div>
   )
 }
@@ -655,7 +669,9 @@ function EditorContent() {
   return (
     <ReactFlowProvider>
       <MindmapProvider>
-        <EditorInner />
+        <TutorialProvider>
+          <EditorInner />
+        </TutorialProvider>
       </MindmapProvider>
     </ReactFlowProvider>
   )
