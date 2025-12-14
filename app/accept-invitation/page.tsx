@@ -10,7 +10,7 @@ function AcceptInvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, isAuthenticated, isLoading: isAuthLoading } = useAuth();
-  
+
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [mindmapId, setMindmapId] = useState<string | null>(null);
@@ -55,7 +55,7 @@ function AcceptInvitationContent() {
           headers: { 'X-Invitation-Token': invitationToken, 'X-Share-Token': invitationToken, 'X-Allow-Public-Auth': '1' },
         });
       }
-      
+
       if (response.data.success) {
         setMindmapId(response.data.mindmapId);
         setMindmapTitle(response.data.mindmapTitle);
@@ -66,7 +66,7 @@ function AcceptInvitationContent() {
     } catch (err: any) {
       console.error('Failed to verify invitation:', err);
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         'Failed to verify invitation. It may be expired or invalid.'
       );
     } finally {
@@ -82,38 +82,30 @@ function AcceptInvitationContent() {
 
     try {
       setAccepting(true);
-      let response = await apiClient.post(`/mindmaps/accept-invitation/${token}`, null, {
-        withCredentials: true,
+      const response = await apiClient.post(`/invitations/${token}/accept`, null, {
         headers: { 'X-Allow-Public-Auth': '1' },
       });
-      if (!(response.data && (response.data.success || response.status === 200))) {
-        response = await apiClient.post(`/mindmaps/accept-invitation`, null, {
-          params: { token },
-          withCredentials: true,
-          headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
-        });
-      }
-      if (!(response.data && (response.data.success || response.status === 200))) {
-        response = await apiClient.post(`/mindmaps/invitations/accept`, null, {
-          params: { token },
-          withCredentials: true,
-          headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
-        });
-      }
-      
+
       if (response.data.success || response.status === 200) {
-        // Show success message
-        setSuccess(true);
-        setSuccessMessage(response.data.message || 'Lời mời được chấp nhận thành công!');
-        
-        // Redirect to editor after 2 seconds
-        const redirectId = response.data.mindmapId || mindmapId;
-        if (redirectId) {
+        // Check if user needs to authenticate
+        if (response.data.requiresAuth) {
+          setSuccess(true);
+          setSuccessMessage(response.data.message || 'Invitation accepted! Please sign in to access the mindmap.');
+          // Redirect to login after 2 seconds
           setTimeout(() => {
-            router.push(`/editor?id=${redirectId}`);
+            router.push('/auth/signin');
           }, 2000);
         } else {
-          setError('Unable to determine mindmap ID. Please try again.');
+          // Show success message and redirect to editor
+          setSuccess(true);
+          setSuccessMessage(response.data.message || 'Lời mời được chấp nhận thành công!');
+
+          const redirectId = response.data.mindmapId || mindmapId;
+          if (redirectId) {
+            setTimeout(() => {
+              router.push(`/editor?id=${redirectId}`);
+            }, 2000);
+          }
         }
       } else {
         setError(response.data.message || 'Failed to accept invitation.');
@@ -121,7 +113,7 @@ function AcceptInvitationContent() {
     } catch (err: any) {
       console.error('Failed to accept invitation:', err);
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         'Failed to accept the invitation. Please try again.'
       );
     } finally {
@@ -137,33 +129,16 @@ function AcceptInvitationContent() {
 
     try {
       setAccepting(true);
-      try {
-        await apiClient.post(`/mindmaps/reject-invitation/${token}`, null, {
-          withCredentials: true,
-          headers: { 'X-Allow-Public-Auth': '1' },
-        });
-      } catch (e) {
-        try {
-          await apiClient.post(`/mindmaps/reject-invitation`, null, {
-            params: { token },
-            withCredentials: true,
-            headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
-          });
-        } catch (e2) {
-          await apiClient.post(`/mindmaps/invitations/reject`, null, {
-            params: { token },
-            withCredentials: true,
-            headers: { 'X-Invitation-Token': token, 'X-Share-Token': token, 'X-Allow-Public-Auth': '1' },
-          });
-        }
-      }
-      
-      // Redirect to dashboard
-      router.push('/dashboard');
+      await apiClient.post(`/invitations/${token}/decline`, null, {
+        headers: { 'X-Allow-Public-Auth': '1' },
+      });
+
+      // Redirect to home page for non-authenticated users, or dashboard for authenticated
+      router.push('/');
     } catch (err: any) {
       console.error('Failed to reject invitation:', err);
       setError(
-        err.response?.data?.message || 
+        err.response?.data?.message ||
         'Failed to reject the invitation. Please try again.'
       );
     } finally {
@@ -215,7 +190,7 @@ function AcceptInvitationContent() {
         <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
           Collaboration Invitation
         </h1>
-        
+
         <div className="mb-6">
           <p className="text-gray-600 dark:text-gray-400 mb-2">
             You have been invited to collaborate on:
@@ -245,7 +220,7 @@ function AcceptInvitationContent() {
           >
             {accepting ? 'Accepting...' : 'Accept Invitation'}
           </button>
-          
+
           <button
             onClick={handleRejectInvitation}
             disabled={accepting}
