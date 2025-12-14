@@ -1,11 +1,12 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Bell, Check, CheckCheck, Gift, UserPlus, UserMinus, LogOut, MessageSquare, RefreshCw, X } from "lucide-react"
+import { Bell, Check, CheckCheck, Gift, UserPlus, UserMinus, LogOut, MessageSquare, RefreshCw, X, CheckCircle, XCircle } from "lucide-react"
 import { useTranslation } from "react-i18next"
 import { useRouter } from "next/navigation"
 import { Notification, NotificationType } from "@/types/notification.types"
 import notificationService from "@/services/notification.service"
+import NotificationModal from "./NotificationModal"
 
 interface NotificationDropdownProps {
     className?: string;
@@ -25,6 +26,10 @@ const getNotificationIcon = (type: NotificationType) => {
             return <MessageSquare className="h-4 w-4 text-purple-500" />;
         case 'TICKET_UPDATE':
             return <RefreshCw className="h-4 w-4 text-indigo-500" />;
+        case 'INVITE_ACCEPTED':
+            return <CheckCircle className="h-4 w-4 text-green-500" />;
+        case 'INVITE_DECLINED':
+            return <XCircle className="h-4 w-4 text-red-500" />;
         default:
             return <Bell className="h-4 w-4 text-muted-foreground" />;
     }
@@ -50,6 +55,8 @@ export default function NotificationDropdown({ className = "" }: NotificationDro
     const [unreadCount, setUnreadCount] = useState(0)
     const [isLoading, setIsLoading] = useState(false)
     const dropdownRef = useRef<HTMLDivElement>(null)
+    const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
+    const [isModalOpen, setIsModalOpen] = useState(false)
 
     // Fetch notifications when dropdown opens
     useEffect(() => {
@@ -112,8 +119,14 @@ export default function NotificationDropdown({ className = "" }: NotificationDro
             }
         }
 
-        // Navigate if there's an action URL
-        if (notification.actionUrl) {
+        // Check if this notification type should open a modal
+        const modalTypes = ['PROJECT_INVITE'];
+        if (modalTypes.includes(notification.type)) {
+            setSelectedNotification(notification);
+            setIsModalOpen(true);
+            setIsOpen(false);
+        } else if (notification.actionUrl) {
+            // Navigate if there's an action URL
             setIsOpen(false);
             router.push(notification.actionUrl);
         }
@@ -216,6 +229,20 @@ export default function NotificationDropdown({ className = "" }: NotificationDro
                     </div>
                 </div>
             )}
+
+            {/* Notification Modal */}
+            <NotificationModal
+                notification={selectedNotification}
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedNotification(null);
+                }}
+                onActionComplete={() => {
+                    fetchNotifications();
+                    fetchUnreadCount();
+                }}
+            />
         </div>
     );
 }
