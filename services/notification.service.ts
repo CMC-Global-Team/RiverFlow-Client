@@ -1,7 +1,8 @@
 import apiClient from "@/lib/apiClient";
-import { Notification, NotificationUnreadCount } from "@/types/notification.types";
+import { Notification, NotificationUnreadCount, InvitationDetails } from "@/types/notification.types";
 
 const NOTIFICATION_API = "/notifications";
+const INVITATION_API = "/invitations";
 
 export const notificationService = {
     /**
@@ -33,6 +34,36 @@ export const notificationService = {
      */
     async markAllAsRead(): Promise<void> {
         await apiClient.put(`${NOTIFICATION_API}/read-all`);
+    },
+
+    /**
+     * Get invitation details by token
+     */
+    async getInvitationDetails(token: string): Promise<InvitationDetails> {
+        const response = await apiClient.get<InvitationDetails>(`${INVITATION_API}/${token}`, {
+            headers: { 'X-Allow-Public-Auth': '1' }
+        });
+        return response.data;
+    },
+
+    /**
+     * Accept invitation by token
+     */
+    async acceptInvitation(token: string): Promise<{ success: boolean; message: string; mindmapId?: string; mindmapTitle?: string; requiresAuth?: boolean }> {
+        const response = await apiClient.post(`${INVITATION_API}/${token}/accept`, null, {
+            headers: { 'X-Allow-Public-Auth': '1' }
+        });
+        return response.data;
+    },
+
+    /**
+     * Decline invitation by token
+     */
+    async declineInvitation(token: string): Promise<{ success: boolean; message: string }> {
+        const response = await apiClient.post(`${INVITATION_API}/${token}/decline`, null, {
+            headers: { 'X-Allow-Public-Auth': '1' }
+        });
+        return response.data;
     },
 };
 

@@ -4,7 +4,9 @@ export type NotificationType =
     | 'CREDIT_TOPUP_SUCCESS'
     | 'PROJECT_REMOVED'
     | 'TICKET_RESPONSE'
-    | 'TICKET_UPDATE';
+    | 'TICKET_UPDATE'
+    | 'INVITE_ACCEPTED'
+    | 'INVITE_DECLINED';
 
 export interface Notification {
     id: number;
@@ -21,4 +23,22 @@ export interface Notification {
 
 export interface NotificationUnreadCount {
     count: number;
+}
+
+export interface InvitationDetails {
+    id: string;
+    token: string;
+    mindmapId: string;
+    mindmapTitle: string;
+    mindmapDescription?: string;
+    invitedByUserId: number;
+    inviterName: string;
+    inviterEmail?: string;
+    inviterAvatarUrl?: string;
+    invitedEmail: string;
+    role: string;
+    status: string;
+    message?: string;
+    createdAt: string;
+    expiresAt: string;
 }
