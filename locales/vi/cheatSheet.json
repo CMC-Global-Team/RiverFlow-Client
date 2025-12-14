@@ -1,0 +1,20 @@
+{
+    "title": "Phím tắt",
+    "dragHint": "Kéo tiêu đề để di chuyển",
+    "actions": {
+        "addChildNode": "Thêm node con",
+        "addSiblingNode": "Thêm node cùng cấp",
+        "deleteSelected": "Xóa đã chọn",
+        "undo": "Hoàn tác",
+        "redo": "Làm lại",
+        "save": "Lưu mindmap",
+        "zoomIn": "Phóng to",
+        "zoomOut": "Thu nhỏ",
+        "fitView": "Vừa màn hình",
+        "deselect": "Bỏ chọn tất cả",
+        "editNode": "Sửa nội dung node",
+        "moveNode": "Di chuyển node",
+        "panCanvas": "Di chuyển canvas",
+        "zoom": "Phóng to/thu nhỏ"
+    }
+}

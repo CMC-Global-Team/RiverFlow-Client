@@ -33,6 +33,10 @@ import DELETE_CONFIRM_DIALOG_EN from "@/locales/en/deleteConfirmDialog.json";
 import DELETE_CONFIRM_DIALOG_VI from "@/locales/vi/deleteConfirmDialog.json";
 import ADMIN_SIDEBAR_EN from "@/locales/en/adminSideBar.json";
 import ADMIN_SIDEBAR_VI from "@/locales/vi/adminSideBar.json";
+import TUTORIAL_EN from "@/locales/en/tutorial.json";
+import TUTORIAL_VI from "@/locales/vi/tutorial.json";
+import CHEATSHEET_EN from "@/locales/en/cheatSheet.json";
+import CHEATSHEET_VI from "@/locales/vi/cheatSheet.json";
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -57,6 +61,8 @@ const resource = {
         viewToggle: VIEW_TOGGLE_EN,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_EN,
         adminSideBar: ADMIN_SIDEBAR_EN,
+        tutorial: TUTORIAL_EN,
+        cheatSheet: CHEATSHEET_EN,
     },
     vi: {
         home: HOME_VI,
@@ -75,6 +81,8 @@ const resource = {
         viewToggle: VIEW_TOGGLE_VI,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_VI,
         adminSideBar: ADMIN_SIDEBAR_VI,
+        tutorial: TUTORIAL_VI,
+        cheatSheet: CHEATSHEET_VI,
     }
 } as const
 const defaultNS = 'home'
@@ -96,7 +104,9 @@ i18n.use(initReactI18next).init({
         "filterBar",
         "viewToggle",
         "deleteConfirmDialog",
-        "adminSideBar"
+        "adminSideBar",
+        "tutorial",
+        "cheatSheet"
     ],
     defaultNS,
     fallbackLng: "vi",

@@ -1,0 +1,70 @@
+{
+    "welcome": {
+        "title": "Welcome to RiverFlow!",
+        "description": "Let's take a quick tour of the mindmap editor. This will only take a minute."
+    },
+    "zoomControls": {
+        "title": "Zoom Controls",
+        "description": "Use these buttons to zoom in, zoom out, or fit the entire mindmap to your screen."
+    },
+    "download": {
+        "title": "Export Your Mindmap",
+        "description": "Download your mindmap in various formats: PNG, JPG, PDF, Text, or JSON."
+    },
+    "chat": {
+        "title": "Real-time Chat",
+        "description": "Collaborate with others in real-time using the chat feature."
+    },
+    "theme": {
+        "title": "Theme Switcher",
+        "description": "Toggle between light and dark mode to match your preference."
+    },
+    "share": {
+        "title": "Share & Collaborate",
+        "description": "Share your mindmap with others or view sharing options."
+    },
+    "viewerNotice": {
+        "title": "View-Only Mode",
+        "description": "You have view-only access to this mindmap. You can explore and export, but cannot make changes."
+    },
+    "addNode": {
+        "title": "Add New Nodes",
+        "description": "Click here to add new nodes in various shapes: rectangle, circle, diamond, and more."
+    },
+    "addSibling": {
+        "title": "Add Sibling Node",
+        "description": "Select a node and click here to add a sibling node at the same level."
+    },
+    "delete": {
+        "title": "Delete Selected",
+        "description": "Remove the selected node or connection from your mindmap."
+    },
+    "undoRedo": {
+        "title": "Undo & Redo",
+        "description": "Made a mistake? Use undo/redo to step through your changes."
+    },
+    "history": {
+        "title": "Change History",
+        "description": "View the complete history of changes made to this mindmap."
+    },
+    "autoSave": {
+        "title": "Auto-Save",
+        "description": "Toggle auto-save to automatically save your changes as you work."
+    },
+    "aiComposer": {
+        "title": "AI Composer",
+        "description": "Use AI to help generate ideas, expand nodes, or enhance your mindmap."
+    },
+    "embed": {
+        "title": "Embed Settings",
+        "description": "Enable embedding to share your mindmap on websites and blogs."
+    },
+    "completion": {
+        "title": "You're All Set!",
+        "description": "You now know the basics of the mindmap editor. Start creating!"
+    },
+    "back": "Back",
+    "next": "Next",
+    "finish": "Finish",
+    "startTutorial": "Start Tutorial"
+}

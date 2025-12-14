@@ -15,6 +15,10 @@ import { getPublicMindmap } from "@/services/mindmap/mindmap.service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/hooks/auth/useAuth"
 import HistorySheet from "@/components/editor/history-sheet"
+import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext"
+import TutorialOverlay from "@/components/editor/TutorialOverlay"
+import { mapUserRoleToAccessMode } from "@/lib/tutorial-steps"
+import CheatSheetModal from "@/components/editor/CheatSheetModal"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
@@ -43,12 +47,14 @@ function PublicMindmapInner() {
   const [isShareOpen, setIsShareOpen] = useState(false)
   const [isChatOpen, setIsChatOpen] = useState(false)
   const [isHistoryOpen, setIsHistoryOpen] = useState(false)
+  const [isCheatSheetOpen, setIsCheatSheetOpen] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [loadedToken, setLoadedToken] = useState<string | null>(null)
   // Initialize userRole based on mindmap if available, otherwise null
   // For public mindmaps accessed via /public-mindmap route, default to viewer if publicAccessLevel is 'view'
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer' | null>(null)
+  const { startTutorial } = useTutorial()
 
   // Load public mindmap by share token
   useEffect(() => {
@@ -268,6 +274,13 @@ function PublicMindmapInner() {
               userRole={userRole}
               onHistoryClick={() => setIsHistoryOpen(true)}
               onChatClick={() => setIsChatOpen(true)}
+              onTutorialClick={() => {
+                if (userRole) {
+                  const accessMode = mapUserRoleToAccessMode(userRole, true)
+                  startTutorial(accessMode)
+                }
+              }}
+              onCheatSheetClick={() => setIsCheatSheetOpen(true)}
             />
           </div>
         </div>
@@ -280,6 +293,9 @@ function PublicMindmapInner() {
         <HistorySheet mindmapId={mindmap.id} mindmap={mindmap} onClose={() => setIsHistoryOpen(false)} />
       )}
 
+      {/* Cheat Sheet Modal */}
+      <CheatSheetModal isOpen={isCheatSheetOpen} onClose={() => setIsCheatSheetOpen(false)} />
+
       <PublicShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
@@ -289,6 +305,9 @@ function PublicMindmapInner() {
         ownerAvatar={mindmap?.ownerAvatar}
         publicAccessLevel={mindmap?.publicAccessLevel || "private"}
       />
+
+      {/* Tutorial Overlay */}
+      <TutorialOverlay />
     </div>
   )
 }
@@ -297,7 +316,9 @@ function PublicMindmapContent() {
   return (
     <ReactFlowProvider>
       <MindmapProvider>
-        <PublicMindmapInner />
+        <TutorialProvider>
+          <PublicMindmapInner />
+        </TutorialProvider>
       </MindmapProvider>
     </ReactFlowProvider>
   )
