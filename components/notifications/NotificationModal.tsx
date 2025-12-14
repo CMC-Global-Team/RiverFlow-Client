@@ -4,13 +4,13 @@ import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-    SheetDescription,
-    SheetFooter,
-} from "@/components/ui/sheet"
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+    DialogFooter,
+} from "@/components/ui/dialog"
 import {
     UserPlus,
     UserMinus,
@@ -275,7 +275,7 @@ export default function NotificationModal({
                     )}
                 </div>
 
-                <SheetFooter className="flex gap-3 mt-4">
+                <DialogFooter className="flex gap-3 mt-4 sm:flex-row">
                     <button
                         onClick={handleDeclineInvitation}
                         disabled={actionStatus === 'loading'}
@@ -300,7 +300,7 @@ export default function NotificationModal({
                         )}
                         Accept
                     </button>
-                </SheetFooter>
+                </DialogFooter>
             </>
         );
     };
@@ -322,7 +322,7 @@ export default function NotificationModal({
             </p>
 
             {notification?.actionUrl && notification?.actionLabel && (
-                <SheetFooter className="mt-4">
+                <DialogFooter className="mt-4">
                     <button
                         onClick={() => {
                             onClose();
@@ -332,7 +332,7 @@ export default function NotificationModal({
                     >
                         {notification.actionLabel}
                     </button>
-                </SheetFooter>
+                </DialogFooter>
             )}
         </div>
     );
@@ -350,28 +350,28 @@ export default function NotificationModal({
     };
 
     return (
-        <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <SheetContent side="right" className="w-full sm:max-w-md overflow-y-auto">
-                <SheetHeader className="pb-4 border-b border-border">
+        <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader className="pb-4 border-b border-border">
                     <div className="flex items-start gap-4">
                         <div className="flex-shrink-0">
                             {notification && getNotificationIcon(notification.type)}
                         </div>
                         <div className="flex-1 min-w-0">
-                            <SheetTitle className="text-lg font-semibold">
+                            <DialogTitle className="text-lg font-semibold">
                                 {notification?.title || 'Notification'}
-                            </SheetTitle>
-                            <SheetDescription className="text-sm text-muted-foreground mt-1">
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-muted-foreground mt-1">
                                 {notification?.type === 'PROJECT_INVITE'
                                     ? 'You have received a collaboration invitation'
                                     : 'Notification details'}
-                            </SheetDescription>
+                            </DialogDescription>
                         </div>
                     </div>
-                </SheetHeader>
+                </DialogHeader>
 
                 {renderContent()}
-            </SheetContent>
-        </Sheet>
+            </DialogContent>
+        </Dialog>
     );
 }
