@@ -74,14 +74,25 @@ export default function TutorialOverlay() {
         return null;
     }
 
-    const title = t(currentStep.title, { defaultValue: currentStep.title });
-    const description = t(currentStep.description, { defaultValue: currentStep.description });
+    // Extract the key path from the step (e.g., 'tutorial.welcome.title' -> 'welcome.title')
+    const getTitleKey = () => {
+        const key = currentStep.title.replace('tutorial.', '');
+        return t(key, { defaultValue: currentStep.title });
+    };
+
+    const getDescriptionKey = () => {
+        const key = currentStep.description.replace('tutorial.', '');
+        return t(key, { defaultValue: currentStep.description });
+    };
+
+    const title = getTitleKey();
+    const description = getDescriptionKey();
 
     return (
         <>
-            {/* Backdrop overlay */}
+            {/* Backdrop overlay - lighter for better visibility */}
             <div
-                className="fixed inset-0 z-[9998] bg-black/50 transition-opacity"
+                className="fixed inset-0 z-[9998] bg-black/30 transition-opacity"
                 onClick={endTutorial}
             />
 
@@ -94,7 +105,7 @@ export default function TutorialOverlay() {
                         left: targetElement.getBoundingClientRect().left - (currentStep.spotlightPadding || 4),
                         width: targetElement.getBoundingClientRect().width + ((currentStep.spotlightPadding || 4) * 2),
                         height: targetElement.getBoundingClientRect().height + ((currentStep.spotlightPadding || 4) * 2),
-                        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.5)',
+                        boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.3)',
                     }}
                 />
             )}
