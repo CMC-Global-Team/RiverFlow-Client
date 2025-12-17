@@ -20,7 +20,7 @@ export function GoogleLoginButton({ onSuccess, onError, text = "signin_with" }: 
         type="button"
         className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
         disabled
-        title="Google Client ID chưa được cấu hình"
+        title={t("errors.googleConfigMissing")}
       >
         <svg className="h-5 w-5" viewBox="0 0 24 24">
           <path
