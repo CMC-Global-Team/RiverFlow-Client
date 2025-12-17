@@ -13,7 +13,7 @@ import { useMindmapActions } from "@/hooks/mindmap/useMindmapActions"
 import { useRouter } from "next/navigation"
 import { useTranslation } from "react-i18next"
 import TemplateModal from "@/components/dashboard/template-modal"
-import {MindmapSummary} from "@/types/mindmap.types";
+import { MindmapSummary } from "@/types/mindmap.types";
 import DeleteConfirmDialog from "@/components/mindmap/DeleteConfirmDialog";
 import EditMindmapModal from "@/components/mindmap/EditMindmapModal";
 import { useToast } from "@/hooks/use-toast"
@@ -25,18 +25,18 @@ function DashboardContent() {
   const { user } = useAuth()
   const router = useRouter()
   const { mindmaps, loading, error, refetch } = useMindmaps()
-  const { create,update, remove, toggleFavorite, archive } = useMindmapActions()
+  const { create, update, remove, toggleFavorite, archive } = useMindmapActions()
   const [actionLoading, setActionLoading] = useState<string | null>(null)
   const [showTemplateModal, setShowTemplateModal] = useState(false)
   const [showAiModal, setShowAiModal] = useState(false)
-    const [showDeleteDialog, setShowDeleteDialog] = useState(false)
-    const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
-    const { t } = useTranslation("dashboard")
-    const [showEditModal, setShowEditModal] = useState(false)
-    const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
-    const { toast } = useToast()
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [mindmapToDelete, setMindmapToDelete] = useState<MindmapSummary | null>(null)
+  const { t } = useTranslation(["dashboard", "mindmaps"])
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [mindmapToEdit, setMindmapToEdit] = useState<MindmapSummary | null>(null)
+  const { toast } = useToast()
 
-    useEffect(() => {
+  useEffect(() => {
     if (!containerRef.current || loading) return
 
     const ctx = gsap.context(() => {
@@ -46,7 +46,7 @@ function DashboardContent() {
           gsap.set(card, { opacity: 1 })
         }
       })
-      
+
       // Then animate
       cardsRef.current.forEach((card, index) => {
         if (!card) return
@@ -69,7 +69,7 @@ function DashboardContent() {
 
   const handleDelete = async (id: string) => {
     if (!confirm(t("confirmDelete"))) return
-    
+
     setActionLoading(id)
     const success = await remove(id)
     if (success) {
@@ -96,61 +96,61 @@ function DashboardContent() {
   const handleCreateNew = () => {
     setShowTemplateModal(true)
   }
-    const handleEditInfo = (id: string) => {
-        const mindmap = mindmaps.find((m) => m.id === id)
-        if (mindmap) {
-            setMindmapToEdit(mindmap)
-            setShowEditModal(true)
-        }
+  const handleEditInfo = (id: string) => {
+    const mindmap = mindmaps.find((m) => m.id === id)
+    if (mindmap) {
+      setMindmapToEdit(mindmap)
+      setShowEditModal(true)
     }
+  }
 
-// Lưu sửa thông tin (gọi API update)
-    const handleSaveEdit = async (data: { title: string; description: string }) => {
-        if (!mindmapToEdit) return
-        setActionLoading(mindmapToEdit.id)
-        await update(mindmapToEdit.id, data)
-        await refetch()
-        setShowEditModal(false)
-        setMindmapToEdit(null)
-        setActionLoading(null)
+  // Lưu sửa thông tin (gọi API update)
+  const handleSaveEdit = async (data: { title: string; description: string }) => {
+    if (!mindmapToEdit) return
+    setActionLoading(mindmapToEdit.id)
+    await update(mindmapToEdit.id, data)
+    await refetch()
+    setShowEditModal(false)
+    setMindmapToEdit(null)
+    setActionLoading(null)
+  }
+
+  // Bấm nút Xóa: mở dialog xác nhận (không xóa ngay)
+  const handleDeleteClick = (id: string) => {
+    const mindmap = mindmaps.find((m) => m.id === id)
+    if (mindmap) {
+      setMindmapToDelete(mindmap)
+      setShowDeleteDialog(true)
     }
+  }
 
-// Bấm nút Xóa: mở dialog xác nhận (không xóa ngay)
-    const handleDeleteClick = (id: string) => {
-        const mindmap = mindmaps.find((m) => m.id === id)
-        if (mindmap) {
-            setMindmapToDelete(mindmap)
-            setShowDeleteDialog(true)
-        }
+  // Xác nhận xóa trong dialog
+  const handleConfirmDelete = async () => {
+    if (!mindmapToDelete) return
+    setActionLoading(mindmapToDelete.id)
+    const success = await remove(mindmapToDelete.id)
+    if (success) {
+      await refetch()
     }
+    setShowDeleteDialog(false)
+    setMindmapToDelete(null)
+    setActionLoading(null)
+  }
 
-// Xác nhận xóa trong dialog
-    const handleConfirmDelete = async () => {
-        if (!mindmapToDelete) return
-        setActionLoading(mindmapToDelete.id)
-        const success = await remove(mindmapToDelete.id)
-        if (success) {
-            await refetch()
-        }
-        setShowDeleteDialog(false)
-        setMindmapToDelete(null)
-        setActionLoading(null)
+
+  const handleSelectTemplate = async (template: any) => {
+    if (template?.id === 'ai') {
+      return
     }
-
-
-    const handleSelectTemplate = async (template: any) => {
-      if (template?.id === 'ai') {
-        return
-      }
-      const newMindmap = await create({
-        title: "Untitled Mindmap",
-        nodes: template.initialNodes,
-        edges: template.initialEdges,
-      })
-      if (newMindmap) {
-        router.push(`/editor?id=${newMindmap.id}`)
-      }
+    const newMindmap = await create({
+      title: t("mindmaps:untitled"),
+      nodes: template.initialNodes,
+      edges: template.initialEdges,
+    })
+    if (newMindmap) {
+      router.push(`/editor?id=${newMindmap.id}`)
     }
+  }
 
   const handleAiGenerated = (m: any) => {
     if (m?.id) {
@@ -164,8 +164,8 @@ function DashboardContent() {
 
     try {
       const newMindmap = await duplicateMindmap(id);
-      
-      toast({ 
+
+      toast({
         title: t("duplicateSuccess"),
         description: t("created", { title: newMindmap.title })
       });
@@ -173,33 +173,33 @@ function DashboardContent() {
 
     } catch (error) {
       console.error(t("duplicateFailed"), error);
-      toast({ 
-        variant: "destructive", 
-        title: t("error"), 
-        description: t("duplicateFailed") 
+      toast({
+        variant: "destructive",
+        title: t("error"),
+        description: t("duplicateFailed")
       });
     } finally {
-      setActionLoading(null); 
+      setActionLoading(null);
     }
   };
 
   const handleLeave = async (id: string) => {
     if (!confirm(t("confirmLeaveProject"))) return
-    
+
     setActionLoading(id)
     try {
       await leaveCollaboration(id)
-      toast({ 
+      toast({
         title: t("leftProject"),
         description: t("leftProjectSuccess")
       })
       await refetch()
     } catch (error) {
       console.error(t("leaveProjectFailed"), error)
-      toast({ 
-        variant: "destructive", 
-        title: t("error"), 
-        description: t("leaveProjectFailed") 
+      toast({
+        variant: "destructive",
+        title: t("error"),
+        description: t("leaveProjectFailed")
       })
     } finally {
       setActionLoading(null)
@@ -226,12 +226,12 @@ function DashboardContent() {
             {/* Quick Action - Only show if user has mindmaps */}
             {!loading && !error && mindmaps.length > 0 && (
               <div className="mb-8 flex items-center gap-3">
-                <button 
+                <button
                   onClick={handleCreateNew}
                   className="flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                 >
                   <Plus className="h-5 w-5" />
-                  Create New Mindmap
+                  {t("common.createNew", "Create New Mindmap")}
                 </button>
               </div>
             )}
@@ -244,16 +244,16 @@ function DashboardContent() {
               </div>
             )}
 
-                        {/* Error State */}
+            {/* Error State */}
             {error && (
               <div className="flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive">
                 <AlertCircle className="h-5 w-5" />
                 <div className="flex-1">
-                  <p className="font-semibold">Failed to load mindmaps</p>
+                  <p className="font-semibold">{t("failedToLoadMindmaps")}</p>
                   <p className="text-sm">{error}</p>
                   {error.includes('403') && (
                     <p className="text-xs mt-1">
-                      You may need to log in again. Your session might have expired.
+                      {t("sessionExpiredMessage")}
                     </p>
                   )}
                 </div>
@@ -261,7 +261,7 @@ function DashboardContent() {
                   onClick={refetch}
                   className="px-4 py-2 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
-                  Retry
+                  {t("retry")}
                 </button>
               </div>
             )}
@@ -271,7 +271,7 @@ function DashboardContent() {
               <div className="text-center py-12 space-y-3">
                 <p className="text-muted-foreground">{t("noMindmaps")}</p>
                 <div className="flex items-center justify-center gap-3">
-                  <button 
+                  <button
                     onClick={handleCreateNew}
                     className="inline-flex items-center gap-2 rounded-lg bg-primary px-6 py-3 text-primary-foreground font-semibold hover:bg-primary/90 transition-all"
                   >
@@ -291,22 +291,22 @@ function DashboardContent() {
                     ref={(el) => {
                       cardsRef.current[index] = el
                     }}
-                    style={{ 
+                    style={{
                       opacity: actionLoading === mindmap.id ? 0.5 : 1,
                       pointerEvents: actionLoading === mindmap.id ? 'none' : 'auto'
                     }}
                   >
-                      <MindmapCard
-                          mindmap={mindmap}
-                          isOwner={mindmap.mysqlUserId === user?.userId}
-                          onDelete={handleDeleteClick}
-                          onToggleFavorite={handleToggleFavorite}
-                          onArchive={handleArchive}
-                          onEdit={handleEditInfo}
-                          onClick={(id) => router.push(`/editor?id=${id}`)}
-                          onDuplicate={handleDuplicate}
-                          onLeave={handleLeave}
-                      />
+                    <MindmapCard
+                      mindmap={mindmap}
+                      isOwner={mindmap.mysqlUserId === user?.userId}
+                      onDelete={handleDeleteClick}
+                      onToggleFavorite={handleToggleFavorite}
+                      onArchive={handleArchive}
+                      onEdit={handleEditInfo}
+                      onClick={(id) => router.push(`/editor?id=${id}`)}
+                      onDuplicate={handleDuplicate}
+                      onLeave={handleLeave}
+                    />
                   </div>
                 ))}
               </div>
@@ -321,30 +321,30 @@ function DashboardContent() {
         onClose={() => setShowTemplateModal(false)}
         onSelectTemplate={handleSelectTemplate}
       />
-      
-        {/* Delete Confirmation Dialog */}
-        <DeleteConfirmDialog
-            isOpen={showDeleteDialog}
-            onClose={() => {
-                setShowDeleteDialog(false)
-                setMindmapToDelete(null)
-            }}
-            onConfirm={handleConfirmDelete}
-            title={mindmapToDelete?.title || ""}
-            isLoading={!!actionLoading}
-        />
 
-        {/* Edit Mindmap Modal */}
-        <EditMindmapModal
-            isOpen={showEditModal}
-            onClose={() => {
-                setShowEditModal(false)
-                setMindmapToEdit(null)
-            }}
-            onSave={handleSaveEdit}
-            mindmap={mindmapToEdit}
-            isLoading={!!actionLoading}
-        />
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false)
+          setMindmapToDelete(null)
+        }}
+        onConfirm={handleConfirmDelete}
+        title={mindmapToDelete?.title || ""}
+        isLoading={!!actionLoading}
+      />
+
+      {/* Edit Mindmap Modal */}
+      <EditMindmapModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false)
+          setMindmapToEdit(null)
+        }}
+        onSave={handleSaveEdit}
+        mindmap={mindmapToEdit}
+        isLoading={!!actionLoading}
+      />
     </div>
   )
 }
