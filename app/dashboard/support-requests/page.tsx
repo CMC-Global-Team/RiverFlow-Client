@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 
 function SupportRequestsContent() {
-    const { t } = useTranslation("supportRequests");
+    const { t } = useTranslation("dashboard");
     const router = useRouter();
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [page, setPage] = useState(0);
@@ -62,7 +62,7 @@ function SupportRequestsContent() {
             setTickets(response.content);
             setTotalPages(response.totalPages);
         } catch (err: any) {
-            setError(err.message || "Failed to load tickets");
+            setError(err.message || t("support.toasts.loadFailed"));
         } finally {
             setLoading(false);
         }
@@ -78,7 +78,7 @@ function SupportRequestsContent() {
             setAttachments([]);
             fetchTickets();
         } catch (err: any) {
-            setError(err.message || "Failed to create ticket");
+            setError(err.message || t("support.toasts.createFailed"));
         } finally {
             setSubmitting(false);
         }
@@ -113,9 +113,9 @@ function SupportRequestsContent() {
                         {/* Header */}
                         <div className="flex justify-between items-center mb-6">
                             <div>
-                                <h1 className="text-2xl font-bold text-foreground">Support Requests</h1>
+                                <h1 className="text-2xl font-bold text-foreground">{t("support.title")}</h1>
                                 <p className="text-muted-foreground mt-1">
-                                    View and manage your support tickets
+                                    {t("support.subtitle")}
                                 </p>
                             </div>
                             <button
@@ -123,7 +123,7 @@ function SupportRequestsContent() {
                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors"
                             >
                                 <Plus className="h-5 w-5" />
-                                New Ticket
+                                {t("support.newTicket")}
                             </button>
                         </div>
 
@@ -142,12 +142,12 @@ function SupportRequestsContent() {
                             </div>
                         ) : tickets.length === 0 ? (
                             <div className="text-center py-12 bg-card rounded-lg border border-border">
-                                <p className="text-muted-foreground">No support tickets yet</p>
+                                <p className="text-muted-foreground">{t("support.list.noTickets")}</p>
                                 <button
                                     onClick={() => setShowCreateModal(true)}
                                     className="mt-4 text-primary hover:underline"
                                 >
-                                    Create your first ticket
+                                    {t("support.list.createFirst")}
                                 </button>
                             </div>
                         ) : (
@@ -205,7 +205,7 @@ function SupportRequestsContent() {
                                     <ChevronLeft className="h-5 w-5" />
                                 </button>
                                 <span className="text-sm text-muted-foreground">
-                                    Page {page + 1} of {totalPages}
+                                    {t("billing.history.pagination.page")} {page + 1} / {totalPages}
                                 </span>
                                 <button
                                     onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
@@ -222,7 +222,7 @@ function SupportRequestsContent() {
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
                                 <div className="bg-card border border-border rounded-xl shadow-xl w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
                                     <div className="flex justify-between items-center p-4 border-b border-border">
-                                        <h2 className="text-xl font-semibold">Create Support Ticket</h2>
+                                        <h2 className="text-xl font-semibold">{t("support.create.title")}</h2>
                                         <button
                                             onClick={() => setShowCreateModal(false)}
                                             className="p-2 hover:bg-muted rounded-lg"
@@ -232,64 +232,65 @@ function SupportRequestsContent() {
                                     </div>
                                     <form onSubmit={handleCreateTicket} className="p-4 space-y-4">
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">Title</label>
+                                            <label className="block text-sm font-medium mb-1">{t("support.create.titleLabel")}</label>
                                             <input
                                                 type="text"
                                                 value={formData.title}
                                                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                                                 required
                                                 className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
-                                                placeholder="Brief summary of your issue"
+                                                placeholder={t("support.create.titlePlaceholder")}
                                             />
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">Description</label>
+                                            <label className="block text-sm font-medium mb-1">{t("support.create.descLabel")}</label>
                                             <textarea
                                                 value={formData.description}
                                                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                                                 required
                                                 rows={4}
                                                 className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-                                                placeholder="Provide detailed information about your issue..."
+                                                placeholder={t("support.create.descPlaceholder")}
                                             />
                                         </div>
                                         <div className="grid grid-cols-2 gap-4">
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Category</label>
+                                                <label className="block text-sm font-medium mb-1">{t("support.create.categoryLabel")}</label>
                                                 <select
                                                     value={formData.category}
                                                     onChange={(e) => setFormData({ ...formData, category: e.target.value as TicketCategory })}
                                                     className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
-                                                    <option value="BUG">Bug Report</option>
-                                                    <option value="TECHNICAL_SUPPORT">Technical Support</option>
-                                                    <option value="BILLING">Billing</option>
-                                                    <option value="FEEDBACK">Feedback</option>
-                                                    <option value="OTHER">Other</option>
+                                                    {Object.keys(t("support.category", { returnObjects: true })).map((key) => (
+                                                        <option key={key} value={key}>
+                                                            {t(`support.category.${key}`)}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                             <div>
-                                                <label className="block text-sm font-medium mb-1">Priority</label>
+                                                <label className="block text-sm font-medium mb-1">{t("support.create.priorityLabel")}</label>
                                                 <select
                                                     value={formData.priority}
                                                     onChange={(e) => setFormData({ ...formData, priority: e.target.value as TicketPriority })}
                                                     className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                                                 >
-                                                    <option value="LOW">Low</option>
-                                                    <option value="MEDIUM">Medium</option>
-                                                    <option value="HIGH">High</option>
-                                                    <option value="URGENT">Urgent</option>
+                                                    {Object.keys(t("support.priority", { returnObjects: true })).map((key) => (
+                                                        <option key={key} value={key}>
+                                                            {t(`support.priority.${key}`)}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                             </div>
                                         </div>
                                         <div>
-                                            <label className="block text-sm font-medium mb-1">Attachments (max 5)</label>
+                                            <label className="block text-sm font-medium mb-1">{t("support.create.attachmentsLabel")}</label>
                                             <label className="flex items-center gap-2 px-3 py-2 bg-background border border-dashed border-border rounded-lg cursor-pointer hover:border-primary/50">
                                                 <Paperclip className="h-5 w-5 text-muted-foreground" />
                                                 <span className="text-sm text-muted-foreground">
                                                     {attachments.length > 0
-                                                        ? `${attachments.length} file(s) selected`
-                                                        : "Click to attach files"}
+                                                        ? `${attachments.length} ${t("support.create.filesSelected")}`
+                                                        : t("support.create.attachFiles")}
                                                 </span>
                                                 <input
                                                     type="file"
@@ -305,7 +306,7 @@ function SupportRequestsContent() {
                                                 onClick={() => setShowCreateModal(false)}
                                                 className="px-4 py-2 text-muted-foreground hover:bg-muted rounded-lg transition-colors"
                                             >
-                                                Cancel
+                                                {t("support.create.cancel")}
                                             </button>
                                             <button
                                                 type="submit"
@@ -313,7 +314,7 @@ function SupportRequestsContent() {
                                                 className="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 flex items-center gap-2"
                                             >
                                                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                                                Submit Ticket
+                                                {t("support.create.submit")}
                                             </button>
                                         </div>
                                     </form>
