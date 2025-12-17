@@ -5,8 +5,10 @@ import { useRouter, useSearchParams } from "next/navigation"
 import { Lock, Eye, EyeOff, CheckCircle2, Loader2 } from "lucide-react"
 import { useResetPassword } from "@/hooks/auth/useResetPassword"
 import { Button } from "@/components/ui/button"
+import { useTranslation } from "react-i18next"
 
 function ResetPasswordContent() {
+  const { t } = useTranslation("auth")
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get("token")
@@ -60,17 +62,17 @@ function ResetPasswordContent() {
 
     // Validation
     if (!newPassword || !confirmPassword) {
-      setValidationError("Vui lòng nhập đầy đủ thông tin!")
+      setValidationError(t("resetPassword.validation.required"))
       return
     }
 
     if (newPassword.length < 6) {
-      setValidationError("Mật khẩu phải có ít nhất 6 ký tự!")
+      setValidationError(t("resetPassword.validation.length"))
       return
     }
 
     if (newPassword !== confirmPassword) {
-      setValidationError("Mật khẩu xác nhận không khớp!")
+      setValidationError(t("resetPassword.validation.mismatch"))
       return
     }
 
@@ -92,7 +94,7 @@ function ResetPasswordContent() {
       <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-          <p className="text-muted-foreground">Đang xác thực...</p>
+          <p className="text-muted-foreground">{t("resetPassword.validating")}</p>
         </div>
       </div>
     )
@@ -112,11 +114,10 @@ function ResetPasswordContent() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10 mb-6">
               <CheckCircle2 className="h-8 w-8 text-green-500" />
             </div>
-            <h2 className="text-2xl font-bold text-foreground mb-2">Đặt lại mật khẩu thành công!</h2>
+            <h2 className="text-2xl font-bold text-foreground mb-2">{t("resetPassword.successTitle")}</h2>
             <p className="text-muted-foreground mb-6">{data.message}</p>
             <p className="text-sm text-muted-foreground">
-              Bạn sẽ được chuyển đến trang đăng nhập sau{" "}
-              <span className="font-semibold text-primary">{countdown}</span> giây...
+              {t("resetPassword.redirecting", { count: countdown })}
             </p>
           </div>
         </div>
@@ -133,8 +134,8 @@ function ResetPasswordContent() {
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 mb-4">
               <Lock className="h-8 w-8 text-primary" />
             </div>
-            <h1 className="text-3xl font-bold text-foreground">Đặt lại mật khẩu</h1>
-            <p className="mt-2 text-muted-foreground">Nhập mật khẩu mới cho tài khoản của bạn</p>
+            <h1 className="text-3xl font-bold text-foreground">{t("resetPassword.title")}</h1>
+            <p className="mt-2 text-muted-foreground">{t("resetPassword.subtitle")}</p>
           </div>
 
           {/* Form */}
@@ -155,7 +156,7 @@ function ResetPasswordContent() {
 
             {/* New Password Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Mật khẩu mới</label>
+              <label className="text-sm font-medium text-foreground">{t("resetPassword.newPassword")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <input
@@ -165,7 +166,7 @@ function ResetPasswordContent() {
                     setNewPassword(e.target.value)
                     setValidationError("")
                   }}
-                  placeholder="Nhập mật khẩu mới"
+                  placeholder={t("resetPassword.placeholderNew")}
                   className="w-full rounded-lg border border-border bg-input pl-10 pr-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
@@ -177,12 +178,12 @@ function ResetPasswordContent() {
                   {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                 </button>
               </div>
-              <p className="text-xs text-muted-foreground">Mật khẩu phải có ít nhất 6 ký tự</p>
+              <p className="text-xs text-muted-foreground">{t("resetPassword.minChar")}</p>
             </div>
 
             {/* Confirm Password Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Xác nhận mật khẩu</label>
+              <label className="text-sm font-medium text-foreground">{t("resetPassword.confirmPassword")}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
                 <input
@@ -192,7 +193,7 @@ function ResetPasswordContent() {
                     setConfirmPassword(e.target.value)
                     setValidationError("")
                   }}
-                  placeholder="Nhập lại mật khẩu mới"
+                  placeholder={t("resetPassword.placeholderConfirm")}
                   className="w-full rounded-lg border border-border bg-input pl-10 pr-10 py-2.5 text-foreground placeholder:text-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                   required
                 />
@@ -215,10 +216,10 @@ function ResetPasswordContent() {
               {isLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Đang xử lý...
+                  {t("resetPassword.processing")}
                 </>
               ) : (
-                "Đặt lại mật khẩu"
+                t("resetPassword.submit")
               )}
             </Button>
 
@@ -229,7 +230,7 @@ function ResetPasswordContent() {
                 onClick={() => router.push("/")}
                 className="text-sm text-primary hover:text-primary/80 transition-colors"
               >
-                Quay lại trang đăng nhập
+                {t('verifyEmail.backToLogin', { ns: 'auth', defaultValue: 'Back to Login' })}
               </button>
             </div>
           </form>
@@ -240,13 +241,14 @@ function ResetPasswordContent() {
 }
 
 export default function ResetPasswordPage() {
+  const { t } = useTranslation("auth")
   return (
     <Suspense
       fallback={
         <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-primary/10 via-background to-secondary/10">
           <div className="text-center">
             <Loader2 className="h-12 w-12 animate-spin text-primary mx-auto mb-4" />
-            <p className="text-muted-foreground">Đang tải...</p>
+            <p className="text-muted-foreground">{t("resetPassword.validating", { defaultValue: 'Loading...' })}</p>
           </div>
         </div>
       }
