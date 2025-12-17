@@ -38,7 +38,13 @@
     "successDesc": "Chào mừng trở lại, {{name}}!",
     "failedTitle": "Đăng nhập thất bại",
     "unverifiedEmail": "Email chưa được xác thực",
-    "missingFields": "Vui lòng nhập đầy đủ email và mật khẩu!"
+    "missingFields": "Vui lòng nhập đầy đủ email và mật khẩu!",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••"
+  },
+  "errors": {
+    "googleConfigMissing": "Google Client ID chưa được cấu hình",
+    "auth0ConfigMissing": "Chưa cấu hình thông tin đăng nhập Auth0"
   },
   "forgot": {
     "back": "Quay lại đăng nhập",
