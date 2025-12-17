@@ -2,19 +2,29 @@
     "title": "Keyboard Shortcuts",
     "dragHint": "Drag header to move",
     "actions": {
-        "addChildNode": "Add child node",
-        "addSiblingNode": "Add sibling node",
-        "deleteSelected": "Delete selected",
+        "addChildNode": "Add Child Node",
+        "addSiblingNode": "Add Sibling Node",
+        "deleteSelected": "Delete Selected",
         "undo": "Undo",
         "redo": "Redo",
-        "save": "Save mindmap",
-        "zoomIn": "Zoom in",
-        "zoomOut": "Zoom out",
-        "fitView": "Fit to screen",
-        "deselect": "Deselect all",
-        "editNode": "Edit node text",
-        "moveNode": "Move node",
-        "panCanvas": "Pan canvas",
-        "zoom": "Zoom in/out"
+        "save": "Save",
+        "zoomIn": "Zoom In",
+        "zoomOut": "Zoom Out",
+        "fitView": "Fit View",
+        "deselect": "Deselect",
+        "editNode": "Edit Node",
+        "moveNode": "Move Node",
+        "panCanvas": "Pan Canvas",
+        "zoom": "Zoom"
+    },
+    "keys": {
+        "Tab": "Tab",
+        "Enter": "Enter",
+        "Delete": "Delete",
+        "Ctrl": "Ctrl",
+        "Escape": "Escape",
+        "DoubleClick": "Double Click",
+        "Drag": "Drag",
+        "Scroll": "Scroll"
     }
 }
