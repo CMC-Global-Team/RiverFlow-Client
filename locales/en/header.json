@@ -1,0 +1,13 @@
+{
+    "login": "Login",
+    "logout": "Logout",
+    "loggingOut": "Logging out...",
+    "getStarted": "Get Started",
+    "profile": "Profile",
+    "features": "Features",
+    "pricing": "Pricing",
+    "about": "About",
+    "docs": "Docs",
+    "dashboard": "Dashboard",
+    "admin": "Admin"
+}
