@@ -67,7 +67,7 @@ import { AdminUserResponse, PageResponse } from "@/types/user.types"
 import { AdminPaymentHistoryResponse } from "@/types/payment.types"
 
 export default function UsersManagePage() {
-    const { t } = useTranslation("adminSideBar")
+    const { t } = useTranslation("admin")
     const { user: currentUser } = useAuth()
     const isSuperAdmin = currentUser?.role === "SUPER_ADMIN"
 
@@ -129,11 +129,11 @@ export default function UsersManagePage() {
             setTotalElements(response.totalElements)
         } catch (error) {
             console.error("Error fetching users:", error)
-            toast.error("Failed to load users")
+            toast.error(t("users.toasts.loadFailed"))
         } finally {
             setLoading(false)
         }
-    }, [search, statusFilter, roleFilter, sortBy, sortDir, page, size, isSuperAdmin])
+    }, [search, statusFilter, roleFilter, sortBy, sortDir, page, size, isSuperAdmin, t])
 
     useEffect(() => {
         fetchUsers()
@@ -169,11 +169,11 @@ export default function UsersManagePage() {
                 role: editForm.role as "admin" | "user",
                 status: editForm.status as "active" | "suspended" | "deleted",
             })
-            toast.success("User updated successfully")
+            toast.success(t("users.toasts.updateSuccess"))
             setEditDialogOpen(false)
             fetchUsers()
         } catch (error) {
-            toast.error("Failed to update user")
+            toast.error(t("users.toasts.updateFailed"))
         }
     }
 
@@ -187,11 +187,11 @@ export default function UsersManagePage() {
         if (!selectedUser) return
         try {
             await deleteUser(selectedUser.userId)
-            toast.success("User soft deleted successfully")
+            toast.success(t("users.toasts.softDeleteSuccess"))
             setDeleteDialogOpen(false)
             fetchUsers()
         } catch (error) {
-            toast.error("Failed to delete user")
+            toast.error(t("users.toasts.deleteFailed"))
         }
     }
 
@@ -199,11 +199,11 @@ export default function UsersManagePage() {
         if (!selectedUser) return
         try {
             await hardDeleteUser(selectedUser.userId)
-            toast.success("User permanently deleted")
+            toast.success(t("users.toasts.permanentDeleteSuccess"))
             setDeleteDialogOpen(false)
             fetchUsers()
         } catch (error) {
-            toast.error("Failed to permanently delete user")
+            toast.error(t("users.toasts.permanentDeleteFailed"))
         }
     }
 
@@ -218,11 +218,11 @@ export default function UsersManagePage() {
         if (!selectedUser) return
         try {
             await updateUserCredit(selectedUser.userId, creditValue)
-            toast.success("Credit updated successfully")
+            toast.success(t("users.toasts.creditSuccess"))
             setCreditDialogOpen(false)
             fetchUsers()
         } catch (error) {
-            toast.error("Failed to update credit")
+            toast.error(t("users.toasts.creditFailed"))
         }
     }
 
@@ -237,10 +237,10 @@ export default function UsersManagePage() {
         if (!selectedUser || !newPassword) return
         try {
             await changeUserPassword(selectedUser.userId, newPassword)
-            toast.success("Password changed successfully")
+            toast.success(t("users.toasts.passwordSuccess"))
             setPasswordDialogOpen(false)
         } catch (error) {
-            toast.error("Failed to change password")
+            toast.error(t("users.toasts.passwordFailed"))
         }
     }
 
@@ -253,7 +253,7 @@ export default function UsersManagePage() {
             const response = await getUserPaymentHistory(user.userId)
             setPayments(response.content)
         } catch (error) {
-            toast.error("Failed to load payment history")
+            toast.error(t("users.toasts.historyFailed"))
         } finally {
             setPaymentLoading(false)
         }
@@ -289,9 +289,9 @@ export default function UsersManagePage() {
         <div className="p-6 md:p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">{t("userManage")}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{t("users.title")}</h1>
                 <p className="mt-2 text-muted-foreground">
-                    {t("showing")} {users.length} {t("of")} {totalElements} {t("results")}
+                    {t("users.showing", { count: users.length, total: totalElements })}
                 </p>
             </div>
 
@@ -300,7 +300,7 @@ export default function UsersManagePage() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder={t("search")}
+                        placeholder={t("users.search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-10"
@@ -308,23 +308,23 @@ export default function UsersManagePage() {
                 </div>
                 <Select value={statusFilter || "all"} onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder={t("allStatus")} />
+                        <SelectValue placeholder={t("users.filters.allStatus")} />
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                        <SelectItem value="all">{t("allStatus")}</SelectItem>
-                        <SelectItem value="active">{t("active")}</SelectItem>
-                        <SelectItem value="suspended">{t("suspended")}</SelectItem>
-                        {isSuperAdmin && <SelectItem value="deleted">{t("deleted")}</SelectItem>}
+                        <SelectItem value="all">{t("users.filters.allStatus")}</SelectItem>
+                        <SelectItem value="active">{t("users.filters.active")}</SelectItem>
+                        <SelectItem value="suspended">{t("users.filters.suspended")}</SelectItem>
+                        {isSuperAdmin && <SelectItem value="deleted">{t("users.filters.deleted")}</SelectItem>}
                     </SelectContent>
                 </Select>
                 <Select value={roleFilter || "all"} onValueChange={(v) => { setRoleFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[180px] ">
-                        <SelectValue placeholder={t("allRoles")} />
+                        <SelectValue placeholder={t("users.filters.allRoles")} />
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                        <SelectItem value="all">{t("allRoles")}</SelectItem>
-                        <SelectItem value="admin">{t("admin")}</SelectItem>
-                        <SelectItem value="user">{t("user")}</SelectItem>
+                        <SelectItem value="all">{t("users.filters.allRoles")}</SelectItem>
+                        <SelectItem value="admin">{t("users.filters.admin")}</SelectItem>
+                        <SelectItem value="user">{t("users.filters.user")}</SelectItem>
                     </SelectContent>
                 </Select>
             </div>
@@ -334,13 +334,13 @@ export default function UsersManagePage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t("email")}</TableHead>
-                            <TableHead>{t("fullName")}</TableHead>
-                            <TableHead>{t("role")}</TableHead>
-                            <TableHead>{t("status")}</TableHead>
-                            <TableHead>{t("credit")}</TableHead>
-                            <TableHead>{t("createdAt")}</TableHead>
-                            <TableHead className="text-center">{t("actions")}</TableHead>
+                            <TableHead>{t("users.columns.email")}</TableHead>
+                            <TableHead>{t("users.columns.fullName")}</TableHead>
+                            <TableHead>{t("users.columns.role")}</TableHead>
+                            <TableHead>{t("users.columns.status")}</TableHead>
+                            <TableHead>{t("users.columns.credit")}</TableHead>
+                            <TableHead>{t("users.columns.createdAt")}</TableHead>
+                            <TableHead className="text-center">{t("users.columns.actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -357,7 +357,7 @@ export default function UsersManagePage() {
                         ) : users.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                                    {t("noUsers")}
+                                    {t("users.noUsers")}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -367,12 +367,12 @@ export default function UsersManagePage() {
                                     <TableCell>{user.fullName}</TableCell>
                                     <TableCell>
                                         <Badge className={getRoleColor(user.role)}>
-                                            {t(user.role)}
+                                            {t(`users.filters.${user.role === 'super_admin' ? 'admin' : user.role}`)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={getStatusColor(user.status)}>
-                                            {t(user.status)}
+                                            {t(`users.filters.${user.status}`)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{user.credit}</TableCell>
@@ -385,7 +385,7 @@ export default function UsersManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleEditClick(user)}
-                                                title={t("edit")}
+                                                title={t("users.actions.edit")}
                                             >
                                                 <Pencil className="h-4 w-4" />
                                             </Button>
@@ -393,7 +393,7 @@ export default function UsersManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleCreditClick(user)}
-                                                title={t("updateCredit")}
+                                                title={t("users.actions.updateCredit")}
                                             >
                                                 <CreditCard className="h-4 w-4" />
                                             </Button>
@@ -401,7 +401,7 @@ export default function UsersManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handlePasswordClick(user)}
-                                                title={t("changePassword")}
+                                                title={t("users.actions.changePassword")}
                                             >
                                                 <Key className="h-4 w-4" />
                                             </Button>
@@ -409,7 +409,7 @@ export default function UsersManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handlePaymentClick(user)}
-                                                title={t("viewPayments")}
+                                                title={t("users.actions.viewPayments")}
                                             >
                                                 <History className="h-4 w-4" />
                                             </Button>
@@ -417,7 +417,7 @@ export default function UsersManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleDeleteClick(user)}
-                                                title={t("delete")}
+                                                title={t("users.actions.delete")}
                                                 className="text-red-600 hover:text-red-700"
                                             >
                                                 <Trash2 className="h-4 w-4" />
@@ -435,7 +435,7 @@ export default function UsersManagePage() {
             <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-4">
                     <p className="text-sm text-muted-foreground">
-                        {t("page")} {page + 1} {t("of")} {totalPages || 1}
+                        {t("common.page")} {page + 1} {t("common.of")} {totalPages || 1}
                     </p>
                     <Select value={size.toString()} onValueChange={(v) => { setSize(parseInt(v)); setPage(0); }}>
                         <SelectTrigger className="w-[100px]">
@@ -458,7 +458,7 @@ export default function UsersManagePage() {
                         disabled={page === 0}
                     >
                         <ChevronLeft className="h-4 w-4 mr-1" />
-                        {t("previous")}
+                        {t("common.previous")}
                     </Button>
                     <Button
                         variant="outline"
@@ -466,7 +466,7 @@ export default function UsersManagePage() {
                         onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                         disabled={page >= totalPages - 1}
                     >
-                        {t("next")}
+                        {t("common.next")}
                         <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                 </div>
@@ -476,64 +476,64 @@ export default function UsersManagePage() {
             <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t("editUser")}</DialogTitle>
+                        <DialogTitle>{t("users.dialogs.editUser")}</DialogTitle>
                         <DialogDescription>
                             {selectedUser?.email}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>{t("fullName")}</Label>
+                            <Label>{t("users.columns.fullName")}</Label>
                             <Input
                                 value={editForm.fullName}
                                 onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>{t("email")}</Label>
+                            <Label>{t("users.columns.email")}</Label>
                             <Input
                                 value={editForm.email}
                                 onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
                             />
                         </div>
                         <div className="space-y-2">
-                            <Label>{t("role")}</Label>
+                            <Label>{t("users.columns.role")}</Label>
                             {isSuperAdmin ? (
                                 <Select value={editForm.role} onValueChange={(v) => setEditForm({ ...editForm, role: v })}>
                                     <SelectTrigger>
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="admin">{t("admin")}</SelectItem>
-                                        <SelectItem value="user">{t("user")}</SelectItem>
+                                        <SelectItem value="admin">{t("users.filters.admin")}</SelectItem>
+                                        <SelectItem value="user">{t("users.filters.user")}</SelectItem>
                                     </SelectContent>
                                 </Select>
                             ) : (
                                 <div className="flex flex-col gap-1">
-                                    <Input value={t(editForm.role)} disabled className="bg-muted" />
-                                    <span className="text-xs text-muted-foreground">{t("roleChangeRestricted")}</span>
+                                    <Input value={t(`users.filters.${editForm.role}`)} disabled className="bg-muted" />
+                                    <span className="text-xs text-muted-foreground">{t("users.dialogs.roleChangeRestricted")}</span>
                                 </div>
                             )}
                         </div>
                         <div className="space-y-2">
-                            <Label>{t("status")}</Label>
+                            <Label>{t("users.columns.status")}</Label>
                             <Select value={editForm.status} onValueChange={(v) => setEditForm({ ...editForm, status: v })}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-background">
-                                    <SelectItem value="active">{t("active")}</SelectItem>
-                                    <SelectItem value="suspended">{t("suspended")}</SelectItem>
-                                    <SelectItem value="deleted">{t("deleted")}</SelectItem>
+                                    <SelectItem value="active">{t("users.filters.active")}</SelectItem>
+                                    <SelectItem value="suspended">{t("users.filters.suspended")}</SelectItem>
+                                    <SelectItem value="deleted">{t("users.filters.deleted")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-                            {t("cancel")}
+                            {t("users.dialogs.cancel")}
                         </Button>
-                        <Button onClick={handleEditSave}>{t("save")}</Button>
+                        <Button onClick={handleEditSave}>{t("users.dialogs.save")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -542,32 +542,32 @@ export default function UsersManagePage() {
             <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>{t("confirmDelete")}</AlertDialogTitle>
+                        <AlertDialogTitle>{t("users.delete.confirm")}</AlertDialogTitle>
                         <AlertDialogDescription>
                             {isSuperAdmin
                                 ? (selectedUser?.status === "deleted"
-                                    ? t("deleteWarningAlreadyDeleted")
-                                    : t("deleteWarningPermanent"))
-                                : t("deleteWarning")}
+                                    ? t("users.delete.warningAlreadyDeleted")
+                                    : t("users.delete.warningPermanent"))
+                                : t("users.delete.warning")}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>{t("cancel")}</AlertDialogCancel>
+                        <AlertDialogCancel>{t("users.dialogs.cancel")}</AlertDialogCancel>
                         {isSuperAdmin ? (
                             <>
                                 {/* Only show soft delete if user is NOT already deleted */}
                                 {selectedUser?.status !== "deleted" && (
                                     <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
-                                        {t("softDelete")}
+                                        {t("users.delete.soft")}
                                     </AlertDialogAction>
                                 )}
                                 <AlertDialogAction onClick={handleHardDeleteConfirm} className="bg-red-600 hover:bg-red-700">
-                                    {t("permanentDelete")}
+                                    {t("users.delete.permanent")}
                                 </AlertDialogAction>
                             </>
                         ) : (
                             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
-                                {t("delete")}
+                                {t("users.actions.delete")}
                             </AlertDialogAction>
                         )}
                     </AlertDialogFooter>
@@ -578,14 +578,14 @@ export default function UsersManagePage() {
             <Dialog open={creditDialogOpen} onOpenChange={setCreditDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t("updateCredit")}</DialogTitle>
+                        <DialogTitle>{t("users.dialogs.updateCredit")}</DialogTitle>
                         <DialogDescription>
                             {selectedUser?.email}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>{t("credit")}</Label>
+                            <Label>{t("users.columns.credit")}</Label>
                             <Input
                                 type="number"
                                 min="0"
@@ -596,9 +596,9 @@ export default function UsersManagePage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setCreditDialogOpen(false)}>
-                            {t("cancel")}
+                            {t("users.dialogs.cancel")}
                         </Button>
-                        <Button onClick={handleCreditSave}>{t("save")}</Button>
+                        <Button onClick={handleCreditSave}>{t("users.dialogs.save")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -607,14 +607,14 @@ export default function UsersManagePage() {
             <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t("changePassword")}</DialogTitle>
+                        <DialogTitle>{t("users.dialogs.changePassword")}</DialogTitle>
                         <DialogDescription>
                             {selectedUser?.email}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>{t("newPassword")}</Label>
+                            <Label>{t("users.dialogs.newPassword")}</Label>
                             <Input
                                 type="password"
                                 autoComplete="new-password"
@@ -625,9 +625,9 @@ export default function UsersManagePage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
-                            {t("cancel")}
+                            {t("users.dialogs.cancel")}
                         </Button>
-                        <Button onClick={handlePasswordSave}>{t("save")}</Button>
+                        <Button onClick={handlePasswordSave}>{t("users.dialogs.save")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -636,7 +636,7 @@ export default function UsersManagePage() {
             <Dialog open={paymentDialogOpen} onOpenChange={setPaymentDialogOpen}>
                 <DialogContent className="max-w-3xl">
                     <DialogHeader>
-                        <DialogTitle>{t("paymentHistory")}</DialogTitle>
+                        <DialogTitle>{t("users.dialogs.paymentHistory")}</DialogTitle>
                         <DialogDescription>
                             {selectedUser?.email}
                         </DialogDescription>
@@ -645,11 +645,11 @@ export default function UsersManagePage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>{t("transactionCode")}</TableHead>
-                                    <TableHead>{t("amount")}</TableHead>
-                                    <TableHead>{t("status")}</TableHead>
-                                    <TableHead>{t("date")}</TableHead>
-                                    <TableHead>{t("gateway")}</TableHead>
+                                    <TableHead>{t("payments.columns.code")}</TableHead>
+                                    <TableHead>{t("payments.columns.amount")}</TableHead>
+                                    <TableHead>{t("payments.columns.status")}</TableHead>
+                                    <TableHead>{t("payments.columns.date")}</TableHead>
+                                    <TableHead>{t("payments.columns.gateway")}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -666,7 +666,7 @@ export default function UsersManagePage() {
                                 ) : payments.length === 0 ? (
                                     <TableRow>
                                         <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                                            No payment history found
+                                            {t("users.dialogs.noPaymentHistory")}
                                         </TableCell>
                                     </TableRow>
                                 ) : (
@@ -684,7 +684,7 @@ export default function UsersManagePage() {
                                                         payment.status === "pending" ? "bg-yellow-500" :
                                                             "bg-gray-500"
                                                 }>
-                                                    {payment.status}
+                                                    {t(`payments.filters.${payment.status}`)}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell>
@@ -699,7 +699,7 @@ export default function UsersManagePage() {
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setPaymentDialogOpen(false)}>
-                            {t("cancel")}
+                            {t("users.dialogs.cancel")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
