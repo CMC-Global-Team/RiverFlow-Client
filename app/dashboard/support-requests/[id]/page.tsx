@@ -31,7 +31,7 @@ import {
 } from "lucide-react";
 
 function TicketDetailContent() {
-    const { t } = useTranslation("supportRequests");
+    const { t, i18n } = useTranslation("dashboard");
     const params = useParams();
     const router = useRouter();
     const ticketId = Number(params.id);
@@ -55,7 +55,7 @@ function TicketDetailContent() {
             const data = await supportTicketService.getTicketById(ticketId);
             setTicket(data);
         } catch (err: any) {
-            setError(err.message || "Failed to load ticket");
+            setError(err.message || t("support.detail.loadError"));
         } finally {
             setLoading(false);
         }
@@ -72,7 +72,7 @@ function TicketDetailContent() {
             setAttachments([]);
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to send reply");
+            setError(err.message || t("support.detail.replyError"));
         } finally {
             setSending(false);
         }
@@ -85,7 +85,7 @@ function TicketDetailContent() {
     };
 
     const formatDate = (dateString: string) => {
-        return new Date(dateString).toLocaleDateString(undefined, {
+        return new Date(dateString).toLocaleDateString(i18n.language, {
             year: "numeric",
             month: "short",
             day: "numeric",
@@ -120,7 +120,7 @@ function TicketDetailContent() {
                         <div className="p-6">
                             <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive flex items-center gap-2">
                                 <AlertCircle className="h-5 w-5" />
-                                {error || "Ticket not found"}
+                                {error || t("support.detail.notFound")}
                             </div>
                         </div>
                     </main>
@@ -150,10 +150,10 @@ function TicketDetailContent() {
                                         {ticket.ticketNumber}
                                     </span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                        {getStatusLabel(ticket.status)}
+                                        {t(`support.status.${ticket.status}`)}
                                     </span>
                                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                        {getPriorityLabel(ticket.priority)}
+                                        {t(`support.priority.${ticket.priority}`)}
                                     </span>
                                 </div>
                                 <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
@@ -161,7 +161,7 @@ function TicketDetailContent() {
                             <button
                                 onClick={fetchTicket}
                                 className="p-2 hover:bg-muted rounded-lg transition-colors"
-                                title="Refresh"
+                                title={t("common.retry") || "Refresh"}
                             >
                                 <RefreshCw className="h-5 w-5" />
                             </button>
@@ -172,13 +172,13 @@ function TicketDetailContent() {
                             <div className="lg:col-span-2 space-y-6">
                                 {/* Description */}
                                 <div className="bg-card border border-border rounded-lg p-4">
-                                    <h3 className="font-medium mb-2">Description</h3>
+                                    <h3 className="font-medium mb-2">{t("support.detail.description")}</h3>
                                     <p className="text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
                                 </div>
 
                                 {/* Messages */}
                                 <div className="bg-card border border-border rounded-lg p-4">
-                                    <h3 className="font-medium mb-4">Conversation</h3>
+                                    <h3 className="font-medium mb-4">{t("support.detail.conversation")}</h3>
                                     <div className="space-y-4 max-h-[400px] overflow-y-auto">
                                         {ticket.messages.filter(m => !m.isInternalNote).map((message) => (
                                             <div
@@ -194,7 +194,7 @@ function TicketDetailContent() {
                                                     </div>
                                                     <span className="text-sm font-medium">{message.senderFullName}</span>
                                                     <span className="text-xs text-muted-foreground">
-                                                        {message.senderRole === "USER" ? "You" : "Support"}
+                                                        {message.senderRole === "USER" ? t("support.detail.you") : t("support.detail.support")}
                                                     </span>
                                                     <span className="text-xs text-muted-foreground ml-auto">
                                                         {formatDate(message.createdAt)}
@@ -219,7 +219,7 @@ function TicketDetailContent() {
                                         ))}
                                         {ticket.messages.filter(m => !m.isInternalNote).length === 0 && (
                                             <p className="text-sm text-muted-foreground text-center py-4">
-                                                No messages yet. Send a message below.
+                                                {t("support.detail.noMessages")}
                                             </p>
                                         )}
                                     </div>
@@ -228,11 +228,11 @@ function TicketDetailContent() {
                                 {/* Reply Form */}
                                 {ticket.status !== "CLOSED" && (
                                     <form onSubmit={handleSendReply} className="bg-card border border-border rounded-lg p-4">
-                                        <h3 className="font-medium mb-3">Send Reply</h3>
+                                        <h3 className="font-medium mb-3">{t("support.detail.sendReply")}</h3>
                                         <textarea
                                             value={replyMessage}
                                             onChange={(e) => setReplyMessage(e.target.value)}
-                                            placeholder="Type your message..."
+                                            placeholder={t("support.detail.replyPlaceholder")}
                                             rows={4}
                                             className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-3"
                                         />
@@ -240,7 +240,7 @@ function TicketDetailContent() {
                                             <label className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg cursor-pointer hover:bg-muted/80">
                                                 <Paperclip className="h-4 w-4" />
                                                 <span className="text-sm">
-                                                    {attachments.length > 0 ? `${attachments.length} files` : "Attach files"}
+                                                    {attachments.length > 0 ? t("support.detail.attachFilesCount", { count: attachments.length }) : t("support.detail.attachFiles")}
                                                 </span>
                                                 <input
                                                     type="file"
@@ -255,7 +255,7 @@ function TicketDetailContent() {
                                                 className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                                             >
                                                 {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                                Send
+                                                {t("support.detail.reply")}
                                             </button>
                                         </div>
                                     </form>
@@ -264,7 +264,7 @@ function TicketDetailContent() {
                                 {ticket.status === "CLOSED" && (
                                     <div className="bg-muted/50 border border-border rounded-lg p-4 text-center">
                                         <p className="text-muted-foreground">
-                                            This ticket is closed. If you need further assistance, please create a new ticket.
+                                            {t("support.detail.closedMessage")}
                                         </p>
                                     </div>
                                 )}
@@ -274,35 +274,35 @@ function TicketDetailContent() {
                             <div className="space-y-4">
                                 {/* Ticket Info */}
                                 <div className="bg-card border border-border rounded-lg p-4">
-                                    <h3 className="font-medium mb-3">Ticket Details</h3>
+                                    <h3 className="font-medium mb-3">{t("support.detail.ticketDetails")}</h3>
                                     <div className="space-y-3 text-sm">
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Category</span>
-                                            <span>{getCategoryLabel(ticket.category)}</span>
+                                            <span className="text-muted-foreground">{t("support.table.category")}</span>
+                                            <span>{t(`support.category.${ticket.category}`)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Priority</span>
+                                            <span className="text-muted-foreground">{t("support.table.priority")}</span>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                                {getPriorityLabel(ticket.priority)}
+                                                {t(`support.priority.${ticket.priority}`)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Status</span>
+                                            <span className="text-muted-foreground">{t("support.table.status")}</span>
                                             <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                                {getStatusLabel(ticket.status)}
+                                                {t(`support.status.${ticket.status}`)}
                                             </span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Created</span>
+                                            <span className="text-muted-foreground">{t("support.detail.created")}</span>
                                             <span>{formatDate(ticket.createdAt)}</span>
                                         </div>
                                         <div className="flex justify-between">
-                                            <span className="text-muted-foreground">Updated</span>
+                                            <span className="text-muted-foreground">{t("support.detail.updated")}</span>
                                             <span>{formatDate(ticket.updatedAt)}</span>
                                         </div>
                                         {ticket.resolvedAt && (
                                             <div className="flex justify-between">
-                                                <span className="text-muted-foreground">Resolved</span>
+                                                <span className="text-muted-foreground">{t("support.detail.resolved")}</span>
                                                 <span>{formatDate(ticket.resolvedAt)}</span>
                                             </div>
                                         )}
@@ -312,14 +312,14 @@ function TicketDetailContent() {
                                 {/* Assigned Staff */}
                                 {ticket.assignedToFullName && (
                                     <div className="bg-card border border-border rounded-lg p-4">
-                                        <h3 className="font-medium mb-3">Support Agent</h3>
+                                        <h3 className="font-medium mb-3">{t("support.detail.supportAgent")}</h3>
                                         <div className="flex items-center gap-3">
                                             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                                                 <User className="h-5 w-5" />
                                             </div>
                                             <div>
                                                 <p className="font-medium">{ticket.assignedToFullName}</p>
-                                                <p className="text-sm text-muted-foreground">Handling your request</p>
+                                                <p className="text-sm text-muted-foreground">{t("support.detail.handlingRequest")}</p>
                                             </div>
                                         </div>
                                     </div>
