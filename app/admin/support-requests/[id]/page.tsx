@@ -35,7 +35,7 @@ import {
 import { useAuth } from "@/hooks/auth/useAuth";
 
 export default function AdminTicketDetailPage() {
-    const { t } = useTranslation("adminSupportRequests");
+    const { t } = useTranslation("admin");
     const params = useParams();
     const router = useRouter();
     const { user } = useAuth();
@@ -64,7 +64,7 @@ export default function AdminTicketDetailPage() {
             const data = await adminSupportTicketService.getTicketById(ticketId);
             setTicket(data);
         } catch (err: any) {
-            setError(err.message || "Failed to load ticket");
+            setError(err.message || t("support.detail.loadError"));
         } finally {
             setLoading(false);
         }
@@ -86,7 +86,7 @@ export default function AdminTicketDetailPage() {
             setAttachments([]);
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to send reply");
+            setError(err.message || t("support.detail.replyError"));
         } finally {
             setSending(false);
         }
@@ -98,7 +98,7 @@ export default function AdminTicketDetailPage() {
             await adminSupportTicketService.updateTicket(ticketId, { status });
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to update status");
+            setError(err.message || t("support.detail.updateError"));
         } finally {
             setUpdating(false);
         }
@@ -110,7 +110,7 @@ export default function AdminTicketDetailPage() {
             await adminSupportTicketService.updateTicket(ticketId, { priority });
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to update priority");
+            setError(err.message || t("support.detail.updateError"));
         } finally {
             setUpdating(false);
         }
@@ -123,7 +123,7 @@ export default function AdminTicketDetailPage() {
             await adminSupportTicketService.updateTicket(ticketId, { assignedToId: user.userId });
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to assign ticket");
+            setError(err.message || t("support.detail.updateError"));
         } finally {
             setUpdating(false);
         }
@@ -135,7 +135,7 @@ export default function AdminTicketDetailPage() {
             await adminSupportTicketService.closeTicket(ticketId);
             fetchTicket();
         } catch (err: any) {
-            setError(err.message || "Failed to close ticket");
+            setError(err.message || t("support.detail.updateError"));
         } finally {
             setUpdating(false);
         }
@@ -170,7 +170,7 @@ export default function AdminTicketDetailPage() {
             <div className="p-6">
                 <div className="p-4 bg-destructive/10 border border-destructive/20 rounded-lg text-destructive flex items-center gap-2">
                     <AlertCircle className="h-5 w-5" />
-                    {error || "Ticket not found"}
+                    {error || t("support.detail.notFound")}
                 </div>
             </div>
         );
@@ -192,10 +192,10 @@ export default function AdminTicketDetailPage() {
                             {ticket.ticketNumber}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                            {getStatusLabel(ticket.status)}
+                            {t(`support.status.${ticket.status}`)}
                         </span>
                         <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                            {getPriorityLabel(ticket.priority)}
+                            {t(`support.priority.${ticket.priority}`)}
                         </span>
                     </div>
                     <h1 className="text-xl font-bold text-foreground">{ticket.title}</h1>
@@ -214,13 +214,13 @@ export default function AdminTicketDetailPage() {
                 <div className="lg:col-span-2 space-y-6">
                     {/* Description */}
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <h3 className="font-medium mb-2">Description</h3>
+                        <h3 className="font-medium mb-2">{t("support.detail.description")}</h3>
                         <p className="text-muted-foreground whitespace-pre-wrap">{ticket.description}</p>
                     </div>
 
                     {/* Messages */}
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <h3 className="font-medium mb-4">Conversation</h3>
+                        <h3 className="font-medium mb-4">{t("support.detail.conversation")}</h3>
                         <div className="space-y-4 max-h-[400px] overflow-y-auto">
                             {ticket.messages.map((message) => (
                                 <div
@@ -242,7 +242,7 @@ export default function AdminTicketDetailPage() {
                                         </span>
                                         {message.isInternalNote && (
                                             <span className="flex items-center gap-1 text-xs text-yellow-600 dark:text-yellow-400">
-                                                <Lock className="h-3 w-3" /> Internal Note
+                                                <Lock className="h-3 w-3" /> {t("support.detail.internalNote")}
                                             </span>
                                         )}
                                         <span className="text-xs text-muted-foreground ml-auto">
@@ -272,11 +272,11 @@ export default function AdminTicketDetailPage() {
                     {/* Reply Form */}
                     {ticket.status !== "CLOSED" && (
                         <form onSubmit={handleSendReply} className="bg-card border border-border rounded-lg p-4">
-                            <h3 className="font-medium mb-3">Send Reply</h3>
+                            <h3 className="font-medium mb-3">{t("support.detail.reply")}</h3>
                             <textarea
                                 value={replyMessage}
                                 onChange={(e) => setReplyMessage(e.target.value)}
-                                placeholder="Type your response..."
+                                placeholder={t("support.detail.replyPlaceholder")}
                                 rows={4}
                                 className="w-full px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary resize-none mb-3"
                             />
@@ -290,13 +290,13 @@ export default function AdminTicketDetailPage() {
                                             className="rounded border-border"
                                         />
                                         <span className="text-sm flex items-center gap-1">
-                                            <Lock className="h-3 w-3" /> Internal Note
+                                            <Lock className="h-3 w-3" /> {t("support.detail.internalNote")}
                                         </span>
                                     </label>
                                     <label className="flex items-center gap-2 px-3 py-1.5 bg-muted rounded-lg cursor-pointer hover:bg-muted/80">
                                         <Paperclip className="h-4 w-4" />
                                         <span className="text-sm">
-                                            {attachments.length > 0 ? `${attachments.length} files` : "Attach"}
+                                            {attachments.length > 0 ? `${attachments.length} files` : t("support.detail.attachFiles")}
                                         </span>
                                         <input
                                             type="file"
@@ -312,7 +312,7 @@ export default function AdminTicketDetailPage() {
                                     className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50"
                                 >
                                     {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                                    Send
+                                    {t("support.detail.sendReply")}
                                 </button>
                             </div>
                         </form>
@@ -323,23 +323,23 @@ export default function AdminTicketDetailPage() {
                 <div className="space-y-4">
                     {/* Ticket Info */}
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <h3 className="font-medium mb-3">Ticket Details</h3>
+                        <h3 className="font-medium mb-3">{t("support.detail.ticketInfo")}</h3>
                         <div className="space-y-3 text-sm">
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Category</span>
-                                <span>{getCategoryLabel(ticket.category)}</span>
+                                <span className="text-muted-foreground">{t("support.table.category")}</span>
+                                <span>{t(`support.category.${ticket.category}`)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Created</span>
+                                <span className="text-muted-foreground">{t("support.detail.created")}</span>
                                 <span>{formatDate(ticket.createdAt)}</span>
                             </div>
                             <div className="flex justify-between">
-                                <span className="text-muted-foreground">Updated</span>
+                                <span className="text-muted-foreground">{t("support.detail.updated")}</span>
                                 <span>{formatDate(ticket.updatedAt)}</span>
                             </div>
                             {ticket.resolvedAt && (
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">Resolved</span>
+                                    <span className="text-muted-foreground">{t("support.status.RESOLVED")}</span>
                                     <span>{formatDate(ticket.resolvedAt)}</span>
                                 </div>
                             )}
@@ -348,7 +348,7 @@ export default function AdminTicketDetailPage() {
 
                     {/* User Info */}
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <h3 className="font-medium mb-3">Submitted By</h3>
+                        <h3 className="font-medium mb-3">{t("support.detail.postedBy")}</h3>
                         <div className="flex items-center gap-3">
                             <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                                 <User className="h-5 w-5" />
@@ -362,47 +362,47 @@ export default function AdminTicketDetailPage() {
 
                     {/* Actions */}
                     <div className="bg-card border border-border rounded-lg p-4">
-                        <h3 className="font-medium mb-3">Actions</h3>
+                        <h3 className="font-medium mb-3">{t("support.detail.actions")}</h3>
                         <div className="space-y-3">
                             {/* Status */}
                             <div>
-                                <label className="block text-sm text-muted-foreground mb-1">Status</label>
+                                <label className="block text-sm text-muted-foreground mb-1">{t("support.table.status")}</label>
                                 <select
                                     value={ticket.status}
                                     onChange={(e) => handleUpdateStatus(e.target.value as TicketStatus)}
                                     disabled={updating}
                                     className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm"
                                 >
-                                    <option value="NEW">New</option>
-                                    <option value="IN_PROGRESS">In Progress</option>
-                                    <option value="ON_HOLD">On Hold</option>
-                                    <option value="WAITING_FOR_RESPONSE">Waiting for Response</option>
-                                    <option value="RESOLVED">Resolved</option>
-                                    <option value="CLOSED">Closed</option>
+                                    <option value="NEW">{t("support.status.NEW")}</option>
+                                    <option value="IN_PROGRESS">{t("support.status.IN_PROGRESS")}</option>
+                                    <option value="ON_HOLD">{t("support.status.ON_HOLD")}</option>
+                                    <option value="WAITING_FOR_RESPONSE">{t("support.status.WAITING_FOR_RESPONSE")}</option>
+                                    <option value="RESOLVED">{t("support.status.RESOLVED")}</option>
+                                    <option value="CLOSED">{t("support.status.CLOSED")}</option>
                                 </select>
                             </div>
 
                             {/* Priority */}
                             <div>
-                                <label className="block text-sm text-muted-foreground mb-1">Priority</label>
+                                <label className="block text-sm text-muted-foreground mb-1">{t("support.table.priority")}</label>
                                 <select
                                     value={ticket.priority}
                                     onChange={(e) => handleUpdatePriority(e.target.value as TicketPriority)}
                                     disabled={updating}
                                     className="w-full px-3 py-2 bg-background border border-border rounded-lg text-sm"
                                 >
-                                    <option value="LOW">Low</option>
-                                    <option value="MEDIUM">Medium</option>
-                                    <option value="HIGH">High</option>
-                                    <option value="URGENT">Urgent</option>
+                                    <option value="LOW">{t("support.priority.LOW")}</option>
+                                    <option value="MEDIUM">{t("support.priority.MEDIUM")}</option>
+                                    <option value="HIGH">{t("support.priority.HIGH")}</option>
+                                    <option value="URGENT">{t("support.priority.URGENT")}</option>
                                 </select>
                             </div>
 
                             {/* Assignment */}
                             <div>
-                                <label className="block text-sm text-muted-foreground mb-1">Assigned To</label>
+                                <label className="block text-sm text-muted-foreground mb-1">{t("support.table.assignedTo")}</label>
                                 <p className="text-sm mb-2">
-                                    {ticket.assignedToFullName || <span className="text-muted-foreground italic">Unassigned</span>}
+                                    {ticket.assignedToFullName || <span className="text-muted-foreground italic">{t("support.detail.unassigned")}</span>}
                                 </p>
                                 {!ticket.assignedToId && (
                                     <button
@@ -410,7 +410,7 @@ export default function AdminTicketDetailPage() {
                                         disabled={updating}
                                         className="w-full px-3 py-2 bg-muted text-sm rounded-lg hover:bg-muted/80"
                                     >
-                                        Assign to Me
+                                        {t("support.detail.assignToMe")}
                                     </button>
                                 )}
                             </div>
@@ -423,7 +423,7 @@ export default function AdminTicketDetailPage() {
                                     className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50"
                                 >
                                     <CheckCircle className="h-4 w-4" />
-                                    Close Ticket
+                                    {t("support.detail.closeTicket")}
                                 </button>
                             )}
                         </div>
