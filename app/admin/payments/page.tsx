@@ -64,7 +64,7 @@ import {
 } from "@/types/payment.types"
 
 export default function PaymentsManagePage() {
-    const { t } = useTranslation("adminSideBar")
+    const { t } = useTranslation("admin")
     const { user: currentUser } = useAuth()
     const isSuperAdmin = currentUser?.role === "SUPER_ADMIN"
 
@@ -119,7 +119,7 @@ export default function PaymentsManagePage() {
             setTotalElements(response.totalElements)
         } catch (error) {
             console.error("Error fetching payments:", error)
-            toast.error("Failed to load payments")
+            toast.error(t("payments.toasts.loadFailed"))
         } finally {
             setLoading(false)
         }
@@ -167,12 +167,13 @@ export default function PaymentsManagePage() {
         if (!selectedPayment) return
         try {
             await updatePaymentStatus(selectedPayment.id, newStatus)
-            toast.success(t("statusUpdateSuccess"))
+            await updatePaymentStatus(selectedPayment.id, newStatus)
+            toast.success(t("payments.toasts.updateSuccess"))
             setStatusDialogOpen(false)
             fetchPayments()
             if (isSuperAdmin) fetchStatistics()
         } catch (error) {
-            toast.error(t("statusUpdateError"))
+            toast.error(t("payments.toasts.updateError"))
         }
     }
 
@@ -183,7 +184,7 @@ export default function PaymentsManagePage() {
             setSelectedPayment(details)
             setDetailsDialogOpen(true)
         } catch (error) {
-            toast.error("Failed to load payment details")
+            toast.error(t("payments.toasts.loadDetailsFailed"))
         }
     }
 
@@ -199,9 +200,9 @@ export default function PaymentsManagePage() {
                 startDate: startDate || undefined,
                 endDate: endDate || undefined,
             })
-            toast.success(t("exportSuccess"))
+            toast.success(t("payments.export.success"))
         } catch (error) {
-            toast.error(t("exportError"))
+            toast.error(t("payments.export.error"))
         } finally {
             setExportLoading(false)
         }
@@ -234,9 +235,9 @@ export default function PaymentsManagePage() {
         <div className="p-6 md:p-8">
             {/* Header */}
             <div className="mb-8">
-                <h1 className="text-3xl font-bold text-foreground">{t("paymentManage")}</h1>
+                <h1 className="text-3xl font-bold text-foreground">{t("payments.title")}</h1>
                 <p className="mt-2 text-muted-foreground">
-                    {t("showing")} {payments.length} {t("of")} {totalElements} {t("results")}
+                    {t("users.showing", { count: payments.length, total: totalElements })}
                 </p>
             </div>
 
@@ -245,7 +246,7 @@ export default function PaymentsManagePage() {
                 <div className="mb-8">
                     <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
                         <TrendingUp className="h-5 w-5" />
-                        {t("statistics")}
+                        {t("payments.statistics")}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                         {statsLoading ? (
@@ -265,7 +266,7 @@ export default function PaymentsManagePage() {
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <DollarSign className="h-4 w-4" />
-                                            {t("totalPayments")}
+                                            {t("payments.stats.total")}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
@@ -279,7 +280,7 @@ export default function PaymentsManagePage() {
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <Clock className="h-4 w-4" />
-                                            {t("todayPayments")}
+                                            {t("payments.stats.today")}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
@@ -293,7 +294,7 @@ export default function PaymentsManagePage() {
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <CheckCircle className="h-4 w-4 text-green-500" />
-                                            {t("processedPayments")}
+                                            {t("payments.stats.processed")}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
@@ -304,7 +305,7 @@ export default function PaymentsManagePage() {
                                     <CardHeader className="pb-2">
                                         <CardTitle className="text-sm font-medium text-muted-foreground flex items-center gap-2">
                                             <AlertCircle className="h-4 w-4 text-yellow-500" />
-                                            {t("pendingPayments")}
+                                            {t("payments.stats.pending")}
                                         </CardTitle>
                                     </CardHeader>
                                     <CardContent>
@@ -324,7 +325,7 @@ export default function PaymentsManagePage() {
                             disabled={exportLoading}
                         >
                             <Download className="h-4 w-4 mr-2" />
-                            {t("exportCSV")}
+                            {t("payments.export.csv")}
                         </Button>
                         <Button
                             variant="outline"
@@ -333,7 +334,7 @@ export default function PaymentsManagePage() {
                             disabled={exportLoading}
                         >
                             <Download className="h-4 w-4 mr-2" />
-                            {t("exportTXT")}
+                            {t("payments.export.txt")}
                         </Button>
                         <Button
                             variant="outline"
@@ -342,7 +343,7 @@ export default function PaymentsManagePage() {
                             disabled={exportLoading}
                         >
                             <Download className="h-4 w-4 mr-2" />
-                            {t("exportJSON")}
+                            {t("payments.export.json")}
                         </Button>
                     </div>
                 </div>
@@ -353,7 +354,7 @@ export default function PaymentsManagePage() {
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
-                        placeholder={t("searchPayments")}
+                        placeholder={t("payments.search")}
                         value={search}
                         onChange={(e) => setSearch(e.target.value)}
                         className="pl-10"
@@ -361,25 +362,25 @@ export default function PaymentsManagePage() {
                 </div>
                 <Select value={statusFilter || "all"} onValueChange={(v) => { setStatusFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder={t("allStatus")} />
+                        <SelectValue placeholder={t("payments.filters.allStatus")} />
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                        <SelectItem value="all">{t("allStatus")}</SelectItem>
-                        <SelectItem value="pending">{t("pending")}</SelectItem>
-                        <SelectItem value="matched">{t("matched")}</SelectItem>
-                        <SelectItem value="processed">{t("processed")}</SelectItem>
-                        <SelectItem value="ignored">{t("ignored")}</SelectItem>
-                        <SelectItem value="invalid">{t("invalid")}</SelectItem>
+                        <SelectItem value="all">{t("payments.filters.allStatus")}</SelectItem>
+                        <SelectItem value="pending">{t("payments.filters.pending")}</SelectItem>
+                        <SelectItem value="matched">{t("payments.filters.matched")}</SelectItem>
+                        <SelectItem value="processed">{t("payments.filters.processed")}</SelectItem>
+                        <SelectItem value="ignored">{t("payments.filters.ignored")}</SelectItem>
+                        <SelectItem value="invalid">{t("payments.filters.invalid")}</SelectItem>
                     </SelectContent>
                 </Select>
                 <Select value={transferTypeFilter || "all"} onValueChange={(v) => { setTransferTypeFilter(v === "all" ? "" : v); setPage(0); }}>
                     <SelectTrigger className="w-[150px]">
-                        <SelectValue placeholder={t("allTransferTypes")} />
+                        <SelectValue placeholder={t("payments.filters.allTypes")} />
                     </SelectTrigger>
                     <SelectContent className="bg-background">
-                        <SelectItem value="all">{t("allTransferTypes")}</SelectItem>
-                        <SelectItem value="in">{t("in")}</SelectItem>
-                        <SelectItem value="out">{t("out")}</SelectItem>
+                        <SelectItem value="all">{t("payments.filters.allTypes")}</SelectItem>
+                        <SelectItem value="in">{t("payments.filters.in")}</SelectItem>
+                        <SelectItem value="out">{t("payments.filters.out")}</SelectItem>
                     </SelectContent>
                 </Select>
                 <div className="flex gap-2 items-center">
@@ -407,14 +408,14 @@ export default function PaymentsManagePage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>{t("paymentId")}</TableHead>
-                            <TableHead>{t("transactionCode")}</TableHead>
-                            <TableHead>{t("userInfo")}</TableHead>
-                            <TableHead>{t("amount")}</TableHead>
-                            <TableHead>{t("status")}</TableHead>
-                            <TableHead>{t("gateway")}</TableHead>
-                            <TableHead>{t("date")}</TableHead>
-                            <TableHead className="text-center">{t("actions")}</TableHead>
+                            <TableHead>{t("payments.columns.id")}</TableHead>
+                            <TableHead>{t("payments.columns.code")}</TableHead>
+                            <TableHead>{t("payments.columns.user")}</TableHead>
+                            <TableHead>{t("payments.columns.amount")}</TableHead>
+                            <TableHead>{t("payments.columns.status")}</TableHead>
+                            <TableHead>{t("payments.columns.gateway")}</TableHead>
+                            <TableHead>{t("payments.columns.date")}</TableHead>
+                            <TableHead className="text-center">{t("payments.columns.actions")}</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -431,7 +432,7 @@ export default function PaymentsManagePage() {
                         ) : payments.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                                    {t("noPayments")}
+                                    {t("payments.noPayments")}
                                 </TableCell>
                             </TableRow>
                         ) : (
@@ -456,7 +457,7 @@ export default function PaymentsManagePage() {
                                     </TableCell>
                                     <TableCell>
                                         <Badge className={getStatusColor(payment.status)}>
-                                            {t(payment.status)}
+                                            {t(`payments.filters.${payment.status}`)}
                                         </Badge>
                                     </TableCell>
                                     <TableCell>{payment.gateway || "-"}</TableCell>
@@ -469,7 +470,7 @@ export default function PaymentsManagePage() {
                                                 variant="ghost"
                                                 size="icon"
                                                 onClick={() => handleViewDetails(payment)}
-                                                title={t("viewDetails")}
+                                                title={t("payments.details.title")}
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
@@ -477,9 +478,9 @@ export default function PaymentsManagePage() {
                                                 variant="ghost"
                                                 size="sm"
                                                 onClick={() => handleStatusClick(payment)}
-                                                title={t("updateStatus")}
+                                                title={t("payments.dialogs.updateStatus")}
                                             >
-                                                {t("updateStatus")}
+                                                {t("payments.dialogs.updateStatus")}
                                             </Button>
                                         </div>
                                     </TableCell>
@@ -494,7 +495,7 @@ export default function PaymentsManagePage() {
             <div className="flex items-center justify-between mt-4">
                 <div className="flex items-center gap-4">
                     <p className="text-sm text-muted-foreground">
-                        {t("page")} {page + 1} {t("of")} {totalPages || 1}
+                        {t("common.page")} {page + 1} {t("common.of")} {totalPages || 1}
                     </p>
                     <Select value={size.toString()} onValueChange={(v) => { setSize(parseInt(v)); setPage(0); }}>
                         <SelectTrigger className="w-[100px]">
@@ -516,7 +517,7 @@ export default function PaymentsManagePage() {
                         disabled={page === 0}
                     >
                         <ChevronLeft className="h-4 w-4 mr-1" />
-                        {t("previous")}
+                        {t("common.previous")}
                     </Button>
                     <Button
                         variant="outline"
@@ -524,7 +525,7 @@ export default function PaymentsManagePage() {
                         onClick={() => setPage(Math.min(totalPages - 1, page + 1))}
                         disabled={page >= totalPages - 1}
                     >
-                        {t("next")}
+                        {t("common.next")}
                         <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                 </div>
@@ -534,33 +535,33 @@ export default function PaymentsManagePage() {
             <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
                 <DialogContent>
                     <DialogHeader>
-                        <DialogTitle>{t("updateStatus")}</DialogTitle>
+                        <DialogTitle>{t("payments.dialogs.updateStatus")}</DialogTitle>
                         <DialogDescription>
-                            {t("transactionCode")}: {selectedPayment?.code || "-"}
+                            {t("payments.columns.code")}: {selectedPayment?.code || "-"}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                            <Label>{t("selectStatus")}</Label>
+                            <Label>{t("payments.dialogs.selectStatus")}</Label>
                             <Select value={newStatus} onValueChange={(v) => setNewStatus(v as PaymentStatus)}>
                                 <SelectTrigger>
                                     <SelectValue />
                                 </SelectTrigger>
                                 <SelectContent className="bg-background">
-                                    <SelectItem value="pending">{t("pending")}</SelectItem>
-                                    <SelectItem value="matched">{t("matched")}</SelectItem>
-                                    <SelectItem value="processed">{t("processed")}</SelectItem>
-                                    <SelectItem value="ignored">{t("ignored")}</SelectItem>
-                                    <SelectItem value="invalid">{t("invalid")}</SelectItem>
+                                    <SelectItem value="pending">{t("payments.filters.pending")}</SelectItem>
+                                    <SelectItem value="matched">{t("payments.filters.matched")}</SelectItem>
+                                    <SelectItem value="processed">{t("payments.filters.processed")}</SelectItem>
+                                    <SelectItem value="ignored">{t("payments.filters.ignored")}</SelectItem>
+                                    <SelectItem value="invalid">{t("payments.filters.invalid")}</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setStatusDialogOpen(false)}>
-                            {t("cancel")}
+                            {t("users.dialogs.cancel")}
                         </Button>
-                        <Button onClick={handleStatusSave}>{t("save")}</Button>
+                        <Button onClick={handleStatusSave}>{t("users.dialogs.save")}</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -569,76 +570,76 @@ export default function PaymentsManagePage() {
             <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
                 <DialogContent className="max-w-2xl">
                     <DialogHeader>
-                        <DialogTitle>{t("paymentDetails")}</DialogTitle>
+                        <DialogTitle>{t("payments.details.title")}</DialogTitle>
                         <DialogDescription>
-                            {t("paymentId")}: #{selectedPayment?.id}
+                            {t("payments.columns.id")}: #{selectedPayment?.id}
                         </DialogDescription>
                     </DialogHeader>
                     {selectedPayment && (
                         <div className="grid grid-cols-2 gap-4 py-4">
                             <div>
-                                <Label className="text-muted-foreground">{t("transactionCode")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.code")}</Label>
                                 <p className="font-mono">{selectedPayment.code || "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("externalId")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.externalId")}</Label>
                                 <p className="font-mono">{selectedPayment.externalId || "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("amount")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.amount")}</Label>
                                 <p className="font-bold text-lg">{formatAmount(selectedPayment.transferAmount)}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("status")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.status")}</Label>
                                 <Badge className={getStatusColor(selectedPayment.status)}>
-                                    {t(selectedPayment.status)}
+                                    {t(`payments.filters.${selectedPayment.status}`)}
                                 </Badge>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("gateway")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.gateway")}</Label>
                                 <p>{selectedPayment.gateway || "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("transferType")}</Label>
-                                <p>{selectedPayment.transferType ? t(selectedPayment.transferType) : "-"}</p>
+                                <Label className="text-muted-foreground">{t("payments.details.type")}</Label>
+                                <p>{selectedPayment.transferType ? t(`payments.filters.${selectedPayment.transferType}`) : "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("accountNumber")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.accountNumber")}</Label>
                                 <p className="font-mono">{selectedPayment.accountNumber || "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("referenceCode")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.referenceCode")}</Label>
                                 <p className="font-mono">{selectedPayment.referenceCode || "-"}</p>
                             </div>
                             <div className="col-span-2">
-                                <Label className="text-muted-foreground">{t("userInfo")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.user")}</Label>
                                 {selectedPayment.userEmail ? (
                                     <p>{selectedPayment.userFullName} ({selectedPayment.userEmail})</p>
                                 ) : (
-                                    <p className="text-muted-foreground">{t("noUserAssociated")}</p>
+                                    <p className="text-muted-foreground">{t("payments.details.noUser")}</p>
                                 )}
                             </div>
                             <div className="col-span-2">
-                                <Label className="text-muted-foreground">{t("content")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.content")}</Label>
                                 <p className="text-sm bg-muted p-2 rounded">{selectedPayment.content || "-"}</p>
                             </div>
                             <div className="col-span-2">
-                                <Label className="text-muted-foreground">{t("description")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.description")}</Label>
                                 <p className="text-sm">{selectedPayment.description || "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("date")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.columns.date")}</Label>
                                 <p>{selectedPayment.transactionDate ? new Date(selectedPayment.transactionDate).toLocaleString() : "-"}</p>
                             </div>
                             <div>
-                                <Label className="text-muted-foreground">{t("createdAt")}</Label>
+                                <Label className="text-muted-foreground">{t("payments.details.created")}</Label>
                                 <p>{selectedPayment.createdAt ? new Date(selectedPayment.createdAt).toLocaleString() : "-"}</p>
                             </div>
                         </div>
                     )}
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setDetailsDialogOpen(false)}>
-                            {t("closeDetails")}
+                            {t("payments.details.close")}
                         </Button>
                     </DialogFooter>
                 </DialogContent>
