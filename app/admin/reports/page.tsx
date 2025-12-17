@@ -82,7 +82,7 @@ const COLORS = {
 const PIE_COLORS = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"]
 
 export default function ReportsPage() {
-    const { t } = useTranslation("adminSideBar")
+    const { t, i18n } = useTranslation("admin")
     const { user: currentUser } = useAuth()
     const isSuperAdmin = currentUser?.role === "SUPER_ADMIN"
 
@@ -102,7 +102,7 @@ export default function ReportsPage() {
             setStatistics(data)
         } catch (error) {
             console.error("Error fetching statistics:", error)
-            toast.error(t("reportFetchError"))
+            toast.error(t("reports.fetchError"))
         } finally {
             setStatsLoading(false)
         }
@@ -116,7 +116,7 @@ export default function ReportsPage() {
             setTimeSeriesData(data)
         } catch (error) {
             console.error("Error fetching time series data:", error)
-            toast.error(t("reportFetchError"))
+            toast.error(t("reports.fetchError"))
         } finally {
             setChartLoading(false)
         }
@@ -137,23 +137,26 @@ export default function ReportsPage() {
                 reportType,
                 format,
             })
-            toast.success(t("exportSuccess"))
+            toast.success(t("reports.exportSuccess"))
         } catch (error) {
             console.error("Export error:", error)
-            toast.error(t("exportError"))
+            toast.error(t("reports.exportError"))
         } finally {
             setExportLoading(false)
         }
     }
 
-    // Format number with Vietnamese locale
+    // Format number with current locale
     const formatNumber = (num: number) => {
-        return new Intl.NumberFormat('vi-VN').format(num)
+        return new Intl.NumberFormat(i18n.language || 'en-US').format(num)
     }
 
     // Format currency
     const formatCurrency = (num: number) => {
-        return new Intl.NumberFormat('vi-VN').format(num) + " VND"
+        // Assuming VND for now as base currency, but formatted according to locale
+        // If the app supports multi-currency, this should be adjusted.
+        // For now, we keep the "VND" suffix but format the number locally
+        return new Intl.NumberFormat(i18n.language || 'en-US').format(num) + " VND"
     }
 
     // Format growth percentage
@@ -188,10 +191,10 @@ export default function ReportsPage() {
                     <Card className="max-w-md">
                         <CardHeader>
                             <CardTitle className="text-center text-destructive">
-                                {t("accessDenied")}
+                                {t("reports.accessDenied")}
                             </CardTitle>
                             <CardDescription className="text-center">
-                                {t("superAdminOnly")}
+                                {t("reports.superAdminOnly")}
                             </CardDescription>
                         </CardHeader>
                     </Card>
@@ -214,14 +217,14 @@ export default function ReportsPage() {
     })) || []
 
     const userRolePieData = statistics ? [
-        { name: t("user"), value: statistics.userStats.regularUserCount },
-        { name: t("admin"), value: statistics.userStats.adminCount },
-        { name: t("super_admin"), value: statistics.userStats.superAdminCount },
+        { name: t("reports.charts.labels.user"), value: statistics.userStats.regularUserCount },
+        { name: t("reports.charts.labels.admin"), value: statistics.userStats.adminCount },
+        { name: t("reports.charts.labels.superAdmin"), value: statistics.userStats.superAdminCount },
     ] : []
 
     const mindmapVisibilityPieData = statistics ? [
-        { name: t("publicMindmaps"), value: statistics.mindmapStats.publicMindmaps },
-        { name: t("privateMindmaps"), value: statistics.mindmapStats.privateMindmaps },
+        { name: t("reports.charts.labels.public"), value: statistics.mindmapStats.publicMindmaps },
+        { name: t("reports.charts.labels.private"), value: statistics.mindmapStats.privateMindmaps },
     ] : []
 
     return (
@@ -229,8 +232,8 @@ export default function ReportsPage() {
             {/* Header */}
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
-                    <h1 className="text-3xl font-bold text-foreground">{t("reports")}</h1>
-                    <p className="mt-2 text-muted-foreground">{t("reportsDescription")}</p>
+                    <h1 className="text-3xl font-bold text-foreground">{t("reports.title")}</h1>
+                    <p className="mt-2 text-muted-foreground">{t("reports.description")}</p>
                 </div>
                 <div className="flex gap-2">
                     <Button
@@ -242,13 +245,13 @@ export default function ReportsPage() {
                         }}
                     >
                         <RefreshCw className="h-4 w-4 mr-2" />
-                        {t("refresh")}
+                        {t("reports.refresh")}
                     </Button>
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="outline" size="sm" disabled={exportLoading}>
                                 <Download className="h-4 w-4 mr-2" />
-                                {t("exportReport")}
+                                {t("reports.export")}
                                 <ChevronDown className="h-4 w-4 ml-2" />
                             </Button>
                         </DropdownMenuTrigger>
@@ -256,7 +259,7 @@ export default function ReportsPage() {
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
                                     <Users className="h-4 w-4 mr-2" />
-                                    {t("userReport")}
+                                    {t("reports.userReport")}
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem onClick={() => handleExport('USERS', 'CSV')}>
@@ -273,7 +276,7 @@ export default function ReportsPage() {
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
                                     <Brain className="h-4 w-4 mr-2" />
-                                    {t("mindmapReport")}
+                                    {t("reports.mindmapReport")}
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem onClick={() => handleExport('MINDMAPS', 'CSV')}>
@@ -290,7 +293,7 @@ export default function ReportsPage() {
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
                                     <DollarSign className="h-4 w-4 mr-2" />
-                                    {t("revenueReport")}
+                                    {t("reports.revenueReport")}
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem onClick={() => handleExport('REVENUE', 'CSV')}>
@@ -308,7 +311,7 @@ export default function ReportsPage() {
                             <DropdownMenuSub>
                                 <DropdownMenuSubTrigger>
                                     <BarChart3 className="h-4 w-4 mr-2" />
-                                    {t("fullReport")}
+                                    {t("reports.fullReport")}
                                 </DropdownMenuSubTrigger>
                                 <DropdownMenuSubContent>
                                     <DropdownMenuItem onClick={() => handleExport('ALL', 'CSV')}>
@@ -334,7 +337,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-700 dark:text-blue-300">
                             <Users className="h-4 w-4" />
-                            {t("totalUsers")}
+                            {t("reports.stats.totalUsers")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -347,7 +350,7 @@ export default function ReportsPage() {
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-blue-600 dark:text-blue-400">
-                                        {t("activeUsers")}: {formatNumber(statistics?.userStats.activeUsers || 0)}
+                                        {t("reports.stats.activeUsers")}: {formatNumber(statistics?.userStats.activeUsers || 0)}
                                     </span>
                                     <GrowthIndicator value={statistics?.userStats.weeklyGrowthPercent || 0} />
                                 </div>
@@ -361,7 +364,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
                             <Brain className="h-4 w-4" />
-                            {t("totalMindmaps")}
+                            {t("reports.stats.totalMindmaps")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -374,7 +377,7 @@ export default function ReportsPage() {
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                                        AI: {formatNumber(statistics?.mindmapStats.aiGeneratedMindmaps || 0)}
+                                        {t("reports.stats.aiGenerated")}: {formatNumber(statistics?.mindmapStats.aiGeneratedMindmaps || 0)}
                                     </span>
                                     <GrowthIndicator value={statistics?.mindmapStats.weeklyGrowthPercent || 0} />
                                 </div>
@@ -388,7 +391,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2 text-amber-700 dark:text-amber-300">
                             <DollarSign className="h-4 w-4" />
-                            {t("totalRevenue")}
+                            {t("reports.stats.totalRevenue")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -401,7 +404,7 @@ export default function ReportsPage() {
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-amber-600 dark:text-amber-400">
-                                        {t("revenueThisMonth")}: {formatCurrency(statistics?.revenueStats.revenueThisMonth || 0)}
+                                        {t("reports.stats.revenueThisMonth")}: {formatCurrency(statistics?.revenueStats.revenueThisMonth || 0)}
                                     </span>
                                     <GrowthIndicator value={statistics?.revenueStats.weeklyGrowthPercent || 0} />
                                 </div>
@@ -415,7 +418,7 @@ export default function ReportsPage() {
                     <CardHeader className="pb-2">
                         <CardTitle className="text-sm font-medium flex items-center gap-2 text-purple-700 dark:text-purple-300">
                             <BarChart3 className="h-4 w-4" />
-                            {t("totalTransactions")}
+                            {t("reports.stats.totalTransactions")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -428,7 +431,7 @@ export default function ReportsPage() {
                                 </div>
                                 <div className="flex items-center justify-between mt-2">
                                     <span className="text-xs text-purple-600 dark:text-purple-400">
-                                        {t("avgTransaction")}: {formatCurrency(statistics?.revenueStats.averageTransactionValue || 0)}
+                                        {t("reports.stats.avgTransaction")}: {formatCurrency(statistics?.revenueStats.averageTransactionValue || 0)}
                                     </span>
                                 </div>
                             </>
@@ -444,7 +447,7 @@ export default function ReportsPage() {
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                             <Users className="h-5 w-5 text-blue-500" />
-                            {t("userStatistics")}
+                            {t("reports.stats.userStatistics")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -455,19 +458,19 @@ export default function ReportsPage() {
                         ) : (
                             <>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("newUsersToday")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.newUsersToday")}</span>
                                     <span className="font-medium">{statistics?.userStats.newUsersToday}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("newUsersThisWeek")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.newUsersThisWeek")}</span>
                                     <span className="font-medium">{statistics?.userStats.newUsersThisWeek}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("newUsersThisMonth")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.newUsersThisMonth")}</span>
                                     <span className="font-medium">{statistics?.userStats.newUsersThisMonth}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("suspended")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.suspended")}</span>
                                     <span className="font-medium text-yellow-600">{statistics?.userStats.suspendedUsers}</span>
                                 </div>
                             </>
@@ -480,7 +483,7 @@ export default function ReportsPage() {
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                             <Brain className="h-5 w-5 text-emerald-500" />
-                            {t("mindmapStatistics")}
+                            {t("reports.stats.mindmapStatistics")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -491,19 +494,19 @@ export default function ReportsPage() {
                         ) : (
                             <>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("newMindmapsToday")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.newMindmapsToday")}</span>
                                     <span className="font-medium">{statistics?.mindmapStats.newMindmapsToday}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("newMindmapsThisWeek")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.newMindmapsThisWeek")}</span>
                                     <span className="font-medium">{statistics?.mindmapStats.newMindmapsThisWeek}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("publicMindmaps")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.publicMindmaps")}</span>
                                     <span className="font-medium">{statistics?.mindmapStats.publicMindmaps}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("aiGenerated")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.aiGeneratedMindmaps")}</span>
                                     <span className="font-medium text-purple-600">{statistics?.mindmapStats.aiGeneratedMindmaps}</span>
                                 </div>
                             </>
@@ -516,7 +519,7 @@ export default function ReportsPage() {
                     <CardHeader>
                         <CardTitle className="text-lg flex items-center gap-2">
                             <DollarSign className="h-5 w-5 text-amber-500" />
-                            {t("revenueStatistics")}
+                            {t("reports.stats.revenueStatistics")}
                         </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
@@ -527,19 +530,19 @@ export default function ReportsPage() {
                         ) : (
                             <>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("revenueToday")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.revenueToday")}</span>
                                     <span className="font-medium">{formatCurrency(statistics?.revenueStats.revenueToday || 0)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("revenueThisWeek")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.revenueThisWeek")}</span>
                                     <span className="font-medium">{formatCurrency(statistics?.revenueStats.revenueThisWeek || 0)}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("transactionsToday")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.transactionsToday")}</span>
                                     <span className="font-medium">{statistics?.revenueStats.transactionsToday}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-muted-foreground">{t("transactionsThisWeek")}</span>
+                                    <span className="text-muted-foreground">{t("reports.stats.transactionsThisWeek")}</span>
                                     <span className="font-medium">{statistics?.revenueStats.transactionsThisWeek}</span>
                                 </div>
                             </>
@@ -554,7 +557,7 @@ export default function ReportsPage() {
                 <div className="flex items-center justify-between">
                     <h2 className="text-xl font-semibold flex items-center gap-2">
                         <LineChartIcon className="h-5 w-5" />
-                        {t("trendCharts")}
+                        {t("reports.charts.trend")}
                     </h2>
                     <Select value={timePeriod} onValueChange={(v) => setTimePeriod(v as TimePeriod)}>
                         <SelectTrigger className="w-[150px]">
@@ -562,28 +565,28 @@ export default function ReportsPage() {
                             <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="DAILY">{t("daily")}</SelectItem>
-                            <SelectItem value="WEEKLY">{t("weekly")}</SelectItem>
-                            <SelectItem value="MONTHLY">{t("monthly")}</SelectItem>
-                            <SelectItem value="YEARLY">{t("yearly")}</SelectItem>
+                            <SelectItem value="DAILY">{t("reports.charts.periods.daily")}</SelectItem>
+                            <SelectItem value="WEEKLY">{t("reports.charts.periods.weekly")}</SelectItem>
+                            <SelectItem value="MONTHLY">{t("reports.charts.periods.monthly")}</SelectItem>
+                            <SelectItem value="YEARLY">{t("reports.charts.periods.yearly")}</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
 
                 <Tabs defaultValue="users" className="w-full">
                     <TabsList className="grid w-full grid-cols-4">
-                        <TabsTrigger value="users">{t("usersChart")}</TabsTrigger>
-                        <TabsTrigger value="revenue">{t("revenueChart")}</TabsTrigger>
-                        <TabsTrigger value="distribution">{t("distributionChart")}</TabsTrigger>
-                        <TabsTrigger value="overview">{t("overviewChart")}</TabsTrigger>
+                        <TabsTrigger value="users">{t("reports.charts.tabs.users")}</TabsTrigger>
+                        <TabsTrigger value="revenue">{t("reports.charts.tabs.revenue")}</TabsTrigger>
+                        <TabsTrigger value="distribution">{t("reports.charts.tabs.distribution")}</TabsTrigger>
+                        <TabsTrigger value="overview">{t("reports.charts.tabs.overview")}</TabsTrigger>
                     </TabsList>
 
                     {/* Users & Mindmaps Chart */}
                     <TabsContent value="users" className="mt-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("usersAndMindmapsTrend")}</CardTitle>
-                                <CardDescription>{t("usersAndMindmapsDescription")}</CardDescription>
+                                <CardTitle>{t("reports.charts.titles.usersAndMindmaps")}</CardTitle>
+                                <CardDescription>{t("reports.charts.titles.usersAndMindmapsDesc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {chartLoading ? (
@@ -609,7 +612,7 @@ export default function ReportsPage() {
                                             <Area
                                                 type="monotone"
                                                 dataKey="users"
-                                                name={t("newUsers")}
+                                                name={t("reports.charts.labels.newUsers")}
                                                 stroke={COLORS.primary}
                                                 fillOpacity={1}
                                                 fill="url(#colorUsers)"
@@ -617,7 +620,7 @@ export default function ReportsPage() {
                                             <Area
                                                 type="monotone"
                                                 dataKey="mindmaps"
-                                                name={t("newMindmaps")}
+                                                name={t("reports.charts.labels.newMindmaps")}
                                                 stroke={COLORS.secondary}
                                                 fillOpacity={1}
                                                 fill="url(#colorMindmaps)"
@@ -633,8 +636,8 @@ export default function ReportsPage() {
                     <TabsContent value="revenue" className="mt-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("revenueTrend")}</CardTitle>
-                                <CardDescription>{t("revenueDescription")}</CardDescription>
+                                <CardTitle>{t("reports.charts.titles.revenueTrend")}</CardTitle>
+                                <CardDescription>{t("reports.charts.titles.revenueDesc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {chartLoading ? (
@@ -648,7 +651,7 @@ export default function ReportsPage() {
                                             <YAxis yAxisId="right" orientation="right" stroke={COLORS.purple} />
                                             <Tooltip
                                                 formatter={(value: number, name: string) => [
-                                                    name === t("revenue") ? formatCurrency(value) : value,
+                                                    name === t("reports.charts.labels.revenue") ? formatCurrency(value) : value,
                                                     name
                                                 ]}
                                             />
@@ -656,7 +659,7 @@ export default function ReportsPage() {
                                             <Bar
                                                 yAxisId="left"
                                                 dataKey="revenue"
-                                                name={t("revenue")}
+                                                name={t("reports.charts.labels.revenue")}
                                                 fill={COLORS.tertiary}
                                                 radius={[4, 4, 0, 0]}
                                             />
@@ -664,7 +667,7 @@ export default function ReportsPage() {
                                                 yAxisId="right"
                                                 type="monotone"
                                                 dataKey="transactions"
-                                                name={t("transactions")}
+                                                name={t("reports.charts.labels.transactions")}
                                                 stroke={COLORS.purple}
                                                 strokeWidth={2}
                                             />
@@ -682,7 +685,7 @@ export default function ReportsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <PieChartIcon className="h-5 w-5" />
-                                        {t("userRoleDistribution")}
+                                        {t("reports.charts.titles.userRoleDist")}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
@@ -716,7 +719,7 @@ export default function ReportsPage() {
                                 <CardHeader>
                                     <CardTitle className="flex items-center gap-2">
                                         <PieChartIcon className="h-5 w-5" />
-                                        {t("mindmapVisibility")}
+                                        {t("reports.charts.titles.mindmapVisibility")}
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent>
@@ -752,8 +755,8 @@ export default function ReportsPage() {
                     <TabsContent value="overview" className="mt-4">
                         <Card>
                             <CardHeader>
-                                <CardTitle>{t("overviewTrend")}</CardTitle>
-                                <CardDescription>{t("overviewDescription")}</CardDescription>
+                                <CardTitle>{t("reports.charts.titles.overviewTrend")}</CardTitle>
+                                <CardDescription>{t("reports.charts.titles.overviewDesc")}</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 {chartLoading ? (
@@ -769,7 +772,7 @@ export default function ReportsPage() {
                                             <Line
                                                 type="monotone"
                                                 dataKey="users"
-                                                name={t("newUsers")}
+                                                name={t("reports.charts.labels.newUsers")}
                                                 stroke={COLORS.primary}
                                                 strokeWidth={2}
                                                 dot={{ fill: COLORS.primary }}
@@ -777,7 +780,7 @@ export default function ReportsPage() {
                                             <Line
                                                 type="monotone"
                                                 dataKey="mindmaps"
-                                                name={t("newMindmaps")}
+                                                name={t("reports.charts.labels.newMindmaps")}
                                                 stroke={COLORS.secondary}
                                                 strokeWidth={2}
                                                 dot={{ fill: COLORS.secondary }}
