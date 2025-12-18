@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input"
 import gsap from "gsap"
 import { Crown, Users as UsersIcon, Globe, User as UserIcon, Pencil, Eye, Search } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 function RoleBadge({ label, variant }: { label: string; variant: "owner" | "collab" | "guest" | "public" }) {
   const map: Record<string, string> = {
@@ -22,6 +23,7 @@ function RoleBadge({ label, variant }: { label: string; variant: "owner" | "coll
 }
 
 function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "public"; access?: "edit" | "view" | null }) {
+  const { t } = useTranslation('editor')
   const iconSize = "h-4 w-4"
   const base = "shrink-0"
   return (
@@ -31,7 +33,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <Crown className={`${iconSize} ${base} text-blue-600`} />
           </TooltipTrigger>
-          <TooltipContent>Chủ sở hữu</TooltipContent>
+          <TooltipContent>{t("presence.owner")}</TooltipContent>
         </Tooltip>
       )}
       {kind === "collab" && (
@@ -39,7 +41,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <UsersIcon className={`${iconSize} ${base} text-emerald-600`} />
           </TooltipTrigger>
-          <TooltipContent>Cộng tác viên</TooltipContent>
+          <TooltipContent>{t("presence.collaborator")}</TooltipContent>
         </Tooltip>
       )}
       {kind === "public" && (
@@ -47,7 +49,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <Globe className={`${iconSize} ${base} text-purple-600`} />
           </TooltipTrigger>
-          <TooltipContent>Công khai</TooltipContent>
+          <TooltipContent>{t("presence.public")}</TooltipContent>
         </Tooltip>
       )}
       {kind === "guest" && (
@@ -55,7 +57,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <UserIcon className={`${iconSize} ${base} text-gray-600`} />
           </TooltipTrigger>
-          <TooltipContent>Khách</TooltipContent>
+          <TooltipContent>{t("presence.guest")}</TooltipContent>
         </Tooltip>
       )}
       {access === "edit" && (
@@ -63,7 +65,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <Pencil className={`${iconSize} ${base} text-muted-foreground`} />
           </TooltipTrigger>
-          <TooltipContent>Chỉnh sửa</TooltipContent>
+          <TooltipContent>{t("presence.edit")}</TooltipContent>
         </Tooltip>
       )}
       {access === "view" && (
@@ -71,7 +73,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
           <TooltipTrigger asChild>
             <Eye className={`${iconSize} ${base} text-muted-foreground`} />
           </TooltipTrigger>
-          <TooltipContent>Xem</TooltipContent>
+          <TooltipContent>{t("presence.view")}</TooltipContent>
         </Tooltip>
       )}
     </div>
@@ -81,6 +83,7 @@ function RoleIconsRow({ kind, access }: { kind: "owner" | "collab" | "guest" | "
 export default function PresenceAvatars() {
   const { participants, mindmap } = useMindmapContext()
   const { user, isAuthenticated } = useAuth()
+  const { t } = useTranslation('editor')
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState("")
   const stackRef = useRef<HTMLDivElement>(null)
@@ -242,13 +245,13 @@ export default function PresenceAvatars() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-xl md:max-w-2xl">
           <DialogHeader>
-            <DialogTitle>Người đang ở mindmap này</DialogTitle>
+            <DialogTitle>{t("presence.dialogTitle")}</DialogTitle>
           </DialogHeader>
           <div className="space-y-3 p-2">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Tìm theo tên..."
+                placeholder={t("presence.searchPlaceholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="pl-9"
@@ -257,33 +260,33 @@ export default function PresenceAvatars() {
           </div>
           <div className="p-2 max-h-[60vh] overflow-y-auto">
             <div ref={gridContainerRef} className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5">
-            {items
-              .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
-              .map((p) => {
-              const url = resolveAvatarUrl(p)
-              const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
-              const role = resolveRole(p)
-              return (
-                <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none w-full">
-                  <Avatar className="size-9">
-                    {url ? (
-                      <AvatarImage src={url} alt={p.name} />
-                    ) : (
-                      <AvatarFallback style={{ backgroundColor: p.color }} className="text-white text-sm font-bold">
-                        {initials}
-                      </AvatarFallback>
-                    )}
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold text-foreground break-words">{p.name}</div>
-                    <div className="mt-1"><RoleIconsRow kind={role.kind} access={role.access} /></div>
-                  </div>
-                </div>
-              )
-            })}
-            {items.filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase())).length === 0 && (
-              <div className="text-sm text-muted-foreground">Chưa có ai tham gia</div>
-            )}
+              {items
+                .filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase()))
+                .map((p) => {
+                  const url = resolveAvatarUrl(p)
+                  const initials = (p.name || "?").split(" ").map((n) => n[0]).join("").substring(0, 2).toUpperCase()
+                  const role = resolveRole(p)
+                  return (
+                    <div ref={(el) => { gridRefs.current[p.clientId] = el }} key={`row-${p.clientId}`} className="flex items-center gap-3 p-2 rounded-md border bg-card select-none w-full">
+                      <Avatar className="size-9">
+                        {url ? (
+                          <AvatarImage src={url} alt={p.name} />
+                        ) : (
+                          <AvatarFallback style={{ backgroundColor: p.color }} className="text-white text-sm font-bold">
+                            {initials}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-foreground break-words">{p.name}</div>
+                        <div className="mt-1"><RoleIconsRow kind={role.kind} access={role.access} /></div>
+                      </div>
+                    </div>
+                  )
+                })}
+              {items.filter((p) => (p.name || "").toLowerCase().includes(query.toLowerCase())).length === 0 && (
+                <div className="text-sm text-muted-foreground">{t("presence.noParticipants")}</div>
+              )}
             </div>
           </div>
         </DialogContent>
