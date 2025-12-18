@@ -1,39 +1,64 @@
 {
+  "untitled": "Mindmap chưa có tên",
   "myMindmaps": "Sơ đồ của tôi",
   "mindmaps": "sơ đồ",
   "mindmap": "sơ đồ",
   "archived": "đã lưu trữ",
-
   "createNew": "Tạo mới",
   "createMindmap": "Tạo sơ đồ tư duy",
-
   "loadingMindmaps": "Đang tải sơ đồ...",
-
   "failedToLoadMindmaps": "Không thể tải danh sách sơ đồ",
   "sessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   "retry": "Thử lại",
-
   "noMindmapsYet": "Bạn chưa có sơ đồ nào",
   "noMindmapsDescription": "Bắt đầu hành trình sáng tạo của bạn bằng cách tạo sơ đồ đầu tiên!",
-
+  "emptyState": {
+    "title": "Không tìm thấy sơ đồ tư duy",
+    "description": "Tạo sơ đồ tư duy đầu tiên để bắt đầu",
+    "action": "Tạo Mindmap"
+  },
   "noArchivedMindmaps": "Không có sơ đồ nào trong lưu trữ",
   "archivedMindmapsDescription": "Các sơ đồ đã được lưu trữ sẽ xuất hiện ở đây.",
-
   "noResultsFound": "Không tìm thấy sơ đồ nào",
   "tryAdjustingFilters": "Thử thay đổi từ khóa tìm kiếm hoặc bộ lọc.",
-
   "duplicating": "Đang sao chép...",
   "pleaseWait": "Vui lòng chờ trong giây lát",
   "duplicateSuccess": "Đã sao chép thành công!",
   "created": "Đã tạo bản sao: {title}",
-
   "duplicateFailedTitle": "Sao chép thất bại",
   "duplicateFailedDescription": "Đã xảy ra lỗi khi cố gắng sao chép sơ đồ. Vui lòng thử lại.",
-
   "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi dự án này không?\nHành động này không thể hoàn tác.",
   "leftProject": "Đã rời dự án",
   "leftProjectDescription": "Bạn đã rời khỏi sơ đồ hợp tác thành công.",
-
   "leaveFailed": "Rời dự án thất bại",
-  "leaveFailedDescription": "Không thể rời khỏi dự án. Vui lòng thử lại sau."
+  "leaveFailedDescription": "Không thể rời khỏi dự án. Vui lòng thử lại sau.",
+  "editMindmap": {
+    "title": "Chỉnh Sửa Mindmap",
+    "titleLabel": "Tiêu đề",
+    "descriptionLabel": "Mô tả",
+    "titlePlaceholder": "Nhập tiêu đề mindmap",
+    "descriptionPlaceholder": "Nhập mô tả mindmap (tùy chọn)",
+    "save": "Lưu Thay Đổi",
+    "saving": "Đang lưu...",
+    "cancel": "Hủy",
+    "charCount": "{{current}}/{{max}} ký tự",
+    "shortcut": "Nhấn <1>Ctrl</1> + <2>Enter</2> để lưu"
+  },
+  "list": {
+    "nodes": "nodes",
+    "edges": "edges",
+    "owner": "Chủ sở hữu:",
+    "noDescription": "Không có mô tả",
+    "actions": {
+      "edit": "Sửa tên & mô tả",
+      "duplicate": "Tạo bản sao",
+      "favorite": "Thêm vào yêu thích",
+      "unfavorite": "Bỏ khỏi yêu thích",
+      "archive": "Lưu trữ",
+      "unarchive": "Bỏ lưu trữ",
+      "delete": "Xóa",
+      "leave": "Rời dự án"
+    }
+  },
+  "searchPlaceholder": "Tìm kiếm mindmap..."
 }
