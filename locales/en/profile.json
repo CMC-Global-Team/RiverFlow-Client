@@ -1,0 +1,29 @@
+{
+    "title": "Edit Profile",
+    "subtitle": "Manage your account information",
+    "upload": {
+        "button": "Upload Avatar",
+        "uploading": "Uploading...",
+        "hint": "JPG, PNG or GIF (max 5MB)",
+        "errorSize": "File must be smaller than 5MB",
+        "errorType": "Please select an image file",
+        "success": "Avatar uploaded successfully"
+    },
+    "form": {
+        "fullName": "Full Name",
+        "fullNamePlaceholder": "Enter your full name",
+        "email": "Email",
+        "emailHint": "Email cannot be changed",
+        "language": "Preferred Language",
+        "timezone": "Timezone",
+        "cancel": "Cancel",
+        "save": "Save Changes",
+        "saving": "Saving..."
+    },
+    "validation": {
+        "required": "Please fill in all required fields"
+    },
+    "success": "Profile updated successfully",
+    "error": "Failed to update profile",
+    "errorGeneric": "Error"
+}
