@@ -366,69 +366,70 @@
             "actions": "Actions",
             "closeTicket": "Close Ticket",
             "assignToMe": "Assign to Me"
-        },
-        "payments": {
-            "title": "Payment Management",
-            "search": "Search payments...",
-            "statistics": "Statistics",
-            "stats": {
-                "total": "Total Payments",
-                "today": "Today's Payments",
-                "processed": "Processed",
-                "pending": "Pending",
-                "amount": "Amount"
-            },
-            "export": {
-                "csv": "Export CSV",
-                "txt": "Export TXT",
-                "json": "Export JSON",
-                "success": "Export successful",
-                "error": "Export failed"
-            },
-            "filters": {
-                "allStatus": "All Status",
-                "allTypes": "All Transfer Types",
-                "in": "In",
-                "out": "Out",
-                "pending": "Pending",
-                "matched": "Matched",
-                "processed": "Processed",
-                "ignored": "Ignored",
-                "invalid": "Invalid"
-            },
-            "columns": {
-                "id": "Payment ID",
-                "code": "Code",
-                "user": "User Info",
-                "amount": "Amount",
-                "status": "Status",
-                "gateway": "Gateway",
-                "date": "Date",
-                "actions": "Actions"
-            },
-            "details": {
-                "title": "Payment Details",
-                "externalId": "External ID",
-                "type": "Transfer Type",
-                "accountNumber": "Account Number",
-                "referenceCode": "Reference Code",
-                "content": "Content",
-                "description": "Description",
-                "created": "Created At",
-                "close": "Close Details",
-                "noUser": "No user associated"
-            },
-            "toasts": {
-                "loadFailed": "Failed to load payments",
-                "loadDetailsFailed": "Failed to load payment details",
-                "updateSuccess": "Status updated successfully",
-                "updateError": "Failed to update status"
-            },
-            "dialogs": {
-                "updateStatus": "Update Status",
-                "selectStatus": "Select Status"
-            },
-            "noPayments": "No payments found"
         }
+    },
+    "payments": {
+        "title": "Payment Management",
+        "search": "Search payments...",
+        "statistics": "Statistics",
+        "stats": {
+            "total": "Total Payments",
+            "today": "Today's Payments",
+            "processed": "Processed",
+            "pending": "Pending",
+            "amount": "Amount"
+        },
+        "export": {
+            "csv": "Export CSV",
+            "txt": "Export TXT",
+            "json": "Export JSON",
+            "success": "Export successful",
+            "error": "Export failed"
+        },
+        "filters": {
+            "allStatus": "All Status",
+            "allTypes": "All Transfer Types",
+            "in": "In",
+            "out": "Out",
+            "pending": "Pending",
+            "matched": "Matched",
+            "processed": "Processed",
+            "ignored": "Ignored",
+            "invalid": "Invalid"
+        },
+        "columns": {
+            "id": "Payment ID",
+            "code": "Code",
+            "user": "User Info",
+            "amount": "Amount",
+            "status": "Status",
+            "gateway": "Gateway",
+            "date": "Date",
+            "actions": "Actions"
+        },
+        "details": {
+            "title": "Payment Details",
+            "externalId": "External ID",
+            "type": "Transfer Type",
+            "accountNumber": "Account Number",
+            "referenceCode": "Reference Code",
+            "content": "Content",
+            "description": "Description",
+            "created": "Created At",
+            "close": "Close Details",
+            "noUser": "No user associated"
+        },
+        "toasts": {
+            "loadFailed": "Failed to load payments",
+            "loadDetailsFailed": "Failed to load payment details",
+            "updateSuccess": "Status updated successfully",
+            "updateError": "Failed to update status"
+        },
+        "dialogs": {
+            "updateStatus": "Update Status",
+            "selectStatus": "Select Status"
+        },
+        "noPayments": "No payments found",
+        "noUserAssociated": "No user associated"
     }
 }
