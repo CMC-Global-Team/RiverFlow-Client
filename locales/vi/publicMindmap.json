@@ -1,0 +1,13 @@
+{
+    "accessDenied": "Từ chối truy cập",
+    "privateMessage": "Sơ đồ tư duy này đang ở chế độ riêng tư.",
+    "loadFailed": "Không thể tải sơ đồ tư duy. Liên kết có thể không hợp lệ hoặc đã hết hạn.",
+    "error": "Lỗi",
+    "accessRevoked": "Quyền truy cập bị thu hồi",
+    "accessRevokedMessage": "Sơ đồ tư duy này không còn truy cập được nữa.",
+    "permissionChanged": "Quyền hạn thay đổi",
+    "permissionChangedMessage": "Cấp độ truy cập của bạn đã được cập nhật. Đang tải lại trang...",
+    "saveFailed": "Lưu thất bại",
+    "saveFailedMessage": "Không thể lưu thay đổi.",
+    "errorLoading": "Lỗi tải sơ đồ tư duy"
+}
