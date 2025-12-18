@@ -57,6 +57,7 @@
     }
   },
   "support": {
+    "subtitle": "Các yêu cầu hỗ trợ của bạn được hiển thị ở đây",
     "title": "Yêu cầu Hỗ trợ",
     "description": "Quản lý và phản hồi các yêu cầu hỗ trợ của người dùng",
     "detail": {
