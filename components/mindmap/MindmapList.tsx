@@ -4,6 +4,7 @@ import { Star, Share2, Archive, Trash2, Calendar, Network, Edit, Copy, LogOut } 
 import { formatDistanceToNow } from "date-fns"
 import { MindmapSummary } from "@/types/mindmap.types"
 import { useAuth } from "@/hooks/auth/useAuth"
+import { useTranslation } from "react-i18next"
 
 interface MindmapListProps {
   mindmaps: MindmapSummary[]
@@ -14,8 +15,8 @@ interface MindmapListProps {
   onDuplicate: (id: string) => void
   onClick: (id: string) => void
   actionLoading: string | null
-    onUnarchive?: (id: string) => void
-    onLeave?: (id: string) => void
+  onUnarchive?: (id: string) => void
+  onLeave?: (id: string) => void
 }
 
 export default function MindmapList({
@@ -27,13 +28,15 @@ export default function MindmapList({
   onDuplicate,
   onClick,
   actionLoading,
-    onUnarchive,
-    onLeave
+  onUnarchive,
+  onLeave
 }: MindmapListProps) {
   const { user } = useAuth()
+  const { t, i18n } = useTranslation("mindmaps")
   const formatDate = (dateString: string) => {
     try {
-      return formatDistanceToNow(new Date(dateString), { addSuffix: true })
+      const locale = i18n.language === 'vi' ? require('date-fns/locale/vi').default : undefined
+      return formatDistanceToNow(new Date(dateString), { addSuffix: true, locale })
     } catch {
       return dateString
     }
@@ -53,126 +56,126 @@ export default function MindmapList({
               ${actionLoading === mindmap.id ? "opacity-50 pointer-events-none" : ""}
             `}
           >
-          {/* Icon/Thumbnail */}
-          <div className="flex-shrink-0">
-            <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Network className="h-6 w-6 text-primary" />
+            {/* Icon/Thumbnail */}
+            <div className="flex-shrink-0">
+              <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Network className="h-6 w-6 text-primary" />
+              </div>
             </div>
-          </div>
 
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h3 className="text-base font-semibold text-foreground truncate">
-                {mindmap.title}
-              </h3>
-              {mindmap.isFavorite && (
-                <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
-              )}
-              {mindmap.isPublic && (
-                <Share2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground truncate mb-2">
-              {mindmap.description || "No description"}
-            </p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Calendar className="h-3 w-3" />
-                {formatDate(mindmap.updatedAt)}
-              </span>
-              <span>{mindmap.nodeCount} nodes</span>
-              <span>{mindmap.edgeCount} edges</span>
-              {mindmap.category && (
-                <span className="px-2 py-0.5 rounded-md bg-muted">
-                  {mindmap.category}
+            {/* Content */}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 mb-1">
+                <h3 className="text-base font-semibold text-foreground truncate">
+                  {mindmap.title}
+                </h3>
+                {mindmap.isFavorite && (
+                  <Star className="h-4 w-4 text-yellow-500 fill-yellow-500 flex-shrink-0" />
+                )}
+                {mindmap.isPublic && (
+                  <Share2 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                )}
+              </div>
+              <p className="text-sm text-muted-foreground truncate mb-2">
+                {mindmap.description || t("list.noDescription")}
+              </p>
+              <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Calendar className="h-3 w-3" />
+                  {formatDate(mindmap.updatedAt)}
                 </span>
-              )}
-              {!isOwner && mindmap.ownerName && (
-                <>
-                  <span className="w-px h-3 bg-border" />
-                  <span className="flex items-center gap-1">
-                    {mindmap.ownerAvatar && (
-                      <img 
-                        src={mindmap.ownerAvatar} 
-                        alt={mindmap.ownerName}
-                        className="w-4 h-4 rounded-full object-cover"
-                      />
-                    )}
-                    <span className="font-medium">Owner: {mindmap.ownerName}</span>
+                <span>{mindmap.nodeCount} {t("list.nodes")}</span>
+                <span>{mindmap.edgeCount} {t("list.edges")}</span>
+                {mindmap.category && (
+                  <span className="px-2 py-0.5 rounded-md bg-muted">
+                    {mindmap.category}
                   </span>
+                )}
+                {!isOwner && mindmap.ownerName && (
+                  <>
+                    <span className="w-px h-3 bg-border" />
+                    <span className="flex items-center gap-1">
+                      {mindmap.ownerAvatar && (
+                        <img
+                          src={mindmap.ownerAvatar}
+                          alt={mindmap.ownerName}
+                          className="w-4 h-4 rounded-full object-cover"
+                        />
+                      )}
+                      <span className="font-medium">{t("list.owner")} {mindmap.ownerName}</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onEdit(mindmap.id)
+                }}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+                title={t("list.actions.edit")}
+              >
+                <Edit className="h-4 w-4" />
+              </button>
+              {isOwner && (
+                <>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onDuplicate(mindmap.id)
+                    }}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    title={t("list.actions.duplicate")}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      onToggleFavorite(mindmap.id)
+                    }}
+                    className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    title={mindmap.isFavorite ? t("list.actions.unfavorite") : t("list.actions.favorite")}
+                  >
+                    <Star className={`h-4 w-4 ${mindmap.isFavorite ? "fill-yellow-500 text-yellow-500" : ""}`} />
+                  </button>
+                  {((mindmap as any).isArchived === true || (mindmap as any).status === "archived") ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onUnarchive?.(mindmap.id)
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title={t("list.actions.unarchive")}
+                    >
+                      <Archive className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        onArchive(mindmap.id)
+                      }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                      title={t("list.actions.archive")}
+                    >
+                      <Archive className="h-4 w-4" />
+                    </button>
+                  )}
                 </>
               )}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onEdit(mindmap.id)
-              }}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              title="Edit name & description"
-            >
-              <Edit className="h-4 w-4" />
-            </button>
-            {isOwner && (
-              <>
-                <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onDuplicate(mindmap.id)
-              }}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              title="Duplicate"
-            >
-              <Copy className="h-4 w-4" />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onToggleFavorite(mindmap.id)
-              }}
-              className="p-2 rounded-lg hover:bg-muted transition-colors"
-              title={mindmap.isFavorite ? "Remove from favorites" : "Add to favorites"}
-            >
-              <Star className={`h-4 w-4 ${mindmap.isFavorite ? "fill-yellow-500 text-yellow-500" : ""}`} />
-            </button>
-                  {((mindmap as any).isArchived === true || (mindmap as any).status === "archived") ? (
-                  <button
-                      onClick={(e) => {
-                          e.stopPropagation()
-                          onUnarchive?.(mindmap.id)
-                      }}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors"
-                      title="Unarchive"
-                  >
-                      <Archive className="h-4 w-4" />
-                  </button>
-              ) : (
-                  <button
-                      onClick={(e) => {
-                          e.stopPropagation()
-                          onArchive(mindmap.id)
-                      }}
-                      className="p-2 rounded-lg hover:bg-muted transition-colors"
-                      title="Archive"
-                  >
-                      <Archive className="h-4 w-4" />
-                  </button>
-              )}
-              </>
-            )}
-            {isOwner ? (
+              {isOwner ? (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
                     onDelete(mindmap.id)
                   }}
                   className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                  title="Delete"
+                  title={t("list.actions.delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -183,7 +186,7 @@ export default function MindmapList({
                     onLeave?.(mindmap.id)
                   }}
                   className="p-2 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
-                  title="Leave project"
+                  title={t("list.actions.leave")}
                 >
                   <LogOut className="h-4 w-4" />
                 </button>
