@@ -2,8 +2,7 @@
   "deleteMindmap": "Xóa sơ đồ này",
   "areYouSureDelete": "Bạn có chắc chắn muốn xóa",
   "cannotUndo": "Hành động này không thể hoàn tác.",
-  
   "cancel": "Hủy",
-  "delete": "Đã xoá",
+  "delete": "Xóa",
   "deleting": "Đang xóa..."
 }
