@@ -1,0 +1,65 @@
+{
+    "title": "Chia sẻ Mindmap",
+    "description": "Quản lý quyền truy cập cho <1>{{title}}</1>.",
+    "tabs": {
+        "link": "Đường dẫn công khai",
+        "collaborators": "Cộng tác viên"
+    },
+    "publicLink": {
+        "title": "Công khai Mindmap",
+        "description": "Cho phép mọi người có liên kết truy cập mindmap này",
+        "accessLevel": "Quyền truy cập công khai",
+        "levels": {
+            "view": {
+                "label": "Xem",
+                "description": "Chỉ xem"
+            },
+            "edit": {
+                "label": "Chỉnh sửa",
+                "description": "Xem và chỉnh sửa"
+            },
+            "private": {
+                "label": "Riêng tư",
+                "description": "Chỉ chủ sở hữu"
+            }
+        },
+        "linkLabel": "Đường dẫn công khai",
+        "copySuccess": "Đã sao chép liên kết vào bộ nhớ tạm",
+        "publicUpdateSuccess": "Mindmap đã được công khai",
+        "privateUpdateSuccess": "Mindmap đã được chuyển thành riêng tư",
+        "updateError": "Lỗi cập nhật trạng thái công khai",
+        "accessUpdateSuccess": "Quyền truy cập công khai đã được cập nhật thành {{level}}",
+        "accessUpdateError": "Lỗi cập nhật quyền truy cập"
+    },
+    "collaborators": {
+        "inviteTitle": "Mời cộng tác viên",
+        "emailLabel": "Email người nhận",
+        "rolePlaceholder": "Quyền",
+        "roles": {
+            "viewer": "Xem",
+            "editor": "Chỉnh sửa"
+        },
+        "sendInvite": "Gửi lời mời",
+        "sending": "Gửi...",
+        "inviteSuccess": "Đã gửi lời mời tới {{email}}",
+        "inviteError": "Lỗi gửi lời mời",
+        "noCollaborators": "Chưa mời ai cộng tác",
+        "invitedList": "Danh sách người được mời",
+        "header": "Cộng tác viên"
+    },
+    "publicShare": {
+        "title": "Chia sẻ \"{{title}}\"",
+        "description": "Đây là liên kết chia sẻ công khai. Bất cứ ai có liên kết này đều có thể truy cập mindmap.",
+        "createdBy": "Tạo bởi",
+        "accessLevel": "Quyền truy cập",
+        "publicLink": "Đường dẫn công khai",
+        "shareHint": "Chia sẻ liên kết này để cho phép mọi người xem mindmap này",
+        "copySuccess": "Đã sao chép liên kết!",
+        "levels": {
+            "view": "Chỉ xem",
+            "edit": "Chỉnh sửa",
+            "private": "Riêng tư"
+        }
+    },
+    "close": "Đóng"
+}
