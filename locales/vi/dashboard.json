@@ -8,19 +8,180 @@
   "sessionExpiredMessage": "Phiên đăng nhập của bạn có thể đã hết hạn. Vui lòng đăng nhập lại.",
   "retry": "Thử lại",
   "noMindmaps": "Bạn chưa có sơ đồ tư duy nào.",
-
   "confirmDelete": "Bạn có chắc chắn muốn xóa sơ đồ tư duy này? Hành động này không thể hoàn tác.",
   "confirmLeaveProject": "Bạn có chắc chắn muốn rời khỏi dự án cộng tác này? Bạn sẽ mất quyền truy cập.",
-
   "duplicating": "Đang nhân bản sơ đồ tư duy...",
   "pleaseWait": "Vui lòng chờ",
   "duplicateSuccess": "Nhân bản sơ đồ tư duy thành công",
   "created": "Đã tạo \"{title}\"",
   "duplicateFailed": "Nhân bản sơ đồ tư duy thất bại",
-
   "leftProject": "Đã rời dự án",
   "leftProjectSuccess": "Bạn đã rời khỏi dự án thành công",
   "leaveProjectFailed": "Rời dự án thất bại",
-
-  "error": "Lỗi"
+  "error": "Lỗi",
+  "billing": {
+    "history": {
+      "title": "Lịch sử giao dịch",
+      "description": "Xem lại chi tiết các khoản nạp tiền và giao dịch đã thực hiện trên tài khoản của bạn.",
+      "notes": {
+        "title": "Lưu ý thanh toán",
+        "processing": "Hệ thống xử lý giao dịch tự động 24/7.",
+        "credit": "Số dư (Credit) thường được cộng ngay lập tức sau khi chuyển khoản thành công.",
+        "content": "Vui lòng nhập chính xác <strong>Nội dung chuyển khoản</strong> để tránh sai sót."
+      },
+      "help": {
+        "title": "Cần hỗ trợ?",
+        "text": "Nếu giao dịch của bạn chưa được cập nhật sau 15 phút, vui lòng liên hệ bộ phận CSKH (0395360205) hoặc gửi yêu cầu hỗ trợ kèm biên lai."
+      },
+      "list": {
+        "title": "Danh sách giao dịch",
+        "subtitle": "Hiển thị 10 giao dịch gần nhất"
+      },
+      "empty": {
+        "title": "Chưa có giao dịch nào",
+        "description": "Lịch sử nạp tiền của bạn sẽ xuất hiện tại đây."
+      },
+      "columns": {
+        "code": "Mã GD",
+        "time": "Thời gian",
+        "gateway": "Cổng TT",
+        "amount": "Số tiền",
+        "status": "Trạng thái"
+      },
+      "loading": "Đang tải dữ liệu...",
+      "pagination": {
+        "page": "Trang",
+        "prev": "Trước",
+        "next": "Sau"
+      }
+    }
+  },
+  "support": {
+    "title": "Yêu cầu Hỗ trợ",
+    "description": "Quản lý và phản hồi các yêu cầu hỗ trợ của người dùng",
+    "detail": {
+      "back": "Quay lại danh sách",
+      "ticketInfo": "Thông tin phiếu",
+      "postedBy": "Đăng bởi",
+      "assignee": "Người được giao",
+      "unassigned": "Chưa giao",
+      "created": "Đã tạo",
+      "updated": "Cập nhật lần cuối",
+      "assign": "Giao việc",
+      "changeStatus": "Đổi trạng thái",
+      "changePriority": "Đổi mức độ ưu tiên",
+      "conversation": "Cuộc trò chuyện",
+      "reply": "Trả lời",
+      "replyPlaceholder": "Nhập tin nhắn của bạn...",
+      "internalNote": "Ghi chú nội bộ (chỉ admin thấy)",
+      "sendReply": "Gửi trả lời",
+      "sending": "Đang gửi...",
+      "attachFiles": "Đính kèm tệp",
+      "attachFilesCount": "{{count}} tệp",
+      "loadError": "Không thể tải chi tiết phiếu",
+      "updateSuccess": "Cập nhật phiếu thành công",
+      "updateError": "Cập nhật phiếu thất bại",
+      "replySuccess": "Đã gửi trả lời",
+      "replyError": "Gửi trả lời thất bại",
+      "notFound": "Không tìm thấy phiếu",
+      "description": "Mô tả",
+      "actions": "Hành động",
+      "closeTicket": "Đóng phiếu",
+      "assignToMe": "Giao cho tôi",
+      "you": "Bạn",
+      "support": "Hỗ trợ",
+      "handlingRequest": "Đang xử lý yêu cầu của bạn",
+      "noMessages": "Chưa có tin nhắn nào. Gửi tin nhắn bên dưới.",
+      "closedMessage": "Phiếu này đã đóng. Nếu bạn cần hỗ trợ thêm, vui lòng tạo phiếu mới.",
+      "status": "Trạng thái",
+      "resolved": "Đã giải quyết",
+      "supportAgent": "Nhân viên hỗ trợ",
+      "ticketDetails": "Chi tiết phiếu"
+    },
+    "newTicket": "Tạo phiếu mới",
+    "create": {
+      "title": "Tạo Phiếu Hỗ trợ",
+      "titleLabel": "Tiêu đề",
+      "titlePlaceholder": "Tóm tắt ngắn gọn vấn đề của bạn",
+      "descLabel": "Mô tả",
+      "descPlaceholder": "Cung cấp thông tin chi tiết về vấn đề của bạn...",
+      "categoryLabel": "Danh mục",
+      "priorityLabel": "Mức ưu tiên",
+      "attachmentsLabel": "Đính kèm (tối đa 5)",
+      "attachFiles": "Nhấn để đính kèm tệp",
+      "filesSelected": "tệp đã chọn",
+      "cancel": "Hủy",
+      "submit": "Gửi phiếu"
+    },
+    "list": {
+      "noTickets": "Chưa có phiếu hỗ trợ nào",
+      "createFirst": "Tạo phiếu đầu tiên của bạn"
+    },
+    "category": {
+      "BUG": "Báo lỗi",
+      "TECHNICAL_SUPPORT": "Hỗ trợ kỹ thuật",
+      "BILLING": "Thanh toán",
+      "FEEDBACK": "Góp ý",
+      "OTHER": "Khác"
+    },
+    "priority": {
+      "LOW": "Thấp",
+      "MEDIUM": "Trung bình",
+      "HIGH": "Cao",
+      "URGENT": "Khẩn cấp"
+    },
+    "toasts": {
+      "loadFailed": "Không thể tải danh sách phiếu",
+      "createFailed": "Không thể tạo phiếu"
+    }
+  },
+  "userManagement": {
+    "title": "Quản lý Người dùng",
+    "totalUsers": "Tổng số người dùng",
+    "activeUsers": "Người dùng hoạt động",
+    "newUsers": "Người dùng mới",
+    "searchPlaceholder": "Tìm theo tin hoặc email...",
+    "columns": {
+      "user": "Người dùng",
+      "role": "Vai trò",
+      "status": "Trạng thái",
+      "joinDate": "Ngày tham gia",
+      "actions": "Hành động"
+    },
+    "filters": {
+      "allRoles": "Tất cả vai trò",
+      "allStatus": "Tất cả trạng thái"
+    },
+    "actions": {
+      "edit": "Sửa",
+      "delete": "Xóa",
+      "viewDetails": "Xem chi tiết"
+    },
+    "confirmDelete": "Bạn có chắc chắn muốn xóa người dùng này?",
+    "createNotImplemented": "Chức năng tạo người dùng mới cần được implement ở backend",
+    "error": "Lỗi",
+    "loadError": "Không thể tải danh sách người dùng"
+  },
+  "settings": {
+    "title": "Ngôn ngữ & Hiển thị",
+    "subtitle": "Tùy chỉnh giao diện theo sở thích của bạn",
+    "displaySettings": "Cài đặt hiển thị",
+    "themeApplied": "Giao diện được áp dụng trên toàn bộ trang",
+    "langImmediate": "Thay đổi ngôn ngữ có hiệu lực ngay lập tức",
+    "systemSync": "Giao diện hệ thống đồng bộ với thiết bị",
+    "tip": "Mẹo",
+    "preferencesSaved": "Tùy chọn của bạn được lưu tự động",
+    "display": "Hiển thị",
+    "chooseTheme": "Chọn giao diện ưa thích",
+    "currentTheme": "Giao diện hiện tại",
+    "language": "Ngôn ngữ",
+    "selectLanguage": "Chọn ngôn ngữ hiển thị",
+    "active": "đang hoạt động",
+    "activeLanguage": "Ngôn ngữ hiện tại",
+    "themes": {
+      "light": "Sáng",
+      "dark": "Tối",
+      "system": "Hệ thống"
+    }
+  }
 }
