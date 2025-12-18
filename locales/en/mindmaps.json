@@ -1,39 +1,64 @@
 {
+  "untitled": "Untitled Mindmap",
   "myMindmaps": "My Mindmaps",
   "mindmaps": "mindmaps",
   "mindmap": "mindmap",
   "archived": "archived",
-
   "createNew": "Create New",
   "createMindmap": "Create Mindmap",
-
   "loadingMindmaps": "Loading mindmaps...",
-
   "failedToLoadMindmaps": "Failed to load mindmaps",
   "sessionExpired": "Your session has expired. Please log in again.",
   "retry": "Retry",
-
   "noMindmapsYet": "You don't have any mindmaps yet",
   "noMindmapsDescription": "Start your creative journey by creating your first mindmap!",
-
+  "emptyState": {
+    "title": "No mindmaps found",
+    "description": "Create your first mindmap to get started",
+    "action": "Create Mindmap"
+  },
   "noArchivedMindmaps": "No archived mindmaps",
   "archivedMindmapsDescription": "Your archived mindmaps will appear here.",
-
   "noResultsFound": "No mindmaps found",
   "tryAdjustingFilters": "Try adjusting your search or filters.",
-
   "duplicating": "Duplicating...",
   "pleaseWait": "Please wait",
   "duplicateSuccess": "Duplicated successfully!",
   "created": "Created copy: {title}",
-
   "duplicateFailedTitle": "Duplicate failed",
   "duplicateFailedDescription": "Something went wrong while duplicating the mindmap. Please try again.",
-
   "confirmLeaveProject": "Are you sure you want to leave this project?\nThis action cannot be undone.",
   "leftProject": "Left project",
   "leftProjectDescription": "You have successfully left the collaborative mindmap.",
-
   "leaveFailed": "Failed to leave project",
-  "leaveFailedDescription": "Could not leave the project. Please try again later."
+  "leaveFailedDescription": "Could not leave the project. Please try again later.",
+  "editMindmap": {
+    "title": "Edit Mindmap",
+    "titleLabel": "Title",
+    "descriptionLabel": "Description",
+    "titlePlaceholder": "Enter mindmap title",
+    "descriptionPlaceholder": "Enter mindmap description (optional)",
+    "save": "Save Changes",
+    "saving": "Saving...",
+    "cancel": "Cancel",
+    "charCount": "{{current}}/{{max}} characters",
+    "shortcut": "Press <1>Ctrl</1> + <2>Enter</2> to save"
+  },
+  "list": {
+    "nodes": "nodes",
+    "edges": "edges",
+    "owner": "Owner:",
+    "noDescription": "No description",
+    "actions": {
+      "edit": "Edit name & description",
+      "duplicate": "Duplicate",
+      "favorite": "Add to favorites",
+      "unfavorite": "Remove from favorites",
+      "archive": "Archive",
+      "unarchive": "Unarchive",
+      "delete": "Delete",
+      "leave": "Leave project"
+    }
+  },
+  "searchPlaceholder": "Search mindmaps..."
 }
