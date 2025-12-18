@@ -33,10 +33,32 @@ import DELETE_CONFIRM_DIALOG_EN from "@/locales/en/deleteConfirmDialog.json";
 import DELETE_CONFIRM_DIALOG_VI from "@/locales/vi/deleteConfirmDialog.json";
 import ADMIN_SIDEBAR_EN from "@/locales/en/adminSideBar.json";
 import ADMIN_SIDEBAR_VI from "@/locales/vi/adminSideBar.json";
-import TUTORIAL_EN from "@/locales/en/tutorial.json";
-import TUTORIAL_VI from "@/locales/vi/tutorial.json";
+
+import HEADER_EN from "@/locales/en/header.json";
+import HEADER_VI from "@/locales/vi/header.json";
+import SHARE_MODAL_EN from "@/locales/en/shareModal.json";
+import SHARE_MODAL_VI from "@/locales/vi/shareModal.json";
+import EDITOR_EN from "@/locales/en/editor.json";
+import EDITOR_VI from "@/locales/vi/editor.json";
+import ADMIN_EN from "@/locales/en/admin.json";
+import ADMIN_VI from "@/locales/vi/admin.json";
+import PUBLIC_MINDMAP_EN from "@/locales/en/publicMindmap.json";
+import PUBLIC_MINDMAP_VI from "@/locales/vi/publicMindmap.json";
+import AUTH_EN from "@/locales/en/auth.json";
+import AUTH_VI from "@/locales/vi/auth.json";
+import AI_EN from "@/locales/en/ai.json";
+import AI_VI from "@/locales/vi/ai.json";
+import PROFILE_EN from "@/locales/en/profile.json";
+import PROFILE_VI from "@/locales/vi/profile.json";
+import NOTIFICATIONS_EN from "@/locales/en/notifications.json";
+import NOTIFICATIONS_VI from "@/locales/vi/notifications.json";
 import CHEATSHEET_EN from "@/locales/en/cheatSheet.json";
 import CHEATSHEET_VI from "@/locales/vi/cheatSheet.json";
+import TUTORIAL_EN from "@/locales/en/tutorial.json";
+import TUTORIAL_VI from "@/locales/vi/tutorial.json";
+import EMBED_MODAL_EN from "@/locales/en/embedModal.json";
+import EMBED_MODAL_VI from "@/locales/vi/embedModal.json";
+
 export const locale = {
     en: "English",
     vi: "Tiếng Việt"
@@ -61,8 +83,19 @@ const resource = {
         viewToggle: VIEW_TOGGLE_EN,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_EN,
         adminSideBar: ADMIN_SIDEBAR_EN,
-        tutorial: TUTORIAL_EN,
+
+        header: HEADER_EN,
+        shareModal: SHARE_MODAL_EN,
+        editor: EDITOR_EN,
+        admin: ADMIN_EN,
+        publicMindmap: PUBLIC_MINDMAP_EN,
+        auth: AUTH_EN,
+        ai: AI_EN,
+        profile: PROFILE_EN,
+        notifications: NOTIFICATIONS_EN,
         cheatSheet: CHEATSHEET_EN,
+        tutorial: TUTORIAL_EN,
+        embedModal: EMBED_MODAL_EN,
     },
     vi: {
         home: HOME_VI,
@@ -81,8 +114,19 @@ const resource = {
         viewToggle: VIEW_TOGGLE_VI,
         deleteConfirmDialog: DELETE_CONFIRM_DIALOG_VI,
         adminSideBar: ADMIN_SIDEBAR_VI,
-        tutorial: TUTORIAL_VI,
+
+        header: HEADER_VI,
+        shareModal: SHARE_MODAL_VI,
+        editor: EDITOR_VI,
+        admin: ADMIN_VI,
+        publicMindmap: PUBLIC_MINDMAP_VI,
+        auth: AUTH_VI,
+        ai: AI_VI,
+        profile: PROFILE_VI,
+        notifications: NOTIFICATIONS_VI,
         cheatSheet: CHEATSHEET_VI,
+        tutorial: TUTORIAL_VI,
+        embedModal: EMBED_MODAL_VI,
     }
 } as const
 const defaultNS = 'home'
@@ -105,8 +149,19 @@ i18n.use(initReactI18next).init({
         "viewToggle",
         "deleteConfirmDialog",
         "adminSideBar",
+
+        "header",
+        "shareModal",
+        "editor",
+        "admin",
+        "publicMindmap",
+        "auth",
+        "ai",
+        "profile",
+        "notifications",
+        "cheatSheet",
         "tutorial",
-        "cheatSheet"
+        "embedModal"
     ],
     defaultNS,
     fallbackLng: "vi",
