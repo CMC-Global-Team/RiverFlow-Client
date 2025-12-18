@@ -15,7 +15,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { isAuthenticated, user } = useAuth()
   const { logout, isLoading: isLoggingOut } = useLogout()
-  const { t } = useTranslation()
+  const { t } = useTranslation(["header", "home"])
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
@@ -32,25 +32,25 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("features")}
+              {t("features", { ns: "header" })}
             </Link>
             <Link
               href="/pricing"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("pricing")}
+              {t("pricing", { ns: "header" })}
             </Link>
             <Link
               href="/about"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("about")}
+              {t("about", { ns: "header" })}
             </Link>
             <Link
               href="#"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("docs")}
+              {t("docs", { ns: "header" })}
             </Link>
           </nav>
 
@@ -80,13 +80,13 @@ export default function Header({ onAuthClick }: HeaderProps) {
                   onClick={() => onAuthClick("login")}
                   className="px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                 >
-                  {t("login")}
+                  {t("login", { ns: "header" })}
                 </button>
                 <button
                   onClick={() => onAuthClick("signup")}
                   className="px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                 >
-                  {t("GetStarted")}
+                  {t("getStarted", { ns: "header" })}
                 </button>
               </>
             )}
@@ -111,23 +111,23 @@ export default function Header({ onAuthClick }: HeaderProps) {
               href="#features"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("features")}
+              {t("features", { ns: "header" })}
             </Link>
             <Link
               href="/pricing"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("pricing")}
+              {t("pricing", { ns: "header" })}
             </Link>
             <Link
               href="/about"
               className="relative text-lg font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all"
             >
-              {t("about")}
+              {t("about", { ns: "header" })}
             </Link>
             <Link href="#"
               className="block px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors after:block after:absolute after:bottom-0 after:left-0 after:w-0 after:h-[2px] after:bg-foreground hover:after:w-full after:transition-all">
-              {t("docs")}
+              {t("docs", { ns: "header" })}
             </Link>
 
             {/* Language Switcher - Mobile */}
@@ -154,7 +154,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     disabled={isLoggingOut}
                     className="w-full px-4 py-2 rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors disabled:opacity-50"
                   >
-                    {isLoggingOut ? "Logging out..." : "Logout"}
+                    {isLoggingOut ? t("loggingOut", { ns: "header" }) : t("logout", { ns: "header" })}
                   </button>
                 </>
               ) : (
@@ -166,7 +166,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     }}
                     className="flex-1 px-4 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
                   >
-                    Login
+                    {t("login", { ns: "header" })}
                   </button>
                   <button
                     onClick={() => {
@@ -175,7 +175,7 @@ export default function Header({ onAuthClick }: HeaderProps) {
                     }}
                     className="flex-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-medium hover:bg-primary/90 transition-all"
                   >
-                    {t("GetStarted")}
+                    {t("getStarted", { ns: "header" })}
                   </button>
                 </div>
               )}
