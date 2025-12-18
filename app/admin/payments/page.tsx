@@ -64,7 +64,7 @@ import {
 } from "@/types/payment.types"
 
 export default function PaymentsManagePage() {
-    const { t } = useTranslation("admin")
+    const { t, i18n } = useTranslation("admin")
     const { user: currentUser } = useAuth()
     const isSuperAdmin = currentUser?.role === "SUPER_ADMIN"
 
@@ -228,7 +228,8 @@ export default function PaymentsManagePage() {
 
     // Format amount
     const formatAmount = (amount: number) => {
-        return new Intl.NumberFormat('vi-VN').format(amount) + " VND"
+        const locale = i18n.language === 'vi' ? 'vi-VN' : 'en-US'
+        return new Intl.NumberFormat(locale).format(amount) + " VND"
     }
 
     return (
@@ -449,7 +450,7 @@ export default function PaymentsManagePage() {
                                                 <div className="text-xs text-muted-foreground">{payment.userEmail}</div>
                                             </div>
                                         ) : (
-                                            <span className="text-muted-foreground">{t("noUserAssociated")}</span>
+                                            <span className="text-muted-foreground">{t("payments.noUserAssociated")}</span>
                                         )}
                                     </TableCell>
                                     <TableCell className="font-medium">
