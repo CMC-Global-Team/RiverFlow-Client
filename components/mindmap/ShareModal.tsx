@@ -1,23 +1,23 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogFooter, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
   DialogTitle,
-  DialogTrigger 
+  DialogTrigger
 } from "@/components/ui/dialog"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select"
-import { 
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label"
 import { Loader2, Mail, Check, Copy, Link as LinkIcon, Users } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import CollaboratorsManagement, { Collaborator } from "./CollaboratorsManagement"
+import { useTranslation, Trans } from "react-i18next"
 
 interface ShareModalProps {
   isOpen: boolean
@@ -46,9 +47,9 @@ interface ShareModalProps {
   mindmapId?: string
 }
 
-export default function ShareModal({ 
-  isOpen, 
-  onClose, 
+export default function ShareModal({
+  isOpen,
+  onClose,
   onInvite,
   onUpdateRole,
   onRemoveCollaborator,
@@ -61,6 +62,7 @@ export default function ShareModal({
   shareToken,
   mindmapId
 }: ShareModalProps) {
+  const { t } = useTranslation("shareModal")
   const [email, setEmail] = useState("")
   const [role, setRole] = useState<"EDITOR" | "VIEWER">("VIEWER")
   const [isLoading, setIsLoading] = useState(false)
@@ -78,13 +80,13 @@ export default function ShareModal({
     try {
       await onInvite(email, role)
       setEmail("")
-      toast({ 
-        description: `Đã gửi lời mời tới ${email}`
+      toast({
+        description: t("collaborators.inviteSuccess", { email })
       })
     } catch (error) {
       console.error(error)
       toast({
-        description: "Lỗi gửi lời mời",
+        description: t("collaborators.inviteError"),
         variant: "destructive"
       })
     } finally {
@@ -107,10 +109,10 @@ export default function ShareModal({
       // Last resort: current URL
       publicUrl = typeof window !== 'undefined' ? window.location.href : ''
     }
-    
+
     navigator.clipboard.writeText(publicUrl)
     setCopied(true)
-    toast({ description: "Đã sao chép liên kết vào bộ nhớ tạm" })
+    toast({ description: t("publicLink.copySuccess") })
     setTimeout(() => setCopied(false), 2000)
   }
 
@@ -134,12 +136,12 @@ export default function ShareModal({
       }
       setIsPublicMode(newIsPublic)
       toast({
-        description: newIsPublic ? "Mindmap đã được công khai" : "Mindmap đã được chuyển thành riêng tư"
+        description: newIsPublic ? t("publicLink.publicUpdateSuccess") : t("publicLink.privateUpdateSuccess")
       })
     } catch (error) {
       console.error(error)
       toast({
-        description: "Lỗi cập nhật trạng thái công khai",
+        description: t("publicLink.updateError"),
         variant: "destructive"
       })
     } finally {
@@ -154,15 +156,14 @@ export default function ShareModal({
         await onTogglePublic(isPublicMode, newLevel)
       }
       setPublicAccess(newLevel)
+      const levelLabel = t(`publicLink.levels.${newLevel}.label`);
       toast({
-        description: `Quyền truy cập công khai đã được cập nhật thành ${
-          newLevel === "view" ? "Xem" : newLevel === "edit" ? "Chỉnh sửa" : "Riêng tư"
-        }`
+        description: t("publicLink.accessUpdateSuccess", { level: levelLabel })
       })
     } catch (error) {
       console.error(error)
       toast({
-        description: "Lỗi cập nhật quyền truy cập",
+        description: t("publicLink.accessUpdateError"),
         variant: "destructive"
       })
     } finally {
@@ -174,95 +175,90 @@ export default function ShareModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Chia sẻ Mindmap</DialogTitle>
+          <DialogTitle>{t("title")}</DialogTitle>
           <DialogDescription>
-            Quản lý quyền truy cập cho <span className="font-medium text-foreground">{mindmapTitle}</span>.
+            <Trans i18nKey="description" ns="shareModal" values={{ title: mindmapTitle }}>
+              Manage access for <span className="font-medium text-foreground">{{ title: mindmapTitle }}</span>.
+            </Trans>
           </DialogDescription>
         </DialogHeader>
 
         <Tabs defaultValue="link" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="link">Đường dẫn công khai</TabsTrigger>
+            <TabsTrigger value="link">{t("tabs.link")}</TabsTrigger>
             <TabsTrigger value="collaborators" className="flex items-center gap-2">
               <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Cộng tác viên</span>
+              <span className="hidden sm:inline">{t("tabs.collaborators")}</span>
               <span className="sm:hidden">{collaborators.length}</span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Tab 1: Đường dẫn công khai */}
+          {/* Tab 1: Public Link */}
           <TabsContent value="link" className="space-y-6 py-4">
             <div className="space-y-4">
-              {/* Toggle công khai */}
+              {/* Public Toggle */}
               <div className="rounded-lg border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h4 className="text-sm font-semibold text-foreground">Công khai Mindmap</h4>
+                    <h4 className="text-sm font-semibold text-foreground">{t("publicLink.title")}</h4>
                     <p className="text-xs text-muted-foreground mt-1">
-                      Cho phép mọi người có liên kết truy cập mindmap này
+                      {t("publicLink.description")}
                     </p>
                   </div>
                   <button
                     onClick={() => handleTogglePublic(!isPublicMode)}
                     disabled={isTogglingPublic}
-                    className={`relative w-11 h-6 rounded-full transition-colors ${
-                      isPublicMode ? "bg-blue-500" : "bg-gray-300"
-                    } ${isTogglingPublic ? "opacity-50" : ""}`}
+                    className={`relative w-11 h-6 rounded-full transition-colors ${isPublicMode ? "bg-blue-500" : "bg-gray-300"
+                      } ${isTogglingPublic ? "opacity-50" : ""}`}
                   >
                     <span
-                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
-                        isPublicMode ? "translate-x-5" : ""
-                      }`}
+                      className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${isPublicMode ? "translate-x-5" : ""
+                        }`}
                     />
                   </button>
                 </div>
               </div>
 
-              {/* Quyền truy cập công khai */}
+              {/* Public Access Level */}
               {isPublicMode && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Quyền truy cập công khai</Label>
+                  <Label className="text-sm font-medium">{t("publicLink.accessLevel")}</Label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {[
-                      { value: "view", label: "Xem", description: "Chỉ xem" },
-                      { value: "edit", label: "Chỉnh sửa", description: "Xem và chỉnh sửa" },
-                      { value: "private", label: "Riêng tư", description: "Chỉ chủ sở hữu" }
-                    ].map(option => (
+                    {(["view", "edit", "private"] as const).map(option => (
                       <button
-                        key={option.value}
-                        onClick={() => handleUpdateAccessLevel(option.value as "view" | "edit" | "private")}
+                        key={option}
+                        onClick={() => handleUpdateAccessLevel(option)}
                         disabled={isTogglingPublic}
-                        className={`p-3 rounded-lg border-2 transition-all text-left ${
-                          publicAccess === option.value
+                        className={`p-3 rounded-lg border-2 transition-all text-left ${publicAccess === option
                             ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
                             : "border-border hover:border-blue-300"
-                        } ${isTogglingPublic ? "opacity-50 cursor-not-allowed" : ""}`}
+                          } ${isTogglingPublic ? "opacity-50 cursor-not-allowed" : ""}`}
                       >
-                        <p className="text-sm font-medium text-foreground">{option.label}</p>
-                        <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
+                        <p className="text-sm font-medium text-foreground">{t(`publicLink.levels.${option}.label`)}</p>
+                        <p className="text-xs text-muted-foreground mt-1">{t(`publicLink.levels.${option}.description`)}</p>
                       </button>
                     ))}
                   </div>
                 </div>
               )}
 
-              {/* Sao chép liên kết */}
+              {/* Copy Link */}
               {isPublicMode && (
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium">Đường dẫn công khai</Label>
+                  <Label className="text-sm font-medium">{t("publicLink.linkLabel")}</Label>
                   <div className="flex items-center gap-2">
                     <div className="relative flex-1">
                       <LinkIcon className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        readOnly 
+                      <Input
+                        readOnly
                         value={getPublicUrl()}
                         className="pl-9 bg-muted/50 text-muted-foreground cursor-text text-sm"
                       />
                     </div>
-                    <Button 
-                      size="icon" 
-                      variant="secondary" 
-                      className="shrink-0 border shadow-sm" 
+                    <Button
+                      size="icon"
+                      variant="secondary"
+                      className="shrink-0 border shadow-sm"
                       onClick={handleCopyLink}
                     >
                       {copied ? <Check className="h-4 w-4 text-green-600" /> : <Copy className="h-4 w-4" />}
@@ -273,15 +269,15 @@ export default function ShareModal({
             </div>
           </TabsContent>
 
-          {/* Tab 2: Quản lý cộng tác viên */}
+          {/* Tab 2: Collaborators */}
           <TabsContent value="collaborators" className="space-y-6 py-4">
             <div className="space-y-4">
-              {/* Form mời cộng tác viên */}
+              {/* Invite Form */}
               <form onSubmit={handleInvite} className="space-y-3 rounded-lg border border-border bg-card p-4">
-                <h4 className="text-sm font-semibold text-foreground">Mời cộng tác viên</h4>
-                
+                <h4 className="text-sm font-semibold text-foreground">{t("collaborators.inviteTitle")}</h4>
+
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-sm font-medium">Email người nhận</Label>
+                  <Label htmlFor="email" className="text-sm font-medium">{t("collaborators.emailLabel")}</Label>
                   <div className="flex gap-2 flex-col sm:flex-row">
                     <div className="relative flex-1">
                       <Mail className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -296,36 +292,36 @@ export default function ShareModal({
                         disabled={isLoading}
                       />
                     </div>
-                    
+
                     <div className="w-full sm:w-[140px] shrink-0">
-                      <Select 
-                        value={role} 
+                      <Select
+                        value={role}
                         onValueChange={(value: "EDITOR" | "VIEWER") => setRole(value)}
                         disabled={isLoading}
                       >
                         <SelectTrigger>
-                          <SelectValue placeholder="Quyền" />
+                          <SelectValue placeholder={t("collaborators.rolePlaceholder")} />
                         </SelectTrigger>
                         <SelectContent align="end">
-                          <SelectItem value="VIEWER">Xem</SelectItem>
-                          <SelectItem value="EDITOR">Chỉnh sửa</SelectItem>
+                          <SelectItem value="VIEWER">{t("collaborators.roles.viewer")}</SelectItem>
+                          <SelectItem value="EDITOR">{t("collaborators.roles.editor")}</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
 
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       disabled={isLoading || !email}
                       className="bg-primary text-primary-foreground shrink-0"
                     >
                       {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      {isLoading ? "Gửi..." : "Gửi lời mời"}
+                      {isLoading ? t("collaborators.sending") : t("collaborators.sendInvite")}
                     </Button>
                   </div>
                 </div>
               </form>
 
-              {/* Danh sách cộng tác viên */}
+              {/* Collaborators List */}
               {onUpdateRole && onRemoveCollaborator && (
                 <CollaboratorsManagement
                   mindmapId=""
@@ -342,7 +338,7 @@ export default function ShareModal({
 
         <DialogFooter className="pt-4">
           <Button type="button" variant="outline" onClick={onClose}>
-            Đóng
+            {t("close")}
           </Button>
         </DialogFooter>
       </DialogContent>
