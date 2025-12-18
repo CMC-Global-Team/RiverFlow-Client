@@ -77,12 +77,16 @@ export default function TutorialOverlay() {
     // Extract the key path from the step (e.g., 'tutorial.welcome.title' -> 'welcome.title')
     const getTitleKey = () => {
         const key = currentStep.title.replace('tutorial.', '');
-        return t(key, { defaultValue: currentStep.title });
+        // If the step title is already a key, t() will use it.
+        // If it's a hardcoded string, we might want to check if it's in our locale file, 
+        // but typically steps are defined with keys.
+        // Assuming the tutorial steps configuration provides keys.
+        return t(key);
     };
 
     const getDescriptionKey = () => {
         const key = currentStep.description.replace('tutorial.', '');
-        return t(key, { defaultValue: currentStep.description });
+        return t(key);
     };
 
     const title = getTitleKey();
@@ -153,7 +157,7 @@ export default function TutorialOverlay() {
                         className="gap-1"
                     >
                         <ChevronLeft className="h-4 w-4" />
-                        {t('back', 'Back')}
+                        {t('back')}
                     </Button>
 
                     <Button
@@ -161,7 +165,7 @@ export default function TutorialOverlay() {
                         onClick={nextStep}
                         className="gap-1"
                     >
-                        {isLastStep ? t('finish', 'Finish') : t('next', 'Next')}
+                        {isLastStep ? t('finish') : t('next')}
                         {!isLastStep && <ChevronRight className="h-4 w-4" />}
                     </Button>
                 </div>
