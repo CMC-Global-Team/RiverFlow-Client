@@ -1,21 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  Trash2, 
+import {
+  Trash2,
   Users,
   Loader2,
   AlertCircle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "react-i18next"
 
 export interface Collaborator {
   id?: string
@@ -47,6 +48,7 @@ export default function CollaboratorsManagement({
   const [loadingEmails, setLoadingEmails] = useState<Set<string>>(new Set())
   const [confirmDeleteEmail, setConfirmDeleteEmail] = useState<string | null>(null)
   const { toast } = useToast()
+  const { t } = useTranslation('shareModal')
 
   const handleUpdateRole = async (email: string, role: "EDITOR" | "VIEWER") => {
     const currentRole = collaborators.find(c => c.email === email)?.role
@@ -57,12 +59,12 @@ export default function CollaboratorsManagement({
     setLoadingEmails(prev => new Set(prev).add(email))
     try {
       await onUpdateRole(email, role)
-      toast({ 
-        description: `Đã cập nhật quyền của ${email}`
+      toast({
+        description: t('collaborators.updateRoleSuccess', { email })
       })
     } catch (error: any) {
-      toast({ 
-        description: error?.message || "Lỗi cập nhật quyền",
+      toast({
+        description: error?.message || t('collaborators.updateRoleError', { defaultValue: 'Error updating role' }),
         variant: "destructive"
       })
     } finally {
@@ -79,12 +81,12 @@ export default function CollaboratorsManagement({
     try {
       await onRemove(email)
       setConfirmDeleteEmail(null)
-      toast({ 
-        description: `Đã xóa ${email} khỏi mindmap`
+      toast({
+        description: t('collaborators.removeSuccess', { email })
       })
     } catch (error: any) {
-      toast({ 
-        description: error?.response?.data?.message || "Lỗi xóa collaborator",
+      toast({
+        description: error?.response?.data?.message || t('collaborators.removeError', { defaultValue: 'Error removing collaborator' }),
         variant: "destructive"
       })
     } finally {
@@ -96,11 +98,12 @@ export default function CollaboratorsManagement({
     }
   }
 
+
   if (collaborators.length === 0) {
     return (
       <div className="text-center py-6">
         <Users className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">Chưa mời ai cộng tác</p>
+        <p className="text-sm text-muted-foreground">{t('collaborators.noCollaborators')}</p>
       </div>
     )
   }
@@ -109,9 +112,9 @@ export default function CollaboratorsManagement({
     <div className="space-y-3">
       <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
         <Users className="h-4 w-4" />
-        Danh sách người được mời ({collaborators.length})
+        {t('collaborators.invitedList')} ({collaborators.length})
       </h3>
-      
+
       <div className="space-y-2">
         {collaborators.map((collaborator) => (
           <div
@@ -126,22 +129,20 @@ export default function CollaboratorsManagement({
               <div className="text-left min-w-0 flex-1">
                 <p className="text-sm font-medium text-foreground truncate">{collaborator.email || 'Unknown'}</p>
                 <div className="flex items-center gap-2 mt-1">
-                  <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
-                    collaborator.role === "EDITOR" 
-                      ? "bg-blue-500/20 text-blue-600 dark:text-blue-400" 
-                      : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
-                  }`}>
-                    {collaborator.role === "EDITOR" ? "Chỉnh sửa" : "Xem"}
+                  <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${collaborator.role === "EDITOR"
+                    ? "bg-blue-500/20 text-blue-600 dark:text-blue-400"
+                    : "bg-gray-500/20 text-gray-600 dark:text-gray-400"
+                    }`}>
+                    {collaborator.role === "EDITOR" ? t('collaborators.roles.editor') : t('collaborators.roles.viewer')}
                   </span>
-                  <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
-                    collaborator.status === "accepted"
-                      ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                      : collaborator.status === "pending"
+                  <span className={`text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${collaborator.status === "accepted"
+                    ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                    : collaborator.status === "pending"
                       ? "bg-yellow-500/20 text-yellow-600 dark:text-yellow-400"
                       : "bg-red-500/20 text-red-600 dark:text-red-400"
-                  }`}>
-                    {collaborator.status === "accepted" ? "Đã chấp nhận" : 
-                     collaborator.status === "pending" ? "Chờ phản hồi" : "Từ chối"}
+                    }`}>
+                    {collaborator.status === "accepted" ? t('collaborators.status.accepted') :
+                      collaborator.status === "pending" ? t('collaborators.status.pending') : t('collaborators.status.rejected')}
                   </span>
                 </div>
               </div>
@@ -153,7 +154,7 @@ export default function CollaboratorsManagement({
               {collaborator.status === "accepted" && (
                 <Select
                   value={collaborator.role}
-                  onValueChange={(value: "EDITOR" | "VIEWER") => 
+                  onValueChange={(value: "EDITOR" | "VIEWER") =>
                     handleUpdateRole(collaborator.email, value)
                   }
                   disabled={loadingEmails.has(collaborator.email) || isLoading}
@@ -162,8 +163,8 @@ export default function CollaboratorsManagement({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="VIEWER">Xem</SelectItem>
-                    <SelectItem value="EDITOR">Chỉnh sửa</SelectItem>
+                    <SelectItem value="VIEWER">{t('collaborators.roles.viewer')}</SelectItem>
+                    <SelectItem value="EDITOR">{t('collaborators.roles.editor')}</SelectItem>
                   </SelectContent>
                 </Select>
               )}
@@ -191,7 +192,7 @@ export default function CollaboratorsManagement({
                     onClick={() => setConfirmDeleteEmail(null)}
                     disabled={loadingEmails.has(collaborator.email)}
                   >
-                    Hủy
+                    {t('collaborators.cancel')}
                   </Button>
                 </div>
               ) : isOwner ? (
@@ -201,7 +202,7 @@ export default function CollaboratorsManagement({
                   className="h-9 w-9 p-0"
                   onClick={() => setConfirmDeleteEmail(collaborator.email)}
                   disabled={loadingEmails.has(collaborator.email) || isLoading}
-                  title="Xóa"
+                  title={t('collaborators.remove')}
                 >
                   {loadingEmails.has(collaborator.email) ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
