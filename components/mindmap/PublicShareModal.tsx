@@ -1,17 +1,18 @@
 "use client"
 
 import { useState } from "react"
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogDescription, 
-  DialogHeader, 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Copy, Check, X } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation } from "react-i18next"
 
 interface PublicShareModalProps {
   isOpen: boolean
@@ -23,9 +24,9 @@ interface PublicShareModalProps {
   publicAccessLevel?: "view" | "edit" | "private"
 }
 
-export default function PublicShareModal({ 
-  isOpen, 
-  onClose, 
+export default function PublicShareModal({
+  isOpen,
+  onClose,
   mindmapTitle,
   shareToken,
   ownerName,
@@ -34,23 +35,24 @@ export default function PublicShareModal({
 }: PublicShareModalProps) {
   const [copied, setCopied] = useState(false)
   const { toast } = useToast()
+  const { t } = useTranslation("shareModal")
 
-  const publicUrl = shareToken 
+  const publicUrl = shareToken
     ? `${typeof window !== 'undefined' ? window.location.origin : ''}/public-mindmap?token=${shareToken}`
     : ''
 
-  const accessLevelLabel = publicAccessLevel === "view" 
-    ? "View Only" 
-    : publicAccessLevel === "edit" 
-    ? "Edit" 
-    : "Private"
+  const accessLevelLabel = publicAccessLevel === "view"
+    ? t("publicShare.levels.view")
+    : publicAccessLevel === "edit"
+      ? t("publicShare.levels.edit")
+      : t("publicShare.levels.private")
 
   const handleCopyLink = () => {
     if (publicUrl) {
       navigator.clipboard.writeText(publicUrl)
       setCopied(true)
       toast({
-        description: "Link copied to clipboard!",
+        description: t("publicShare.copySuccess"),
       })
       setTimeout(() => setCopied(false), 2000)
     }
@@ -60,9 +62,9 @@ export default function PublicShareModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Share "{mindmapTitle}"</DialogTitle>
+          <DialogTitle>{t("publicShare.title", { title: mindmapTitle })}</DialogTitle>
           <DialogDescription>
-            This is a public share link. Anyone with this link can access the mindmap.
+            {t("publicShare.description")}
           </DialogDescription>
         </DialogHeader>
 
@@ -71,14 +73,14 @@ export default function PublicShareModal({
           {ownerName && (
             <div className="flex items-center gap-3 p-3 bg-muted rounded-lg">
               {ownerAvatar && (
-                <img 
-                  src={ownerAvatar} 
+                <img
+                  src={ownerAvatar}
                   alt={ownerName}
                   className="w-10 h-10 rounded-full object-cover"
                 />
               )}
               <div>
-                <p className="text-sm text-muted-foreground">Created by</p>
+                <p className="text-sm text-muted-foreground">{t("publicShare.createdBy")}</p>
                 <p className="text-sm font-medium">{ownerName}</p>
               </div>
             </div>
@@ -86,13 +88,13 @@ export default function PublicShareModal({
 
           {/* Access Level */}
           <div className="p-3 bg-muted rounded-lg">
-            <p className="text-sm text-muted-foreground mb-1">Access Level</p>
+            <p className="text-sm text-muted-foreground mb-1">{t("publicShare.accessLevel")}</p>
             <p className="text-sm font-medium">{accessLevelLabel}</p>
           </div>
 
           {/* Public Link */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Public Link</label>
+            <label className="text-sm font-medium">{t("publicShare.publicLink")}</label>
             <div className="flex gap-2">
               <Input
                 value={publicUrl}
@@ -113,14 +115,14 @@ export default function PublicShareModal({
               </Button>
             </div>
             <p className="text-xs text-muted-foreground">
-              Share this link to allow anyone to view this mindmap
+              {t("publicShare.shareHint")}
             </p>
           </div>
 
           {/* Close Button */}
           <div className="flex justify-end pt-4">
             <Button onClick={onClose} variant="outline">
-              Close
+              {t("close")}
             </Button>
           </div>
         </div>
