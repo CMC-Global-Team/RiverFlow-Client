@@ -38,7 +38,7 @@ export default function PricingCard({ name, price, description, features, isPopu
         {/* Price */}
         <div className="mt-6">
           <span className="text-5xl font-bold text-foreground">${price}</span>
-          <span className="text-muted-foreground">/month</span>
+          <span className="text-muted-foreground">{t("card.perMonth")}</span>
         </div>
 
         {/* CTA Button */}

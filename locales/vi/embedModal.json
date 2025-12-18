@@ -1,0 +1,21 @@
+{
+    "title": "Nhúng Mindmap",
+    "description": "Nhúng mindmap <1>{{title}}</1> vào trang web khác.",
+    "enableEmbed": {
+        "title": "Cho phép nhúng",
+        "description": "Bật tính năng nhúng để người khác có thể nhúng mindmap này vào trang web của họ",
+        "enabledSuccess": "Đã bật tính năng nhúng mindmap",
+        "disabledSuccess": "Đã tắt tính năng nhúng mindmap",
+        "error": "Lỗi cập nhật cài đặt nhúng"
+    },
+    "link": {
+        "label": "Đường dẫn nhúng",
+        "copySuccess": "Đã sao chép đường dẫn nhúng"
+    },
+    "iframe": {
+        "label": "Mã nhúng Iframe",
+        "copySuccess": "Đã sao chép mã nhúng iframe"
+    },
+    "disabledState": "Bật tính năng nhúng để lấy mã nhúng mindmap",
+    "close": "Đóng"
+}

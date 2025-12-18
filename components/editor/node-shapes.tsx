@@ -6,6 +6,7 @@ import { memo } from "react"
 import { Handle, Position, NodeProps, useUpdateNodeInternals } from "reactflow"
 import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip'
 import { Link } from 'lucide-react'
+import { useTranslation } from "react-i18next"
 
 interface NodeData {
   label: string
@@ -21,6 +22,7 @@ interface NodeData {
 // Resize Handle Component
 const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: string; currentScale: number; canEdit?: boolean }) => {
   const { updateNodeData } = useMindmapContext()
+  const { t } = useTranslation('editor')
   const updateNodeInternals = useUpdateNodeInternals()
 
   const [isResizing, setIsResizing] = useState(false)
@@ -111,7 +113,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
-        title={enabled ? "Drag to resize" : undefined}
+        title={enabled ? t("nodes.dragToResize") : undefined}
       />
       <div
         className="absolute top-0 right-0"
@@ -119,7 +121,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
-        title={enabled ? "Drag to resize" : undefined}
+        title={enabled ? t("nodes.dragToResize") : undefined}
       />
       <div
         className="absolute bottom-0 left-0"
@@ -127,7 +129,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
-        title={enabled ? "Drag to resize" : undefined}
+        title={enabled ? t("nodes.dragToResize") : undefined}
       />
       <div
         className="absolute bottom-0 right-0"
@@ -135,7 +137,7 @@ const ResizeHandle = memo(({ nodeId, currentScale, canEdit = true }: { nodeId: s
         onMouseDown={handleMouseDown}
         onMouseEnter={() => enabled && setHovering(true)}
         onMouseLeave={() => enabled && !isResizing && setHovering(false)}
-        title={enabled ? "Drag to resize" : undefined}
+        title={enabled ? t("nodes.dragToResize") : undefined}
       />
     </>
   )
@@ -145,13 +147,14 @@ ResizeHandle.displayName = "ResizeHandle"
 
 // Link Indicator Component - shows when node has a link
 const LinkIndicator = memo(({ hasLink, color }: { hasLink: boolean; color: string }) => {
+  const { t } = useTranslation('editor')
   if (!hasLink) return null
 
   return (
     <div
       className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-background border-2 flex items-center justify-center shadow-sm z-10"
       style={{ borderColor: color }}
-      title="This node has a link - click to preview"
+      title={t("nodes.hasLink")}
     >
       <Link className="w-3 h-3" style={{ color }} />
     </div>
@@ -162,6 +165,7 @@ LinkIndicator.displayName = "LinkIndicator"
 
 const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
   const { updateNodeData } = useMindmapContext()
+  const { t } = useTranslation('editor')
   const [editingLabel, setEditingLabel] = useState(false)
   const [editingDesc, setEditingDesc] = useState(false)
   const labelRef = useRef<HTMLDivElement>(null)
@@ -261,7 +265,7 @@ const EditableContent = memo(({ data, id }: { data: NodeData; id: string }) => {
         <div
           className="font-semibold text-sm select-none px-2 -mx-2 py-1 rounded transition-colors w-full pointer-events-auto whitespace-pre-wrap break-words"
           style={{ color: data.color || "#3b82f6", minHeight: '24px', wordWrap: 'break-word', overflowWrap: 'break-word' }}
-          dangerouslySetInnerHTML={{ __html: linkify(data.label || '<span class="opacity-50">Click to edit</span>') }}
+          dangerouslySetInnerHTML={{ __html: linkify(data.label || `<span class="opacity-50">${t('nodes.clickToEdit')}</span>`) }}
         />
       )}
 

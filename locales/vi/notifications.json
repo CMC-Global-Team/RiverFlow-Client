@@ -1,0 +1,33 @@
+{
+    "title": "Thông báo",
+    "projectInvite": "Bạn nhận được lời mời cộng tác",
+    "details": "Chi tiết thông báo",
+    "project": "Dự án",
+    "role": "Vai trò",
+    "expires": "Hết hạn {{time}}",
+    "message": "Tin nhắn",
+    "accept": "Chấp nhận",
+    "decline": "Từ chối",
+    "success": "Thành công!",
+    "error": "Lỗi",
+    "tryAgain": "Thử lại",
+    "relatedTo": "Liên quan đến: {{type}} • {{id}}",
+    "roles": {
+        "editor": "Chỉnh sửa",
+        "viewer": "Xem"
+    },
+    "actions": {
+        "invitationAccepted": "Đã chấp nhận lời mời!",
+        "invitationDeclined": "Đã từ chối lời mời",
+        "failedAccept": "Chấp nhận tham gia thất bại",
+        "failedDecline": "Từ chối tham gia thất bại",
+        "loading": "Đang tải..."
+    },
+    "time": {
+        "justNow": "Vừa xong",
+        "ago": "{{time}} trước",
+        "m": "phút",
+        "h": "giờ",
+        "d": "ngày"
+    }
+}

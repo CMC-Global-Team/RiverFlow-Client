@@ -40,6 +40,7 @@ import {
 import { Sparkles } from "lucide-react"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { useReactFlow } from "reactflow"
+import { useTranslation } from "react-i18next"
 import { toast } from "sonner"
 import {
   DropdownMenu,
@@ -109,6 +110,7 @@ export default function Toolbar({
 }: ToolbarProps = {}) {
   const { addNode, deleteNode, deleteEdge, selectedNode, selectedEdge, nodes, edges, undo, redo, onConnect, setSelectedNode, canUndo, canRedo } = useMindmapContext()
   const reactFlowInstance = useReactFlow()
+  const { t } = useTranslation("editor")
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   // Debug logging for userRole
@@ -118,9 +120,9 @@ export default function Toolbar({
 
   // Get permission label text
   const getPermissionLabel = () => {
-    if (userRole === 'owner') return 'Owner'
-    if (userRole === 'editor') return 'Edit'
-    if (userRole === 'viewer') return 'View'
+    if (userRole === 'owner') return t('toolbar.owner')
+    if (userRole === 'editor') return t('toolbar.edit')
+    if (userRole === 'viewer') return t('toolbar.view')
     return ''
   }
 
@@ -132,12 +134,12 @@ export default function Toolbar({
       },
       shape
     )
-    toast.success(`${shape} node added`)
+    toast.success(t("toasts.nodeAdded", { shape }))
   }
 
   const handleAddSiblingNode = () => {
     if (!selectedNode) {
-      toast.error("Vui lòng chọn một node trước")
+      toast.error(t("toasts.selectNodeFirst"))
       return
     }
 
@@ -186,18 +188,18 @@ export default function Toolbar({
     // Note: Node selection is handled by the useEffect in Canvas component
     // No need to manually select here to avoid infinite loops
 
-    toast.success("Node anh em đã được thêm")
+    toast.success(t("toasts.siblingAdded"))
   }
 
   const handleDeleteSelected = () => {
     if (selectedNode) {
       deleteNode(selectedNode.id)
-      toast.success("Node deleted")
+      toast.success(t("toasts.nodeDeleted"))
     } else if (selectedEdge) {
       deleteEdge(selectedEdge.id)
-      toast.success("Connection deleted")
+      toast.success(t("toasts.connectionDeleted"))
     } else {
-      toast.error("Please select a node or connection first")
+      toast.error(t("toasts.selectFirst"))
     }
   }
 
@@ -226,7 +228,7 @@ export default function Toolbar({
     link.download = `${mindmap?.title || 'mindmap'}.json`
     link.click()
     URL.revokeObjectURL(url)
-    toast.success("Mindmap downloaded as JSON")
+    toast.success(t("toasts.downloadSuccess", { format: "JSON" }))
   }
 
   const handleDownloadImage = async (format: 'png' | 'jpeg') => {
@@ -264,10 +266,10 @@ export default function Toolbar({
       link.download = `${mindmap?.title || 'mindmap'}.${format}`
       link.href = dataUrl
       link.click()
-      toast.success(`Mindmap downloaded as ${format.toUpperCase()}`)
+      toast.success(t("toasts.downloadSuccess", { format: format.toUpperCase() }))
     } catch (err) {
       console.error('Error downloading image:', err)
-      toast.error("Failed to download image")
+      toast.error(t("toasts.downloadError", { format: "Image" }))
     } finally {
       try { document.head.removeChild(styleEl) } catch { }
       try { revertFns.forEach((fn) => fn()) } catch { }
@@ -310,10 +312,10 @@ export default function Toolbar({
       const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width
       pdf.addImage(dataUrl, 'PNG', 0, 0, pdfWidth, pdfHeight)
       pdf.save(`${mindmap?.title || 'mindmap'}.pdf`)
-      toast.success("Mindmap downloaded as PDF")
+      toast.success(t("toasts.downloadSuccess", { format: "PDF" }))
     } catch (err) {
       console.error('Error downloading PDF:', err)
-      toast.error("Failed to download PDF")
+      toast.error(t("toasts.downloadError", { format: "PDF" }))
     } finally {
       try { document.head.removeChild(styleEl) } catch { }
       try { revertFns.forEach((fn) => fn()) } catch { }
@@ -337,7 +339,7 @@ export default function Toolbar({
     link.href = url
     link.click()
     URL.revokeObjectURL(url)
-    toast.success("Mindmap downloaded as Text")
+    toast.success(t("toasts.downloadSuccess", { format: "Text" }))
   }
 
 
@@ -362,7 +364,7 @@ export default function Toolbar({
               {isEditing && userRole !== 'viewer' ? (
                 <input
                   type="text"
-                  value={mindmap?.title || "Untitled Mindmap"}
+                  value={mindmap?.title || t("toolbar.untitled", { defaultValue: "Untitled Mindmap" })}
                   onChange={(e) => handleTitleChange?.(e.target.value)}
                   onBlur={() => setIsEditing?.(false)}
                   autoFocus
@@ -378,7 +380,7 @@ export default function Toolbar({
                   onMouseEnter={userRole !== 'viewer' ? handleTitleHover : undefined}
                   onMouseLeave={userRole !== 'viewer' ? handleTitleLeave : undefined}
                 >
-                  {mindmap?.title || "Untitled Mindmap"}
+                  {mindmap?.title || t("toolbar.untitled", { defaultValue: "Untitled Mindmap" })}
                 </h1>
               )}
             </div>
@@ -394,7 +396,7 @@ export default function Toolbar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Add Node"
+                  title={t("toolbar.addNode")}
                   disabled={userRole === 'viewer'}
                   className="hover:bg-primary/10 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed h-8 w-8"
                 >
@@ -404,27 +406,27 @@ export default function Toolbar({
               <DropdownMenuContent>
                 <DropdownMenuItem onClick={() => handleAddNode("rectangle")} disabled={userRole === 'viewer'}>
                   <Square className="h-4 w-4 mr-2" />
-                  Rectangle
+                  {t("toolbar.shapes.rectangle")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAddNode("circle")} disabled={userRole === 'viewer'}>
                   <Circle className="h-4 w-4 mr-2" />
-                  Circle
+                  {t("toolbar.shapes.circle")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAddNode("ellipse")} disabled={userRole === 'viewer'}>
                   <Circle className="h-4 w-4 mr-2" />
-                  Ellipse
+                  {t("toolbar.shapes.ellipse")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAddNode("diamond")} disabled={userRole === 'viewer'}>
                   <Diamond className="h-4 w-4 mr-2" />
-                  Diamond
+                  {t("toolbar.shapes.diamond")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAddNode("hexagon")} disabled={userRole === 'viewer'}>
                   <Hexagon className="h-4 w-4 mr-2" />
-                  Hexagon
+                  {t("toolbar.shapes.hexagon")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleAddNode("roundedRectangle")} disabled={userRole === 'viewer'}>
                   <Square className="h-4 w-4 mr-2" />
-                  Rounded Rectangle
+                  {t("toolbar.shapes.roundedRectangle")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -435,7 +437,7 @@ export default function Toolbar({
               onClick={handleAddSiblingNode}
               variant="ghost"
               size="icon"
-              title="Add Sibling Node (Enter)"
+              title={t("toolbar.addSibling")}
               disabled={!selectedNode || userRole === 'viewer'}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -448,7 +450,7 @@ export default function Toolbar({
               onClick={handleDeleteSelected}
               variant="ghost"
               size="icon"
-              title="Delete Selected"
+              title={t("toolbar.delete")}
               disabled={(!selectedNode && !selectedEdge) || userRole === 'viewer'}
               className="hover:bg-destructive/10 hover:text-destructive h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -462,7 +464,7 @@ export default function Toolbar({
             variant="ghost"
             size="icon"
             onClick={onHistoryClick}
-            title="Change History"
+            title={t("toolbar.history")}
             disabled={userRole === 'viewer'}
             className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
           >
@@ -478,7 +480,7 @@ export default function Toolbar({
               onClick={undo}
               variant="ghost"
               size="icon"
-              title="Undo (Ctrl+Z)"
+              title={t("toolbar.undo")}
               disabled={!canUndo || userRole === 'viewer'}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -488,7 +490,7 @@ export default function Toolbar({
               onClick={redo}
               variant="ghost"
               size="icon"
-              title="Redo (Ctrl+Y)"
+              title={t("toolbar.redo")}
               disabled={!canRedo || userRole === 'viewer'}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8 disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -505,7 +507,7 @@ export default function Toolbar({
               onClick={handleZoomIn}
               variant="ghost"
               size="icon"
-              title="Zoom In"
+              title={t("toolbar.zoomIn")}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
               <ZoomIn className="h-4 w-4" />
@@ -514,7 +516,7 @@ export default function Toolbar({
               onClick={handleZoomOut}
               variant="ghost"
               size="icon"
-              title="Zoom Out"
+              title={t("toolbar.zoomOut")}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
               <ZoomOut className="h-4 w-4" />
@@ -523,7 +525,7 @@ export default function Toolbar({
               onClick={handleFitView}
               variant="ghost"
               size="icon"
-              title="Fit View"
+              title={t("toolbar.fitView")}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
               <Maximize2 className="h-4 w-4" />
@@ -540,7 +542,7 @@ export default function Toolbar({
                 <Button
                   variant="ghost"
                   size="icon"
-                  title="Download Options"
+                  title={t("toolbar.download")}
                   className="hover:bg-primary/10 hover:text-primary h-8 w-8"
                 >
                   <Download className="h-4 w-4" />
@@ -549,23 +551,23 @@ export default function Toolbar({
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => handleDownloadImage('png')}>
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  PNG Image
+                  {t("toolbar.formats.png")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleDownloadImage('jpeg')}>
                   <ImageIcon className="h-4 w-4 mr-2" />
-                  JPG Image
+                  {t("toolbar.formats.jpg")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadPDF}>
                   <File className="h-4 w-4 mr-2" />
-                  PDF Document
+                  {t("toolbar.formats.pdf")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadText}>
                   <FileText className="h-4 w-4 mr-2" />
-                  Text File
+                  {t("toolbar.formats.text")}
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={handleDownloadJSON}>
                   <FileJson className="h-4 w-4 mr-2" />
-                  JSON Data
+                  {t("toolbar.formats.json")}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -577,7 +579,7 @@ export default function Toolbar({
               data-tutorial="tutorial-btn"
               variant="ghost"
               size="icon"
-              title="Tutorial"
+              title={t("toolbar.tutorial")}
               onClick={onTutorialClick}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
@@ -588,7 +590,7 @@ export default function Toolbar({
               data-tutorial="cheatsheet"
               variant="ghost"
               size="icon"
-              title="Keyboard Shortcuts"
+              title={t("toolbar.shortcuts")}
               onClick={onCheatSheetClick}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
             >
@@ -601,7 +603,7 @@ export default function Toolbar({
                 onClick={onEmbedClick}
                 variant="ghost"
                 size="icon"
-                title="Embed Mindmap"
+                title={t("toolbar.embed")}
                 className="hover:bg-primary/10 hover:text-primary h-8 w-8"
               >
                 <Code className="h-4 w-4" />
@@ -617,7 +619,7 @@ export default function Toolbar({
                 data-tutorial="ai"
                 variant="ghost"
                 size="icon"
-                title="AI Composer"
+                title={t("toolbar.ai")}
                 className={`h-8 w-8 ${aiOpen ? 'bg-primary/10 text-primary' : ''}`}
                 onClick={onAiToggle}
               >
@@ -628,7 +630,7 @@ export default function Toolbar({
               data-tutorial="chat"
               variant="ghost"
               size="icon"
-              title="Chat"
+              title={t("toolbar.chat")}
               className="hover:bg-primary/10 hover:text-primary h-8 w-8"
               onClick={onChatClick}
             >
@@ -661,7 +663,7 @@ export default function Toolbar({
               className="h-4 w-8"
             />
             <Label htmlFor="auto-save" className="text-xs font-medium cursor-pointer hidden sm:inline">
-              Auto
+              {t("toolbar.autoSave")}
             </Label>
           </div>
         )}
@@ -686,7 +688,7 @@ export default function Toolbar({
           onClick={onShareClick}
           variant="ghost"
           size="icon"
-          title="Share"
+          title={t("toolbar.share")}
           className="hover:bg-primary/10 hover:text-primary h-8 w-8"
         >
           <Users className="h-4 w-4" />
@@ -704,12 +706,12 @@ export default function Toolbar({
             {saveStatus === 'error' && <AlertCircle className="h-3 w-3 text-destructive" />}
             <span>
               {saveStatus === 'saving'
-                ? 'Saving...'
+                ? t("toolbar.saving")
                 : saveStatus === 'saved'
-                  ? 'Saved'
+                  ? t("toolbar.saved")
                   : saveStatus === 'error'
-                    ? 'Retry'
-                    : 'Save'}
+                    ? t("toolbar.retry")
+                    : t("toolbar.save")}
             </span>
           </Button>
         )}
@@ -739,7 +741,7 @@ export default function Toolbar({
           variant="ghost"
           size="icon"
           onClick={() => setIsCollapsed(!isCollapsed)}
-          title={isCollapsed ? "Expand Toolbar" : "Collapse Toolbar"}
+          title={isCollapsed ? t("toolbar.expand") : t("toolbar.collapse")}
           className="h-8 w-8 flex-shrink-0 hover:bg-primary/10"
         >
           {isCollapsed ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}

@@ -25,7 +25,7 @@ import { getDashboardData, formatCurrency, formatNumber } from "@/services/admin
 import { AdminDashboardResponse } from "@/types/dashboard.types"
 
 export default function AdminDashboardPage() {
-    const { t } = useTranslation("adminSideBar")
+    const { t } = useTranslation("admin")
     const { user } = useAuth()
     const router = useRouter()
     const [dashboard, setDashboard] = useState<AdminDashboardResponse | null>(null)
@@ -43,21 +43,21 @@ export default function AdminDashboardPage() {
                 setDashboard(data)
             } catch (err) {
                 console.error("Failed to fetch dashboard:", err)
-                setError("Failed to load dashboard data")
+                setError(t("dashboard.toasts.loadFailed") || "Failed to load dashboard data")
             } finally {
                 setIsLoading(false)
             }
         }
 
         fetchDashboard()
-    }, [])
+    }, [t])
 
     if (isLoading) {
         return (
             <div className="flex h-full items-center justify-center p-8">
                 <div className="flex flex-col items-center gap-4">
                     <Loader2 className="h-10 w-10 animate-spin text-primary" />
-                    <p className="text-muted-foreground">Loading dashboard...</p>
+                    <p className="text-muted-foreground">{t("common.loading")}</p>
                 </div>
             </div>
         )
@@ -73,7 +73,7 @@ export default function AdminDashboardPage() {
                         onClick={() => window.location.reload()}
                         className="mt-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                     >
-                        Retry
+                        {t("common.retry")}
                     </button>
                 </div>
             </div>
@@ -86,15 +86,15 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-3xl font-bold text-foreground">
-                        {t("dashboard")}
+                        {t("dashboard.title")}
                     </h1>
                     <p className="mt-1 text-muted-foreground">
-                        Welcome back, {user?.fullName || "Admin"}
+                        {t("dashboard.welcome", { name: user?.fullName || "Admin" })}
                     </p>
                 </div>
                 <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
                     <Zap className="h-4 w-4" />
-                    {isSuperAdmin ? "Super Admin" : "Admin"}
+                    {isSuperAdmin ? t("dashboard.role.superAdmin") : t("dashboard.role.admin")}
                 </div>
             </div>
 
@@ -105,7 +105,7 @@ export default function AdminDashboardPage() {
                     <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <CardDescription className="text-muted-foreground font-medium">Total Users</CardDescription>
+                            <CardDescription className="text-muted-foreground font-medium">{t("dashboard.stats.totalUsers")}</CardDescription>
                             <div className="p-2 rounded-lg bg-blue-500/10">
                                 <Users className="h-4 w-4 text-blue-500" />
                             </div>
@@ -117,7 +117,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex items-center gap-1 mt-2 text-sm text-emerald-500">
                             <TrendingUp className="h-3 w-3" />
-                            <span>+{formatNumber(dashboard?.quickStats.newUsersToday || 0)} today</span>
+                            <span>{t("dashboard.stats.today", { formattedCount: formatNumber(dashboard?.quickStats.newUsersToday || 0) })}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -127,7 +127,7 @@ export default function AdminDashboardPage() {
                     <div className="absolute top-0 right-0 w-20 h-20 bg-purple-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <CardDescription className="text-muted-foreground font-medium">Total Mindmaps</CardDescription>
+                            <CardDescription className="text-muted-foreground font-medium">{t("dashboard.stats.totalMindmaps")}</CardDescription>
                             <div className="p-2 rounded-lg bg-purple-500/10">
                                 <FileText className="h-4 w-4 text-purple-500" />
                             </div>
@@ -139,7 +139,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex items-center gap-1 mt-2 text-sm text-emerald-500">
                             <TrendingUp className="h-3 w-3" />
-                            <span>+{formatNumber(dashboard?.quickStats.newMindmapsToday || 0)} today</span>
+                            <span>{t("dashboard.stats.today", { formattedCount: formatNumber(dashboard?.quickStats.newMindmapsToday || 0) })}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -149,7 +149,7 @@ export default function AdminDashboardPage() {
                     <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <CardDescription className="text-muted-foreground font-medium">Total Revenue</CardDescription>
+                            <CardDescription className="text-muted-foreground font-medium">{t("dashboard.stats.totalRevenue")}</CardDescription>
                             <div className="p-2 rounded-lg bg-emerald-500/10">
                                 <Wallet className="h-4 w-4 text-emerald-500" />
                             </div>
@@ -161,7 +161,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex items-center gap-1 mt-2 text-sm text-emerald-500">
                             <TrendingUp className="h-3 w-3" />
-                            <span>+{formatCurrency(dashboard?.quickStats.revenueToday || 0)} today</span>
+                            <span>{t("dashboard.stats.revenuetoday", { amount: formatCurrency(dashboard?.quickStats.revenueToday || 0) })}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -171,7 +171,7 @@ export default function AdminDashboardPage() {
                     <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500" />
                     <CardHeader className="pb-2">
                         <div className="flex items-center justify-between">
-                            <CardDescription className="text-muted-foreground font-medium">Total Transactions</CardDescription>
+                            <CardDescription className="text-muted-foreground font-medium">{t("dashboard.stats.totalTransactions")}</CardDescription>
                             <div className="p-2 rounded-lg bg-orange-500/10">
                                 <CreditCard className="h-4 w-4 text-orange-500" />
                             </div>
@@ -183,7 +183,7 @@ export default function AdminDashboardPage() {
                         </div>
                         <div className="flex items-center gap-1 mt-2 text-sm text-emerald-500">
                             <TrendingUp className="h-3 w-3" />
-                            <span>+{formatNumber(dashboard?.quickStats.transactionsToday || 0)} today</span>
+                            <span>{t("dashboard.stats.today", { formattedCount: formatNumber(dashboard?.quickStats.transactionsToday || 0) })}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -196,9 +196,9 @@ export default function AdminDashboardPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Activity className="h-5 w-5 text-primary" />
-                            Today&apos;s Activity
+                            {t("dashboard.activity.title")}
                         </CardTitle>
-                        <CardDescription>Quick overview of today&apos;s metrics</CardDescription>
+                        <CardDescription>{t("dashboard.activity.description")}</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="grid grid-cols-2 gap-4">
@@ -209,7 +209,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold">{formatNumber(dashboard?.quickStats.newUsersToday || 0)}</p>
-                                        <p className="text-xs text-muted-foreground">New Users</p>
+                                        <p className="text-xs text-muted-foreground">{t("dashboard.stats.newUsers")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -220,7 +220,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold">{formatNumber(dashboard?.quickStats.activeUsersToday || 0)}</p>
-                                        <p className="text-xs text-muted-foreground">Active Users</p>
+                                        <p className="text-xs text-muted-foreground">{t("dashboard.stats.activeUsers")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -231,7 +231,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold">{formatNumber(dashboard?.quickStats.activeMindmaps || 0)}</p>
-                                        <p className="text-xs text-muted-foreground">Active Mindmaps</p>
+                                        <p className="text-xs text-muted-foreground">{t("dashboard.stats.activeMindmaps")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -242,7 +242,7 @@ export default function AdminDashboardPage() {
                                     </div>
                                     <div>
                                         <p className="text-2xl font-bold">{formatNumber(dashboard?.quickStats.pendingPayments || 0)}</p>
-                                        <p className="text-xs text-muted-foreground">Pending Payments</p>
+                                        <p className="text-xs text-muted-foreground">{t("dashboard.stats.pendingPayments")}</p>
                                     </div>
                                 </div>
                             </div>
@@ -255,9 +255,9 @@ export default function AdminDashboardPage() {
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Zap className="h-5 w-5 text-primary" />
-                            Quick Actions
+                            {t("dashboard.quickActions.title")}
                         </CardTitle>
-                        <CardDescription>Navigate to common admin tasks</CardDescription>
+                        <CardDescription>{t("dashboard.quickActions.description")}</CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-3">
@@ -267,7 +267,7 @@ export default function AdminDashboardPage() {
                             >
                                 <div className="flex items-center gap-3">
                                     <Users className="h-5 w-5" />
-                                    <span className="font-medium">Manage Users</span>
+                                    <span className="font-medium">{t("dashboard.quickActions.manageUsers")}</span>
                                 </div>
                                 <ArrowUpRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </Link>
@@ -277,7 +277,7 @@ export default function AdminDashboardPage() {
                             >
                                 <div className="flex items-center gap-3">
                                     <CreditCard className="h-5 w-5" />
-                                    <span className="font-medium">Payments</span>
+                                    <span className="font-medium">{t("dashboard.quickActions.payments")}</span>
                                 </div>
                                 <ArrowUpRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                             </Link>
@@ -289,7 +289,7 @@ export default function AdminDashboardPage() {
                                     >
                                         <div className="flex items-center gap-3">
                                             <BarChart3 className="h-5 w-5" />
-                                            <span className="font-medium">Reports</span>
+                                            <span className="font-medium">{t("dashboard.quickActions.reports")}</span>
                                         </div>
                                         <ArrowUpRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </Link>
@@ -299,7 +299,7 @@ export default function AdminDashboardPage() {
                                     >
                                         <div className="flex items-center gap-3">
                                             <FileText className="h-5 w-5" />
-                                            <span className="font-medium">System Logs</span>
+                                            <span className="font-medium">{t("dashboard.quickActions.systemLogs")}</span>
                                         </div>
                                         <ArrowUpRight className="h-4 w-4 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </Link>
@@ -318,15 +318,15 @@ export default function AdminDashboardPage() {
                             <div>
                                 <CardTitle className="flex items-center gap-2">
                                     <Clock className="h-5 w-5 text-primary" />
-                                    Recent Activity
+                                    {t("dashboard.activity.recent")}
                                 </CardTitle>
-                                <CardDescription>Latest system activities</CardDescription>
+                                <CardDescription>{t("dashboard.activity.latest")}</CardDescription>
                             </div>
                             <Link
                                 href="/admin/logging"
                                 className="text-sm text-primary hover:underline flex items-center gap-1"
                             >
-                                View All
+                                {t("dashboard.activity.viewAll")}
                                 <ArrowUpRight className="h-3 w-3" />
                             </Link>
                         </div>
@@ -344,10 +344,10 @@ export default function AdminDashboardPage() {
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-center gap-2">
                                             <span className="font-medium text-foreground">{activity.action}</span>
-                                            <span className="text-muted-foreground text-sm">by {activity.actor}</span>
+                                            <span className="text-muted-foreground text-sm">{t("dashboard.activity.by", { name: activity.actor })}</span>
                                         </div>
                                         <p className="text-sm text-muted-foreground mt-1">
-                                            Target: {activity.target}
+                                            {t("dashboard.activity.target", { target: activity.target })}
                                             {activity.details && ` - ${activity.details}`}
                                         </p>
                                     </div>

@@ -3,18 +3,28 @@
     "dragHint": "Kéo tiêu đề để di chuyển",
     "actions": {
         "addChildNode": "Thêm node con",
-        "addSiblingNode": "Thêm node cùng cấp",
+        "addSiblingNode": "Thêm node anh/em",
         "deleteSelected": "Xóa đã chọn",
         "undo": "Hoàn tác",
         "redo": "Làm lại",
-        "save": "Lưu mindmap",
+        "save": "Lưu",
         "zoomIn": "Phóng to",
         "zoomOut": "Thu nhỏ",
         "fitView": "Vừa màn hình",
-        "deselect": "Bỏ chọn tất cả",
-        "editNode": "Sửa nội dung node",
+        "deselect": "Bỏ chọn",
+        "editNode": "Chỉnh sửa node",
         "moveNode": "Di chuyển node",
-        "panCanvas": "Di chuyển canvas",
-        "zoom": "Phóng to/thu nhỏ"
+        "panCanvas": "Di chuyển vùng vẽ",
+        "zoom": "Thu/Phóng"
+    },
+    "keys": {
+        "Tab": "Tab",
+        "Enter": "Enter",
+        "Delete": "Delete",
+        "Ctrl": "Ctrl",
+        "Escape": "Esc",
+        "DoubleClick": "Click đúp",
+        "Drag": "Kéo",
+        "Scroll": "Cuộn"
     }
 }

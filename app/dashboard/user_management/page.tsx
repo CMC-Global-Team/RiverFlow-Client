@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import { Plus } from 'lucide-react';
 
 function UserManagementContent() {
-    const { t } = useTranslation("userManagement");
+    const { t } = useTranslation("dashboard");
     const [users, setUsers] = useState<AdminUserResponse[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [error, setError] = useState<string>('');
@@ -41,11 +41,11 @@ function UserManagementContent() {
                 setTotalPages(data.totalPages || 0);
                 setCurrentPage(data.number || 0);
             } else {
-                setError('Định dạng dữ liệu từ server không đúng');
+                setError(t("userManagement.error"));
                 setUsers([]);
             }
         } catch (e: any) {
-            const errorMsg = e.response?.data?.message || e.message || 'Không thể tải danh sách người dùng';
+            const errorMsg = e.response?.data?.message || e.message || t("userManagement.error");
             setError(errorMsg);
             console.error('Error fetching users:', e);
             setUsers([]);
@@ -112,14 +112,14 @@ function UserManagementContent() {
     };
 
     const handleDelete = async (id: number) => {
-        if (!confirm('Bạn có chắc chắn muốn xóa người dùng này?')) return;
+        if (!confirm(t("userManagement.delete.confirm"))) return;
 
         try {
             await deleteUser(id);
             await fetchUsers(currentPage, pageSize);
-            alert('Xóa người dùng thành công');
+            alert(t("userManagement.delete.success"));
         } catch (e: any) {
-            const errorMsg = e.response?.data?.message || e.message || 'Xóa người dùng thất bại';
+            const errorMsg = e.response?.data?.message || e.message || t("userManagement.delete.error");
             alert(errorMsg);
             console.error('Error deleting user:', e);
         }
@@ -127,7 +127,7 @@ function UserManagementContent() {
 
     const handleSubmit = async (formData: AdminUpdateUserRequest) => {
         if (!editingUser) {
-            alert('Chức năng tạo user mới cần được implement ở backend');
+            alert(t("userManagement.update.createNotImplemented"));
             return;
         }
 
@@ -135,9 +135,9 @@ function UserManagementContent() {
             await updateUser(editingUser.userId, formData);
             setShowForm(false);
             await fetchUsers(currentPage, pageSize);
-            alert('Cập nhật thành công');
+            alert(t("userManagement.update.success"));
         } catch (e: any) {
-            const errorMsg = e.response?.data?.message || e.message || 'Cập nhật thất bại';
+            const errorMsg = e.response?.data?.message || e.message || t("userManagement.update.error");
             alert(errorMsg);
             console.error('Error updating user:', e);
             throw e;
@@ -163,12 +163,9 @@ function UserManagementContent() {
                         <div className="mb-6">
                             <div className="flex items-center justify-between mb-2">
                                 <div>
-                                    <h1 className="text-3xl font-bold text-foreground">Quản Lý Người Dùng</h1>
+                                    <h1 className="text-3xl font-bold text-foreground">{t("userManagement.title")}</h1>
                                     <p className="mt-2 text-muted-foreground">
-                                        {filteredAndSortedUsers.length} người dùng
-                                        {filteredAndSortedUsers.length !== users.length &&
-                                            ` (${users.length} tổng)`
-                                        }
+                                        {t("userManagement.total", { count: filteredAndSortedUsers.length, total: users.length })}
                                     </p>
                                 </div>
                                 <button
@@ -176,7 +173,7 @@ function UserManagementContent() {
                                     className="flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors font-semibold"
                                 >
                                     <Plus className="h-5 w-5" />
-                                    Tạo Người Dùng Mới
+                                    {t("userManagement.create")}
                                 </button>
                             </div>
                         </div>
@@ -185,7 +182,7 @@ function UserManagementContent() {
                         {error && (
                             <div className="mb-6 flex items-center gap-3 p-4 rounded-lg bg-destructive/10 text-destructive border border-destructive/20">
                                 <div className="flex-1">
-                                    <p className="font-semibold">Lỗi</p>
+                                    <p className="font-semibold">{t("userManagement.error")}</p>
                                     <p className="text-sm">{error}</p>
                                 </div>
                             </div>
@@ -219,11 +216,11 @@ function UserManagementContent() {
                                     disabled={currentPage === 0}
                                     className="px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90"
                                 >
-                                    ← Trang Trước
+                                    ← {t("userManagement.table.prev")}
                                 </button>
 
                                 <span className="text-sm text-muted-foreground">
-                                    Trang <strong>{currentPage + 1}</strong> / <strong>{totalPages}</strong>
+                                    {t("userManagement.table.page")} <strong>{currentPage + 1}</strong> / <strong>{totalPages}</strong>
                                 </span>
 
                                 <button
@@ -231,7 +228,7 @@ function UserManagementContent() {
                                     disabled={currentPage >= totalPages - 1}
                                     className="px-4 py-2 rounded-lg font-medium text-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed bg-primary text-primary-foreground hover:bg-primary/90"
                                 >
-                                    Trang Sau →
+                                    {t("userManagement.table.next")} →
                                 </button>
                             </div>
                         )}

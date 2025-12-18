@@ -1,0 +1,22 @@
+{
+    "settings": "Settings",
+    "structure": "Structure",
+    "language": "Language",
+    "auto": "Auto",
+    "vietnamese": "Vietnamese",
+    "english": "English",
+    "inputPlaceholder": "Enter your prompt...",
+    "conversation": "Conversation",
+    "noMessages": "No messages yet",
+    "mode": {
+        "normal": "Normal Mode",
+        "thinking": "Thinking Mode",
+        "max": "Max Mode"
+    },
+    "error": {
+        "noMindmap": "Error (NO_MINDMAP): Please open a mindmap in the Editor first.",
+        "createFailed": "Failed to generate mindmap.",
+        "hint": "Hint"
+    },
+    "agentName": "RiverFlow Agent"
+}

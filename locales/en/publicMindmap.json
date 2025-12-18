@@ -1,0 +1,13 @@
+{
+    "accessDenied": "Access Denied",
+    "privateMessage": "This mindmap is private.",
+    "loadFailed": "Failed to load mindmap. The link may be invalid or expired.",
+    "error": "Error",
+    "accessRevoked": "Access Revoked",
+    "accessRevokedMessage": "This mindmap is no longer accessible.",
+    "permissionChanged": "Permission Changed",
+    "permissionChangedMessage": "Your access level has been updated. Refreshing page...",
+    "saveFailed": "Save failed",
+    "saveFailedMessage": "Could not save changes.",
+    "errorLoading": "Error Loading Mindmap"
+}

@@ -1,0 +1,33 @@
+{
+    "title": "Notification",
+    "projectInvite": "You have received a collaboration invitation",
+    "details": "Notification details",
+    "project": "Project",
+    "role": "Role",
+    "expires": "Expires {{time}}",
+    "message": "Message",
+    "accept": "Accept",
+    "decline": "Decline",
+    "success": "Success!",
+    "error": "Error",
+    "tryAgain": "Try again",
+    "relatedTo": "Related to: {{type}} • {{id}}",
+    "roles": {
+        "editor": "Editor",
+        "viewer": "Viewer"
+    },
+    "actions": {
+        "invitationAccepted": "Invitation accepted!",
+        "invitationDeclined": "Invitation declined",
+        "failedAccept": "Failed to accept invitation",
+        "failedDecline": "Failed to decline invitation",
+        "loading": "Loading..."
+    },
+    "time": {
+        "justNow": "Just now",
+        "ago": "{{time}} ago",
+        "m": "m",
+        "h": "h",
+        "d": "d"
+    }
+}

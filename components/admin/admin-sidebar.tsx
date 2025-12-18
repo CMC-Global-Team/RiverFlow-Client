@@ -20,7 +20,7 @@ import {
 } from "lucide-react"
 
 export default function AdminSidebar() {
-    const { t } = useTranslation("adminSideBar")
+    const { t } = useTranslation("admin")
     const [isCollapsed, setIsCollapsed] = useState(false)
     const { logout, isLoading } = useLogout()
     const { user } = useAuth()
@@ -42,7 +42,7 @@ export default function AdminSidebar() {
             <div className="flex h-16 items-center justify-between px-4 border-b border-border">
                 {!isCollapsed && (
                     <span className="text-lg font-bold text-foreground">
-                        <Link href="/admin">{isSuperAdmin ? "RiverFlow Super Admin" : "RiverFlow Admin"}</Link>
+                        <Link href="/admin">{isSuperAdmin ? t("dashboard.superAdmin") : t("dashboard.admin")}</Link>
                     </span>
                 )}
                 <button
@@ -61,7 +61,7 @@ export default function AdminSidebar() {
                         className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                         <LayoutGrid className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">{t("dashboard")}</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.dashboard")}</span>}
                     </Link>
 
                     <Link
@@ -69,7 +69,7 @@ export default function AdminSidebar() {
                         className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                         <Users className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">{t("userManage")}</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.userManage")}</span>}
                     </Link>
 
                     <Link
@@ -77,7 +77,7 @@ export default function AdminSidebar() {
                         className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                         <CreditCard className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">{t("paymentManage")}</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.paymentManage")}</span>}
                     </Link>
 
                     {/* Reports & Statistics - Only visible for Super Admin */}
@@ -87,7 +87,7 @@ export default function AdminSidebar() {
                             className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                         >
                             <BarChart3 className="h-5 w-5" />
-                            {!isCollapsed && <span className="text-sm font-medium">{t("reports")}</span>}
+                            {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.reports")}</span>}
                         </Link>
                     )}
 
@@ -98,7 +98,7 @@ export default function AdminSidebar() {
                             className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                         >
                             <FileText className="h-5 w-5" />
-                            {!isCollapsed && <span className="text-sm font-medium">{t("loggingSystem")}</span>}
+                            {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.loggingSystem")}</span>}
                         </Link>
                     )}
 
@@ -108,7 +108,7 @@ export default function AdminSidebar() {
                         className="flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                     >
                         <Headphones className="h-5 w-5" />
-                        {!isCollapsed && <span className="text-sm font-medium">{t("supportRequests")}</span>}
+                        {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.supportRequests")}</span>}
                     </Link>
 
                     <div className="space-y-1">
@@ -118,7 +118,7 @@ export default function AdminSidebar() {
                         >
                             <div className="flex items-center gap-3">
                                 <Settings className="h-5 w-5" />
-                                {!isCollapsed && <span className="text-sm font-medium">{t("settings")}</span>}
+                                {!isCollapsed && <span className="text-sm font-medium">{t("sidebar.settings")}</span>}
                             </div>
 
                             {!isCollapsed && (
@@ -135,13 +135,13 @@ export default function AdminSidebar() {
                                     href="/admin/settings/general"
                                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                                 >
-                                    {t("generalSettings")}
+                                    {t("sidebar.generalSettings")}
                                 </Link>
                                 <Link
                                     href="/admin/settings/system"
                                     className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
                                 >
-                                    {t("systemSettings")}
+                                    {t("sidebar.systemSettings")}
                                 </Link>
                             </div>
                         )}
@@ -157,7 +157,7 @@ export default function AdminSidebar() {
                     className="w-full flex items-center gap-3 rounded-lg px-4 py-2.5 text-muted-foreground hover:bg-muted hover:text-destructive transition-all disabled:opacity-50"
                 >
                     <LogOut className="h-5 w-5" />
-                    {!isCollapsed && <span className="text-sm font-medium">{isLoading ? t("loggingOut") : t("logout")}</span>}
+                    {!isCollapsed && <span className="text-sm font-medium">{isLoading ? t("sidebar.loggingOut") : t("sidebar.logout")}</span>}
                 </button>
             </div>
         </aside>

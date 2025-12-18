@@ -1,70 +1,7 @@
 {
-    "welcome": {
-        "title": "Chào mừng đến với RiverFlow!",
-        "description": "Hãy cùng khám phá trình soạn thảo mindmap. Chỉ mất một phút thôi."
-    },
-    "zoomControls": {
-        "title": "Điều khiển Thu phóng",
-        "description": "Sử dụng các nút này để phóng to, thu nhỏ hoặc vừa khít mindmap với màn hình."
-    },
-    "download": {
-        "title": "Xuất Mindmap",
-        "description": "Tải mindmap của bạn ở nhiều định dạng: PNG, JPG, PDF, Text hoặc JSON."
-    },
-    "chat": {
-        "title": "Chat Thời gian thực",
-        "description": "Cộng tác với người khác theo thời gian thực bằng tính năng chat."
-    },
-    "theme": {
-        "title": "Chuyển đổi Giao diện",
-        "description": "Chuyển đổi giữa chế độ sáng và tối theo sở thích của bạn."
-    },
-    "share": {
-        "title": "Chia sẻ & Cộng tác",
-        "description": "Chia sẻ mindmap của bạn với người khác hoặc xem các tùy chọn chia sẻ."
-    },
-    "viewerNotice": {
-        "title": "Chế độ Chỉ xem",
-        "description": "Bạn chỉ có quyền xem mindmap này. Bạn có thể khám phá và xuất, nhưng không thể thay đổi."
-    },
-    "addNode": {
-        "title": "Thêm Node Mới",
-        "description": "Nhấn vào đây để thêm node mới với nhiều hình dạng: hình chữ nhật, hình tròn, hình thoi và nhiều hơn nữa."
-    },
-    "addSibling": {
-        "title": "Thêm Node Cùng cấp",
-        "description": "Chọn một node và nhấn vào đây để thêm node cùng cấp."
-    },
-    "delete": {
-        "title": "Xóa Đã chọn",
-        "description": "Xóa node hoặc kết nối đã chọn khỏi mindmap."
-    },
-    "undoRedo": {
-        "title": "Hoàn tác & Làm lại",
-        "description": "Làm sai? Sử dụng hoàn tác/làm lại để quay lại các thay đổi."
-    },
-    "history": {
-        "title": "Lịch sử Thay đổi",
-        "description": "Xem toàn bộ lịch sử thay đổi của mindmap này."
-    },
-    "autoSave": {
-        "title": "Tự động Lưu",
-        "description": "Bật tự động lưu để lưu thay đổi tự động khi bạn làm việc."
-    },
-    "aiComposer": {
-        "title": "Trợ lý AI",
-        "description": "Sử dụng AI để tạo ý tưởng, mở rộng node hoặc cải thiện mindmap of bạn."
-    },
-    "embed": {
-        "title": "Cài đặt Nhúng",
-        "description": "Bật nhúng để chia sẻ mindmap trên website và blog."
-    },
-    "completion": {
-        "title": "Bạn Đã Sẵn sàng!",
-        "description": "Bạn đã biết những điều cơ bản về trình soạn thảo mindmap. Hãy bắt đầu sáng tạo!"
-    },
+    "title": "Hướng dẫn",
     "back": "Quay lại",
     "next": "Tiếp theo",
-    "finish": "Hoàn thành",
-    "startTutorial": "Bắt đầu Hướng dẫn"
+    "finish": "Hoàn tất",
+    "skip": "Bỏ qua"
 }

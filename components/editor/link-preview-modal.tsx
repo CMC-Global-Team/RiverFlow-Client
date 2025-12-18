@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { ExternalLink, X, GripHorizontal, Globe, Loader2, Play } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 interface OGMetadata {
     title: string
@@ -36,6 +37,7 @@ export default function LinkPreviewModal({
     nodeLabel,
     position = { x: 100, y: 100 },
 }: LinkPreviewModalProps) {
+    const { t } = useTranslation('editor')
     const [metadata, setMetadata] = useState<OGMetadata | null>(null)
     const [isLoading, setIsLoading] = useState(true)
     const [isDragging, setIsDragging] = useState(false)
@@ -79,7 +81,7 @@ export default function LinkPreviewModal({
                         favicon: '',
                         url: url,
                         type: 'website',
-                        error: 'Failed to load preview',
+                        error: t('linkPreview.error'),
                     })
                     setIsLoading(false)
                 })
@@ -157,7 +159,7 @@ export default function LinkPreviewModal({
                     </div>
                     <Button className="w-full gap-2 mt-3" onClick={handleOpenInNewTab}>
                         <ExternalLink className="w-4 h-4" />
-                        Open Full Image
+                        {t('linkPreview.openFullImage')}
                     </Button>
                 </div>
             )
@@ -179,7 +181,7 @@ export default function LinkPreviewModal({
                     </div>
                     <Button className="w-full gap-2 mt-3" onClick={handleOpenInNewTab}>
                         <ExternalLink className="w-4 h-4" />
-                        Open Video
+                        {t('linkPreview.openVideo')}
                     </Button>
                 </div>
             )
@@ -201,7 +203,7 @@ export default function LinkPreviewModal({
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-1">{metadata.title}</p>
                     <Button className="w-full gap-2 mt-2" onClick={handleOpenInNewTab}>
                         <Play className="w-4 h-4" />
-                        Watch on YouTube
+                        {t('linkPreview.watchYoutube')}
                     </Button>
                 </div>
             )
@@ -223,7 +225,7 @@ export default function LinkPreviewModal({
                     <p className="text-sm text-muted-foreground mt-2 line-clamp-1">{metadata.title}</p>
                     <Button className="w-full gap-2 mt-2" onClick={handleOpenInNewTab}>
                         <Play className="w-4 h-4" />
-                        Watch on Vimeo
+                        {t('linkPreview.watchVimeo')}
                     </Button>
                 </div>
             )
@@ -249,7 +251,7 @@ export default function LinkPreviewModal({
                     )}
                     <Button className="w-full gap-2 mt-3" onClick={handleOpenInNewTab}>
                         <ExternalLink className="w-4 h-4" />
-                        Open Website
+                        {t('linkPreview.openWebsite')}
                     </Button>
                 </div>
             )
@@ -300,7 +302,7 @@ export default function LinkPreviewModal({
 
                     <Button className="w-full gap-2" onClick={handleOpenInNewTab}>
                         <ExternalLink className="w-4 h-4" />
-                        Open Website
+                        {t('linkPreview.openWebsite')}
                     </Button>
                 </div>
             </div>
@@ -349,7 +351,7 @@ export default function LinkPreviewModal({
                         {/* Type badge */}
                         {metadata && metadata.type !== 'website' && (
                             <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary uppercase">
-                                {metadata.type}
+                                {t(`linkPreview.type.${metadata.type}` as any) || metadata.type}
                             </span>
                         )}
                     </div>
@@ -379,7 +381,7 @@ export default function LinkPreviewModal({
                 {isLoading ? (
                     <div className="flex flex-col items-center justify-center py-12">
                         <Loader2 className="w-8 h-8 animate-spin text-primary mb-2" />
-                        <span className="text-sm text-muted-foreground">Loading preview...</span>
+                        <span className="text-sm text-muted-foreground">{t('linkPreview.loading')}</span>
                     </div>
                 ) : (
                     renderContent()

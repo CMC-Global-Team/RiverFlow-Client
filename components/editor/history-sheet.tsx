@@ -13,8 +13,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { getAvatarUrl } from "@/lib/avatar-utils"
+import { useTranslation } from "react-i18next"
 
 export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapId: string; mindmap?: MindmapResponse; onClose: () => void }) {
+  const { t } = useTranslation("editor")
   const [items, setItems] = useState<HistoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -34,7 +36,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   const [totalPages, setTotalPages] = useState(0)
   const scrollerRef = useRef<HTMLDivElement | null>(null)
   const seenRef = useRef<Set<string>>(new Set())
-  
+
 
   const loadPage = async (reset = false, pageOverride?: number) => {
     setLoading(true)
@@ -55,7 +57,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       setItems(next)
       setTotalPages(meta.totalPages || 0)
     } catch (e) {
-      setError("Không tải được lịch sử")
+      setError(t("history.error"))
     } finally {
       setLoading(false)
     }
@@ -143,19 +145,19 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       const count = changes?.count ?? (items ? items.length : undefined)
       switch (action) {
         case 'node_update':
-          return count ? `Cập nhật ${count} node` : 'Cập nhật node'
+          return count ? `${t("history.nodeUpdate")} (${count})` : t("history.nodeUpdate")
         case 'edge_update':
-          return count ? `Cập nhật ${count} connection` : 'Cập nhật connection'
+          return count ? `${t("history.edgeUpdate")} (${count})` : t("history.edgeUpdate")
         case 'edge_add':
-          return 'Tạo connection'
+          return t("history.edgeAdd")
         case 'node_add':
-          return 'Tạo node'
+          return t("history.nodeAdd")
         case 'node_delete':
-          return 'Xóa node'
+          return t("history.nodeDelete")
         case 'edge_delete':
-          return 'Xóa connection'
+          return t("history.edgeDelete")
         case 'viewport_change':
-          return 'Thay đổi khung nhìn'
+          return t("history.viewportChange")
         default:
           return action
       }
@@ -173,23 +175,23 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
   }
 
   const getUserDisplay = (userId?: number) => {
-    if (!userId) return { name: 'Người dùng ẩn danh', avatar: null }
+    if (!userId) return { name: t("history.anonymousUser"), avatar: null }
     const isOwner = mindmap && mindmap.mysqlUserId === userId
     if (isOwner) {
-      return { name: mindmap?.ownerName || 'Chủ sở hữu', avatar: absolutize(mindmap?.ownerAvatar || (`/user/avatar/${userId}`)) }
+      return { name: mindmap?.ownerName || t("toolbar.owner"), avatar: absolutize(mindmap?.ownerAvatar || (`/user/avatar/${userId}`)) }
     }
     const pres = Object.values(participants || {}).find((p: any) => String(p.userId ?? '') === String(userId)) as any
     if (pres) {
       const avatar = getAvatarUrl(pres.avatar || undefined)
-      return { name: pres.name || `Người dùng ẩn danh`, avatar }
+      return { name: pres.name || t("history.anonymous"), avatar }
     }
     const collab = mindmap?.collaborators?.find((c: Collaborator) => c.mysqlUserId === userId)
     if (collab) {
       const avatar = getAvatarUrl(`/user/avatar/${userId}`)
-      return { name: collab.email || `Người dùng ẩn danh`, avatar }
+      return { name: collab.email || t("history.anonymous"), avatar }
     }
     const avatar = getAvatarUrl(`/user/avatar/${userId}`)
-    return { name: `Người dùng ẩn danh`, avatar }
+    return { name: t("history.anonymous"), avatar }
   }
 
   const canRestore = () => {
@@ -220,7 +222,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
       }
       if (!snap) return
       await restoreFromHistory(snap, item.id)
-    } catch {}
+    } catch { }
   }
 
   return (
@@ -236,29 +238,29 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
     >
       <div className="sticky top-0 flex items-center justify-between p-3 border-b border-border bg-card/50 backdrop-blur-sm cursor-grab active:cursor-grabbing hover:bg-card/70 transition-colors flex-shrink-0 gap-2" onMouseDown={handleMouseDown}>
         <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-        <h3 className="text-sm font-semibold text-foreground">Lịch sử thay đổi</h3>
+        <h3 className="text-sm font-semibold text-foreground">{t("history.title")}</h3>
         <div className="flex items-center gap-2 flex-1" onMouseDown={(e) => e.stopPropagation()}>
-          <Input placeholder="Tìm kiếm..." value={q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} className="h-8 text-sm w-40" />
+          <Input placeholder={t("history.search")} value={q} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setQ(e.target.value)} className="h-8 text-sm w-40" />
           <Select value={selectedAction} onValueChange={setSelectedAction}>
             <SelectTrigger className="h-8 w-36 text-sm">
-              <SelectValue placeholder="Loại" />
+              <SelectValue placeholder={t("history.type")} />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">Tất cả loại</SelectItem>
-              <SelectItem value="node_update">Cập nhật node</SelectItem>
-              <SelectItem value="edge_update">Cập nhật connection</SelectItem>
-              <SelectItem value="edge_add">Tạo connection</SelectItem>
-              <SelectItem value="node_add">Tạo node</SelectItem>
-              <SelectItem value="node_delete">Xóa node</SelectItem>
-              <SelectItem value="edge_delete">Xóa connection</SelectItem>
-              <SelectItem value="viewport_change">Thay đổi khung nhìn</SelectItem>
+              <SelectItem value="all">{t("history.allTypes")}</SelectItem>
+              <SelectItem value="node_update">{t("history.nodeUpdate")}</SelectItem>
+              <SelectItem value="edge_update">{t("history.edgeUpdate")}</SelectItem>
+              <SelectItem value="edge_add">{t("history.edgeAdd")}</SelectItem>
+              <SelectItem value="node_add">{t("history.nodeAdd")}</SelectItem>
+              <SelectItem value="node_delete">{t("history.nodeDelete")}</SelectItem>
+              <SelectItem value="edge_delete">{t("history.edgeDelete")}</SelectItem>
+              <SelectItem value="viewport_change">{t("history.viewportChange")}</SelectItem>
             </SelectContent>
           </Select>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
                 <Calendar className="h-3.5 w-3.5 mr-1" /><ArrowLeft className="h-3.5 w-3.5 mr-1" />
-                {from ? new Date(from).toLocaleString() : 'Từ'}
+                {from ? new Date(from).toLocaleString() : t("history.from")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-2 bg-card/95 backdrop-blur-sm border border-border shadow-md">
@@ -269,7 +271,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm" className="h-8 px-2 text-xs">
                 <Calendar className="h-3.5 w-3.5 mr-1" /><ArrowRight className="h-3.5 w-3.5 mr-1" />
-                {to ? new Date(to).toLocaleString() : 'Đến'}
+                {to ? new Date(to).toLocaleString() : t("history.to")}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="p-2 bg-card/95 backdrop-blur-sm border border-border shadow-md">
@@ -282,9 +284,9 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
         </Button>
       </div>
       <div ref={scrollerRef} className="overflow-y-auto" style={{ height: `calc(100% - 85px)` }}>
-        {loading && <div className="p-4 text-sm">Đang tải...</div>}
+        {loading && <div className="p-4 text-sm">{t("history.loading")}</div>}
         {error && <div className="p-4 text-sm text-destructive">{error}</div>}
-        {!loading && !error && items.length === 0 && <div className="p-4 text-sm">Chưa có lịch sử</div>}
+        {!loading && !error && items.length === 0 && <div className="p-4 text-sm">{t("history.noHistory")}</div>}
         {!loading && !error && items.length > 0 && (
           <ul className="list-none m-0 p-0">
             {items.map((it) => {
@@ -306,14 +308,14 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
                         )
                       })()}
                       <div className="flex items-center gap-2">
-                        <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{it.action}</span>
+                        <span className="text-xs px-2 py-0.5 rounded bg-primary/10 text-primary">{t(`history.${it.action.replace(/_([a-z])/g, (g) => g[1].toUpperCase())}` as any, { defaultValue: it.action })}</span>
                         <span className="text-sm font-semibold">{describe(it.action, it.changes as any)}</span>
                       </div>
                     </div>
                     <div className="text-right flex items-center gap-3">
                       <div className="text-xs font-medium">{u.name}</div>
                       <div className="text-xs text-muted-foreground">{new Date(it.createdAt).toLocaleString()}</div>
-                      <Button variant="ghost" size="icon" title="Quay về" aria-label="Quay về" disabled={!canRestore()} onClick={() => handleRestore(it)} className="h-7 w-7">
+                      <Button variant="ghost" size="icon" title={t("history.restore")} aria-label={t("history.restore")} disabled={!canRestore()} onClick={() => handleRestore(it)} className="h-7 w-7">
                         <RotateCcw className="h-4 w-4" />
                       </Button>
                     </div>
@@ -332,7 +334,7 @@ export default function HistorySheet({ mindmapId, mindmap, onClose }: { mindmapI
           ))}
         </div>
       </div>
-      
+
       <div className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors" onMouseDown={handleResizeStart} />
     </div>
   )

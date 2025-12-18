@@ -9,6 +9,7 @@ import { uploadAvatar } from "@/services/auth/upload-avatar.service"
 import { getAvatarUrl } from "@/lib/avatar-utils"
 import { useToast } from "@/hooks/use-toast"
 import type { UpdateUserRequest } from "@/types/user.types"
+import { useTranslation } from "react-i18next"
 
 interface ProfileModalProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ interface ProfileModalProps {
 }
 
 export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
+  const { t } = useTranslation("profile")
   const { user, updateUser } = useAuth()
   const { toast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -24,7 +26,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false)
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null)
   const profileLoadedRef = useRef(false)
-  
+
   const [formData, setFormData] = useState<UpdateUserRequest>({
     fullName: "",
     email: "",
@@ -78,8 +80,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     if (!file.type.startsWith("image/")) {
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: "Vui lòng chọn file ảnh",
+        title: t("errorGeneric"),
+        description: t("upload.errorType"),
       })
       return
     }
@@ -88,8 +90,8 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     if (file.size > 5 * 1024 * 1024) {
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: "Kích thước file phải nhỏ hơn 5MB",
+        title: t("errorGeneric"),
+        description: t("upload.errorSize"),
       })
       return
     }
@@ -106,7 +108,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     try {
       const response = await uploadAvatar(file)
       setFormData({ ...formData, avatar: response.url })
-      
+
       // Update avatar in auth context immediately
       if (user) {
         updateUser({
@@ -118,17 +120,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
           avatar: response.url,
         })
       }
-      
+
       toast({
-        title: "Thành công",
-        description: "Upload avatar thành công",
+        title: t("success"),
+        description: t("upload.success"),
       })
     } catch (error: any) {
       console.error("Error uploading avatar:", error)
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: error.message || "Không thể upload avatar",
+        title: t("errorGeneric"),
+        description: error.message || t("upload.errorGeneric", "Failed to upload avatar"),
       })
       setAvatarPreview(formData.avatar || null)
     } finally {
@@ -138,12 +140,12 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!formData.fullName.trim()) {
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: "Vui lòng điền đầy đủ thông tin bắt buộc",
+        title: t("errorGeneric"),
+        description: t("validation.required"),
       })
       return
     }
@@ -151,7 +153,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
     setIsLoading(true)
     try {
       const updatedProfile = await updateUserProfile(formData)
-      
+
       // Update auth context
       updateUser({
         userId: updatedProfile.userId,
@@ -163,17 +165,17 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       })
 
       toast({
-        title: "Thành công",
-        description: "Cập nhật thông tin thành công",
+        title: t("success"),
+        description: t("success"),
       })
-      
+
       onClose()
     } catch (error: any) {
       console.error("Error updating profile:", error)
       toast({
         variant: "destructive",
-        title: "Lỗi",
-        description: error.message || "Không thể cập nhật thông tin",
+        title: t("errorGeneric"),
+        description: error.message || t("error"),
       })
     } finally {
       setIsLoading(false)
@@ -189,16 +191,16 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   if (!isOpen) return null
 
   const modalContent = (
-    <div 
+    <div
       className="fixed inset-0 z-[9999] flex items-center justify-center"
-      style={{ 
-        position: 'fixed', 
-        top: 0, 
-        left: 0, 
-        right: 0, 
-        bottom: 0, 
-        display: 'flex', 
-        alignItems: 'center', 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        alignItems: 'center',
         justifyContent: 'center',
         zIndex: 9999,
         backgroundColor: 'rgba(0, 0, 0, 0.5)',
@@ -207,9 +209,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
       onClick={onClose}
       onKeyDown={handleKeyDown}
     >
-      <div 
+      <div
         className="relative w-full max-w-4xl mx-4 bg-card rounded-xl shadow-2xl border border-border"
-        style={{ 
+        style={{
           maxHeight: '85vh',
           overflow: 'hidden',
           display: 'flex',
@@ -221,9 +223,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
         {/* Header */}
         <div className="flex items-center justify-between p-5 border-b border-border">
           <div>
-            <h2 className="text-xl font-bold text-foreground">Cập nhật thông tin cá nhân</h2>
+            <h2 className="text-xl font-bold text-foreground">{t("title")}</h2>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Quản lý thông tin tài khoản của bạn
+              {t("subtitle")}
             </p>
           </div>
           <button
@@ -256,9 +258,9 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                       <div className="relative">
                         <div className="h-24 w-24 rounded-full border-2 border-border overflow-hidden bg-muted flex items-center justify-center">
                           {avatarPreview ? (
-                            <img 
-                              src={avatarPreview} 
-                              alt="Avatar preview" 
+                            <img
+                              src={avatarPreview}
+                              alt="Avatar preview"
                               className="h-full w-full object-cover"
                               onError={() => setAvatarPreview(null)}
                             />
@@ -288,10 +290,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                           className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 flex items-center gap-2 text-sm"
                         >
                           <Upload className="h-4 w-4" />
-                          {isUploadingAvatar ? "Đang upload..." : "Chọn ảnh"}
+                          {isUploadingAvatar ? t("upload.uploading") : t("upload.button")}
                         </button>
                         <p className="text-xs text-muted-foreground mt-1">
-                          JPG, PNG hoặc GIF (tối đa 5MB)
+                          {t("upload.hint")}
                         </p>
                       </div>
                     </div>
@@ -301,13 +303,13 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
                       <User className="h-4 w-4" />
-                      Họ và tên <span className="text-destructive">*</span>
+                      {t("form.fullName")} <span className="text-destructive">*</span>
                     </label>
                     <input
                       type="text"
                       value={formData.fullName}
                       onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                      placeholder="Nhập họ và tên"
+                      placeholder={t("form.fullNamePlaceholder")}
                       disabled={isLoading}
                       required
                       className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50 text-sm"
@@ -315,23 +317,23 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                     />
                   </div>
 
-              {/* Email */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
-                  <Mail className="h-4 w-4" />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  placeholder="Email"
-                  disabled={true}
-                  className="w-full px-3 py-2 rounded-lg border border-border bg-muted text-muted-foreground cursor-not-allowed text-sm"
-                />
-                <p className="text-xs text-muted-foreground mt-1">
-                  Email không thể thay đổi
-                </p>
-              </div>
+                  {/* Email */}
+                  <div>
+                    <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
+                      <Mail className="h-4 w-4" />
+                      {t("form.email")}
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      placeholder="Email"
+                      disabled={true}
+                      className="w-full px-3 py-2 rounded-lg border border-border bg-muted text-muted-foreground cursor-not-allowed text-sm"
+                    />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {t("form.emailHint")}
+                    </p>
+                  </div>
                 </div>
 
                 {/* Right Column */}
@@ -340,7 +342,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
                       <Globe className="h-4 w-4" />
-                      Ngôn ngữ ưa thích
+                      {t("form.language")}
                     </label>
                     <select
                       value={formData.preferredLanguage}
@@ -357,7 +359,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                   <div>
                     <label className="flex items-center gap-2 text-sm font-medium text-foreground mb-2">
                       <Clock className="h-4 w-4" />
-                      Múi giờ
+                      {t("form.timezone")}
                     </label>
                     <select
                       value={formData.timezone}
@@ -384,7 +386,7 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 disabled={isLoading}
                 className="px-4 py-2 rounded-lg border border-border hover:bg-muted transition-colors disabled:opacity-50 text-sm"
               >
-                Hủy
+                {t("form.cancel")}
               </button>
               <button
                 type="submit"
@@ -394,10 +396,10 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
                 {isLoading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin inline-block mr-2" />
-                    Đang lưu...
+                    {t("form.saving")}
                   </>
                 ) : (
-                  "Lưu thay đổi"
+                  t("form.save")
                 )}
               </button>
             </div>
@@ -411,6 +413,6 @@ export default function ProfileModal({ isOpen, onClose }: ProfileModalProps) {
   if (typeof window !== 'undefined') {
     return createPortal(modalContent, document.body)
   }
-  
+
   return null
 }

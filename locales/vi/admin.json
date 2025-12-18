@@ -1,0 +1,435 @@
+{
+    "dashboard": {
+        "title": "Bảng điều khiển",
+        "welcome": "Chào mừng trở lại, {{name}}",
+        "superAdmin": "Quản trị viên cấp cao RiverFlow",
+        "admin": "Quản trị viên RiverFlow",
+        "role": {
+            "superAdmin": "Quản trị viên cấp cao",
+            "admin": "Quản trị viên"
+        },
+        "stats": {
+            "totalUsers": "Tổng người dùng",
+            "totalMindmaps": "Tổng sơ đồ tư duy",
+            "totalRevenue": "Tổng doanh thu",
+            "totalTransactions": "Tổng giao dịch",
+            "today": "+{{formattedCount}} hôm nay",
+            "newUsers": "Người dùng mới",
+            "activeUsers": "Người dùng hoạt động",
+            "activeMindmaps": "Sơ đồ hoạt động",
+            "pendingPayments": "Thanh toán chờ xử lý",
+            "revenuetoday": "+{{amount}} hôm nay"
+        },
+        "quickActions": {
+            "title": "Thao tác nhanh",
+            "description": "Truy cập nhanh các tác vụ quản trị",
+            "manageUsers": "Quản lý người dùng",
+            "payments": "Thanh toán",
+            "reports": "Báo cáo",
+            "systemLogs": "Nhật ký hệ thống"
+        },
+        "activity": {
+            "title": "Hoạt động hôm nay",
+            "description": "Tổng quan nhanh các chỉ số hôm nay",
+            "recent": "Hoạt động gần đây",
+            "latest": "Các hoạt động hệ thống mới nhất",
+            "viewAll": "Xem tất cả",
+            "by": "bởi {{name}}",
+            "target": "Mục tiêu: {{target}}"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Bảng điều khiển",
+        "userManage": "Quản lý người dùng",
+        "paymentManage": "Quản lý thanh toán",
+        "reports": "Báo cáo & Thống kê",
+        "loggingSystem": "Hệ thống nhật ký",
+        "supportRequests": "Yêu cầu hỗ trợ",
+        "settings": "Cài đặt",
+        "generalSettings": "Cài đặt chung",
+        "systemSettings": "Cài đặt hệ thống",
+        "logout": "Đăng xuất",
+        "loggingOut": "Đang đăng xuất..."
+    },
+    "users": {
+        "title": "Quản lý người dùng",
+        "showing": "Hiển thị {{count}} trên {{total}} kết quả",
+        "search": "Tìm kiếm người dùng...",
+        "noUsers": "Không tìm thấy người dùng nào",
+        "columns": {
+            "email": "Email",
+            "fullName": "Họ tên",
+            "role": "Vai trò",
+            "status": "Trạng thái",
+            "credit": "Tín dụng",
+            "createdAt": "Ngày tạo",
+            "actions": "Thao tác"
+        },
+        "filters": {
+            "allStatus": "Tất cả trạng thái",
+            "allRoles": "Tất cả vai trò",
+            "active": "Hoạt động",
+            "suspended": "Đã đình chỉ",
+            "deleted": "Đã xóa",
+            "admin": "Quản trị viên",
+            "user": "Người dùng"
+        },
+        "actions": {
+            "edit": "Chỉnh sửa",
+            "updateCredit": "Cập nhật tín dụng",
+            "changePassword": "Đổi mật khẩu",
+            "viewPayments": "Xem lịch sử thanh toán",
+            "delete": "Xóa"
+        },
+        "dialogs": {
+            "editUser": "Chỉnh sửa người dùng",
+            "updateCredit": "Cập nhật tín dụng",
+            "changePassword": "Đổi mật khẩu",
+            "paymentHistory": "Lịch sử thanh toán",
+            "cancel": "Hủy",
+            "save": "Lưu",
+            "newPassword": "Mật khẩu mới",
+            "roleChangeRestricted": "Chỉ Quản trị viên cấp cao mới có thể thay đổi vai trò người dùng",
+            "noPaymentHistory": "Không tìm thấy lịch sử thanh toán nào"
+        },
+        "delete": {
+            "confirm": "Bạn có chắc chắn muốn xóa người dùng này?",
+            "warning": "Hành động này sẽ xóa mềm người dùng và họ sẽ không thể truy cập tài khoản của mình nữa.",
+            "warningPermanent": "Với tư cách là Quản trị viên cấp cao, bạn có thể chọn xóa mềm (người dùng có thể được khôi phục) hoặc xóa vĩnh viễn (không thể hoàn tác).",
+            "warningAlreadyDeleted": "Người dùng này đã bị xóa mềm. Bạn có thể xóa vĩnh viễn họ khỏi cơ sở dữ liệu.",
+            "soft": "Xóa mềm",
+            "permanent": "Xóa vĩnh viễn"
+        },
+        "toasts": {
+            "loadFailed": "Không thể tải danh sách người dùng",
+            "updateSuccess": "Cập nhật người dùng thành công",
+            "updateFailed": "Cập nhật người dùng thất bại",
+            "softDeleteSuccess": "Xóa mềm người dùng thành công",
+            "deleteFailed": "Xóa người dùng thất bại",
+            "permanentDeleteSuccess": "Đã xóa vĩnh viễn người dùng",
+            "permanentDeleteFailed": "Xóa vĩnh viễn người dùng thất bại",
+            "creditSuccess": "Cập nhật tín dụng thành công",
+            "creditFailed": "Cập nhật tín dụng thất bại",
+            "passwordSuccess": "Đổi mật khẩu thành công",
+            "passwordFailed": "Đổi mật khẩu thất bại",
+            "historyFailed": "Không thể tải lịch sử thanh toán"
+        }
+    },
+    "payments": {
+        "title": "Quản lý thanh toán",
+        "statistics": "Thống kê",
+        "search": "Tìm kiếm thanh toán...",
+        "noPayments": "Không tìm thấy thanh toán nào",
+        "stats": {
+            "total": "Tổng số thanh toán",
+            "today": "Hôm nay",
+            "processed": "Đã xử lý",
+            "pending": "Đang chờ",
+            "exportCSV": "Xuất CSV",
+            "exportTXT": "Xuất TXT",
+            "exportJSON": "Xuất JSON"
+        },
+        "columns": {
+            "id": "Mã thanh toán",
+            "code": "Mã giao dịch",
+            "user": "Người dùng",
+            "amount": "Số tiền",
+            "status": "Trạng thái",
+            "gateway": "Cổng thanh toán",
+            "date": "Ngày",
+            "actions": "Thao tác"
+        },
+        "filters": {
+            "allStatus": "Tất cả trạng thái",
+            "allTypes": "Tất cả loại",
+            "in": "Vào",
+            "out": "Ra",
+            "pending": "Đang chờ",
+            "matched": "Đã khớp",
+            "processed": "Đã xử lý",
+            "ignored": "Bỏ qua",
+            "invalid": "Không hợp lệ"
+        },
+        "actions": {
+            "viewDetails": "Xem chi tiết",
+            "updateStatus": "Cập nhật trạng thái",
+            "close": "Đóng",
+            "selectStatus": "Chọn trạng thái"
+        },
+        "details": {
+            "title": "Chi tiết thanh toán",
+            "externalId": "ID tham chiếu ngoài",
+            "accountNumber": "Số tài khoản",
+            "referenceCode": "Mã tham chiếu",
+            "content": "Nội dung",
+            "description": "Mô tả",
+            "noUserAssociated": "Không có người dùng liên kết"
+        },
+        "toasts": {
+            "loadFailed": "Không thể tải danh sách thanh toán",
+            "statusSuccess": "Cập nhật trạng thái thanh toán thành công",
+            "statusFailed": "Cập nhật trạng thái thanh toán thất bại",
+            "detailsFailed": "Không thể tải chi tiết thanh toán",
+            "exportSuccess": "Xuất dữ liệu thành công",
+            "exportFailed": "Xuất dữ liệu thất bại"
+        }
+    },
+    "common": {
+        "page": "Trang",
+        "of": "của",
+        "previous": "Trước",
+        "next": "Tiếp",
+        "loading": "Đang tải...",
+        "retry": "Thử lại",
+        "accessDenied": "Từ chối truy cập"
+    },
+    "logging": {
+        "title": "Nhật ký Hoạt động Hệ thống",
+        "superAdminBadge": "Quản trị viên cấp cao",
+        "autoRefresh": "Tự động làm mới",
+        "autoRefreshOn": "Đang Tự động làm mới",
+        "refresh": "Làm mới",
+        "searchPlaceholder": "Tìm kiếm nhật ký...",
+        "stats": {
+            "totalLogs": "Tổng nhật ký",
+            "last24h": "24 giờ qua",
+            "last7d": "7 ngày qua",
+            "categories": "Danh mục"
+        },
+        "filters": {
+            "category": "Danh mục",
+            "action": "Hành động",
+            "role": "Vai trò",
+            "allCategories": "Tất cả Danh mục",
+            "allActions": "Tất cả Hành động",
+            "allRoles": "Tất cả Vai trò"
+        },
+        "logFile": "activity.log",
+        "entries": "mục",
+        "emptyState": "Không tìm thấy nhật ký hoạt động nào",
+        "emptyStateDesc": "Hãy điều chỉnh bộ lọc hoặc kiểm tra lại sau",
+        "details": "Chi tiết",
+        "timestamp": "Thời gian",
+        "ip": "IP"
+    },
+    "reports": {
+        "title": "Báo cáo Kinh doanh",
+        "description": "Phân tích người dùng, sơ đồ tư duy và doanh thu",
+        "refresh": "Làm mới dữ liệu",
+        "export": "Xuất báo cáo",
+        "userReport": "Báo cáo Người dùng",
+        "mindmapReport": "Báo cáo Sơ đồ tư duy",
+        "revenueReport": "Báo cáo Doanh thu",
+        "fullReport": "Báo cáo Toàn hệ thống",
+        "accessDenied": "Truy cập bị từ chối",
+        "superAdminOnly": "Khu vực này chỉ dành cho Quản trị viên cấp cao.",
+        "fetchError": "Không thể tải dữ liệu báo cáo",
+        "exportSuccess": "Xuất báo cáo thành công",
+        "exportError": "Xuất báo cáo thất bại",
+        "stats": {
+            "totalUsers": "Tổng Người dùng",
+            "activeUsers": "Người dùng Hoạt động",
+            "totalMindmaps": "Tổng Sơ đồ tư duy",
+            "aiGenerated": "AI",
+            "totalRevenue": "Tổng Doanh thu",
+            "revenueThisMonth": "Tháng này",
+            "totalTransactions": "Tổng giao dịch",
+            "avgTransaction": "TB Giao dịch",
+            "userStatistics": "Thống kê Người dùng",
+            "newUsersToday": "Người dùng mới hôm nay",
+            "newUsersThisWeek": "Người dùng mới tuần này",
+            "newUsersThisMonth": "Người dùng mới tháng này",
+            "suspended": "Bị đình chỉ",
+            "mindmapStatistics": "Thống kê Sơ đồ tư duy",
+            "newMindmapsToday": "Sơ đồ mới hôm nay",
+            "newMindmapsThisWeek": "Tuần này",
+            "publicMindmaps": "Công khai",
+            "aiGeneratedMindmaps": "Tạo bởi AI",
+            "revenueStatistics": "Thống kê Doanh thu",
+            "revenueToday": "Doanh thu hôm nay",
+            "revenueThisWeek": "Tuần này",
+            "transactionsToday": "Giao dịch hôm nay",
+            "transactionsThisWeek": "Tuần này"
+        },
+        "charts": {
+            "trend": "Biểu đồ Xu hướng",
+            "periods": {
+                "daily": "Hàng ngày",
+                "weekly": "Hàng tuần",
+                "monthly": "Hàng tháng",
+                "yearly": "Hàng năm"
+            },
+            "tabs": {
+                "users": "Người dùng & Tăng trưởng",
+                "revenue": "Doanh thu",
+                "distribution": "Phân bố",
+                "overview": "Tổng quan"
+            },
+            "titles": {
+                "usersAndMindmaps": "Xu hướng Người dùng & Sơ đồ",
+                "usersAndMindmapsDesc": "Tăng trưởng người dùng so với tạo sơ đồ",
+                "revenueTrend": "Xu hướng Doanh thu",
+                "revenueDesc": "Thu nhập và khối lượng giao dịch theo thời gian",
+                "userRoleDist": "Phân bố Vai trò Người dùng",
+                "mindmapVisibility": "Quyền riêng tư Sơ đồ",
+                "overviewTrend": "Tổng quan Nền tảng",
+                "overviewDesc": "So sánh các chỉ số chính"
+            },
+            "labels": {
+                "newUsers": "Người dùng mới",
+                "newMindmaps": "Sơ đồ mới",
+                "revenue": "Doanh thu",
+                "transactions": "Giao dịch",
+                "user": "Người dùng",
+                "admin": "Quản trị viên",
+                "superAdmin": "QTV Cấp cao",
+                "public": "Công khai",
+                "private": "Riêng tư"
+            }
+        }
+    },
+    "settings": {
+        "comingSoon": "Sắp ra mắt"
+    },
+    "support": {
+        "title": "Yêu cầu Hỗ trợ",
+        "description": "Quản lý và phản hồi các yêu cầu hỗ trợ của người dùng",
+        "stats": {
+            "total": "Tổng cộng",
+            "open": "Đang mở",
+            "resolved": "Đã giải quyết",
+            "unassigned": "Chưa nhận hỗ trợ"
+        },
+        "filters": {
+            "searchPlaceholder": "Tìm kiếm theo số phiếu, tiêu đề hoặc email...",
+            "allStatus": "Tất cả trạng thái",
+            "allPriority": "Tất cả mức độ ưu tiên",
+            "allCategories": "Tất cả danh mục"
+        },
+        "table": {
+            "ticket": "Phiếu hỗ trợ",
+            "user": "Người dùng",
+            "status": "Trạng thái",
+            "priority": "Ưu tiên",
+            "category": "Danh mục",
+            "assignedTo": "Người hỗ trợ",
+            "created": "Ngày tạo",
+            "noTickets": "Không tìm thấy phiếu hỗ trợ nào",
+            "unassigned": "Không"
+        },
+        "status": {
+            "NEW": "Mới",
+            "IN_PROGRESS": "Đang xử lý",
+            "ON_HOLD": "Tạm hoãn",
+            "WAITING_FOR_RESPONSE": "Chờ phản hồi",
+            "RESOLVED": "Đã giải quyết",
+            "CLOSED": "Đã đóng"
+        },
+        "priority": {
+            "LOW": "Thấp",
+            "MEDIUM": "Trung bình",
+            "HIGH": "Cao",
+            "URGENT": "Khẩn cấp"
+        },
+        "category": {
+            "BUG": "Báo lỗi",
+            "TECHNICAL_SUPPORT": "Hỗ trợ kỹ thuật",
+            "BILLING": "Thanh toán",
+            "FEEDBACK": "Góp ý",
+            "OTHER": "Khác"
+        },
+        "detail": {
+            "back": "Quay lại danh sách",
+            "ticketInfo": "Thông tin phiếu",
+            "postedBy": "Gửi bởi",
+            "assignee": "Người xử lý",
+            "unassigned": "Chưa nhận hỗ trợ",
+            "created": "Ngày tạo",
+            "updated": "Cập nhật lần cuối",
+            "assign": "Nhận hỗ trợ",
+            "changeStatus": "Đổi trạng thái",
+            "changePriority": "Đổi mức ưu tiên",
+            "conversation": "Cuộc hội thoại",
+            "reply": "Phản hồi",
+            "replyPlaceholder": "Nhập nội dung phản hồi...",
+            "internalNote": "Ghi chú nội bộ (chỉ quản trị viên thấy)",
+            "sendReply": "Gửi phản hồi",
+            "sending": "Đang gửi...",
+            "attachFiles": "Đính kèm tệp",
+            "loadError": "Không thể tải chi tiết phiếu",
+            "updateSuccess": "Cập nhật phiếu thành công",
+            "updateError": "Cập nhật phiếu thất bại",
+            "replySuccess": "Gửi phản hồi thành công",
+            "replyError": "Gửi phản hồi thất bại",
+            "notFound": "Không tìm thấy phiếu",
+            "description": "Mô tả",
+            "actions": "Thao tác",
+            "closeTicket": "Đóng phiếu",
+            "assignToMe": "Nhận hỗ trợ"
+        }
+    },
+    "payments": {
+        "title": "Quản lý Thanh toán",
+        "search": "Tìm kiếm thanh toán...",
+        "statistics": "Thống kê",
+        "stats": {
+            "total": "Tổng thanh toán",
+            "today": "Thanh toán hôm nay",
+            "processed": "Đã xử lý",
+            "pending": "Đang chờ",
+            "amount": "Số tiền"
+        },
+        "export": {
+            "csv": "Xuất CSV",
+            "txt": "Xuất TXT",
+            "json": "Xuất JSON",
+            "success": "Xuất thành công",
+            "error": "Xuất thất bại"
+        },
+        "filters": {
+            "allStatus": "Tất cả trạng thái",
+            "allTypes": "Tất cả loại giao dịch",
+            "in": "Vào",
+            "out": "Ra",
+            "pending": "Đang chờ",
+            "matched": "Đã khớp",
+            "processed": "Đã xử lý",
+            "ignored": "Đã bỏ qua",
+            "invalid": "Không hợp lệ"
+        },
+        "columns": {
+            "id": "Mã thanh toán",
+            "code": "Mã giao dịch",
+            "user": "Người dùng",
+            "amount": "Số tiền",
+            "status": "Trạng thái",
+            "gateway": "Cổng",
+            "date": "Ngày",
+            "actions": "Thao tác"
+        },
+        "details": {
+            "title": "Chi tiết thanh toán",
+            "externalId": "Mã đối tác",
+            "type": "Loại giao dịch",
+            "accountNumber": "Số tài khoản",
+            "referenceCode": "Mã tham chiếu",
+            "content": "Nội dung",
+            "description": "Mô tả",
+            "created": "Ngày tạo",
+            "close": "Đóng",
+            "noUser": "Không có người dùng"
+        },
+        "toasts": {
+            "loadFailed": "Không thể tải danh sách thanh toán",
+            "loadDetailsFailed": "Không thể tải chi tiết thanh toán",
+            "updateSuccess": "Cập nhật trạng thái thành công",
+            "updateError": "Cập nhật trạng thái thất bại"
+        },
+        "dialogs": {
+            "updateStatus": "Cập nhật trạng thái",
+            "selectStatus": "Chọn trạng thái"
+        },
+        "noPayments": "Không tìm thấy thanh toán nào",
+        "noUserAssociated": "Không có người dùng liên kết"
+    }
+}

@@ -6,6 +6,7 @@ import apiClient from '@/lib/apiClient'
 import { isAxiosError } from 'axios'
 
 import { Loader2, CircleCheck, CircleAlert } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export default function VerifyEmailPage() {
     return (
@@ -20,17 +21,18 @@ export default function VerifyEmailPage() {
 }
 
 function VerifyEmailComponent() {
+    const { t } = useTranslation("auth")
     const router = useRouter()
     const searchParams = useSearchParams()
     const token = searchParams.get('token') // Lấy token từ URL
 
     const [status, setStatus] = useState('loading')
-    const [message, setMessage] = useState('Đang xác thực tài khoản của bạn...')
+    const [message, setMessage] = useState(t('verifyEmail.validating'))
 
     useEffect(() => {
         if (!token) {
             setStatus('error')
-            setMessage('Token không hợp lệ hoặc bị thiếu.')
+            setMessage(t('verifyEmail.invalidToken'))
             return
         }
 
@@ -40,7 +42,7 @@ function VerifyEmailComponent() {
                 const response = await apiClient.get(`/auth/verify-email?token=${encodeURIComponent(token)}`)
                 console.log('Verification response:', response.data)
                 setStatus('success')
-                setMessage(response.data.message || 'Xác thực tài khoản thành công!')
+                setMessage(response.data.message || t('verifyEmail.successMessage'))
                 setTimeout(() => {
                     router.push('/?showLogin=true')
                 }, 2000)
@@ -50,9 +52,9 @@ function VerifyEmailComponent() {
                 if (isAxiosError(error)) {
                     if (error.response) {
                         // Server responded with error
-                        const errorMessage = error.response.data?.message || 
-                                           error.response.data?.error || 
-                                           'Token không hợp lệ hoặc đã hết hạn.'
+                        const errorMessage = error.response.data?.message ||
+                            error.response.data?.error ||
+                            'Token không hợp lệ hoặc đã hết hạn.'
                         console.error('Server error response:', error.response.status, errorMessage)
                         setMessage(errorMessage)
                     } else if (error.request) {
@@ -65,7 +67,7 @@ function VerifyEmailComponent() {
                         setMessage('Đã xảy ra lỗi. Vui lòng thử lại.')
                     }
                 } else {
-                    setMessage('Đã xảy ra lỗi không xác định. Vui lòng thử lại.')
+                    setMessage(t('verifyEmail.errorTitle')) // Fallback generic error
                 }
             }
         }
@@ -74,14 +76,14 @@ function VerifyEmailComponent() {
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-gray-100 dark:bg-gray-900 p-4">
-            
+
             <div className="w-full max-w-md rounded-lg bg-card p-8 shadow-md border border-border text-center">
-                
+
                 {/* --- Trạng thái Loading --- */}
                 {status === 'loading' && (
                     <div className="flex flex-col items-center gap-4">
                         <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                        <h1 className="text-2xl font-semibold">Đang xác thực...</h1>
+                        <h1 className="text-2xl font-semibold">{t('verifyEmail.title')}</h1>
                         <p className="text-muted-foreground">{message}</p>
                     </div>
                 )}
@@ -90,7 +92,7 @@ function VerifyEmailComponent() {
                 {status === 'success' && (
                     <div className="flex flex-col items-center gap-4">
                         <CircleCheck className="h-12 w-12 text-green-500" />
-                        <h1 className="text-2xl font-semibold">Thành công!</h1>
+                        <h1 className="text-2xl font-semibold">{t('verifyEmail.successTitle')}</h1>
                         <p className="text-muted-foreground">{message}</p>
                     </div>
                 )}
@@ -98,16 +100,16 @@ function VerifyEmailComponent() {
                 {/* --- Trạng thái Error --- */}
                 {status === 'error' && (
                     <div className="flex flex-col items-center gap-4">
-                        <CircleAlert className="h-12 w-12 text-red-500" />
-                        <h1 className="text-2xl font-semibold">Đã xảy ra lỗi</h1>
+                        <CircleCheck className="h-12 w-12 text-red-500" />
+                        <h1 className="text-2xl font-semibold">{t('verifyEmail.errorTitle')}</h1>
                         <p className="text-muted-foreground">{message}</p>
-                        
+
                         {/* 3. Sửa lại button này để dùng Tailwind và đúng đường dẫn */}
-                        <button 
+                        <button
                             onClick={() => router.push('/?showLogin=true')} // Chuyển về trang chủ để mở modal
                             className="mt-4 w-full rounded-lg bg-primary py-2.5 font-semibold text-primary-foreground hover:bg-primary/90 transition-all"
                         >
-                            Quay lại trang đăng nhập
+                            {t('verifyEmail.backToLogin')}
                         </button>
                     </div>
                 )}

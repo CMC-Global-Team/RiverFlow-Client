@@ -2,8 +2,7 @@
   "deleteMindmap": "Delete this mindmap",
   "areYouSureDelete": "Are you sure you want to delete",
   "cannotUndo": "This action cannot be undone.",
-  
   "cancel": "Cancel",
-  "delete": "Deleted",
+  "delete": "Delete",
   "deleting": "Deleting..."
 }

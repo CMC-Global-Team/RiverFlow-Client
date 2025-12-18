@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Check, Copy, Code, Link as LinkIcon, FileCode, Loader2 } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
+import { useTranslation, Trans } from "react-i18next"
 
 interface EmbedModalProps {
     isOpen: boolean
@@ -38,6 +39,7 @@ export default function EmbedModal({
     const [embedEnabled, setEmbedEnabled] = useState(isEmbedEnabled)
     const [copiedType, setCopiedType] = useState<'link' | 'iframe' | null>(null)
     const { toast } = useToast()
+    const { t } = useTranslation('embedModal')
 
     // Sync state with prop
     useEffect(() => {
@@ -49,15 +51,16 @@ export default function EmbedModal({
         try {
             await onToggleEmbed(newEnabled)
             setEmbedEnabled(newEnabled)
+            setEmbedEnabled(newEnabled)
             toast({
                 description: newEnabled
-                    ? "Đã bật tính năng nhúng mindmap"
-                    : "Đã tắt tính năng nhúng mindmap"
+                    ? t('enableEmbed.enabledSuccess')
+                    : t('enableEmbed.disabledSuccess')
             })
         } catch (error) {
             console.error(error)
             toast({
-                description: "Lỗi cập nhật cài đặt nhúng",
+                description: t('enableEmbed.error', { defaultValue: 'Failed to update embed settings' }),
                 variant: "destructive"
             })
         } finally {
@@ -89,10 +92,11 @@ export default function EmbedModal({
         const content = type === 'link' ? getEmbedUrl() : getIframeCode()
         navigator.clipboard.writeText(content)
         setCopiedType(type)
+        setCopiedType(type)
         toast({
             description: type === 'link'
-                ? "Đã sao chép đường dẫn nhúng"
-                : "Đã sao chép mã nhúng iframe"
+                ? t('link.copySuccess')
+                : t('iframe.copySuccess')
         })
         setTimeout(() => setCopiedType(null), 2000)
     }
@@ -103,10 +107,10 @@ export default function EmbedModal({
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <Code className="h-5 w-5" />
-                        Nhúng Mindmap
+                        {t('title')}
                     </DialogTitle>
                     <DialogDescription>
-                        Nhúng mindmap <span className="font-medium text-foreground">{mindmapTitle}</span> vào trang web khác.
+                        <Trans i18nKey="description" values={{ title: mindmapTitle }} components={{ 1: <span className="font-medium text-foreground" /> }} />
                     </DialogDescription>
                 </DialogHeader>
 
@@ -115,9 +119,9 @@ export default function EmbedModal({
                     <div className="rounded-lg border border-border bg-card p-4 space-y-3">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h4 className="text-sm font-semibold text-foreground">Cho phép nhúng</h4>
+                                <h4 className="text-sm font-semibold text-foreground">{t('enableEmbed.title')}</h4>
                                 <p className="text-xs text-muted-foreground mt-1">
-                                    Bật tính năng nhúng để người khác có thể nhúng mindmap này vào trang web của họ
+                                    {t('enableEmbed.description')}
                                 </p>
                             </div>
                             <button
@@ -147,7 +151,7 @@ export default function EmbedModal({
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium flex items-center gap-2">
                                     <LinkIcon className="h-4 w-4" />
-                                    Đường dẫn nhúng
+                                    {t('link.label')}
                                 </Label>
                                 <div className="flex items-center gap-2">
                                     <Input
@@ -172,7 +176,7 @@ export default function EmbedModal({
                             <div className="space-y-2">
                                 <Label className="text-sm font-medium flex items-center gap-2">
                                     <FileCode className="h-4 w-4" />
-                                    Mã nhúng Iframe
+                                    {t('iframe.label')}
                                 </Label>
                                 <div className="relative">
                                     <pre className="bg-muted/50 rounded-lg p-3 text-xs font-mono overflow-x-auto max-h-32 whitespace-pre-wrap break-all text-foreground">
@@ -197,14 +201,14 @@ export default function EmbedModal({
                     {!embedEnabled && (
                         <div className="rounded-lg bg-muted/50 p-4 text-center text-sm text-muted-foreground">
                             <Code className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                            <p>Bật tính năng nhúng để lấy mã nhúng mindmap</p>
+                            <p>{t('disabledState')}</p>
                         </div>
                     )}
                 </div>
 
                 <DialogFooter>
                     <Button type="button" variant="outline" onClick={onClose}>
-                        Đóng
+                        {t('close')}
                     </Button>
                 </DialogFooter>
             </DialogContent>

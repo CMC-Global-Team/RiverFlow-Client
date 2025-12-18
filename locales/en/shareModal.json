@@ -1,0 +1,74 @@
+{
+    "title": "Share Mindmap",
+    "description": "Manage access for <1>{{title}}</1>.",
+    "tabs": {
+        "link": "Public Link",
+        "collaborators": "Collaborators"
+    },
+    "publicLink": {
+        "title": "Public Mindmap",
+        "description": "Allow anyone with the link to access this mindmap",
+        "accessLevel": "Public Access Level",
+        "levels": {
+            "view": {
+                "label": "View",
+                "description": "View only"
+            },
+            "edit": {
+                "label": "Edit",
+                "description": "View and edit"
+            },
+            "private": {
+                "label": "Private",
+                "description": "Owner only"
+            }
+        },
+        "linkLabel": "Public Link",
+        "copySuccess": "Link copied to clipboard",
+        "publicUpdateSuccess": "Mindmap is now public",
+        "privateUpdateSuccess": "Mindmap is now private",
+        "updateError": "Failed to update public status",
+        "accessUpdateSuccess": "Public access level updated to {{level}}",
+        "accessUpdateError": "Failed to update access level"
+    },
+    "collaborators": {
+        "inviteTitle": "Invite Collaborators",
+        "emailLabel": "Recipient Email",
+        "rolePlaceholder": "Permission",
+        "roles": {
+            "viewer": "View",
+            "editor": "Edit"
+        },
+        "sendInvite": "Send Invite",
+        "sending": "Sending...",
+        "inviteSuccess": "Invitation sent to {{email}}",
+        "inviteError": "Failed to send invitation",
+        "header": "Collaborators",
+        "status": {
+            "accepted": "Accepted",
+            "pending": "Pending",
+            "rejected": "Rejected"
+        },
+        "remove": "Remove",
+        "cancel": "Cancel",
+        "updateRoleSuccess": "Updated role for {{email}}",
+        "removeSuccess": "Removed {{email}} from mindmap",
+        "noCollaborators": "No collaborators invited yet",
+        "invitedList": "Invited List"
+    },
+    "publicShare": {
+        "title": "Share \"{{title}}\"",
+        "description": "This is a public share link. Anyone with this link can access the mindmap.",
+        "createdBy": "Created by",
+        "accessLevel": "Access Level",
+        "publicLink": "Public Link",
+        "shareHint": "Share this link to allow anyone to view this mindmap",
+        "copySuccess": "Link copied to clipboard!",
+        "levels": {
+            "view": "View Only",
+            "edit": "Edit",
+            "private": "Private"
+        }
+    },
+    "close": "Close"
+}

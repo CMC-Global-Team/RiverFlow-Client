@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/auth/useAuth"
 import { getUserProfile } from "@/services/auth/update-user.service"
 import { getSocket } from "@/lib/realtime"
 import type { MindmapResponse } from "@/types/mindmap.types"
+import { useTranslation } from "react-i18next"
 
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 
@@ -81,9 +82,10 @@ function Draggable({ children, initialPos, handle }: { children: React.ReactNode
 }
 
 export default function AiComposer({ defaultOpen = false }: { defaultOpen?: boolean }) {
+  const { t } = useTranslation("ai")
   const [mode, setMode] = useState<"normal" | "thinking" | "max">("normal")
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const modeLabel = mode === "max" ? "Max Mode" : mode === "thinking" ? "Thinking Mode" : "Normal Mode"
+  const modeLabel = mode === "max" ? t("mode.max") : mode === "thinking" ? t("mode.thinking") : t("mode.normal")
   const [chatOpen, setChatOpen] = useState(defaultOpen)
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; text: string; mode?: "normal" | "thinking" | "max"; streaming?: boolean }[]>([])
   const [inputValue, setInputValue] = useState("")
@@ -151,7 +153,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
   const isStreamingRef = useRef(false)
   const animationFrameRef = useRef<number>()
   const lastFrameTimeRef = useRef(0)
-  const streamTimeoutRef = useRef<NodeJS.Timeout>()
+  const streamTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
   const isActionListAnimatingRef = useRef(false) // Prevent handleThinkingDone from interrupting Action Plan
   const isThinkingModeRef = useRef(false) // Track if we're in Thinking Mode
   const finalResponseBufferRef = useRef("") // Separate buffer for final response in thinking mode
@@ -318,7 +320,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       isStreamingRef.current = false
       isThinkingModeRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
-      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi: ${data.error}` }])
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `${t('error.generic', 'Error')}: ${data.error}` }])
       setStreamingText("")
     }
 
@@ -384,7 +386,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       isStreamingRef.current = false
       isThinkingModeRef.current = false
       if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current)
-      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `Lỗi Thinking Mode: ${data.error}` }])
+      setMessages((m: typeof messages) => [...m, { role: 'assistant', text: `${t('error.genericThinking', 'Error Thinking Mode')}: ${data.error}` }])
       setStreamingText("")
     }
 
@@ -452,7 +454,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
       socket.off('ai:thinking:error', handleThinkingError)
       socket.off('ai:thinking:actionlist', handleThinkingActionList)
     }
-  }, [mindmap?.id, user?.userId, animateTypewriter])
+  }, [mindmap?.id, user?.userId, animateTypewriter, t])
 
   // Removed composeAgentPlan - backend AI handles all planning
 
@@ -499,15 +501,15 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           await loadMindmap(mindmap.id)
         }
       } else {
-        const msg = 'Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.'
+        const msg = t('error.noMindmap')
         setMessages((m) => [...m, { role: 'assistant', text: msg }])
       }
     } catch (err: any) {
       const code = err?.response?.data?.error?.code || 'ERROR'
-      const message = err?.response?.data?.error?.message || err?.message || 'Không thể tạo mindmap.'
+      const message = err?.response?.data?.error?.message || err?.message || t('error.createFailed')
       const hints: string[] | undefined = err?.response?.data?.error?.hints
-      const hintStr = hints && hints.length ? `\nGợi ý: ${hints.join(' • ')}` : ''
-      setMessages((m) => [...m, { role: 'assistant', text: `Lỗi (${code}): ${message}${hintStr}` }])
+      const hintStr = hints && hints.length ? `\n${t('error.hint')}: ${hints.join(' • ')}` : ''
+      setMessages((m) => [...m, { role: 'assistant', text: `${t('errorGeneric', 'Error')} (${code}): ${message}${hintStr}` }])
     } finally {
       try {
         const s = getSocket()
@@ -542,11 +544,11 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="min-w-[260px] p-2 bg-background shadow-md border rounded-xl">
-                  <DropdownMenuLabel>Settings</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('settings')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <span>Structure</span>
+                      <span>{t('structure')}</span>
                       <span className="ml-auto text-muted-foreground">
                         {structureType === "mindmap" ? "Mind Map" : structureType === "logic" ? "Logic Chart" : structureType === "brace" ? "Brace Map" : structureType === "org" ? "Org Chart" : structureType === "tree" ? "Tree Chart" : structureType === "timeline" ? "Timeline" : "Fishbone"}
                       </span>
@@ -565,16 +567,16 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                   </DropdownMenuSub>
                   <DropdownMenuSub>
                     <DropdownMenuSubTrigger>
-                      <span>Language</span>
+                      <span>{t('language')}</span>
                       <span className="ml-auto text-muted-foreground">
-                        {langPref === "auto" ? "Auto" : langPref === "vi" ? "Tiếng Việt" : "English"}
+                        {langPref === "auto" ? t('auto') : langPref === "vi" ? t('vietnamese') : t('english')}
                       </span>
                     </DropdownMenuSubTrigger>
                     <DropdownMenuSubContent className="min-w-[200px] p-2 bg-background shadow-md border rounded-lg">
                       <DropdownMenuRadioGroup value={langPref} onValueChange={(v) => setLangPref(v as any)}>
-                        <DropdownMenuRadioItem value="auto">Auto</DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="vi">Tiếng Việt</DropdownMenuRadioItem>
-                        <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="auto">{t('auto')}</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="vi">{t('vietnamese')}</DropdownMenuRadioItem>
+                        <DropdownMenuRadioItem value="en">{t('english')}</DropdownMenuRadioItem>
                       </DropdownMenuRadioGroup>
                     </DropdownMenuSubContent>
                   </DropdownMenuSub>
@@ -590,7 +592,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               <input ref={fileInputRef} type="file" className="hidden" />
             </div>
             <Textarea
-              placeholder="Nhập nội dung của bạn"
+              placeholder={t("inputPlaceholder")}
               className="flex-1 min-h-10 max-h-24 rounded-xl bg-background/40 border-muted/50 resize-none overflow-y-auto"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -614,21 +616,21 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem onClick={() => setMode("normal")}>
-                  <span className="flex-1">Normal Mode</span>
+                  <span className="flex-1">{t('mode.normal')}</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
                     -1
                     <Coins className="size-4" />
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setMode("thinking")}>
-                  <span className="flex-1">Thinking Mode</span>
+                  <span className="flex-1">{t('mode.thinking')}</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
                     -3
                     <Coins className="size-4" />
                   </span>
                 </DropdownMenuItem>
                 <DropdownMenuItem onClick={() => setMode("max")}>
-                  <span className="flex-1">Max Mode</span>
+                  <span className="flex-1">{t('mode.max')}</span>
                   <span className="flex items-center gap-1 text-muted-foreground">
                     -5
                     <Coins className="size-4" />
@@ -660,7 +662,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
           <div className="w-[420px] rounded-2xl border bg-card dark:bg-card text-card-foreground shadow-xl ring-1 ring-border">
             <div className="draggable-handle flex items-center justify-between gap-2 px-3 py-2 border-b cursor-move">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium">Cuộc hội thoại</span>
+                <span className="text-sm font-medium">{t('conversation')}</span>
                 <span className="text-xs px-2 py-1 rounded bg-muted">{modeLabel}</span>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setChatOpen(false)} title="Đóng">
@@ -673,7 +675,7 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                   <div key={i} className={m.role === "user" ? "flex justify-end animate-in fade-in slide-in-from-bottom-2 duration-300" : "flex justify-start animate-in fade-in slide-in-from-bottom-2 duration-300"}>
                     <div className="flex flex-col items-start gap-1">
                       {m.role !== "user" ? (
-                        <div className="text-[11px] text-muted-foreground">RiverFlow Agent</div>
+                        <div className="text-[11px] text-muted-foreground">{t('agentName')}</div>
                       ) : null}
                       <div className={m.role === "user" ? "max-w-[80%] rounded-xl bg-primary text-primary-foreground px-3 py-2 shadow-sm" : "max-w-[80%] rounded-xl bg-muted px-3 py-2 shadow-sm"}>
                         <div className="whitespace-pre-wrap" style={{ whiteSpace: 'pre-wrap' }}>
@@ -700,16 +702,16 @@ export default function AiComposer({ defaultOpen = false }: { defaultOpen?: bool
                       </div>
                       {m.role === "user" && m.mode ? (
                         <div className="text-[11px] text-muted-foreground">
-                          {m.mode === "max" && "Max Mode"}
-                          {m.mode === "thinking" && "Thinking Mode"}
-                          {m.mode === "normal" && "Normal Mode"}
+                          {m.mode === "max" && t('mode.max')}
+                          {m.mode === "thinking" && t('mode.thinking')}
+                          {m.mode === "normal" && t('mode.normal')}
                         </div>
                       ) : null}
                     </div>
                   </div>
                 ))}
                 {messages.length === 0 ? (
-                  <div className="text-muted-foreground text-sm">Chưa có tin nhắn</div>
+                  <div className="text-muted-foreground text-sm">{t('noMessages')}</div>
                 ) : null}
               </div>
             </ScrollArea>

@@ -1,0 +1,22 @@
+{
+    "settings": "Cài đặt",
+    "structure": "Cấu trúc",
+    "language": "Ngôn ngữ",
+    "auto": "Tự động",
+    "vietnamese": "Tiếng Việt",
+    "english": "Tiếng Anh",
+    "inputPlaceholder": "Nhập nội dung của bạn...",
+    "conversation": "Cuộc hội thoại",
+    "noMessages": "Chưa có tin nhắn",
+    "mode": {
+        "normal": "Chế độ Thường",
+        "thinking": "Chế độ Suy nghĩ",
+        "max": "Chế độ Tối đa"
+    },
+    "error": {
+        "noMindmap": "Lỗi (NO_MINDMAP): Vui lòng mở một mindmap trong Editor trước khi sử dụng AI.",
+        "createFailed": "Không thể tạo mindmap.",
+        "hint": "Gợi ý"
+    },
+    "agentName": "RiverFlow Agent"
+}

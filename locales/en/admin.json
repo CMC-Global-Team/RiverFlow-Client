@@ -1,0 +1,435 @@
+{
+    "dashboard": {
+        "title": "Dashboard",
+        "welcome": "Welcome back, {{name}}",
+        "superAdmin": "RiverFlow Super Admin",
+        "admin": "RiverFlow Admin",
+        "role": {
+            "superAdmin": "Super Admin",
+            "admin": "Admin"
+        },
+        "stats": {
+            "totalUsers": "Total Users",
+            "totalMindmaps": "Total Mindmaps",
+            "totalRevenue": "Total Revenue",
+            "totalTransactions": "Total Transactions",
+            "today": "+{{formattedCount}} today",
+            "newUsers": "New Users",
+            "activeUsers": "Active Users",
+            "activeMindmaps": "Active Mindmaps",
+            "pendingPayments": "Pending Payments",
+            "revenuetoday": "+{{amount}} today"
+        },
+        "quickActions": {
+            "title": "Quick Actions",
+            "description": "Navigate to common admin tasks",
+            "manageUsers": "Manage Users",
+            "payments": "Payments",
+            "reports": "Reports",
+            "systemLogs": "System Logs"
+        },
+        "activity": {
+            "title": "Today's Activity",
+            "description": "Quick overview of today's metrics",
+            "recent": "Recent Activity",
+            "latest": "Latest system activities",
+            "viewAll": "View All",
+            "by": "by {{name}}",
+            "target": "Target: {{target}}"
+        }
+    },
+    "sidebar": {
+        "dashboard": "Dashboard",
+        "userManage": "User Management",
+        "paymentManage": "Payment Management",
+        "reports": "Reports & Statistics",
+        "loggingSystem": "Logging System",
+        "supportRequests": "Support Requests",
+        "settings": "Settings",
+        "generalSettings": "General Settings",
+        "systemSettings": "System Settings",
+        "logout": "Log out",
+        "loggingOut": "Logging out..."
+    },
+    "users": {
+        "title": "User Management",
+        "showing": "Showing {{count}} of {{total}} results",
+        "search": "Search users...",
+        "noUsers": "No users found",
+        "columns": {
+            "email": "Email",
+            "fullName": "Full Name",
+            "role": "Role",
+            "status": "Status",
+            "credit": "Credit",
+            "createdAt": "Created At",
+            "actions": "Actions"
+        },
+        "filters": {
+            "allStatus": "All Status",
+            "allRoles": "All Roles",
+            "active": "Active",
+            "suspended": "Suspended",
+            "deleted": "Deleted",
+            "admin": "Admin",
+            "user": "User"
+        },
+        "actions": {
+            "edit": "Edit",
+            "updateCredit": "Update Credit",
+            "changePassword": "Change Password",
+            "viewPayments": "View Payments",
+            "delete": "Delete"
+        },
+        "dialogs": {
+            "editUser": "Edit User",
+            "updateCredit": "Update Credit",
+            "changePassword": "Change Password",
+            "paymentHistory": "Payment History",
+            "cancel": "Cancel",
+            "save": "Save",
+            "newPassword": "New Password",
+            "roleChangeRestricted": "Only Super Admin can change user roles",
+            "noPaymentHistory": "No payment history found"
+        },
+        "delete": {
+            "confirm": "Are you sure you want to delete this user?",
+            "warning": "This will soft delete the user and they will no longer be able to access their account.",
+            "warningPermanent": "As Super Admin, you can choose to soft delete (user can be restored) or permanently delete (cannot be undone).",
+            "warningAlreadyDeleted": "This user is already soft-deleted. You can permanently delete them from the database.",
+            "soft": "Soft Delete",
+            "permanent": "Permanent Delete"
+        },
+        "toasts": {
+            "loadFailed": "Failed to load users",
+            "updateSuccess": "User updated successfully",
+            "updateFailed": "Failed to update user",
+            "softDeleteSuccess": "User soft deleted successfully",
+            "deleteFailed": "Failed to delete user",
+            "permanentDeleteSuccess": "User permanently deleted",
+            "permanentDeleteFailed": "Failed to permanently delete user",
+            "creditSuccess": "Credit updated successfully",
+            "creditFailed": "Failed to update credit",
+            "passwordSuccess": "Password changed successfully",
+            "passwordFailed": "Failed to change password",
+            "historyFailed": "Failed to load payment history"
+        }
+    },
+    "payments": {
+        "title": "Payment Management",
+        "statistics": "Statistics",
+        "search": "Search payments...",
+        "noPayments": "No payments found",
+        "stats": {
+            "total": "Total Payments",
+            "today": "Today",
+            "processed": "Processed",
+            "pending": "Pending",
+            "exportCSV": "Export CSV",
+            "exportTXT": "Export TXT",
+            "exportJSON": "Export JSON"
+        },
+        "columns": {
+            "id": "Payment ID",
+            "code": "Transaction Code",
+            "user": "User",
+            "amount": "Amount",
+            "status": "Payment Status",
+            "gateway": "Gateway",
+            "date": "Date",
+            "actions": "Actions"
+        },
+        "filters": {
+            "allStatus": "All Status",
+            "allTypes": "All Types",
+            "in": "In",
+            "out": "Out",
+            "pending": "Pending",
+            "matched": "Matched",
+            "processed": "Processed",
+            "ignored": "Ignored",
+            "invalid": "Invalid"
+        },
+        "actions": {
+            "viewDetails": "View Details",
+            "updateStatus": "Update Status",
+            "close": "Close Details",
+            "selectStatus": "Select Status"
+        },
+        "details": {
+            "title": "Payment Details",
+            "externalId": "External ID",
+            "accountNumber": "Account Number",
+            "referenceCode": "Reference Code",
+            "content": "Content",
+            "description": "Description",
+            "noUserAssociated": "No user associated"
+        },
+        "toasts": {
+            "loadFailed": "Failed to load payments",
+            "statusSuccess": "Payment status updated successfully",
+            "statusFailed": "Failed to update payment status",
+            "detailsFailed": "Failed to load payment details",
+            "exportSuccess": "Export completed successfully",
+            "exportFailed": "Failed to export payments"
+        }
+    },
+    "common": {
+        "page": "Page",
+        "of": "of",
+        "previous": "Previous",
+        "next": "Next",
+        "loading": "Loading...",
+        "retry": "Retry",
+        "accessDenied": "Access Denied"
+    },
+    "logging": {
+        "title": "System Activity Logs",
+        "superAdminBadge": "Super Admin",
+        "autoRefresh": "Auto-refresh",
+        "autoRefreshOn": "Auto-refresh ON",
+        "refresh": "Refresh",
+        "searchPlaceholder": "Search logs...",
+        "stats": {
+            "totalLogs": "Total Logs",
+            "last24h": "Last 24 Hours",
+            "last7d": "Last 7 Days",
+            "categories": "Categories"
+        },
+        "filters": {
+            "category": "Category",
+            "action": "Action",
+            "role": "Role",
+            "allCategories": "All Categories",
+            "allActions": "All Actions",
+            "allRoles": "All Roles"
+        },
+        "logFile": "activity.log",
+        "entries": "entries",
+        "emptyState": "No activity logs found",
+        "emptyStateDesc": "Adjust your filters or check back later",
+        "details": "Details",
+        "timestamp": "Timestamp",
+        "ip": "IP"
+    },
+    "reports": {
+        "title": "Business Reports",
+        "description": "Analysis of users, mindmaps, and revenue",
+        "refresh": "Refresh Data",
+        "export": "Export Report",
+        "userReport": "User Report",
+        "mindmapReport": "Mindmap Report",
+        "revenueReport": "Revenue Report",
+        "fullReport": "Full System Report",
+        "accessDenied": "Access Denied",
+        "superAdminOnly": "This area is restricted to Super Administrators only.",
+        "fetchError": "Failed to fetch report data",
+        "exportSuccess": "Report exported successfully",
+        "exportError": "Failed to export report",
+        "stats": {
+            "totalUsers": "Total Users",
+            "activeUsers": "Active Users",
+            "totalMindmaps": "Total Mindmaps",
+            "aiGenerated": "AI",
+            "totalRevenue": "Total Revenue",
+            "revenueThisMonth": "This Month",
+            "totalTransactions": "Total Transactions",
+            "avgTransaction": "Avg. Value",
+            "userStatistics": "User Statistics",
+            "newUsersToday": "New Users Today",
+            "newUsersThisWeek": "New Users This Week",
+            "newUsersThisMonth": "New Users This Month",
+            "suspended": "Suspended",
+            "mindmapStatistics": "Mindmap Statistics",
+            "newMindmapsToday": "New Mindmaps Today",
+            "newMindmapsThisWeek": "This Week",
+            "publicMindmaps": "Public Mindmaps",
+            "aiGeneratedMindmaps": "AI Generated",
+            "revenueStatistics": "Revenue Statistics",
+            "revenueToday": "Revenue Today",
+            "revenueThisWeek": "This Week",
+            "transactionsToday": "Transactions Today",
+            "transactionsThisWeek": "This Week"
+        },
+        "charts": {
+            "trend": "Trend Charts",
+            "periods": {
+                "daily": "Daily",
+                "weekly": "Weekly",
+                "monthly": "Monthly",
+                "yearly": "Yearly"
+            },
+            "tabs": {
+                "users": "Users & Growth",
+                "revenue": "Revenue",
+                "distribution": "Distribution",
+                "overview": "Overview"
+            },
+            "titles": {
+                "usersAndMindmaps": "Users & Mindmaps Trend",
+                "usersAndMindmapsDesc": "Growth of user base compared to mindmap creation",
+                "revenueTrend": "Revenue Trend",
+                "revenueDesc": "Income and transaction volume over time",
+                "userRoleDist": "User Role Distribution",
+                "mindmapVisibility": "Mindmap Visibility",
+                "overviewTrend": "Platform Overview",
+                "overviewDesc": "Key metrics comparison"
+            },
+            "labels": {
+                "newUsers": "New Users",
+                "newMindmaps": "New Mindmaps",
+                "revenue": "Revenue",
+                "transactions": "Transactions",
+                "user": "User",
+                "admin": "Admin",
+                "superAdmin": "Super Admin",
+                "public": "Public",
+                "private": "Private"
+            }
+        }
+    },
+    "settings": {
+        "comingSoon": "Coming Soon"
+    },
+    "support": {
+        "title": "Support Requests",
+        "description": "Manage and respond to user support tickets",
+        "stats": {
+            "total": "Total",
+            "open": "Open",
+            "resolved": "Resolved",
+            "unassigned": "Unassigned"
+        },
+        "filters": {
+            "searchPlaceholder": "Search by ticket number, title, or email...",
+            "allStatus": "All Status",
+            "allPriority": "All Priority",
+            "allCategories": "All Categories"
+        },
+        "table": {
+            "ticket": "Ticket",
+            "user": "User",
+            "status": "Status",
+            "priority": "Priority",
+            "category": "Category",
+            "assignedTo": "Assigned To",
+            "created": "Created",
+            "noTickets": "No tickets found",
+            "unassigned": "Unassigned"
+        },
+        "status": {
+            "NEW": "New",
+            "IN_PROGRESS": "In Progress",
+            "ON_HOLD": "On Hold",
+            "WAITING_FOR_RESPONSE": "Waiting for Response",
+            "RESOLVED": "Resolved",
+            "CLOSED": "Closed"
+        },
+        "priority": {
+            "LOW": "Low",
+            "MEDIUM": "Medium",
+            "HIGH": "High",
+            "URGENT": "Urgent"
+        },
+        "category": {
+            "BUG": "Bug Report",
+            "TECHNICAL_SUPPORT": "Technical Support",
+            "BILLING": "Billing",
+            "FEEDBACK": "Feedback",
+            "OTHER": "Other"
+        },
+        "detail": {
+            "back": "Back to tickets",
+            "ticketInfo": "Ticket Information",
+            "postedBy": "Posted by",
+            "assignee": "Assignee",
+            "unassigned": "Unassigned",
+            "created": "Created",
+            "updated": "Last updated",
+            "assign": "Assign",
+            "changeStatus": "Change Status",
+            "changePriority": "Change Priority",
+            "conversation": "Conversation",
+            "reply": "Reply",
+            "replyPlaceholder": "Type your reply here...",
+            "internalNote": "Internal Note (visible to admins only)",
+            "sendReply": "Send Reply",
+            "sending": "Sending...",
+            "attachFiles": "Attach Files",
+            "loadError": "Failed to load ticket details",
+            "updateSuccess": "Ticket updated successfully",
+            "updateError": "Failed to update ticket",
+            "replySuccess": "Reply sent successfully",
+            "replyError": "Failed to send reply",
+            "notFound": "Ticket not found",
+            "description": "Description",
+            "actions": "Actions",
+            "closeTicket": "Close Ticket",
+            "assignToMe": "Assign to Me"
+        }
+    },
+    "payments": {
+        "title": "Payment Management",
+        "search": "Search payments...",
+        "statistics": "Statistics",
+        "stats": {
+            "total": "Total Payments",
+            "today": "Today's Payments",
+            "processed": "Processed",
+            "pending": "Pending",
+            "amount": "Amount"
+        },
+        "export": {
+            "csv": "Export CSV",
+            "txt": "Export TXT",
+            "json": "Export JSON",
+            "success": "Export successful",
+            "error": "Export failed"
+        },
+        "filters": {
+            "allStatus": "All Status",
+            "allTypes": "All Transfer Types",
+            "in": "In",
+            "out": "Out",
+            "pending": "Pending",
+            "matched": "Matched",
+            "processed": "Processed",
+            "ignored": "Ignored",
+            "invalid": "Invalid"
+        },
+        "columns": {
+            "id": "Payment ID",
+            "code": "Code",
+            "user": "User Info",
+            "amount": "Amount",
+            "status": "Status",
+            "gateway": "Gateway",
+            "date": "Date",
+            "actions": "Actions"
+        },
+        "details": {
+            "title": "Payment Details",
+            "externalId": "External ID",
+            "type": "Transfer Type",
+            "accountNumber": "Account Number",
+            "referenceCode": "Reference Code",
+            "content": "Content",
+            "description": "Description",
+            "created": "Created At",
+            "close": "Close Details",
+            "noUser": "No user associated"
+        },
+        "toasts": {
+            "loadFailed": "Failed to load payments",
+            "loadDetailsFailed": "Failed to load payment details",
+            "updateSuccess": "Status updated successfully",
+            "updateError": "Failed to update status"
+        },
+        "dialogs": {
+            "updateStatus": "Update Status",
+            "selectStatus": "Select Status"
+        },
+        "noPayments": "No payments found",
+        "noUserAssociated": "No user associated"
+    }
+}

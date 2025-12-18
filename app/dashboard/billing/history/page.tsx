@@ -1,17 +1,18 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { 
-  Loader2, 
-  Search, 
-  History, 
-  Wallet, 
-  CheckCircle2, 
+import {
+  Loader2,
+  Search,
+  History,
+  Wallet,
+  CheckCircle2,
   AlertCircle,
   HelpCircle
 } from "lucide-react"
 import { format } from "date-fns"
-import { vi } from "date-fns/locale"
+import { vi, enUS } from "date-fns/locale"
+import { useTranslation, Trans } from "react-i18next"
 
 import Sidebar from "@/components/dashboard/sidebar"
 import DashboardHeader from "@/components/dashboard/dashboard-header"
@@ -21,6 +22,7 @@ import { TransactionHistory } from "@/types/payment.types"
 import TransactionStatusBadge from "@/components/payment/TransactionStatusBadge"
 
 export default function PaymentHistoryPage() {
+  const { t, i18n } = useTranslation("dashboard")
   const [transactions, setTransactions] = useState<TransactionHistory[]>([])
   const [loading, setLoading] = useState(true)
   const [currentPage, setCurrentPage] = useState(0)
@@ -28,15 +30,15 @@ export default function PaymentHistoryPage() {
   const pageSize = 10
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('vi-VN', { 
-      style: 'currency', 
-      currency: 'VND' 
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND'
     }).format(amount)
   }
 
   const formatDate = (dateString: string) => {
     try {
-      return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: vi })
+      return format(new Date(dateString), "dd/MM/yyyy HH:mm", { locale: i18n.language === 'vi' ? vi : enUS })
     } catch {
       return dateString
     }
@@ -65,7 +67,7 @@ export default function PaymentHistoryPage() {
         <DashboardHeader />
 
         <main className="flex-1 overflow-auto bg-background p-6 md:p-8">
-          
+
           <div className="max-w-[1600px] mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               <div className="lg:col-span-4 space-y-6">
@@ -74,29 +76,31 @@ export default function PaymentHistoryPage() {
                     <div className="p-2 bg-primary/10 rounded-lg text-primary">
                       <History className="h-6 w-6" />
                     </div>
-                    <h1 className="text-2xl font-bold tracking-tight">Lịch sử giao dịch</h1>
+                    <h1 className="text-2xl font-bold tracking-tight">{t("billing.history.title")}</h1>
                   </div>
                   <p className="text-muted-foreground">
-                    Xem lại chi tiết các khoản nạp tiền và giao dịch đã thực hiện trên tài khoản của bạn.
+                    {t("billing.history.description")}
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="font-semibold text-sm text-foreground uppercase tracking-wider">
-                    Lưu ý thanh toán
+                    {t("billing.history.notes.title")}
                   </h3>
                   <ul className="space-y-3">
                     <li className="flex items-start gap-3 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                      <span>Hệ thống xử lý giao dịch tự động 24/7.</span>
+                      <span>{t("billing.history.notes.processing")}</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                      <span>Số dư (Credit) thường được cộng ngay lập tức sau khi chuyển khoản thành công.</span>
+                      <span>{t("billing.history.notes.credit")}</span>
                     </li>
                     <li className="flex items-start gap-3 text-sm text-muted-foreground">
                       <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
-                      <span>Vui lòng nhập chính xác <strong>Nội dung chuyển khoản</strong> để tránh sai sót.</span>
+                      <span>
+                        <Trans i18nKey="billing.history.notes.content" ns="dashboard" components={{ strong: <strong /> }} />
+                      </span>
                     </li>
                   </ul>
                 </div>
@@ -105,9 +109,9 @@ export default function PaymentHistoryPage() {
                   <div className="flex gap-3">
                     <HelpCircle className="h-5 w-5 text-blue-600 dark:text-blue-400 shrink-0" />
                     <div className="text-sm text-blue-800 dark:text-blue-300">
-                      <p className="font-medium mb-1">Cần hỗ trợ?</p>
+                      <p className="font-medium mb-1">{t("billing.history.help.title")}</p>
                       <p>
-                        Nếu giao dịch của bạn chưa được cập nhật sau 15 phút, vui lòng liên hệ bộ phận CSKH (0395360205) hoặc gửi yêu cầu hỗ trợ kèm biên lai.
+                        {t("billing.history.help.text")}
                       </p>
                     </div>
                   </div>
@@ -118,8 +122,8 @@ export default function PaymentHistoryPage() {
                 <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
                   <div className="p-6 border-b border-border flex items-center justify-between">
                     <div>
-                      <h2 className="font-semibold text-lg">Danh sách giao dịch</h2>
-                      <p className="text-sm text-muted-foreground">Hiển thị 10 giao dịch gần nhất</p>
+                      <h2 className="font-semibold text-lg">{t("billing.history.list.title")}</h2>
+                      <p className="text-sm text-muted-foreground">{t("billing.history.list.subtitle")}</p>
                     </div>
                     <div className="h-10 w-10 bg-muted rounded-full flex items-center justify-center">
                       <Wallet className="h-5 w-5 text-muted-foreground" />
@@ -130,16 +134,16 @@ export default function PaymentHistoryPage() {
                     {loading ? (
                       <div className="flex flex-col items-center justify-center h-64">
                         <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
-                        <p className="text-muted-foreground text-sm">Đang tải dữ liệu...</p>
+                        <p className="text-muted-foreground text-sm">{t("billing.history.loading")}</p>
                       </div>
                     ) : transactions.length === 0 ? (
                       <div className="flex flex-col items-center justify-center h-64 text-center px-4">
                         <div className="bg-muted/50 p-4 rounded-full mb-4">
                           <Search className="h-8 w-8 text-muted-foreground" />
                         </div>
-                        <h3 className="font-medium">Chưa có giao dịch nào</h3>
+                        <h3 className="font-medium">{t("billing.history.empty.title")}</h3>
                         <p className="text-muted-foreground text-sm mt-1">
-                          Lịch sử nạp tiền của bạn sẽ xuất hiện tại đây.
+                          {t("billing.history.empty.description")}
                         </p>
                       </div>
                     ) : (
@@ -147,11 +151,11 @@ export default function PaymentHistoryPage() {
                         <table className="w-full text-sm text-left">
                           <thead className="bg-muted/40 text-muted-foreground border-b border-border">
                             <tr>
-                              <th className="px-6 py-4 font-medium whitespace-nowrap">Mã GD</th>
-                              <th className="px-6 py-4 font-medium whitespace-nowrap">Thời gian</th>
-                              <th className="px-6 py-4 font-medium whitespace-nowrap">Cổng TT</th>
-                              <th className="px-6 py-4 font-medium whitespace-nowrap text-right">Số tiền</th>
-                              <th className="px-6 py-4 font-medium whitespace-nowrap text-center">Trạng thái</th>
+                              <th className="px-6 py-4 font-medium whitespace-nowrap">{t("billing.history.columns.code")}</th>
+                              <th className="px-6 py-4 font-medium whitespace-nowrap">{t("billing.history.columns.time")}</th>
+                              <th className="px-6 py-4 font-medium whitespace-nowrap">{t("billing.history.columns.gateway")}</th>
+                              <th className="px-6 py-4 font-medium whitespace-nowrap text-right">{t("billing.history.columns.amount")}</th>
+                              <th className="px-6 py-4 font-medium whitespace-nowrap text-center">{t("billing.history.columns.status")}</th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-border">
@@ -185,7 +189,7 @@ export default function PaymentHistoryPage() {
                   {!loading && transactions.length > 0 && (
                     <div className="border-t border-border p-4 flex items-center justify-between bg-muted/10">
                       <p className="text-sm text-muted-foreground">
-                        Trang <span className="font-medium text-foreground">{currentPage + 1}</span> / {totalPages}
+                        {t("billing.history.pagination.page")} <span className="font-medium text-foreground">{currentPage + 1}</span> / {totalPages}
                       </p>
                       <div className="flex gap-2">
                         <button
@@ -193,14 +197,14 @@ export default function PaymentHistoryPage() {
                           disabled={currentPage === 0}
                           className="px-3 py-1.5 border border-border rounded-md text-sm bg-background hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Trước
+                          {t("billing.history.pagination.prev")}
                         </button>
                         <button
                           onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
                           disabled={currentPage >= totalPages - 1}
                           className="px-3 py-1.5 border border-border rounded-md text-sm bg-background hover:bg-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Sau
+                          {t("billing.history.pagination.next")}
                         </button>
                       </div>
                     </div>
@@ -209,7 +213,7 @@ export default function PaymentHistoryPage() {
               </div>
             </div>
           </div>
-          
+
         </main>
       </div>
     </div>

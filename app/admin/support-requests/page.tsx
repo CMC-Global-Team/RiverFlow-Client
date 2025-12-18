@@ -31,8 +31,9 @@ import {
     User,
 } from "lucide-react";
 
+
 export default function AdminSupportRequestsPage() {
-    const { t } = useTranslation("adminSupportRequests");
+    const { t } = useTranslation("admin");
     const router = useRouter();
     const [tickets, setTickets] = useState<SupportTicket[]>([]);
     const [page, setPage] = useState(0);
@@ -70,7 +71,7 @@ export default function AdminSupportRequestsPage() {
             setTotalPages(response.totalPages);
             setTotalElements(response.totalElements);
         } catch (err: any) {
-            setError(err.message || "Failed to load tickets");
+            setError(err.message || t("support.detail.loadError"));
         } finally {
             setLoading(false);
         }
@@ -105,9 +106,9 @@ export default function AdminSupportRequestsPage() {
         <div className="p-6">
             {/* Header */}
             <div className="mb-6">
-                <h1 className="text-2xl font-bold text-foreground">Support Requests</h1>
+                <h1 className="text-2xl font-bold text-foreground">{t("support.title")}</h1>
                 <p className="text-muted-foreground mt-1">
-                    Manage and respond to user support tickets
+                    {t("support.description")}
                 </p>
             </div>
 
@@ -120,7 +121,7 @@ export default function AdminSupportRequestsPage() {
                                 <Ticket className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Total</p>
+                                <p className="text-sm text-muted-foreground">{t("support.stats.total")}</p>
                                 <p className="text-2xl font-bold">{statistics.totalTickets}</p>
                             </div>
                         </div>
@@ -131,7 +132,7 @@ export default function AdminSupportRequestsPage() {
                                 <Clock className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Open</p>
+                                <p className="text-sm text-muted-foreground">{t("support.stats.open")}</p>
                                 <p className="text-2xl font-bold">{statistics.openTickets}</p>
                             </div>
                         </div>
@@ -142,7 +143,7 @@ export default function AdminSupportRequestsPage() {
                                 <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Resolved</p>
+                                <p className="text-sm text-muted-foreground">{t("support.stats.resolved")}</p>
                                 <p className="text-2xl font-bold">{statistics.resolvedTickets}</p>
                             </div>
                         </div>
@@ -153,7 +154,7 @@ export default function AdminSupportRequestsPage() {
                                 <AlertCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
                             </div>
                             <div>
-                                <p className="text-sm text-muted-foreground">Unassigned</p>
+                                <p className="text-sm text-muted-foreground">{t("support.stats.unassigned")}</p>
                                 <p className="text-2xl font-bold">{statistics.unassignedTickets}</p>
                             </div>
                         </div>
@@ -171,7 +172,7 @@ export default function AdminSupportRequestsPage() {
                                 type="text"
                                 value={search}
                                 onChange={(e) => setSearch(e.target.value)}
-                                placeholder="Search by ticket number, title, or email..."
+                                placeholder={t("support.filters.searchPlaceholder")}
                                 className="w-full pl-10 pr-4 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                             />
                         </div>
@@ -181,36 +182,36 @@ export default function AdminSupportRequestsPage() {
                         onChange={(e) => { setStatusFilter(e.target.value); setPage(0); }}
                         className="px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                        <option value="">All Status</option>
-                        <option value="NEW">New</option>
-                        <option value="IN_PROGRESS">In Progress</option>
-                        <option value="ON_HOLD">On Hold</option>
-                        <option value="WAITING_FOR_RESPONSE">Waiting for Response</option>
-                        <option value="RESOLVED">Resolved</option>
-                        <option value="CLOSED">Closed</option>
+                        <option value="">{t("support.filters.allStatus")}</option>
+                        <option value="NEW">{t("support.status.NEW")}</option>
+                        <option value="IN_PROGRESS">{t("support.status.IN_PROGRESS")}</option>
+                        <option value="ON_HOLD">{t("support.status.ON_HOLD")}</option>
+                        <option value="WAITING_FOR_RESPONSE">{t("support.status.WAITING_FOR_RESPONSE")}</option>
+                        <option value="RESOLVED">{t("support.status.RESOLVED")}</option>
+                        <option value="CLOSED">{t("support.status.CLOSED")}</option>
                     </select>
                     <select
                         value={priorityFilter}
                         onChange={(e) => { setPriorityFilter(e.target.value); setPage(0); }}
                         className="px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                        <option value="">All Priority</option>
-                        <option value="LOW">Low</option>
-                        <option value="MEDIUM">Medium</option>
-                        <option value="HIGH">High</option>
-                        <option value="URGENT">Urgent</option>
+                        <option value="">{t("support.filters.allPriority")}</option>
+                        <option value="LOW">{t("support.priority.LOW")}</option>
+                        <option value="MEDIUM">{t("support.priority.MEDIUM")}</option>
+                        <option value="HIGH">{t("support.priority.HIGH")}</option>
+                        <option value="URGENT">{t("support.priority.URGENT")}</option>
                     </select>
                     <select
                         value={categoryFilter}
                         onChange={(e) => { setCategoryFilter(e.target.value); setPage(0); }}
                         className="px-3 py-2 bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
                     >
-                        <option value="">All Categories</option>
-                        <option value="BUG">Bug Report</option>
-                        <option value="TECHNICAL_SUPPORT">Technical Support</option>
-                        <option value="BILLING">Billing</option>
-                        <option value="FEEDBACK">Feedback</option>
-                        <option value="OTHER">Other</option>
+                        <option value="">{t("support.filters.allCategories")}</option>
+                        <option value="BUG">{t("support.category.BUG")}</option>
+                        <option value="TECHNICAL_SUPPORT">{t("support.category.TECHNICAL_SUPPORT")}</option>
+                        <option value="BILLING">{t("support.category.BILLING")}</option>
+                        <option value="FEEDBACK">{t("support.category.FEEDBACK")}</option>
+                        <option value="OTHER">{t("support.category.OTHER")}</option>
                     </select>
                 </form>
             </div>
@@ -230,20 +231,20 @@ export default function AdminSupportRequestsPage() {
                 </div>
             ) : tickets.length === 0 ? (
                 <div className="text-center py-12 bg-card rounded-lg border border-border">
-                    <p className="text-muted-foreground">No tickets found</p>
+                    <p className="text-muted-foreground">{t("support.table.noTickets")}</p>
                 </div>
             ) : (
                 <div className="bg-card border border-border rounded-lg overflow-hidden">
                     <table className="w-full">
                         <thead className="bg-muted/50">
                             <tr>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Ticket</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">User</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Status</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Priority</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Category</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Assigned To</th>
-                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">Created</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.ticket")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.user")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.status")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.priority")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.category")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.assignedTo")}</th>
+                                <th className="px-4 py-3 text-left text-sm font-medium text-muted-foreground">{t("support.table.created")}</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-border">
@@ -272,24 +273,24 @@ export default function AdminSupportRequestsPage() {
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)}`}>
-                                            {getStatusLabel(ticket.status)}
+                                            {t(`support.status.${ticket.status}`)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)}`}>
-                                            {getPriorityLabel(ticket.priority)}
+                                            {t(`support.priority.${ticket.priority}`)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         <span className="text-sm text-muted-foreground">
-                                            {getCategoryLabel(ticket.category)}
+                                            {t(`support.category.${ticket.category}`)}
                                         </span>
                                     </td>
                                     <td className="px-4 py-3">
                                         {ticket.assignedToFullName ? (
                                             <span className="text-sm">{ticket.assignedToFullName}</span>
                                         ) : (
-                                            <span className="text-sm text-muted-foreground italic">Unassigned</span>
+                                            <span className="text-sm text-muted-foreground italic">{t("support.table.unassigned")}</span>
                                         )}
                                     </td>
                                     <td className="px-4 py-3">
@@ -308,7 +309,7 @@ export default function AdminSupportRequestsPage() {
             {totalPages > 1 && (
                 <div className="flex justify-between items-center mt-4">
                     <span className="text-sm text-muted-foreground">
-                        Showing {tickets.length} of {totalElements} tickets
+                        {t("common.page")} {page + 1} {t("common.of")} {totalPages} ({tickets.length} / {totalElements})
                     </span>
                     <div className="flex items-center gap-2">
                         <button
@@ -319,7 +320,7 @@ export default function AdminSupportRequestsPage() {
                             <ChevronLeft className="h-5 w-5" />
                         </button>
                         <span className="text-sm">
-                            Page {page + 1} of {totalPages}
+                            {t("common.page")} {page + 1} {t("common.of")} {totalPages}
                         </span>
                         <button
                             onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}

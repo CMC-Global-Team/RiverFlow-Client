@@ -19,6 +19,7 @@ import { TutorialProvider, useTutorial } from "@/contexts/TutorialContext"
 import TutorialOverlay from "@/components/editor/TutorialOverlay"
 import { mapUserRoleToAccessMode } from "@/lib/tutorial-steps"
 import CheatSheetModal from "@/components/editor/CheatSheetModal"
+import { useTranslation } from "react-i18next"
 
 function PublicMindmapInner() {
   const searchParams = useSearchParams()
@@ -26,6 +27,7 @@ function PublicMindmapInner() {
   const shareToken = searchParams.get('token')
   const titleRef = useRef<HTMLHeadingElement | null>(null)
   const { user } = useAuth()
+  const { t } = useTranslation(["publicMindmap", "mindmaps"])
 
   const {
     mindmap,
@@ -75,16 +77,16 @@ function PublicMindmapInner() {
             console.log('Setting initial userRole after load:', initialRole)
             setUserRole(initialRole)
           } else {
-            const errorMsg = 'Mindmap này đang ở chế độ riêng tư.'
+            const errorMsg = t("privateMessage")
             setError(errorMsg)
-            toast({ title: 'Access Denied', description: errorMsg, variant: 'destructive' })
+            toast({ title: t("accessDenied"), description: errorMsg, variant: 'destructive' })
           }
         } catch (err) {
           console.error('Failed to load public mindmap:', err)
-          const errorMsg = err instanceof Error ? err.message : 'Failed to load mindmap. The link may be invalid or expired.'
+          const errorMsg = err instanceof Error ? err.message : t("loadFailed")
           setError(errorMsg)
           toast({
-            title: "Error",
+            title: t("error"),
             description: errorMsg,
             variant: "destructive",
           })
@@ -102,8 +104,8 @@ function PublicMindmapInner() {
     if (accessRevoked?.revoked) {
       console.log('[PublicMindmap] Access revoked, redirecting to home:', accessRevoked)
       toast({
-        title: 'Access Revoked',
-        description: accessRevoked.message || 'This mindmap is no longer accessible.',
+        title: t("accessRevoked"),
+        description: accessRevoked.message || t("accessRevokedMessage"),
         variant: 'destructive',
       })
       clearAccessRevoked()
@@ -116,8 +118,8 @@ function PublicMindmapInner() {
     if (permissionChanged?.changed) {
       console.log('[PublicMindmap] Permission changed, refreshing page:', permissionChanged)
       toast({
-        title: 'Permission Changed',
-        description: `Your access level has been updated. Refreshing page...`,
+        title: t("permissionChanged"),
+        description: t("permissionChangedMessage"),
       })
       clearPermissionChanged()
       // Refresh the page to get updated permissions
@@ -219,7 +221,7 @@ function PublicMindmapInner() {
       <div suppressHydrationWarning className="flex h-screen items-center justify-center">
         <div className="max-w-md text-center">
           <AlertCircle className="h-12 w-12 text-destructive mx-auto mb-4" />
-          <h2 className="text-xl font-semibold mb-2">Error Loading Mindmap</h2>
+          <h2 className="text-xl font-semibold mb-2">{t("errorLoading")}</h2>
           <p className="text-muted-foreground">{error}</p>
         </div>
       </div>
@@ -239,7 +241,7 @@ function PublicMindmapInner() {
       await saveMindmap()
     } catch (error) {
       console.error('Save failed:', error)
-      toast({ title: 'Save failed', description: 'Không thể lưu thay đổi.', variant: 'destructive' })
+      toast({ title: t("saveFailed"), description: t("saveFailedMessage"), variant: 'destructive' })
     }
   }
 
@@ -299,7 +301,7 @@ function PublicMindmapInner() {
       <PublicShareModal
         isOpen={isShareOpen}
         onClose={() => setIsShareOpen(false)}
-        mindmapTitle={mindmap?.title || "Untitled Mindmap"}
+        mindmapTitle={mindmap?.title || t("mindmaps:untitled")}
         shareToken={shareToken || undefined}
         ownerName={mindmap?.ownerName}
         ownerAvatar={mindmap?.ownerAvatar}

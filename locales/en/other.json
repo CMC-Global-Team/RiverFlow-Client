@@ -38,7 +38,13 @@
     "successDesc": "Welcome back, {{name}}!",
     "failedTitle": "Sign-in failed",
     "unverifiedEmail": "Email not verified",
-    "missingFields": "Please enter email and password!"
+    "missingFields": "Please enter email and password!",
+    "emailPlaceholder": "you@example.com",
+    "passwordPlaceholder": "••••••••"
+  },
+  "errors": {
+    "googleConfigMissing": "Google Client ID not configured",
+    "auth0ConfigMissing": "Auth0 credentials not configured"
   },
   "forgot": {
     "back": "Back to login",

@@ -10,9 +10,13 @@ import { Label } from "@/components/ui/label"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
 import { useState, useRef, useEffect } from "react"
+import { useTranslation } from "react-i18next"
 
 export default function NodePropertiesPanel() {
+  const { t } = useTranslation('editor')
   const { selectedNode, updateNodeData, setSelectedNode, deleteNode } = useMindmapContext()
+
+  if (!selectedNode) return null
 
   const [focusedField, setFocusedField] = useState<"label" | "description" | null>(null)
 
@@ -199,12 +203,12 @@ export default function NodePropertiesPanel() {
   const currentScale = (selectedNode.data.scale || 1).toFixed(1)
 
   const shapes = [
-    { value: "rectangle", label: "Rectangle", icon: "▭" },
-    { value: "circle", label: "Circle", icon: "●" },
-    { value: "ellipse", label: "Ellipse", icon: "⬭" },
-    { value: "diamond", label: "Diamond", icon: "◆" },
-    { value: "hexagon", label: "Hexagon", icon: "⬡" },
-    { value: "roundedRectangle", label: "Rounded", icon: "▢" }
+    { value: "rectangle", label: t("toolbar.shapes.rectangle"), icon: "▭" },
+    { value: "circle", label: t("toolbar.shapes.circle"), icon: "●" },
+    { value: "ellipse", label: t("toolbar.shapes.ellipse"), icon: "⬭" },
+    { value: "diamond", label: t("toolbar.shapes.diamond"), icon: "◆" },
+    { value: "hexagon", label: t("toolbar.shapes.hexagon"), icon: "⬡" },
+    { value: "roundedRectangle", label: t("toolbar.shapes.roundedRectangle"), icon: "▢" }
   ]
 
   const bgColors = [
@@ -215,7 +219,7 @@ export default function NodePropertiesPanel() {
 
   const remove = () => {
     deleteNode(selectedNode.id)
-    toast.success("Node deleted")
+    toast.success(t("toasts.nodeDeleted"))
   }
 
   if (!selectedNode) return null
@@ -234,7 +238,7 @@ export default function NodePropertiesPanel() {
               if (!focusedField) labelRef.current?.focus()
               toggleBold()
             }}
-            title="Bold (Ctrl+B)"
+            title={t("properties.bold")}
           >
             <Bold />
           </Button>
@@ -245,7 +249,7 @@ export default function NodePropertiesPanel() {
               if (!focusedField) labelRef.current?.focus()
               toggleItalic()
             }}
-            title="Italic (Ctrl+I)"
+            title={t("properties.italic")}
           >
             <Italic />
           </Button>
@@ -256,7 +260,7 @@ export default function NodePropertiesPanel() {
               if (!focusedField) labelRef.current?.focus()
               toggleUnderline()
             }}
-            title="Underline (Ctrl+U)"
+            title={t("properties.underline")}
           >
             <Underline />
           </Button>
@@ -278,7 +282,7 @@ export default function NodePropertiesPanel() {
                 setShowHighlight(!showHighlight)
                 setShowTextColor(false)
               }}
-              title="Highlight text"
+              title={t("properties.highlight")}
             >
               <Highlighter />
             </Button>
@@ -328,7 +332,7 @@ export default function NodePropertiesPanel() {
                 setShowTextColor(!showTextColor)
                 setShowHighlight(false)
               }}
-              title="Text color"
+              title={t("properties.textColor")}
             >
               <Palette />
             </Button>
@@ -363,7 +367,7 @@ export default function NodePropertiesPanel() {
         </div>
 
         {/* LABEL */}
-        <Label>Label</Label>
+        <Label>{t("properties.label")}</Label>
         <div
           ref={labelRef}
           contentEditable
@@ -376,7 +380,7 @@ export default function NodePropertiesPanel() {
         />
 
         {/* DESCRIPTION */}
-        <Label>Description</Label>
+        <Label>{t("properties.description")}</Label>
         <div
           ref={descRef}
           contentEditable
@@ -392,7 +396,7 @@ export default function NodePropertiesPanel() {
         <div className="space-y-2">
           <Label className="flex items-center gap-1">
             <Link className="w-4 h-4" />
-            Link (URL)
+            {t("properties.link")}
           </Label>
           <Input
             type="url"
@@ -411,13 +415,13 @@ export default function NodePropertiesPanel() {
             className="bg-background"
           />
           <p className="text-xs text-muted-foreground">
-            In view mode, clicking this node will preview the link
+            {t("properties.linkHint")}
           </p>
         </div>
 
         {/* SHAPE */}
         <div className="space-y-2">
-          <Label>Shape</Label>
+          <Label>{t("properties.shape")}</Label>
           <div className="grid grid-cols-3 gap-2">
             {shapes.map(s => (
               <button
@@ -435,7 +439,7 @@ export default function NodePropertiesPanel() {
 
         {/* COLOR */}
         <div className="space-y-2">
-          <Label>Color</Label>
+          <Label>{t("properties.color")}</Label>
           <div className="flex gap-2 flex-wrap">
             {["#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981", "#6366f1", "#ef4444", "#14b8a6"].map(c => (
               <button
@@ -453,7 +457,7 @@ export default function NodePropertiesPanel() {
 
         {/* BACKGROUND */}
         <div className="space-y-2">
-          <Label>Background</Label>
+          <Label>{t("properties.background")}</Label>
           <div className="flex gap-2 flex-wrap">
             {bgColors.map(c => (
               <button
@@ -484,14 +488,14 @@ export default function NodePropertiesPanel() {
 
         {/* SIZE / SCALE */}
         <div className="space-y-2">
-          <Label>Node Size</Label>
+          <Label>{t("properties.size")}</Label>
           <div className="flex items-center gap-2">
             <Button
               variant="outline"
               size="icon"
               onClick={handleScaleDecrease}
               disabled={currentScale === '0.6'}
-              title="Decrease node size (Min: 0.6x)"
+              title={t("properties.decreaseSize")}
             >
               <Minus className="w-4 h-4" />
             </Button>
@@ -503,7 +507,7 @@ export default function NodePropertiesPanel() {
               size="icon"
               onClick={handleScaleIncrease}
               disabled={currentScale === '2.0'}
-              title="Increase node size (Max: 2.0x)"
+              title={t("properties.increaseSize")}
             >
               <Plus className="w-4 h-4" />
             </Button>
@@ -512,14 +516,14 @@ export default function NodePropertiesPanel() {
 
         {/* INFO */}
         <div className="pt-2 text-xs text-muted-foreground border-t">
-          <p>Node ID: {selectedNode.id}</p>
-          <p>Type: {selectedNode.type}</p>
-          <p>Shape: {selectedNode.data.shape}</p>
+          <p>{t("properties.nodeId")}: {selectedNode.id}</p>
+          <p>{t("properties.type")}: {selectedNode.type}</p>
+          <p>{t("properties.shape")}: {selectedNode.data.shape}</p>
         </div>
 
         {/* DELETE */}
         <Button variant="destructive" className="w-full" onClick={remove}>
-          <Trash2 className="mr-2" /> Delete Node
+          <Trash2 className="mr-2" /> {t("properties.deleteNode")}
         </Button>
 
       </div>

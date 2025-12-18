@@ -7,14 +7,17 @@ import EdgePropertiesPanel from "./edge-properties-panel"
 import { X, GripVertical } from "lucide-react"
 import { Button } from "@/components/ui/button"
 
+import { useTranslation } from "react-i18next"
+
 export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean }) {
+  const { t } = useTranslation('editor')
   const { selectedNode, selectedEdge } = useMindmapContext()
   const [isOpen, setIsOpen] = useState(false)
   const [isDragging, setIsDragging] = useState(false)
   const [isResizing, setIsResizing] = useState(false)
-  const [position, setPosition] = useState({ 
-    x: 0, 
-    y: 100 
+  const [position, setPosition] = useState({
+    x: 0,
+    y: 100
   })
   const [size, setSize] = useState({ width: 400, height: 500 })
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
@@ -24,9 +27,9 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
   // Set initial position after mount to avoid hydration mismatch
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      setPosition({ 
-        x: window.innerWidth - 450, 
-        y: 100 
+      setPosition({
+        x: window.innerWidth - 450,
+        y: 100
       })
     }
   }, [])
@@ -59,7 +62,7 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
 
     document.addEventListener('mousemove', handleGlobalMouseMove)
     document.addEventListener('mouseup', handleGlobalMouseUp)
-    
+
     return () => {
       document.removeEventListener('mousemove', handleGlobalMouseMove)
       document.removeEventListener('mouseup', handleGlobalMouseUp)
@@ -117,7 +120,7 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
   }
 
   return (
-    <div 
+    <div
       ref={panelRef}
       className="fixed rounded-lg border border-border bg-card shadow-2xl backdrop-blur-sm bg-card/95 overflow-hidden z-50 pointer-events-auto"
       style={{
@@ -137,7 +140,7 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
       >
         <GripVertical className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         <h3 className="text-sm font-semibold text-foreground flex-1 min-w-0">
-          {selectedEdge ? "Connection" : selectedNode ? "Node" : "Properties"}
+          {selectedEdge ? t("properties.connection") : selectedNode ? t("properties.node") : t("properties.title")}
         </h3>
         <Button
           variant="ghost"
@@ -161,7 +164,7 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
         {/* Empty State */}
         {!hasSelection && isOpen && (
           <div className="p-4 text-center text-sm text-muted-foreground">
-            Select a node or connection to view properties
+            {t("properties.emptyState")}
           </div>
         )}
       </div>
@@ -170,7 +173,7 @@ export default function PropertiesPanel({ canEdit = true }: { canEdit?: boolean 
       <div
         className="resize-handle absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-primary/50 transition-colors"
         onMouseDown={handleResizeStart}
-        title="Drag to resize"
+        title={t("properties.dragToResize")}
       />
     </div>
   )

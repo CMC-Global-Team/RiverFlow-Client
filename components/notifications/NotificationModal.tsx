@@ -36,15 +36,17 @@ interface NotificationModalProps {
     onActionComplete?: () => void;
 }
 
-const formatTimeAgo = (dateString: string) => {
+// Removed formatTimeAgo function, replacing with inline translation logic or date-fns if needed
+// For now, implementing simple helper using translation keys
+const formatTimeAgo = (dateString: string, t: any) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    if (diffInSeconds < 60) return 'Just now';
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    if (diffInSeconds < 60) return t('time.justNow');
+    if (diffInSeconds < 3600) return t('time.ago', { time: `${Math.floor(diffInSeconds / 60)}${t('time.m')}` });
+    if (diffInSeconds < 86400) return t('time.ago', { time: `${Math.floor(diffInSeconds / 3600)}${t('time.h')}` });
+    if (diffInSeconds < 604800) return t('time.ago', { time: `${Math.floor(diffInSeconds / 86400)}${t('time.d')}` });
     return date.toLocaleDateString();
 };
 
@@ -102,7 +104,7 @@ export default function NotificationModal({
             const response = await notificationService.acceptInvitation(invitationDetails.token);
             if (response.success) {
                 setActionStatus('success');
-                setActionMessage(response.message || 'Invitation accepted!');
+                setActionMessage(response.message || t('actions.invitationAccepted'));
 
                 // If requires auth, show message and redirect to login
                 if (response.requiresAuth) {
@@ -119,11 +121,11 @@ export default function NotificationModal({
                 }
             } else {
                 setActionStatus('error');
-                setActionMessage(response.message || 'Failed to accept invitation');
+                setActionMessage(response.message || t('actions.failedAccept'));
             }
         } catch (error: any) {
             setActionStatus('error');
-            setActionMessage(error.response?.data?.message || 'Failed to accept invitation');
+            setActionMessage(error.response?.data?.message || t('actions.failedAccept'));
         }
     };
 
@@ -135,18 +137,18 @@ export default function NotificationModal({
             const response = await notificationService.declineInvitation(invitationDetails.token);
             if (response.success) {
                 setActionStatus('success');
-                setActionMessage(response.message || 'Invitation declined');
+                setActionMessage(response.message || t('actions.invitationDeclined'));
                 setTimeout(() => {
                     onClose();
                     onActionComplete?.();
                 }, 1500);
             } else {
                 setActionStatus('error');
-                setActionMessage(response.message || 'Failed to decline invitation');
+                setActionMessage(response.message || t('actions.failedDecline'));
             }
         } catch (error: any) {
             setActionStatus('error');
-            setActionMessage(error.response?.data?.message || 'Failed to decline invitation');
+            setActionMessage(error.response?.data?.message || t('actions.failedDecline'));
         }
     };
 
@@ -188,7 +190,7 @@ export default function NotificationModal({
                     <div className="flex items-center justify-center w-16 h-16 rounded-full bg-green-100 dark:bg-green-900 mb-4">
                         <Check className="h-8 w-8 text-green-600 dark:text-green-400" />
                     </div>
-                    <p className="text-lg font-medium text-foreground mb-2">Success!</p>
+                    <p className="text-lg font-medium text-foreground mb-2">{t('success')}</p>
                     <p className="text-muted-foreground">{actionMessage}</p>
                 </div>
             );
@@ -200,13 +202,13 @@ export default function NotificationModal({
                     <div className="flex items-center justify-center w-16 h-16 rounded-full bg-red-100 dark:bg-red-900 mb-4">
                         <X className="h-8 w-8 text-red-600 dark:text-red-400" />
                     </div>
-                    <p className="text-lg font-medium text-foreground mb-2">Error</p>
+                    <p className="text-lg font-medium text-foreground mb-2">{t('error')}</p>
                     <p className="text-muted-foreground">{actionMessage}</p>
                     <button
                         onClick={() => setActionStatus('idle')}
                         className="mt-4 text-primary hover:underline"
                     >
-                        Try again
+                        {t('tryAgain')}
                     </button>
                 </div>
             );
@@ -225,7 +227,7 @@ export default function NotificationModal({
                 <div className="space-y-4 py-4">
                     {/* Mindmap Info */}
                     <div className="bg-muted/50 rounded-lg p-4">
-                        <p className="text-sm text-muted-foreground mb-1">Project</p>
+                        <p className="text-sm text-muted-foreground mb-1">{t('project')}</p>
                         <p className="text-lg font-semibold text-foreground">
                             {invitationDetails.mindmapTitle}
                         </p>
@@ -249,12 +251,12 @@ export default function NotificationModal({
 
                     {/* Role */}
                     <div className="flex items-center justify-between py-2">
-                        <span className="text-muted-foreground">Role</span>
+                        <span className="text-muted-foreground">{t('role')}</span>
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${invitationDetails.role === 'EDITOR'
-                                ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
-                                : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
+                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300'
                             }`}>
-                            {invitationDetails.role === 'EDITOR' ? 'Editor' : 'Viewer'}
+                            {invitationDetails.role === 'EDITOR' ? t('roles.editor') : t('roles.viewer')}
                         </span>
                     </div>
 
@@ -262,14 +264,14 @@ export default function NotificationModal({
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Clock className="h-4 w-4" />
                         <span>
-                            Expires {formatTimeAgo(invitationDetails.expiresAt)}
+                            {t('expires', { time: formatTimeAgo(invitationDetails.expiresAt, t) })}
                         </span>
                     </div>
 
                     {/* Message */}
                     {invitationDetails.message && (
                         <div className="border-t border-border pt-4">
-                            <p className="text-sm text-muted-foreground mb-1">Message</p>
+                            <p className="text-sm text-muted-foreground mb-1">{t('message')}</p>
                             <p className="text-foreground italic">"{invitationDetails.message}"</p>
                         </div>
                     )}
@@ -286,7 +288,7 @@ export default function NotificationModal({
                         ) : (
                             <X className="h-4 w-4" />
                         )}
-                        Decline
+                        {t('decline')}
                     </button>
                     <button
                         onClick={handleAcceptInvitation}
@@ -298,7 +300,7 @@ export default function NotificationModal({
                         ) : (
                             <Check className="h-4 w-4" />
                         )}
-                        Accept
+                        {t('accept')}
                     </button>
                 </DialogFooter>
             </>
@@ -312,13 +314,13 @@ export default function NotificationModal({
             {notification?.entityType && notification?.entityId && (
                 <div className="bg-muted/50 rounded-lg p-3">
                     <p className="text-sm text-muted-foreground">
-                        Related to: {notification.entityType} • {notification.entityId}
+                        {t('relatedTo', { type: notification.entityType, id: notification.entityId })}
                     </p>
                 </div>
             )}
 
             <p className="text-sm text-muted-foreground">
-                {notification?.createdAt && formatTimeAgo(notification.createdAt)}
+                {notification?.createdAt && formatTimeAgo(notification.createdAt, t)}
             </p>
 
             {notification?.actionUrl && notification?.actionLabel && (
@@ -359,12 +361,12 @@ export default function NotificationModal({
                         </div>
                         <div className="flex-1 min-w-0">
                             <DialogTitle className="text-lg font-semibold">
-                                {notification?.title || 'Notification'}
+                                {notification?.title || t('title')}
                             </DialogTitle>
                             <DialogDescription className="text-sm text-muted-foreground mt-1">
                                 {notification?.type === 'PROJECT_INVITE'
-                                    ? 'You have received a collaboration invitation'
-                                    : 'Notification details'}
+                                    ? t('projectInvite')
+                                    : t('details')}
                             </DialogDescription>
                         </div>
                     </div>

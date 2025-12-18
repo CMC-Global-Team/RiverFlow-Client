@@ -1,0 +1,29 @@
+{
+    "title": "Cập nhật thông tin cá nhân",
+    "subtitle": "Quản lý thông tin tài khoản của bạn",
+    "upload": {
+        "button": "Chọn ảnh",
+        "uploading": "Đang upload...",
+        "hint": "JPG, PNG hoặc GIF (tối đa 5MB)",
+        "errorSize": "Kích thước file phải nhỏ hơn 5MB",
+        "errorType": "Vui lòng chọn file ảnh",
+        "success": "Upload avatar thành công"
+    },
+    "form": {
+        "fullName": "Họ và tên",
+        "fullNamePlaceholder": "Nhập họ và tên",
+        "email": "Email",
+        "emailHint": "Email không thể thay đổi",
+        "language": "Ngôn ngữ ưa thích",
+        "timezone": "Múi giờ",
+        "cancel": "Hủy",
+        "save": "Lưu thay đổi",
+        "saving": "Đang lưu..."
+    },
+    "validation": {
+        "required": "Vui lòng điền đầy đủ thông tin bắt buộc"
+    },
+    "success": "Cập nhật thông tin thành công",
+    "error": "Không thể cập nhật thông tin",
+    "errorGeneric": "Lỗi"
+}
