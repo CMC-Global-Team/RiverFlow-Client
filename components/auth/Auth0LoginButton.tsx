@@ -30,7 +30,7 @@ export function Auth0LoginButton({
                 type="button"
                 className="w-full flex items-center justify-center gap-2 rounded-lg border border-border bg-card py-2.5 hover:bg-muted transition-colors disabled:opacity-50"
                 disabled
-                title="Auth0 credentials are not configured"
+                title={t("errors.auth0ConfigMissing")}
             >
                 <Shield className="h-5 w-5 text-orange-500" />
                 <span className="text-sm font-medium">
