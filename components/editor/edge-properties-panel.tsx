@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { useTranslation } from "react-i18next"
 import { useMindmapContext } from "@/contexts/mindmap/MindmapContext"
 import { toast } from "sonner"
 import { useState, useEffect, useRef } from "react"
 
 export default function EdgePropertiesPanel() {
+  const { t } = useTranslation("editor")
   const { selectedEdge, updateEdgeData, setSelectedEdge, deleteEdge } = useMindmapContext()
 
   const [showTextColor, setShowTextColor] = useState(false)
@@ -36,11 +38,11 @@ export default function EdgePropertiesPanel() {
   if (!selectedEdge) return null
 
   const edgeTypes = [
-    { value: "default", label: "Default", description: "Straight line" },
-    { value: "straight", label: "Straight", description: "Direct connection" },
-    { value: "smoothstep", label: "Smooth Step", description: "Rounded corners" },
-    { value: "step", label: "Step", description: "90° angles" },
-    { value: "bezier", label: "Bezier", description: "Curved line" },
+    { value: "default", label: t("properties.edgeTypes.default"), description: t("properties.edgeTypeDescriptions.default") },
+    { value: "straight", label: t("properties.edgeTypes.straight"), description: t("properties.edgeTypeDescriptions.straight") },
+    { value: "smoothstep", label: t("properties.edgeTypes.smoothstep"), description: t("properties.edgeTypeDescriptions.smoothstep") },
+    { value: "step", label: t("properties.edgeTypes.step"), description: t("properties.edgeTypeDescriptions.step") },
+    { value: "bezier", label: t("properties.edgeTypes.bezier"), description: t("properties.edgeTypeDescriptions.bezier") },
   ]
 
   const handleLabelChange = (label: string) => {
@@ -139,7 +141,7 @@ export default function EdgePropertiesPanel() {
 
   const handleDeleteConnection = () => {
     deleteEdge(selectedEdge.id)
-    toast.success('Connection deleted')
+    toast.success(t("toasts.connectionDeleted"))
   }
 
   return (
@@ -147,13 +149,13 @@ export default function EdgePropertiesPanel() {
       <div className="space-y-4">
         {/* TEXT TOOLBAR */}
         <div className="flex gap-2 mb-2 flex-wrap">
-          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }}>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleBold() }} title={t("properties.bold")}>
             <Bold />
           </Button>
-          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleItalic() }}>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleItalic() }} title={t("properties.italic")}>
             <Italic />
           </Button>
-          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleUnderline() }}>
+          <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); toggleUnderline() }} title={t("properties.underline")}>
             <Underline />
           </Button>
 
@@ -168,6 +170,7 @@ export default function EdgePropertiesPanel() {
                 e.stopPropagation()
                 setShowTextColor(!showTextColor)
               }}
+              title={t("properties.textColor")}
             >
               <Palette />
             </Button>
@@ -201,12 +204,12 @@ export default function EdgePropertiesPanel() {
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="edge-label">Connection Label</Label>
+          <Label htmlFor="edge-label">{t("properties.connectionLabel")}</Label>
           <Textarea
             id="edge-label"
             value={(selectedEdge.label as string) || ""}
             onChange={(e) => handleLabelChange(e.target.value)}
-            placeholder="Add label to connection (supports multi-line)"
+            placeholder={t("properties.placeholder")}
             className="min-h-[60px]"
           />
         </div>
@@ -214,7 +217,7 @@ export default function EdgePropertiesPanel() {
         {selectedEdge.label && (
           <>
             <div className="space-y-2">
-              <Label>Label Background</Label>
+              <Label>{t("properties.background")}</Label>
               <div className="flex gap-2 flex-wrap">
                 {["#ffffff", "#f3f4f6", "#000000", "#3b82f6", "#8b5cf6", "#ec4899", "#f59e0b", "#10b981"].map((color) => (
                   <button
@@ -233,7 +236,7 @@ export default function EdgePropertiesPanel() {
         )}
 
         <div className="space-y-2">
-          <Label>Connection Style</Label>
+          <Label>{t("properties.connectionStyle")}</Label>
           <div className="space-y-2">
             {edgeTypes.map((type) => (
               <button
@@ -250,7 +253,7 @@ export default function EdgePropertiesPanel() {
         </div>
 
         <div className="space-y-2">
-          <Label>Line Color</Label>
+          <Label>{t("properties.lineColor")}</Label>
           <div className="flex gap-2 flex-wrap">
             {colors.map((color) => (
               <button
@@ -267,7 +270,7 @@ export default function EdgePropertiesPanel() {
         </div>
 
         <div className="flex items-center justify-between">
-          <Label htmlFor="animated">Animated</Label>
+          <Label htmlFor="animated">{t("properties.animated")}</Label>
           <Switch
             id="animated"
             checked={selectedEdge.animated || false}
@@ -276,11 +279,11 @@ export default function EdgePropertiesPanel() {
         </div>
 
         <div className="pt-2 text-xs text-muted-foreground border-t">
-          <p>Connection ID: {selectedEdge.id}</p>
-          <p>From: {selectedEdge.source}</p>
-          <p>To: {selectedEdge.target}</p>
-          <p>Type: {selectedEdge.type || "default"}</p>
-          {selectedEdge.label && <p className="whitespace-pre-wrap break-words">Label: {selectedEdge.label}</p>}
+          <p>{t("properties.connectionId")}: {selectedEdge.id}</p>
+          <p>{t("properties.from")}: {selectedEdge.source}</p>
+          <p>{t("properties.to")}: {selectedEdge.target}</p>
+          <p>{t("properties.type")}: {selectedEdge.type || "default"}</p>
+          {selectedEdge.label && <p className="whitespace-pre-wrap break-words">{t("properties.label")}: {selectedEdge.label}</p>}
         </div>
 
         {/* Delete Connection Button */}
@@ -290,7 +293,7 @@ export default function EdgePropertiesPanel() {
           onClick={handleDeleteConnection}
         >
           <Trash2 className="h-4 w-4 mr-2" />
-          Delete Connection
+          {t("properties.deleteConnection")}
         </Button>
       </div>
     </div>
