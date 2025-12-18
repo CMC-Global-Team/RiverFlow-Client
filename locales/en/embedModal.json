@@ -1,0 +1,21 @@
+{
+    "title": "Embed Mindmap",
+    "description": "Embed mindmap <1>{{title}}</1> into other websites.",
+    "enableEmbed": {
+        "title": "Allow Embedding",
+        "description": "Enable embedding to allow others to embed this mindmap on their websites",
+        "enabledSuccess": "Embed enabled",
+        "disabledSuccess": "Embed disabled",
+        "error": "Failed to update embed settings"
+    },
+    "link": {
+        "label": "Embed Link",
+        "copySuccess": "Embed link copied"
+    },
+    "iframe": {
+        "label": "Iframe Code",
+        "copySuccess": "Iframe code copied"
+    },
+    "disabledState": "Enable embedding to get the embed code",
+    "close": "Close"
+}
