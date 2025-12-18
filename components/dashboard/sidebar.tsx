@@ -48,7 +48,7 @@ export default function Sidebar() {
       return
     }
     const newMindmap = await create({
-      title: "Untitled Mindmap",
+      title: t("untitled", { ns: "mindmaps" }),
       nodes: template.initialNodes,
       edges: template.initialEdges,
     })
