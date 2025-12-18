@@ -57,6 +57,7 @@
     }
   },
   "support": {
+    "subtitle": "Manage and respond to your support tickets",
     "title": "Support Requests",
     "description": "Manage and respond to user support tickets",
     "detail": {
