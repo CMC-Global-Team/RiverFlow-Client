@@ -298,7 +298,7 @@
             "total": "Tổng cộng",
             "open": "Đang mở",
             "resolved": "Đã giải quyết",
-            "unassigned": "Chưa gán"
+            "unassigned": "Chưa nhận hỗ trợ"
         },
         "filters": {
             "searchPlaceholder": "Tìm kiếm theo số phiếu, tiêu đề hoặc email...",
@@ -312,10 +312,10 @@
             "status": "Trạng thái",
             "priority": "Ưu tiên",
             "category": "Danh mục",
-            "assignedTo": "Được gán cho",
+            "assignedTo": "Người hỗ trợ",
             "created": "Ngày tạo",
             "noTickets": "Không tìm thấy phiếu hỗ trợ nào",
-            "unassigned": "Chưa gán"
+            "unassigned": "Không"
         },
         "status": {
             "NEW": "Mới",
@@ -343,10 +343,10 @@
             "ticketInfo": "Thông tin phiếu",
             "postedBy": "Gửi bởi",
             "assignee": "Người xử lý",
-            "unassigned": "Chưa gán",
+            "unassigned": "Chưa nhận hỗ trợ",
             "created": "Ngày tạo",
             "updated": "Cập nhật lần cuối",
-            "assign": "Gán",
+            "assign": "Nhận hỗ trợ",
             "changeStatus": "Đổi trạng thái",
             "changePriority": "Đổi mức ưu tiên",
             "conversation": "Cuộc hội thoại",
@@ -365,70 +365,71 @@
             "description": "Mô tả",
             "actions": "Thao tác",
             "closeTicket": "Đóng phiếu",
-            "assignToMe": "Gán cho tôi"
-        },
-        "payments": {
-            "title": "Quản lý Thanh toán",
-            "search": "Tìm kiếm thanh toán...",
-            "statistics": "Thống kê",
-            "stats": {
-                "total": "Tổng thanh toán",
-                "today": "Thanh toán hôm nay",
-                "processed": "Đã xử lý",
-                "pending": "Đang chờ",
-                "amount": "Số tiền"
-            },
-            "export": {
-                "csv": "Xuất CSV",
-                "txt": "Xuất TXT",
-                "json": "Xuất JSON",
-                "success": "Xuất thành công",
-                "error": "Xuất thất bại"
-            },
-            "filters": {
-                "allStatus": "Tất cả trạng thái",
-                "allTypes": "Tất cả loại giao dịch",
-                "in": "Vào",
-                "out": "Ra",
-                "pending": "Đang chờ",
-                "matched": "Đã khớp",
-                "processed": "Đã xử lý",
-                "ignored": "Đã bỏ qua",
-                "invalid": "Không hợp lệ"
-            },
-            "columns": {
-                "id": "Mã thanh toán",
-                "code": "Mã giao dịch",
-                "user": "Người dùng",
-                "amount": "Số tiền",
-                "status": "Trạng thái",
-                "gateway": "Cổng",
-                "date": "Ngày",
-                "actions": "Thao tác"
-            },
-            "details": {
-                "title": "Chi tiết thanh toán",
-                "externalId": "Mã đối tác",
-                "type": "Loại giao dịch",
-                "accountNumber": "Số tài khoản",
-                "referenceCode": "Mã tham chiếu",
-                "content": "Nội dung",
-                "description": "Mô tả",
-                "created": "Ngày tạo",
-                "close": "Đóng",
-                "noUser": "Không có người dùng"
-            },
-            "toasts": {
-                "loadFailed": "Không thể tải danh sách thanh toán",
-                "loadDetailsFailed": "Không thể tải chi tiết thanh toán",
-                "updateSuccess": "Cập nhật trạng thái thành công",
-                "updateError": "Cập nhật trạng thái thất bại"
-            },
-            "dialogs": {
-                "updateStatus": "Cập nhật trạng thái",
-                "selectStatus": "Chọn trạng thái"
-            },
-            "noPayments": "Không tìm thấy thanh toán nào"
+            "assignToMe": "Nhận hỗ trợ"
         }
+    },
+    "payments": {
+        "title": "Quản lý Thanh toán",
+        "search": "Tìm kiếm thanh toán...",
+        "statistics": "Thống kê",
+        "stats": {
+            "total": "Tổng thanh toán",
+            "today": "Thanh toán hôm nay",
+            "processed": "Đã xử lý",
+            "pending": "Đang chờ",
+            "amount": "Số tiền"
+        },
+        "export": {
+            "csv": "Xuất CSV",
+            "txt": "Xuất TXT",
+            "json": "Xuất JSON",
+            "success": "Xuất thành công",
+            "error": "Xuất thất bại"
+        },
+        "filters": {
+            "allStatus": "Tất cả trạng thái",
+            "allTypes": "Tất cả loại giao dịch",
+            "in": "Vào",
+            "out": "Ra",
+            "pending": "Đang chờ",
+            "matched": "Đã khớp",
+            "processed": "Đã xử lý",
+            "ignored": "Đã bỏ qua",
+            "invalid": "Không hợp lệ"
+        },
+        "columns": {
+            "id": "Mã thanh toán",
+            "code": "Mã giao dịch",
+            "user": "Người dùng",
+            "amount": "Số tiền",
+            "status": "Trạng thái",
+            "gateway": "Cổng",
+            "date": "Ngày",
+            "actions": "Thao tác"
+        },
+        "details": {
+            "title": "Chi tiết thanh toán",
+            "externalId": "Mã đối tác",
+            "type": "Loại giao dịch",
+            "accountNumber": "Số tài khoản",
+            "referenceCode": "Mã tham chiếu",
+            "content": "Nội dung",
+            "description": "Mô tả",
+            "created": "Ngày tạo",
+            "close": "Đóng",
+            "noUser": "Không có người dùng"
+        },
+        "toasts": {
+            "loadFailed": "Không thể tải danh sách thanh toán",
+            "loadDetailsFailed": "Không thể tải chi tiết thanh toán",
+            "updateSuccess": "Cập nhật trạng thái thành công",
+            "updateError": "Cập nhật trạng thái thất bại"
+        },
+        "dialogs": {
+            "updateStatus": "Cập nhật trạng thái",
+            "selectStatus": "Chọn trạng thái"
+        },
+        "noPayments": "Không tìm thấy thanh toán nào",
+        "noUserAssociated": "Không có người dùng liên kết"
     }
 }
